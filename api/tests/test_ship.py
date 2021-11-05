@@ -6,6 +6,21 @@ from api import constants
 
 
 
+'''
+ █████  ██████       ██ ██    ██ ███████ ████████
+██   ██ ██   ██      ██ ██    ██ ██         ██
+███████ ██   ██      ██ ██    ██ ███████    ██
+██   ██ ██   ██ ██   ██ ██    ██      ██    ██
+██   ██ ██████   █████   ██████  ███████    ██
+
+██████  ███████ ███████  ██████  ██    ██ ██████   ██████ ███████ ███████
+██   ██ ██      ██      ██    ██ ██    ██ ██   ██ ██      ██      ██
+██████  █████   ███████ ██    ██ ██    ██ ██████  ██      █████   ███████
+██   ██ ██           ██ ██    ██ ██    ██ ██   ██ ██      ██           ██
+██   ██ ███████ ███████  ██████   ██████  ██   ██  ██████ ███████ ███████
+'''
+
+
 class TestShipAdjustResources(TestCase):
     def setUp(self):
         self.ship = Ship.spawn(map_units_per_meter=10)
@@ -195,6 +210,222 @@ class TestShipAdjustResources(TestCase):
         assert not self.ship.engine_lit
 
 
+
+'''
+ ██████  █████  ██       ██████ ██    ██ ██       █████  ████████ ███████
+██      ██   ██ ██      ██      ██    ██ ██      ██   ██    ██    ██
+██      ███████ ██      ██      ██    ██ ██      ███████    ██    █████
+██      ██   ██ ██      ██      ██    ██ ██      ██   ██    ██    ██
+ ██████ ██   ██ ███████  ██████  ██████  ███████ ██   ██    ██    ███████
+
+██████  ██   ██ ██    ██ ███████ ██  ██████ ███████
+██   ██ ██   ██  ██  ██  ██      ██ ██      ██
+██████  ███████   ████   ███████ ██ ██      ███████
+██      ██   ██    ██         ██ ██ ██           ██
+██      ██   ██    ██    ███████ ██  ██████ ███████
+
+'''
+
+
+class TestShipCMDCalculatePhysics(TestCase):
+    def setUp(self):
+        self.map_units_per_meter = 10
+        self.ship = Ship.spawn(map_units_per_meter=self.map_units_per_meter)
+        self.fps = 2
+        self._reset_ship()
+
+    def _reset_ship(self):
+        self.ship.coord_x = 100_000
+        self.ship.coord_y = 100_000
+        self.ship.velocity_x_meters_per_second = 0
+        self.ship.velocity_y_meters_per_second = 0
+        self.start_x = self.ship.coord_x
+        self.start_y = self.ship.coord_y
+
+    def _calculate_physics(self) -> None:
+        self.ship.calculate_physics(self.fps)
+
+
+    ''' No Velocity and No Acceleration
+    '''
+    def test_ship_position_does_not_change_if_no_velocity_and_no_acceleration(self):
+        self.ship.velocity_x_meters_per_second = 0 # No velocity
+        self.ship.velocity_y_meters_per_second = 0 #
+        self.ship.engine_lit = False               # No Acceleration
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 0 # No change in velocity
+        assert self.ship.velocity_y_meters_per_second == 0
+        assert self.ship.coord_x == self.start_x # No change in position
+        assert self.ship.coord_y == self.start_y
+
+
+    ''' NO acceleration, only X or only Y velocity
+    '''
+    def test_ship_position_does_change_if_positive_x_velocity_and_no_acceleration(self):
+        self.ship.velocity_x_meters_per_second = 240
+        self.ship.velocity_y_meters_per_second = 0
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 240
+        assert self.ship.velocity_y_meters_per_second == 0
+        assert self.ship.coord_x == self.start_x + 1200
+        assert self.ship.coord_y == self.start_y
+
+    def test_ship_position_does_change_if_negative_x_velocity_and_no_acceleration(self):
+        self.ship.velocity_x_meters_per_second = -240
+        self.ship.velocity_y_meters_per_second = 0
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == -240
+        assert self.ship.velocity_y_meters_per_second == 0
+        assert self.ship.coord_x == self.start_x - 1200
+        assert self.ship.coord_y == self.start_y
+
+    def test_ship_position_does_change_if_positive_y_velocity_and_no_acceleration(self):
+        self.ship.velocity_x_meters_per_second = 0
+        self.ship.velocity_y_meters_per_second = 240
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 0
+        assert self.ship.velocity_y_meters_per_second == 240
+        assert self.ship.coord_x == self.start_x
+        assert self.ship.coord_y == self.start_y + 1200
+
+    def test_ship_position_does_change_if_negative_y_velocity_and_no_acceleration(self):
+        self.ship.velocity_x_meters_per_second = 0
+        self.ship.velocity_y_meters_per_second = -240
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 0
+        assert self.ship.velocity_y_meters_per_second == -240
+        assert self.ship.coord_x == self.start_x
+        assert self.ship.coord_y == self.start_y - 1200
+
+
+    ''' NO acceleration, X AND Y Velocity
+    '''
+    def test_ship_position_does_change_if_equal_positive_x_and_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = 240
+        self.ship.velocity_y_meters_per_second = 240
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 240
+        assert self.ship.velocity_y_meters_per_second == 240
+        assert self.ship.coord_x == self.start_x + 1200
+        assert self.ship.coord_y == self.start_y + 1200
+
+    def test_ship_position_does_change_if_equal_positive_x_and_negative_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = -240
+        self.ship.velocity_y_meters_per_second = 240
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == -240
+        assert self.ship.velocity_y_meters_per_second == 240
+        assert self.ship.coord_x == self.start_x - 1200
+        assert self.ship.coord_y == self.start_y + 1200
+
+    def test_ship_position_does_change_if_equal_negative_x_and_positive_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = 240
+        self.ship.velocity_y_meters_per_second = -240
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 240
+        assert self.ship.velocity_y_meters_per_second == -240
+        assert self.ship.coord_x == self.start_x + 1200
+        assert self.ship.coord_y == self.start_y - 1200
+
+    def test_ship_position_does_change_if_equal_negative_x_and_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = -240
+        self.ship.velocity_y_meters_per_second = -240
+
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == -240
+        assert self.ship.velocity_y_meters_per_second == -240
+        assert self.ship.coord_x == self.start_x - 1200
+        assert self.ship.coord_y == self.start_y - 1200
+
+    def test_ship_position_does_change_if_not_equal_positive_x_and_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = 50
+        self.ship.velocity_y_meters_per_second = 300
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 50
+        assert self.ship.velocity_y_meters_per_second == 300
+        assert self.ship.coord_x == self.start_x + 238
+        assert self.ship.coord_y == self.start_y + 1502
+
+        self._reset_ship()
+        self.ship.velocity_x_meters_per_second = 300
+        self.ship.velocity_y_meters_per_second = 50
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 300
+        assert self.ship.velocity_y_meters_per_second == 50
+        assert self.ship.coord_x == self.start_x + 1502
+        assert self.ship.coord_y == self.start_y + 238
+
+    def test_ship_position_does_change_if_not_equal_negative_x_and_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = -50
+        self.ship.velocity_y_meters_per_second = -300
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == -50
+        assert self.ship.velocity_y_meters_per_second == -300
+        assert self.ship.coord_x == self.start_x - 238
+        assert self.ship.coord_y == self.start_y - 1502
+
+        self._reset_ship()
+        self.ship.velocity_x_meters_per_second = -300
+        self.ship.velocity_y_meters_per_second = -50
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == -300
+        assert self.ship.velocity_y_meters_per_second == -50
+        assert self.ship.coord_x == self.start_x - 1502
+        assert self.ship.coord_y == self.start_y - 238
+
+    def test_ship_position_does_change_if_not_equal_positive_x_and_negative_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = 300
+        self.ship.velocity_y_meters_per_second = -50
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 300
+        assert self.ship.velocity_y_meters_per_second == -50
+        assert self.ship.coord_x == self.start_x + 1502
+        assert self.ship.coord_y == self.start_y - 238
+
+        self._reset_ship()
+        self.ship.velocity_x_meters_per_second = 50
+        self.ship.velocity_y_meters_per_second = -300
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == 50
+        assert self.ship.velocity_y_meters_per_second == -300
+        assert self.ship.coord_x == self.start_x + 238
+        assert self.ship.coord_y == self.start_y - 1502
+
+    def test_ship_position_does_change_if_not_equal_negative_x_and_positive_y_velocity(self):
+        self.ship.velocity_x_meters_per_second = -300
+        self.ship.velocity_y_meters_per_second = 50
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == -300
+        assert self.ship.velocity_y_meters_per_second == 50
+        assert self.ship.coord_x == self.start_x - 1502
+        assert self.ship.coord_y == self.start_y + 238
+
+        self._reset_ship()
+        self.ship.velocity_x_meters_per_second = -50
+        self.ship.velocity_y_meters_per_second = 300
+        self._calculate_physics()
+        assert self.ship.velocity_x_meters_per_second == -50
+        assert self.ship.velocity_y_meters_per_second == 300
+        assert self.ship.coord_x == self.start_x - 238
+        assert self.ship.coord_y == self.start_y + 1502
+
+
+'''
+███████ ███████ ████████     ██   ██ ███████  █████  ██████  ██ ███    ██  ██████
+██      ██         ██        ██   ██ ██      ██   ██ ██   ██ ██ ████   ██ ██
+███████ █████      ██        ███████ █████   ███████ ██   ██ ██ ██ ██  ██ ██   ███
+     ██ ██         ██        ██   ██ ██      ██   ██ ██   ██ ██ ██  ██ ██ ██    ██
+███████ ███████    ██        ██   ██ ███████ ██   ██ ██████  ██ ██   ████  ██████
+'''
+
 class TestShipCMDSetHeading(TestCase):
 
     def setUp(self):
@@ -301,6 +532,21 @@ class TestShipCMDSetHeading(TestCase):
         self._assert_heading_0_cords_fixed()
 
 
+'''
+██████  ███████  █████   ██████ ████████ ██  ██████  ███    ██
+██   ██ ██      ██   ██ ██         ██    ██ ██    ██ ████   ██
+██████  █████   ███████ ██         ██    ██ ██    ██ ██ ██  ██
+██   ██ ██      ██   ██ ██         ██    ██ ██    ██ ██  ██ ██
+██   ██ ███████ ██   ██  ██████    ██    ██  ██████  ██   ████
+
+██     ██ ██   ██ ███████ ███████ ██
+██     ██ ██   ██ ██      ██      ██
+██  █  ██ ███████ █████   █████   ██
+██ ███ ██ ██   ██ ██      ██      ██
+ ███ ███  ██   ██ ███████ ███████ ███████
+'''
+
+
 class TestShipCMDActivateAndDeactivateReactionWheel(TestCase):
 
     def setUp(self):
@@ -332,6 +578,14 @@ class TestShipCMDActivateAndDeactivateReactionWheel(TestCase):
         self.ship.cmd_set_reaction_wheel_status(False)
         assert not self.ship.reaction_wheel_online
 
+
+'''
+███████ ███    ██  ██████  ██ ███    ██ ███████
+██      ████   ██ ██       ██ ████   ██ ██
+█████   ██ ██  ██ ██   ███ ██ ██ ██  ██ █████
+██      ██  ██ ██ ██    ██ ██ ██  ██ ██ ██
+███████ ██   ████  ██████  ██ ██   ████ ███████
+'''
 
 class TestShipCMDActivateDeactivateLightEngine(TestCase):
     def setUp(self):

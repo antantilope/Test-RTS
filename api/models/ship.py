@@ -1,8 +1,9 @@
 
 from decimal import Decimal
+from typing import Tuple
 
 from api.models.base import BaseModel
-from api import utils
+from api import utils2d
 from api import constants
 
 
@@ -106,6 +107,9 @@ class Ship(BaseModel):
         # to support operations that occur over multiple frames.
         self._state = {}
 
+    @property
+    def coords(self) -> Tuple[int]:
+        return (self.coord_x, self.coord_y,)
 
     @property
     def h0_x1(self) -> int:
@@ -267,11 +271,12 @@ class Ship(BaseModel):
                 )
 
 
-    def calculate_physics(self, frames_per_second: int):
+    def calculate_physics(self, frames_per_second: int) -> None:
         if self.engine_lit:
             adj_meters_per_second: float = self.engine_newtons / self.mass
             adj_meters_per_frame: float = adj_meters_per_second / frames_per_second
-            delta_x, delta_y = utils.calculate_x_y_components(
+
+            delta_x, delta_y = utils2d.calculate_x_y_components(
                 adj_meters_per_frame,
                 self.heading,
             )
@@ -283,13 +288,13 @@ class Ship(BaseModel):
             return
 
         # Calculate new coordinates with current velocity.
-        distance_meters, heading = utils.calculate_resultant_vector(
+        distance_meters, heading = utils2d.calculate_resultant_vector(
             round(self.velocity_x_meters_per_second),
             round(self.velocity_y_meters_per_second),
         )
-        distance_map_units = distance_meters * self.map_units_per_meter
+        distance_map_units = round((distance_meters * self.map_units_per_meter) / frames_per_second)
 
-        new_x, new_y = utils.translate_point(
+        new_x, new_y = utils2d.translate_point(
             (self.coord_x, self.coord_y),
             heading,
             distance_map_units
@@ -351,25 +356,25 @@ class Ship(BaseModel):
 
 
     def _set_relative_coords(self) -> None:
-        delta_degrees = utils.heading_to_delta_heading_from_zero(self.heading)
-        delta_radians = utils.degrees_to_radians(delta_degrees)
+        delta_degrees = utils2d.heading_to_delta_heading_from_zero(self.heading)
+        delta_radians = utils2d.degrees_to_radians(delta_degrees)
 
-        self.rel_rot_coord_0 = utils.rotate(
+        self.rel_rot_coord_0 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_0,
             delta_radians
         )
-        self.rel_rot_coord_1 = utils.rotate(
+        self.rel_rot_coord_1 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_1,
             delta_radians
         )
-        self.rel_rot_coord_2 = utils.rotate(
+        self.rel_rot_coord_2 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_2,
             delta_radians
         )
-        self.rel_rot_coord_3 = utils.rotate(
+        self.rel_rot_coord_3 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_3,
             delta_radians

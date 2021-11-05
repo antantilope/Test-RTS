@@ -54,7 +54,7 @@ def calculate_resultant_vector(fx: int, fy: int) -> Tuple:
     if fy == 0 and fx == 0:
         return (0, 0,)
 
-    meters = round(math.sqrt((fx**2) + (fy**2)))
+    meters = math.sqrt((fx**2) + (fy**2))
 
     if fy != 0:
         angle = math.degrees(math.atan(fx / fy))
