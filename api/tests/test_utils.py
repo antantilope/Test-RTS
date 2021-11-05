@@ -1,0 +1,374 @@
+
+from unittest import TestCase
+
+from api import utils
+from api import constants
+
+class TestUtils(TestCase):
+
+    origin = constants.ORGIN_COORD
+
+    def test_heading_to_delta_heading_from_zero(self):
+        assert utils.heading_to_delta_heading_from_zero(45) == 45
+        assert utils.heading_to_delta_heading_from_zero(90) == 90
+        assert utils.heading_to_delta_heading_from_zero(180) == 180
+        assert utils.heading_to_delta_heading_from_zero(181) == -179
+        assert utils.heading_to_delta_heading_from_zero(270) == -90
+        assert utils.heading_to_delta_heading_from_zero(359) == -1
+
+
+    def test_signed_angle_to_unsigned_angle(self):
+        # Positive angles
+        assert utils.signed_angle_to_unsigned_angle(0) == 0
+        assert utils.signed_angle_to_unsigned_angle(44) == 44
+        assert utils.signed_angle_to_unsigned_angle(75) == 75
+        assert utils.signed_angle_to_unsigned_angle(185) == 185
+        assert utils.signed_angle_to_unsigned_angle(299) == 299
+        assert utils.signed_angle_to_unsigned_angle(344) == 344
+        assert utils.signed_angle_to_unsigned_angle(360) == 0
+        assert utils.signed_angle_to_unsigned_angle(360 + 150) == 150
+        assert utils.signed_angle_to_unsigned_angle(360 * 3 + 299) == 299
+
+        # Negative angles
+        assert utils.signed_angle_to_unsigned_angle(-44) == 360 - 44
+        assert utils.signed_angle_to_unsigned_angle(-75) == 360 - 75
+        assert utils.signed_angle_to_unsigned_angle(-185) == 360 - 185
+        assert utils.signed_angle_to_unsigned_angle(-299) == 360 - 299
+        assert utils.signed_angle_to_unsigned_angle(-344) == 360 - 344
+        assert utils.signed_angle_to_unsigned_angle(-360) == 0
+        assert utils.signed_angle_to_unsigned_angle(-370) == 360 - 10
+
+    def test_invert_heading(self):
+        assert utils.invert_heading(0) == 180
+        assert utils.invert_heading(180) == 0
+        assert utils.invert_heading(90) == 270
+        assert utils.invert_heading(270) == 90
+
+
+    # ANGLE ROTATIONS # # #
+
+    def test_360_rotation_results_in_same_point(self):
+        rotation = utils.degrees_to_radians(360)
+        point = (-42, 33)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == point
+        rotation = utils.degrees_to_radians(-360)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == point
+
+
+    def test_rotate_point_180(self):
+        rotation = utils.degrees_to_radians(180)
+
+        point = (2, 5)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-2, -5)
+
+        point = (-5, 2)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (5, -2)
+
+        point = (-4, -8)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (4, 8)
+
+        point = (6, -3)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-6, 3)
+
+
+    def test_rotate_point_negative_180(self):
+        rotation = utils.degrees_to_radians(-180)
+
+        point = (2, 5)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-2, -5)
+
+        point = (-5, 2)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (5, -2)
+
+        point = (-4, -8)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (4, 8)
+
+        point = (6, -3)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-6, 3)
+
+
+    def test_rotate_point_90(self):
+        rotation = utils.degrees_to_radians(90)
+
+        point = (2, 5)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (5, -2)
+
+        point = (-5, 2)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (2, 5)
+
+        point = (-5, -2)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-2, 5)
+
+        point = (-4, 3)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (3, 4)
+
+
+    def test_rotate_point_negative_90(self):
+        rotation = utils.degrees_to_radians(-90)
+
+        point = (5, -2)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (2, 5)
+
+        point = (2, 5)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-5, 2)
+
+        point = (-2, 5)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-5, -2)
+
+        point = (3, 4)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-4, 3)
+
+
+    def test_rotate_quad_1_point_40_degrees(self):
+        rotation = utils.degrees_to_radians(40)
+        point = (60, 75)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (94, 19,)
+
+
+    def test_rotate_quad_1_point_negative_40_degrees(self):
+        rotation = utils.degrees_to_radians(-40)
+        point = (60, 75)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-2, 96,)
+
+
+    def test_rotate_quad_2_point_40_degrees(self):
+        rotation = utils.degrees_to_radians(40)
+        point = (3, -50)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-30, -40,)
+
+
+    def test_rotate_quad_2_point_negative_40_degrees(self):
+        rotation = utils.degrees_to_radians(-40)
+        point = (3, -50)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (34, -36,)
+
+
+    def test_rotate_quad_3_point_60_degrees(self):
+        rotation = utils.degrees_to_radians(60)
+        point = (-63, -50)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-75, 30,)
+
+
+    def test_rotate_quad_3_point_negative_60_degrees(self):
+        rotation = utils.degrees_to_radians(-60)
+        point = (-63, -50)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (12, -80,)
+
+
+    def test_rotate_quad_4_point_66_degrees(self):
+        rotation = utils.degrees_to_radians(66)
+        point = (-42, 33)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (13, 52,)
+
+
+    def test_rotate_quad_4_point_negative_66_degrees(self):
+        rotation = utils.degrees_to_radians(-66)
+        point = (-42, 33)
+        rotated = utils.rotate(self.origin, point, rotation)
+        assert rotated == (-47, -25,)
+
+
+    # RESULTANT FORCE # # #
+
+    def test_calc_resultant_force_due_north(self):
+        force, angle = utils.calculate_resultant_vector(0, 12)
+        assert force == 12
+        assert angle == 0 # N
+
+    def test_calc_resultant_force_due_east(self):
+        force, angle = utils.calculate_resultant_vector(12, 0)
+        assert force == 12
+        assert angle == 90 # E
+
+    def test_calc_resultant_force_due_south(self):
+        force, angle = utils.calculate_resultant_vector(0, -12)
+        assert force == 12
+        assert angle == 180 # S
+
+    def test_calc_resultant_force_due_west(self):
+        force, angle = utils.calculate_resultant_vector(-12, 0)
+        assert force == 12
+        assert angle == 270 # W
+
+    def test_calc_quad_1_resultant_force(self):
+        force, angle = utils.calculate_resultant_vector(19, 12)
+        assert force == 22
+        assert angle == 58
+
+    def test_calc_quad_1_resultant_force_xy_equal(self):
+        force, angle = utils.calculate_resultant_vector(19, 19)
+        assert force == 27
+        assert angle == 45 # NE
+
+    def test_calc_quad_2_resultant_force(self):
+        force, angle = utils.calculate_resultant_vector(9, -7)
+        assert force == 11
+        assert angle == 128
+
+    def test_calc_quad_2_resultant_force_xy_equal(self):
+        force, angle = utils.calculate_resultant_vector(8, -8)
+        assert force == 11
+        assert angle == 135 # SE
+
+    def test_calc_quad_3_resultant_force(self):
+        force, angle = utils.calculate_resultant_vector(-17, -12)
+        assert force == 21
+        assert angle == 235
+
+    def test_calc_quad_3_resultant_force_xy_equal(self):
+        force, angle = utils.calculate_resultant_vector(-17, -17)
+        assert force == 24
+        assert angle == 225 # SW
+
+    def test_calc_quad_4_resultant_force(self):
+        force, angle = utils.calculate_resultant_vector(-13, 21)
+        assert force == 25
+        assert angle == 328
+
+    def test_calc_quad_4_resultant_force_xy_equal(self):
+        force, angle = utils.calculate_resultant_vector(-14, 14)
+        assert force == 20
+        assert angle == 315 # NW
+
+
+    # FORCE COMPONENETS # # #
+
+    def _calculate_x_y_components(self, *args):
+        return tuple(map(round, utils.calculate_x_y_components(*args)))
+
+    def test_calc_components_for_vector_with_no_magnitude(self):
+        assert self._calculate_x_y_components(0, 135) == constants.ORGIN_COORD
+
+    def test_calc_components_for_n_vector(self):
+        x, y = self._calculate_x_y_components(12, 0)
+        assert (x, y) == (0, 12)
+        x, y = self._calculate_x_y_components(12, 360) # 0 and 360 are equivolent.
+        assert (x, y) == (0, 12)
+
+    def test_calc_components_for_s_vector(self):
+        x, y = self._calculate_x_y_components(12, 180)
+        assert (x, y) == (0, -12)
+
+    def test_calc_components_for_e_vector(self):
+        x, y = self._calculate_x_y_components(12, 90)
+        assert (x, y) == (12, 0)
+
+    def test_calc_components_for_w_vector(self):
+        x, y = self._calculate_x_y_components(12, 270)
+        assert (x, y) == (-12, 0)
+
+    def test_calc_components_for_ne_vector(self):
+        x, y = self._calculate_x_y_components(12, 28)
+        assert (x, y) == (6, 11)
+        x, y = self._calculate_x_y_components(12, 45)
+        assert (x, y) == (8, 8)
+        x, y = self._calculate_x_y_components(12, 70)
+        assert (x, y) == (11, 4)
+
+    def test_calc_components_for_se_vector(self):
+        x, y = self._calculate_x_y_components(12, 110)
+        assert (x, y) == (11, -4)
+        x, y = self._calculate_x_y_components(12, 135)
+        assert (x, y) == (8, -8)
+        x, y = self._calculate_x_y_components(12, 160)
+        assert (x, y) == (4, -11)
+
+    def test_calc_components_for_sw_vector(self):
+        x, y = self._calculate_x_y_components(12, 200)
+        assert (x, y) == (-4, -11)
+        x, y = self._calculate_x_y_components(12, 225)
+        assert (x, y) == (-8, -8)
+        x, y = self._calculate_x_y_components(12, 250)
+        assert (x, y) == (-11, -4)
+
+    def test_calc_components_for_nw_vector(self):
+        x, y = self._calculate_x_y_components(12, 290)
+        assert (x, y) == (-11, 4)
+        x, y = self._calculate_x_y_components(12, 315)
+        assert (x, y) == (-8, 8)
+        x, y = self._calculate_x_y_components(12, 340)
+        assert (x, y) == (-4, 11)
+
+
+    # POINT TRANSLATION # # #
+
+    def test_translate_point_move_n(self):
+        start = (12, 12,)
+        heading = 0
+        distance = 25
+        end = utils.translate_point(start, heading, distance)
+        assert end == (12, 37,)
+
+    def test_translate_point_move_s(self):
+        start = (12, 12,)
+        heading = 180
+        distance = 10
+        end = utils.translate_point(start, heading, distance)
+        assert end == (12, 2,)
+
+    def test_translate_point_move_e(self):
+        start = (12, 12,)
+        heading = 90
+        distance = 10
+        end = utils.translate_point(start, heading, distance)
+        assert end == (22, 12,)
+
+    def test_translate_point_move_w(self):
+        start = (12, 12,)
+        heading = 270
+        distance = 10
+        end = utils.translate_point(start, heading, distance)
+        assert end == (2, 12,)
+
+    def test_translate_point_move_ne(self):
+        start = (12, 12,)
+        heading = 45
+        distance = 25
+        end = utils.translate_point(start, heading, distance)
+        assert end == (30, 30,)
+
+    def test_translate_point_move_se(self):
+        start = (12, 12,)
+        heading = 110
+        distance = 10
+        end = utils.translate_point(start, heading, distance)
+        assert end == (21, 9,)
+
+    def test_translate_point_move_sw(self):
+        start = (12, 12,)
+        heading = 225
+        distance = 10
+        end = utils.translate_point(start, heading, distance)
+        assert end == (5, 5,)
+
+    def test_translate_point_move_nw(self):
+        start = (12, 12,)
+        heading = 315
+        distance = 10
+        end = utils.translate_point(start, heading, distance)
+        assert end == (5, 19,)

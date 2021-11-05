@@ -1,0 +1,21 @@
+
+Frame Phases
+
+
+> SHIP DAMAGE
+    > calculate collisions between ships, weapons, and asterioids
+    > update ship
+
+> SHIP RESOURCE & MULTIFRAME SIDE EFFECTS
+    update ship battery power based on current ship state
+
+> PHYSICS
+    update the positions of server tracked objects
+
+> SHIP SIDE EFFECTS
+    update ship state
+
+> SHIP COMMANDS
+    process user commands and update state
+
+
