@@ -36,6 +36,7 @@ class ShipCommands:
 
 class ShipStateKey:
     ENGINE = 'engine'
+    MASS = 'mass'
 
 
 class Ship(BaseModel):
@@ -130,13 +131,13 @@ class Ship(BaseModel):
 
     @property
     def mass(self) -> int:
-        return (
+        return self._state.get(ShipStateKey.MASS, (
             self.battery_mass
             + self.engine_mass
             + int(self.fuel_level / constants.FUEL_MASS_UNITS_PER_KG)
             + constants.HULL_BASE_MASS
             + constants.PILOT_MASS
-        )
+        ))
 
     @property
     def engine_heading(self) -> int:
@@ -273,8 +274,8 @@ class Ship(BaseModel):
 
     def calculate_physics(self, frames_per_second: int) -> None:
         if self.engine_lit:
-            adj_meters_per_second: float = self.engine_newtons / self.mass
-            adj_meters_per_frame: float = adj_meters_per_second / frames_per_second
+            adj_meters_per_second = float(self.engine_newtons / self.mass)
+            adj_meters_per_frame = float(adj_meters_per_second / frames_per_second)
 
             delta_x, delta_y = utils2d.calculate_x_y_components(
                 adj_meters_per_frame,
@@ -289,8 +290,8 @@ class Ship(BaseModel):
 
         # Calculate new coordinates with current velocity.
         distance_meters, heading = utils2d.calculate_resultant_vector(
-            round(self.velocity_x_meters_per_second),
-            round(self.velocity_y_meters_per_second),
+            self.velocity_x_meters_per_second,
+            self.velocity_y_meters_per_second,
         )
         distance_map_units = round((distance_meters * self.map_units_per_meter) / frames_per_second)
 

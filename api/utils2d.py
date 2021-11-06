@@ -47,7 +47,15 @@ def signed_angle_to_unsigned_angle(degrees: int) -> int:
         return 360 - (pos_angle % 360)
 
 
-def calculate_resultant_vector(fx: int, fy: int) -> Tuple:
+def translate_point(point: Tuple, degrees: int, distance_map_units: int) -> Tuple:
+    px, py = point
+    radians = degrees_to_radians(degrees % 360)
+    px += (distance_map_units * math.sin(radians))
+    py += (distance_map_units * math.cos(radians))
+    return round(px), round(py)
+
+
+def calculate_resultant_vector(fx: Union[int, float], fy: Union[int, float]) -> Tuple:
     """ Given an X and Y force component, calculate the resultant force.
         Return resultant force as distance (meters) and direction (heading)
     """
@@ -108,11 +116,3 @@ def calculate_x_y_components(
         (meters * math.sin(radians)),
         (meters * math.cos(radians)),
     )
-
-
-def translate_point(point: Tuple, degrees: int, distance_map_units: int) -> Tuple:
-    px, py = point
-    radians = degrees_to_radians(degrees % 360)
-    px += (distance_map_units * math.sin(radians))
-    py += (distance_map_units * math.cos(radians))
-    return round(px), round(py)
