@@ -1312,6 +1312,173 @@ class TestShipCMDCalculatePhysics(TestCase):
             y_velocity_profile=PROFILE_DECREASE,
         )
 
+    def test_ship_position_accelerate_nw_from_with_se_velocity_into_quad_3(self):
+        """ Y velocity will steadily increase, going from negative to positive
+            X velocity will steadily decrease, going from positive to negative
+            Ship position will go from origin, into quadrant 4, then into quadrant 3
+                (and eventually to quad 2).
+        """
+
+        self.ship.velocity_x_meters_per_second = 2.0
+        self.ship.velocity_y_meters_per_second = -3.5
+        self.ship.heading = 280
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(4, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 4, 3,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_INCREASE,
+        )
+
+    def test_ship_position_accelerate_nw_from_with_se_velocity_into_quad_1(self):
+        """ Y velocity will steadily increase, going from negative to positive
+            X velocity will steadily decrease, going from positive to negative
+            Ship position will go from origin, into quadrant 4, then into quadrant 1
+                (and eventually to quad 2).
+        """
+
+        self.ship.velocity_x_meters_per_second = 3.0
+        self.ship.velocity_y_meters_per_second = -2
+        self.ship.heading = 330
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(4, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 4, 1,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_INCREASE,
+        )
+
+
+
+    def test_ship_position_accelerate_sw_from_with_ne_velocity_into_quad_2(self):
+        """ Y velocity will steadily decrease, going from positive to negative
+            X velocity will steadily decrease, going from positive to negative
+            Ship position will go from origin, into quadrant 1, then into quadrant 2
+                (and eventually to quad 3).
+        """
+
+        self.ship.velocity_x_meters_per_second = 2.0
+        self.ship.velocity_y_meters_per_second = 3.5
+        self.ship.heading = 255
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(1, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 1, 2,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
+
+    def test_ship_position_accelerate_sw_from_with_ne_velocity_into_quad_4(self):
+        """ Y velocity will steadily decrease, going from positive to negative
+            X velocity will steadily decrease, going from positive to negative
+            Ship position will go from origin, into quadrant 1, then into quadrant 2
+                (and eventually to quad 3).
+        """
+
+        self.ship.velocity_x_meters_per_second = 3.5
+        self.ship.velocity_y_meters_per_second = 2
+        self.ship.heading = 195
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(1, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 1, 4,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
+
+    def test_ship_position_accelerate_ne_from_with_sw_velocity_into_quad_2(self):
+        """ Y velocity will steadily increase, going from negative to positive
+            X velocity will steadily increase, going from negative to positive
+            Ship position will go from origin, into quadrant 3, then into quadrant 2
+                (and eventually to quad 1).
+        """
+        self.ship.velocity_x_meters_per_second = -2.5
+        self.ship.velocity_y_meters_per_second = -3.5
+        self.ship.heading = 25
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(3, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 3, 2,
+            x_velocity_profile=PROFILE_INCREASE,
+            y_velocity_profile=PROFILE_INCREASE,
+        )
+
+    def test_ship_position_accelerate_ne_from_with_sw_velocity_into_quad_4(self):
+        """ Y velocity will steadily increase, going from negative to positive
+            X velocity will steadily increase, going from negative to positive
+            Ship position will go from origin, into quadrant 3, then into quadrant 2
+                (and eventually to quad 1).
+        """
+        self.ship.velocity_x_meters_per_second = -3.5
+        self.ship.velocity_y_meters_per_second = -2.5
+        self.ship.heading = 80
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(3, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 3, 4,
+            x_velocity_profile=PROFILE_INCREASE,
+            y_velocity_profile=PROFILE_INCREASE,
+        )
+
+    def test_ship_position_accelerate_se_from_with_nw_velocity_into_quad_1(self):
+        """ Y velocity will steadily decrease, going from positive to negative
+            X velocity will steadily increase, going from negative to positive
+            Ship position will go from origin, into quadrant 2, then into quadrant 1
+                (and eventually to quad 4).
+        """
+        self.ship.velocity_x_meters_per_second = -2.5
+        self.ship.velocity_y_meters_per_second = 3.5
+        self.ship.heading = 95
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 2, 1,
+            x_velocity_profile=PROFILE_INCREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
+
+    def test_ship_position_accelerate_se_from_with_nw_velocity_into_quad_3(self):
+        """ Y velocity will steadily decrease, going from positive to negative
+            X velocity will steadily increase, going from negative to positive
+            Ship position will go from origin, into quadrant 2, then into quadrant 3
+                (and eventually to quad 4).
+        """
+        self.ship.velocity_x_meters_per_second = -3.5
+        self.ship.velocity_y_meters_per_second = 2.5
+        self.ship.heading = 150
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 2, 3,
+            x_velocity_profile=PROFILE_INCREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
+
+
 
 '''
 ███████ ███████ ████████     ██   ██ ███████  █████  ██████  ██ ███    ██  ██████
