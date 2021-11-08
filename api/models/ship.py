@@ -296,13 +296,11 @@ class Ship(BaseModel):
         )
         distance_map_units = round((distance_meters * self.map_units_per_meter) / frames_per_second)
 
-        new_x, new_y = utils2d.translate_point(
+        self.coord_x, self.coord_y = utils2d.translate_point(
             (self.coord_x, self.coord_y),
             heading,
-            distance_map_units
+            distance_map_units,
         )
-        self.coord_x = new_x
-        self.coord_y = new_y
 
 
     def calculate_side_effects(self):
