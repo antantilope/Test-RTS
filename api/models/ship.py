@@ -1,8 +1,9 @@
 
 from decimal import Decimal
+from typing import Tuple
 
 from api.models.base import BaseModel
-from api import utils
+from api import utils2d
 from api import constants
 
 
@@ -35,6 +36,7 @@ class ShipCommands:
 
 class ShipStateKey:
     ENGINE = 'engine'
+    MASS = 'mass'
 
 
 class Ship(BaseModel):
@@ -106,6 +108,9 @@ class Ship(BaseModel):
         # to support operations that occur over multiple frames.
         self._state = {}
 
+    @property
+    def coords(self) -> Tuple[int]:
+        return (self.coord_x, self.coord_y,)
 
     @property
     def h0_x1(self) -> int:
@@ -126,13 +131,13 @@ class Ship(BaseModel):
 
     @property
     def mass(self) -> int:
-        return (
+        return self._state.get(ShipStateKey.MASS, (
             self.battery_mass
             + self.engine_mass
             + int(self.fuel_level / constants.FUEL_MASS_UNITS_PER_KG)
             + constants.HULL_BASE_MASS
             + constants.PILOT_MASS
-        )
+        ))
 
     @property
     def engine_heading(self) -> int:
@@ -219,29 +224,30 @@ class Ship(BaseModel):
         if ShipStateKey.ENGINE in self._state:
             ''' ENGINE POWER DRAW (STARTING) # # # '''
             state = self._state[ShipStateKey.ENGINE]
-            if not state['starting']:
-                raise NotImplementedError
-            if self.engine_online:
-                raise NotImplementedError
+            if 'starting' in state:
+                if not state['starting']:
+                    raise NotImplementedError
+                if self.engine_online:
+                    raise NotImplementedError
 
-            startup_complete = state['last_frame'] <= self.game_frame
-            if startup_complete:
-                del self._state[ShipStateKey.ENGINE]
-                try:
-                    self.use_battery_power(
-                        self.engine_idle_power_requirement_per_frame
-                    )
-                except InsufficientPowerError:
-                    pass
-                else:
-                    self.engine_online = True
-            else:
-                try:
-                    self.use_battery_power(
-                        self.engine_activation_power_required_per_frame
-                    )
-                except InsufficientPowerError:
+                startup_complete = state['last_frame'] <= self.game_frame
+                if startup_complete:
                     del self._state[ShipStateKey.ENGINE]
+                    try:
+                        self.use_battery_power(
+                            self.engine_idle_power_requirement_per_frame
+                        )
+                    except InsufficientPowerError:
+                        pass
+                    else:
+                        self.engine_online = True
+                else:
+                    try:
+                        self.use_battery_power(
+                            self.engine_activation_power_required_per_frame
+                        )
+                    except InsufficientPowerError:
+                        del self._state[ShipStateKey.ENGINE]
 
 
         elif self.engine_online and not self.engine_lit:
@@ -267,11 +273,12 @@ class Ship(BaseModel):
                 )
 
 
-    def calculate_physics(self, frames_per_second: int):
+    def calculate_physics(self, frames_per_second: int) -> None:
         if self.engine_lit:
-            adj_meters_per_second: float = self.engine_newtons / self.mass
-            adj_meters_per_frame: float = adj_meters_per_second / frames_per_second
-            delta_x, delta_y = utils.calculate_x_y_components(
+            adj_meters_per_second = float(self.engine_newtons / self.mass)
+            adj_meters_per_frame = float(adj_meters_per_second / frames_per_second)
+
+            delta_x, delta_y = utils2d.calculate_x_y_components(
                 adj_meters_per_frame,
                 self.heading,
             )
@@ -283,19 +290,17 @@ class Ship(BaseModel):
             return
 
         # Calculate new coordinates with current velocity.
-        distance_meters, heading = utils.calculate_resultant_vector(
-            round(self.velocity_x_meters_per_second),
-            round(self.velocity_y_meters_per_second),
+        distance_meters, heading = utils2d.calculate_resultant_vector(
+            self.velocity_x_meters_per_second,
+            self.velocity_y_meters_per_second,
         )
-        distance_map_units = distance_meters * self.map_units_per_meter
+        distance_map_units = round((distance_meters * self.map_units_per_meter) / frames_per_second)
 
-        new_x, new_y = utils.translate_point(
+        self.coord_x, self.coord_y = utils2d.translate_point(
             (self.coord_x, self.coord_y),
             heading,
-            distance_map_units
+            distance_map_units,
         )
-        self.coord_x = new_x
-        self.coord_y = new_y
 
 
     def calculate_side_effects(self):
@@ -351,25 +356,25 @@ class Ship(BaseModel):
 
 
     def _set_relative_coords(self) -> None:
-        delta_degrees = utils.heading_to_delta_heading_from_zero(self.heading)
-        delta_radians = utils.degrees_to_radians(delta_degrees)
+        delta_degrees = utils2d.heading_to_delta_heading_from_zero(self.heading)
+        delta_radians = utils2d.degrees_to_radians(delta_degrees)
 
-        self.rel_rot_coord_0 = utils.rotate(
+        self.rel_rot_coord_0 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_0,
             delta_radians
         )
-        self.rel_rot_coord_1 = utils.rotate(
+        self.rel_rot_coord_1 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_1,
             delta_radians
         )
-        self.rel_rot_coord_2 = utils.rotate(
+        self.rel_rot_coord_2 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_2,
             delta_radians
         )
-        self.rel_rot_coord_3 = utils.rotate(
+        self.rel_rot_coord_3 = utils2d.rotate(
             constants.ORGIN_COORD,
             self.heading_0_rel_coord_3,
             delta_radians
