@@ -224,29 +224,30 @@ class Ship(BaseModel):
         if ShipStateKey.ENGINE in self._state:
             ''' ENGINE POWER DRAW (STARTING) # # # '''
             state = self._state[ShipStateKey.ENGINE]
-            if not state['starting']:
-                raise NotImplementedError
-            if self.engine_online:
-                raise NotImplementedError
+            if 'starting' in state:
+                if not state['starting']:
+                    raise NotImplementedError
+                if self.engine_online:
+                    raise NotImplementedError
 
-            startup_complete = state['last_frame'] <= self.game_frame
-            if startup_complete:
-                del self._state[ShipStateKey.ENGINE]
-                try:
-                    self.use_battery_power(
-                        self.engine_idle_power_requirement_per_frame
-                    )
-                except InsufficientPowerError:
-                    pass
-                else:
-                    self.engine_online = True
-            else:
-                try:
-                    self.use_battery_power(
-                        self.engine_activation_power_required_per_frame
-                    )
-                except InsufficientPowerError:
+                startup_complete = state['last_frame'] <= self.game_frame
+                if startup_complete:
                     del self._state[ShipStateKey.ENGINE]
+                    try:
+                        self.use_battery_power(
+                            self.engine_idle_power_requirement_per_frame
+                        )
+                    except InsufficientPowerError:
+                        pass
+                    else:
+                        self.engine_online = True
+                else:
+                    try:
+                        self.use_battery_power(
+                            self.engine_activation_power_required_per_frame
+                        )
+                    except InsufficientPowerError:
+                        del self._state[ShipStateKey.ENGINE]
 
 
         elif self.engine_online and not self.engine_lit:
