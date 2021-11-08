@@ -5,7 +5,13 @@ from api.models.ship import ShipStateKey
 from api import constants
 from .utils import (
     DebugShip as Ship,
+    TEST_ORIGIN,
     assert_floats_equal,
+    assert_coord_in_quadrant,
+    assert_ship_moves_from_quadrant_to_quadrant,
+    PROFILE_INCREASE,
+    PROFILE_DECREASE,
+    PROFILE_NO_CHANGE,
 )
 
 
@@ -269,8 +275,8 @@ class TestShipCMDCalculatePhysics(TestCase):
         self._reset_ship()
 
     def _reset_ship(self):
-        self.ship.coord_x = 100_000
-        self.ship.coord_y = 100_000
+        self.ship.coord_x = TEST_ORIGIN[0]
+        self.ship.coord_y = TEST_ORIGIN[1]
         self.ship.velocity_x_meters_per_second = 0
         self.ship.velocity_y_meters_per_second = 0
         self.start_x = self.ship.coord_x
@@ -668,6 +674,9 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert self.ship.coords == (100_000 - 154, self.start_y)
 
 
+    ''' ACCELERATE along cardinal headings (N/S/E/W) with retrograde heading.
+    '''
+
     def test_ship_position_accelerate_s_with_n_velocity(self):
         delta_velocity_per_frame = 0.8527131782945736
         self.ship.velocity_x_meters_per_second = 0
@@ -675,7 +684,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self.ship.heading = constants.DEGREES_SOUTH
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.0)
@@ -690,7 +699,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.0)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, delta_velocity_per_frame * -1)
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.0)
@@ -705,7 +714,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self.ship.heading = constants.DEGREES_NORTH
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.0)
@@ -720,7 +729,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.0)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, delta_velocity_per_frame * 1)
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.0)
@@ -735,7 +744,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self.ship.heading = constants.DEGREES_WEST
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, delta_velocity_per_frame * 1)
@@ -750,7 +759,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, delta_velocity_per_frame * -1)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, 0.0)
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, delta_velocity_per_frame * -2)
@@ -765,7 +774,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self.ship.heading = constants.DEGREES_EAST
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, delta_velocity_per_frame * -1)
@@ -780,7 +789,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, delta_velocity_per_frame * 1)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, 0.0)
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, delta_velocity_per_frame * 2)
@@ -788,14 +797,16 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert self.ship.coords == (100_009, 100_000)
 
 
+    ''' ACCELERATE along inter-cardinal headings (NE/SE/SW/NW) with retrograde heading.
+    '''
+
     def test_ship_position_accelerate_ne_with_sw_velocity(self):
-        delta_velocity_per_frame = 0.8527131782945736
         self.ship.velocity_x_meters_per_second = -5
         self.ship.velocity_y_meters_per_second = -5
         self.ship.heading = constants.DEGREES_NORTH_EAST
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, -4.3970)
@@ -848,13 +859,12 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert self.ship.coords == (99_915, 99_915) # +5
 
     def test_ship_position_accelerate_se_with_nw_velocity(self):
-        delta_velocity_per_frame = 0.8527131782945736
         self.ship.velocity_x_meters_per_second = -5
         self.ship.velocity_y_meters_per_second = 5
         self.ship.heading = constants.DEGREES_SOUTH_EAST
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
 
@@ -909,13 +919,12 @@ class TestShipCMDCalculatePhysics(TestCase):
 
 
     def test_ship_position_accelerate_sw_with_ne_velocity(self):
-        delta_velocity_per_frame = 0.8527131782945736
         self.ship.velocity_x_meters_per_second = 5
         self.ship.velocity_y_meters_per_second = 5
         self.ship.heading = constants.DEGREES_SOUTH_WEST
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
 
@@ -970,13 +979,12 @@ class TestShipCMDCalculatePhysics(TestCase):
 
 
     def test_ship_position_accelerate_nw_with_se_velocity(self):
-        delta_velocity_per_frame = 0.8527131782945736
         self.ship.velocity_x_meters_per_second = 5
         self.ship.velocity_y_meters_per_second = -5
         self.ship.heading = constants.DEGREES_NORTH_WEST
         self.ship.engine_lit = True
 
-        assert self.ship.coords == (100_000, 100_000)
+        assert self.ship.coords == TEST_ORIGIN
 
         self._calculate_physics()
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 4.3970)
@@ -1027,6 +1035,282 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert_floats_equal(self.ship.velocity_x_meters_per_second, -1.0296)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.0296)
         assert self.ship.coords == (100_085, 99_915)
+
+
+    ''' ACCELERATE along cardinal headings (N/S/E/W) with +/- 90 degree perpendicular heading.
+    '''
+
+    def test_ship_position_accelerate_e_from_with_n_velocity(self):
+        self.ship.velocity_x_meters_per_second = 0
+        self.ship.velocity_y_meters_per_second = 5
+        self.ship.heading = constants.DEGREES_EAST
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.8527)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 5.0)
+        assert self.ship.coords == (100_004, 100_025)
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.8527 * 2)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 5.0)
+        assert self.ship.coords == (100_012, 100_050)
+
+    def test_ship_position_accelerate_w_from_with_n_velocity(self):
+        self.ship.velocity_x_meters_per_second = 0
+        self.ship.velocity_y_meters_per_second = 5
+        self.ship.heading = constants.DEGREES_WEST
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -0.8527)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 5.0)
+        assert self.ship.coords == (99_996, 100_025)
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -0.8527 * 2)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 5.0)
+        assert self.ship.coords == (99_988, 100_050)
+
+    def test_ship_position_accelerate_e_from_with_s_velocity(self):
+        self.ship.velocity_x_meters_per_second = 0
+        self.ship.velocity_y_meters_per_second = -5
+        self.ship.heading = constants.DEGREES_EAST
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.8527)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, -5.0)
+        assert self.ship.coords == (100_004, 99_975)
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.8527 * 2)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, -5.0)
+        assert self.ship.coords == (100_012, 99_950)
+
+    def test_ship_position_accelerate_w_from_with_s_velocity(self):
+        self.ship.velocity_x_meters_per_second = 0
+        self.ship.velocity_y_meters_per_second = -5
+        self.ship.heading = constants.DEGREES_WEST
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -0.8527)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, -5.0)
+        assert self.ship.coords == (99_996, 99_975)
+
+        self._calculate_physics()
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -0.8527 * 2)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, -5.0)
+        assert self.ship.coords == (99_988, 99_950)
+
+
+    ''' ACCELERATE along headings that are normal/anti-normal with both x & y velocity.
+    '''
+    def test_ship_position_accelerate_ne_from_with_nw_velocity(self):
+        """ Y velocity will steadily increase staying positive
+            X velocity will steadily increase from negative to positive
+            Ship position will go from origin, into quadrant 2, then into quadrant 1.
+        """
+        self.ship.velocity_x_meters_per_second = -2.0
+        self.ship.velocity_y_meters_per_second = 3.5
+        self.ship.heading = 63
+        self.ship.engine_lit = True
+
+        # Ship at origin
+        assert self.ship.coords == TEST_ORIGIN
+
+        self._calculate_physics()
+        # Ship in Quad 2
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -1.2402)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 3.8871)
+        assert self.ship.coords == (99_994, 100_019)
+
+        self._calculate_physics()
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -0.4805)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 4.2742)
+        assert self.ship.coords == (99_992, 100_041)
+
+        self._calculate_physics()
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 0.2793)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 4.6614)
+        assert self.ship.coords == (99_993, 100_064)
+
+        self._calculate_physics()
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.0391)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 5.0485)
+        assert self.ship.coords == (99_998, 100_089)
+
+        self._calculate_physics()
+        # Ship in Quad 1
+        assert_coord_in_quadrant(1, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.7989)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 5.4356)
+        assert self.ship.coords == (100_007, 100_117)
+
+
+    def test_ship_position_accelerate_sw_from_with_nw_velocity(self):
+        """ Y velocity will steadily decrease, going from positive to negative
+            X velocity will steadily decrease, staying negative
+            Ship position will go from origin, into quadrant 2, then into quadrant 3.
+        """
+        self.ship.velocity_x_meters_per_second = -2.0
+        self.ship.velocity_y_meters_per_second = 3.5
+        self.ship.heading = 255
+        self.ship.engine_lit = True
+
+        # Ship at origin
+        assert self.ship.coords == TEST_ORIGIN
+
+        self._calculate_physics()
+        # Ship in Quad 2
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -2.8237)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 3.2793)
+        assert self.ship.coords == (99_986, 100_017)
+
+        self._calculate_physics()
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -3.6473)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 3.0586)
+        assert self.ship.coords == (99_968, 100_032)
+
+        self._calculate_physics()
+        assert_coord_in_quadrant(2, self.ship.coords)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, -4.4710)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 2.8379)
+        assert self.ship.coords == (99_946, 100_046)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 2, 3,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
+
+    def test_ship_position_accelerate_nw_from_with_sw_velocity(self):
+        """ Y velocity will steadily increase, going from negative to positive
+            X velocity will steadily decrease, staying negative
+            Ship position will go from origin, into quadrant 3, then into quadrant 2.
+        """
+        self.ship.velocity_x_meters_per_second = -2.0
+        self.ship.velocity_y_meters_per_second = -3.5
+        self.ship.heading = 342
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(3, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 3, 2,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_INCREASE,
+        )
+
+    def test_ship_position_accelerate_se_from_with_sw_velocity(self):
+        """ Y velocity will steadily decrease, staying negative
+            X velocity will steadily increase, going from negative to postive
+            Ship position will go from origin, into quadrant 3, then into quadrant 4.
+        """
+        self.ship.velocity_x_meters_per_second = -2.0
+        self.ship.velocity_y_meters_per_second = -3.5
+        self.ship.heading = 116
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(3, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 3, 4,
+            x_velocity_profile=PROFILE_INCREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
+
+    def test_ship_position_accelerate_sw_from_with_se_velocity(self):
+        """ Y velocity will steadily decrease, staying negative
+            X velocity will steadily decrease, going from negative to positive
+            Ship position will go from origin, into quadrant 4, then into quadrant 3.
+        """
+        self.ship.velocity_x_meters_per_second = 2.0
+        self.ship.velocity_y_meters_per_second = -3.5
+        self.ship.heading = 223
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(4, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 4, 3,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
+
+    def test_ship_position_accelerate_ne_from_with_se_velocity(self):
+        """ Y velocity will steadily increase, going from negative to positive
+            X velocity will steadily increase, staying positive
+            Ship position will go from origin, into quadrant 4, then into quadrant 1.
+        """
+        self.ship.velocity_x_meters_per_second = 2.0
+        self.ship.velocity_y_meters_per_second = -3.5
+        self.ship.heading = 50
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(4, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 4, 1,
+            x_velocity_profile=PROFILE_INCREASE,
+            y_velocity_profile=PROFILE_INCREASE,
+        )
+
+    def test_ship_position_accelerate_nw_from_with_ne_velocity(self):
+        """ Y velocity will steadily increase, staying positive
+            X velocity will steadily decrease, going from positive to negative
+            Ship position will go from origin, into quadrant 1, then into quadrant 2.
+        """
+        self.ship.velocity_x_meters_per_second = 2.0
+        self.ship.velocity_y_meters_per_second = 3.5
+        self.ship.heading = 330
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(1, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 1, 2,
+            x_velocity_profile=PROFILE_DECREASE,
+            y_velocity_profile=PROFILE_INCREASE,
+        )
+
+    def test_ship_position_accelerate_se_from_with_ne_velocity(self):
+        """ Y velocity will steadily decrease, going from positive to negative
+            X velocity will steadily increase, staying positive
+            Ship position will go from origin, into quadrant 1, then into quadrant 4.
+        """
+        self.ship.velocity_x_meters_per_second = 2.0
+        self.ship.velocity_y_meters_per_second = 3.5
+        self.ship.heading = 98
+        self.ship.engine_lit = True
+
+        assert self.ship.coords == TEST_ORIGIN
+        self._calculate_physics()
+        assert_coord_in_quadrant(1, self.ship.coords)
+        assert_ship_moves_from_quadrant_to_quadrant(
+            self.ship, self.fps, 1, 4,
+            x_velocity_profile=PROFILE_INCREASE,
+            y_velocity_profile=PROFILE_DECREASE,
+        )
 
 
 '''
