@@ -83,7 +83,7 @@
                     }
 
                     $.post({
-                        url: "/loginwithcode",
+                        url: "/api/players/loginwithcode",
                         contentType: "application/json",
                         data: JSON.stringify({handle, loginCode}),
                         success: (data, status, xhr) => {

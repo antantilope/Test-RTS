@@ -43,5 +43,4 @@ const { set_login_code } = require("../lib/db/set_login_code");
     } finally {
         db.close();
     }
-
 })()
