@@ -15,7 +15,7 @@ const { loginWithCodeController } = require("./controllers/login");
 // Webapp imports
 const { handleSocketConnection } = require("./socket_handler");
 const { get_rooms } = require("./lib/db/get_rooms");
-const locals = require("./applocals")
+const locals = require("./applocals");
 
 
 // Setup server
@@ -24,26 +24,31 @@ const expressApp = express();
 const httpServer = http.createServer(expressApp);
 const io = new socketIO.Server(httpServer);
 
-// Register static asset directories
+// Register static asset directories.
 expressApp.use('/static', express.static('static'));
 
 // JSON Parsing for HTTP requests.
 expressApp.use(express.json())
 
-// Setup session
+// Create session and bind session
 const redisClient  = redis.createClient();
-expressApp.use(expressSession({
+session = expressSession({
     secret: locals.sessionKey,
     store: new redisStore({
         host: 'localhost',
         port: 6379,
         client: redisClient,
-        ttl: 260
+        ttl: 260,
     }),
+    rolling: true,
     saveUninitialized: false,
     resave: false,
     cookie: { secure: locals.sessionCookieSecureOnly }
-}));
+})
+io.use((socket, next) => {
+    session(socket.request, socket.request.res || {}, next);
+})
+expressApp.use(session);
 
 
 io.on('connection', (socket) => handleSocketConnection(io, socket));
@@ -71,7 +76,7 @@ expressApp.get('/logout', (req, res) => {
     return res.redirect('/');
 });
 
-expressApp.get('/rooms', (req, res) => {
+expressApp.get('/rooms', async (req, res) => {
     const rooms = await get_rooms();
     return res.status(200).json(rooms);
 });
