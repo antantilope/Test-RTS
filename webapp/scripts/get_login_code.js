@@ -2,14 +2,8 @@
 
 const { get_unused_login_code } = require("../lib/db/get_unused_login_code");
 const { get_db_connection } = require("../lib/db/get_db_connection");
+const { set_login_code } = require("../lib/db/set_login_code");
 
-
-
-const setLoginCode = async (db, uuid, newCode) => {
-    const sql = 'UPDATE api_player set login_code = ? where uuid = ?'
-    const resp = await db.run(sql, [newCode, uuid]);
-    return resp;
-}
 
 
 (async function(){
@@ -33,7 +27,7 @@ const setLoginCode = async (db, uuid, newCode) => {
         if (typeof resp !== 'undefined' && resp) {
             const uuid = resp.uuid;
             const newLoginCode = await get_unused_login_code(db);
-            const updateResp = await setLoginCode(db, uuid, newLoginCode);
+            const updateResp = await set_login_code(db, uuid, newLoginCode);
             if (typeof updateResp !== 'undefined' && updateResp && updateResp.changes) {
                 console.log("login code set to " + newLoginCode);
             } else {
