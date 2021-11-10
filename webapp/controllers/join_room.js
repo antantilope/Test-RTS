@@ -90,7 +90,6 @@ exports.joinRoomController = async (req, res) => {
                 "Unable to save all changes."
             );
         }
-
     }
     catch(err) {
         throw err;

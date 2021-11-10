@@ -2,9 +2,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script
-            src="/static/js/jquery.js"
-        ></script>
+        <script src="/static/js/jquery.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
         <style>
             html {
                 font-family: arial;
@@ -40,6 +39,7 @@
                 const rowElementId = `room-row-${room.uuid}`;
                 const rowCountsElemId = rowElementId + "-counts";
                 const rowExists = $("#" + rowElementId).length > 0;
+
                 if (!rowExists && !roomFull && roomIsInLobbyPhase) {
                     /* Add row to table
                     */
@@ -113,6 +113,7 @@
 
             }
             $(document).ready(() => {
+                // Populate initial list of
                 $.get({
                     url: "/api/rooms/list",
                     success: (data, status, xhr) => {
@@ -121,6 +122,14 @@
                         }
                     }
                 });
+
+                const socket = io("ws://localhost:8000");
+                socket.on("connect", () => {
+                    console.log("Socket Connected...");
+                })
+
+
+
             });
         </script>
     </body>
