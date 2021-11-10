@@ -21,12 +21,12 @@ const validateSessionHTTPMiddleware = (req, res, next) => {
 }
 
 
-const SessionToString = (req) => {
-    return
+const abbrId = (uuid) => {
+    return Boolean(uuid) ? uuid.slice(0, 7) : ''
 }
 
 const requestLoggingMiddleware = (req, res, next) => {
-    const sessionString = `SESS(player_id:${req.session.player_id || ''} team_id:${req.session.team_id || ''} room_id:${req.session.room_id || ''})`;
+    const sessionString = `SESS(player_id:${abbrId(req.session.player_id)} team_id:${abbrId(req.session.team_id)} room_id:${abbrId(req.session.room_id)})`;
     const currDate = new Date();
     const timeString = `${currDate.getHours()}:${currDate.getMinutes()}:${currDate.getSeconds()}`
     res.on('finish', ()=>{
