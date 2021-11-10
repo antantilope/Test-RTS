@@ -108,10 +108,8 @@
                     console.warn("Could not add/update/remove room from table");
                     console.warn(room);
                 }
-
-
-
             }
+
             $(document).ready(() => {
                 // Populate initial list of
                 $.get({
@@ -126,10 +124,8 @@
                 const socket = io("ws://localhost:8000");
                 socket.on("connect", () => {
                     console.log("Socket Connected...");
-                })
-
-
-
+                });
+                socket.on("room_list_update", createOrUpdateRoomRow)
             });
         </script>
     </body>

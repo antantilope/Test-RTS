@@ -2,8 +2,9 @@
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_user_details } = require("../lib/db/get_user_details");
 const { get_room } = require("../lib/db/get_rooms");
-const { mint_team_uuid } = require("../lib/db/mint_team_uuid")
-
+const { mint_team_uuid } = require("../lib/db/mint_team_uuid");
+const { get_rooms_page_name } = require("../lib/room_names");
+const { EVENT_ROOM_LIST_UPDATE } = require("../lib/event_names");
 const {
     PHASE_0_LOBBY,
 } = require("../constants");
@@ -82,6 +83,23 @@ exports.joinRoomController = async (req, res) => {
             // Write changes to session.
             req.session.room_id = room_uuid;
             req.session.team_id = team_uuid;
+
+            // Emit socket event to rooms list page.
+            req.app.get('socketio')
+                .to(get_rooms_page_name())
+                .emit(
+                    EVENT_ROOM_LIST_UPDATE,
+                    {
+                        uuid: roomDetails.uuid,
+                        name: roomDetails.name,
+                        max_players: roomDetails.max_players,
+                        player_count: roomDetails.player_count + 1,
+                        phase: PHASE_0_LOBBY,
+                    },
+                );
+
+            // Emit socket event to room that was joined
+
 
             return res.sendStatus(201);
 

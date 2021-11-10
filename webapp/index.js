@@ -18,6 +18,7 @@ const { leaveRoomController } = require("./controllers/leave_room")
 const { handleSocketConnection } = require("./socket_handler");
 const { get_db_connection } = require("./lib/db/get_db_connection");
 const { get_rooms, get_room } = require("./lib/db/get_rooms");
+const { get_user_details } = require("./lib/db/get_user_details");
 const {
     validateSessionHTTPMiddleware,
     requestLoggingMiddleware,
@@ -32,6 +33,9 @@ const port = 8000;
 const expressApp = express();
 const httpServer = http.createServer(expressApp);
 const io = new socketIO.Server(httpServer);
+
+// Allow express app to access socket server from HTTP request context.
+expressApp.set('socketio', io);
 
 // Create session and bind as middleware.
 const redisClient  = redis.createClient();
@@ -50,7 +54,7 @@ session = expressSession({
 })
 io.use((socket, next) => {
     session(socket.request, socket.request.res || {}, next);
-})
+});
 expressApp.use(session);
 
 /* Register additional middleware.
@@ -88,14 +92,28 @@ expressApp.get('/', async (req, res) => {
     // Player is logged in and a room member.
     if(req.session.room_id && req.session.team_id) {
         let roomDetails;
+        let playerDetails;
         const db = await get_db_connection();
         try {
             roomDetails = await get_room(db, req.session.room_id);
+            playerDetails = await get_user_details(db, req.session.player_id);
         } catch (err) {
             throw err;
         } finally {
             db.close();
         }
+
+        if(!playerDetails.team_uuid) {
+            // Session thinks player is in a room, but database does not have a team.
+            // Clean up the session.
+            console.warn(
+                "Session room/team info is mismatched with database. Deleting room/team IDs from session."
+            );
+            delete req.session.team_id;
+            delete req.session.room_id;
+            return res.sendFile(path.join(__dirname, 'templates/join_room.html'));
+        }
+
         const roomInLobby = roomDetails.phase === PHASE_0_LOBBY;
         if (roomInLobby) {
             return res.sendFile(path.join(__dirname, 'templates/game_lobby.html'));
