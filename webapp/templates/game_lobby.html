@@ -170,6 +170,14 @@
                     })
                 });
 
+                const socket = io("ws://localhost:8000");
+                socket.on("connect", () => {
+                    console.log("Socket Connected...");
+                });
+                socket.on("room_list_update", data => {
+
+                });
+
             });
         </script>
     </body>

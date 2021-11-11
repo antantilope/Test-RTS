@@ -53,7 +53,10 @@ payload: {
     max_players: INT
 }
 
-if the phase does not equal lobby
+
+event name: "room_lobby_update"
+rooms: room_{ROOM_UUID}
+
 
 
 
