@@ -29,7 +29,7 @@ exports.get_rooms = async () => {
 }
 
 
-exports.get_room = async (db, roomUUID) => {
+const get_room = async (db, roomUUID) => {
     const sql = `
         SELECT
             api_room.*,
@@ -49,4 +49,28 @@ exports.get_room = async (db, roomUUID) => {
     const resp = await statement.get(roomUUID);
     await statement.finalize();
     return resp;
+}
+exports.get_room = get_room;
+
+
+exports.get_room_and_player_details = async (db, roomUUID) => {
+    const roomDetails = await get_room(db, roomUUID);
+
+    const playersSQL = `
+        SELECT
+            api_player.uuid AS player_uuid,
+            api_player.handle AS handle,
+            api_player.team_id AS team_uuid,
+            api_team.is_observer AS is_observer
+        FROM api_player
+        LEFT JOIN api_team ON api_team.uuid = api_player.team_id
+        LEFT JOIN api_room ON api_room.uuid = api_team.room_id
+        WHERE api_room.uuid = ?;
+    `;
+    const players = await db.all(playersSQL, [roomUUID]);
+
+    return {
+        roomDetails,
+        players,
+    }
 }
