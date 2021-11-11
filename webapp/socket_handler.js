@@ -2,7 +2,9 @@
 
 const { get_db_connection } = require("./lib/db/get_db_connection")
 const { get_room } = require("./lib/db/get_rooms");
+const { get_user_details } = require("./lib/db/get_user_details");
 const { PHASE_0_LOBBY } = require("./constants");
+const { EVENT_PUBMSG } = require("./lib/event_names");
 
 const {
     get_rooms_page_name,
@@ -14,6 +16,7 @@ const {
 exports.handleSocketConnection = async (io, socket) => {
     console.log("socket connected, ID: " + socket.id);
     socket.on("disconnect", ()=>{
+        socket.rooms
         console.log("socket disconnected, ID: " + socket.id)
     });
 
@@ -47,11 +50,36 @@ exports.handleSocketConnection = async (io, socket) => {
         finally {
             db.close();
         }
+        // Join rooms
         socket.join(get_room_room_name(sess_room_id));
         if(roomDetails.phase !== PHASE_0_LOBBY) {
             console.log("adding socket to team room")
             socket.join(get_team_room_name(sess_room_id, sess_team_id));
         }
+
+        // Register listener handlers for events from the client
+        socket.on(EVENT_PUBMSG, async (message) => {
+            const db = await get_db_connection()
+            let userDetails;
+            try {
+                userDetails = await get_user_details(db, socket.request.session.player_id);
+            }
+            catch(err) {
+                throw err;
+            }
+            finally {
+                db.close();
+            }
+            console.log({pubmsg: message});
+            console.log({session: socket.request.session});
+            const outmsg = `${userDetails.handle} 💬 ${message}`;
+            console.log(outmsg);
+            console.log()
+            io.to(get_room_room_name(sess_room_id)).emit(
+                EVENT_PUBMSG,
+                outmsg,
+            );
+        });
     }
     else
     {

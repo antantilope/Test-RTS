@@ -45,7 +45,7 @@ room_{ROOM_UUID}_{TEAM_UUID}
 event name: "room_list_update"
 rooms: rooms_page
 description: this event delivers changes to the "list of rooms" page.
-payload: {
+payload: data:{
     uuid: { ROOM-UUID }
     phase: { ROOM-PHASE }
     name: { ROOM-NAME }
@@ -56,7 +56,33 @@ payload: {
 
 event name: "room_lobby_update"
 rooms: room_{ROOM_UUID}
+description: this event delivers changes to a specific game lobby
+payload: msg: str, data {
+    "roomDetails":{
+        "uuid":"48a431e1-969f-4065-abd4-c941c4c45a70",
+        "name":"join now!",
+        "max_players":2,
+        "room_owner":"a5211f08-8a3b-46c0-9e12-533564e2fbe9",
+        "phase":"0-lobby",
+        "player_count":2
+    },
+    "players":[
+        {
+            "player_uuid":"a5211f08-8a3b-46c0-9e12-533564e2fbe9",
+            "handle":"wetswater12",
+            "team_uuid":"4920658a-49dc-4f77-811b-ae30f3aa1f6a",
+            "is_observer":0
+        }, {
+            "player_uuid":"919daafb-d735-418c-a286-cd482b7dded0",
+            "handle":"wetwater",
+            "team_uuid":"1d956ee1-e038-42e3-83ed-ba65c6dc3bc9",
+            "is_observer":0
+        }
+    ],
+    "userIsOwner":true
+}
 
-
-
-
+event name: "pubmsg"
+rooms: room_{ROOM_UUID}, room_{ROOM_UUID}_{TEAM_UUID}
+description a chat (instant message) that is sent to all players in a room/game
+payload: msg: str

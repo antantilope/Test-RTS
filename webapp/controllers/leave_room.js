@@ -1,9 +1,13 @@
 
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_team_details } = require("../lib/db/get_team_details")
-const { get_rooms_page_name } = require("../lib/room_names");
-const { get_room } = require("../lib/db/get_rooms");
-const { EVENT_ROOM_LIST_UPDATE } = require("../lib/event_names");
+const { get_user_details } = require("../lib/db/get_user_details")
+const { get_rooms_page_name, get_room_room_name } = require("../lib/room_names");
+const { get_room, get_room_and_player_details } = require("../lib/db/get_rooms");
+const {
+    EVENT_ROOM_LIST_UPDATE,
+    EVENT_LOBBY_UPDATE,
+} = require("../lib/event_names");
 const {
     PHASE_0_LOBBY,
 } = require("../constants");
@@ -48,11 +52,15 @@ exports.leaveRoomController = async (req, res) => {
     // Update database
     const db = await get_db_connection();
     let roomDetails;
+    let updatedRoom;
+    let playerDetails;
     try {
         roomDetails = await get_room(db, sess_room_id);
         const teamDetails = await get_team_details(db, sess_team_id);
         const deleteTeam = teamDetails.player_count === 1;
         await removePlayerFromRoom(db, sess_player_id, sess_team_id, deleteTeam);
+        updatedRoom = await get_room_and_player_details(db, sess_room_id);
+        playerDetails = await get_user_details(db, sess_player_id);
     } catch(err) {
         throw err
     } finally {
@@ -75,6 +83,15 @@ exports.leaveRoomController = async (req, res) => {
                 player_count: roomDetails.player_count - 1,
                 phase: PHASE_0_LOBBY,
             },
+        )
+
+    // Emit socket event to game lobby.
+    req.app.get("socketio")
+        .to(get_room_room_name(sess_room_id))
+        .emit(
+            EVENT_LOBBY_UPDATE,
+            updatedRoom,
+            `🤖📢 ${playerDetails.handle} has left 👋`,
         )
 
     return res.sendStatus(204);

@@ -93,7 +93,13 @@
             <div class="room-chat-container section-container gray-border">
                 <div>
                     <h2>Chat</h2>
+                    <button id="chat-send-msg">
+                        send
+                    </button>
+                    <input type="text" id="chat-input">
                     <hr>
+                    <div id="chat-messages">
+                    </div>
                 </div>
             </div>
         </div>
@@ -103,6 +109,7 @@
                 console.log({roomDetails, players, userIsOwner});
 
                 if(userIsOwner) {
+                    console.log("adding");
                     $("#start-game-btn").css("display", "block");
                 }
 
@@ -133,7 +140,16 @@
                 });
 
             }
-
+            function addToChat(text) {
+                const newMsg = document.createElement("div");
+                $(newMsg).text(text);
+                $(newMsg).css('display', 'none');
+                $("#chat-messages").prepend(newMsg);
+                $(newMsg).slideDown();
+                setTimeout(()=>{
+                    $(newMsg).fadeOut();
+                }, 8000);
+            }
             $(document).ready(() => {
 
                 $.get({
@@ -167,18 +183,37 @@
                             console.error({err, status, xhr});
                             alert("an error occured");
                         }
-                    })
+                    });
                 });
 
                 const socket = io("ws://localhost:8000");
                 socket.on("connect", () => {
                     console.log("Socket Connected...");
                 });
-                socket.on("room_list_update", data => {
-
+                socket.on("room_lobby_update", (data, msg) => {
+                    console.log({room_lobby_update: data});
+                    drawLobby(
+                        data.roomDetails,
+                        data.players,
+                    );
+                    if(typeof msg !== "undefined") {
+                        addToChat(msg);
+                    }
                 });
-
+                socket.on("pubmsg", msg => {
+                    console.log({pubmsg: msg});
+                    addToChat(msg);
+                });
+                $("#chat-send-msg").click(() =>{
+                    const msg = $("#chat-input").val();
+                    if(msg) {
+                        $("#chat-input").val("");
+                        socket.emit("pubmsg", msg);
+                    }
+                });
             });
+
+
         </script>
     </body>
 </html>

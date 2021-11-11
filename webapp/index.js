@@ -80,8 +80,23 @@ expressApp.get('/', async (req, res) => {
     /* Landing Page
     */
 
-    // Player is not logged in
-    if (!req.session.player_id) {
+    if(req.session.player_id){
+        // Player is logged in, Sync Session with SSOT
+        const db = await get_db_connection();
+        try {
+            const playerDetails = await get_user_details(db, req.session.player_id);
+            if(typeof playerDetails !== "undefined") {
+                req.session.team_id = playerDetails.team_uuid;
+                req.session.room_id = playerDetails.room_uuid;
+            }
+        } catch (err) {
+            throw err;
+        } finally {
+            db.close();
+        }
+    }
+    else {
+        // Player is not logged in
         return res.sendFile(path.join(__dirname, 'templates/login_with_code.html'));
     }
 

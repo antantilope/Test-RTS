@@ -1,10 +1,13 @@
 
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_user_details } = require("../lib/db/get_user_details");
-const { get_room } = require("../lib/db/get_rooms");
+const { get_room_and_player_details, get_room } = require("../lib/db/get_rooms");
 const { mint_team_uuid } = require("../lib/db/mint_team_uuid");
-const { get_rooms_page_name } = require("../lib/room_names");
-const { EVENT_ROOM_LIST_UPDATE } = require("../lib/event_names");
+const { get_rooms_page_name, get_room_room_name } = require("../lib/room_names");
+const {
+    EVENT_ROOM_LIST_UPDATE,
+    EVENT_LOBBY_UPDATE
+} = require("../lib/event_names");
 const {
     PHASE_0_LOBBY,
 } = require("../constants");
@@ -62,16 +65,16 @@ exports.joinRoomController = async (req, res) => {
             );
         }
 
-        const roomDetails = await get_room(db, room_uuid);
-        if (typeof roomDetails === 'undefined') {
+        let room = await get_room_and_player_details(db, room_uuid);
+        if (typeof room.roomDetails === 'undefined') {
             console.error("Unable To Find Room to Join.");
             return res.status(500).send("Could not find room with id " + room_uuid)
         }
 
-        if(roomDetails.player_count >= roomDetails.max_players) {
+        if(room.roomDetails.player_count >= room.roomDetails.max_players) {
             return res.status(400).send("Room is full.");
         }
-        if(roomDetails.phase !== PHASE_0_LOBBY) {
+        if(room.roomDetails.phase !== PHASE_0_LOBBY) {
             return res.status(400).send("Cannot join room.");
         }
 
@@ -80,6 +83,12 @@ exports.joinRoomController = async (req, res) => {
         const resp = await addPlayerToRoom(db, sess_player_id, room_uuid, team_uuid);
 
         if (resp.length === resp.filter(r => r.changes === 1).length) {
+
+            // Refresh room data.
+            room = await get_room_and_player_details(db, room_uuid);
+            delete room.roomDetails.port;
+            room.userIsOwner = room.roomDetails.room_owner === req.session.player_id
+
             // Write changes to session.
             req.session.room_id = room_uuid;
             req.session.team_id = team_uuid;
@@ -90,16 +99,22 @@ exports.joinRoomController = async (req, res) => {
                 .emit(
                     EVENT_ROOM_LIST_UPDATE,
                     {
-                        uuid: roomDetails.uuid,
-                        name: roomDetails.name,
-                        max_players: roomDetails.max_players,
-                        player_count: roomDetails.player_count + 1,
+                        uuid: room.roomDetails.uuid,
+                        name: room.roomDetails.name,
+                        max_players: room.roomDetails.max_players,
+                        player_count: room.roomDetails.player_count,
                         phase: PHASE_0_LOBBY,
                     },
                 );
 
             // Emit socket event to room that was joined
-
+            req.app.get('socketio')
+                .to(get_room_room_name(room.roomDetails.uuid))
+                .emit(
+                    EVENT_LOBBY_UPDATE,
+                    room,
+                    `🤖📢 ${userDetails.handle} has joined 👋`,
+                );
 
             return res.sendStatus(201);
 
