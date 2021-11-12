@@ -139,6 +139,8 @@ $ npm run-script builddev
 ## Start webserver & socket server
 
 ```bash
+# From the webapp/ directory
+
 $ node index.js
 
 # OR (npm i nodemon)
