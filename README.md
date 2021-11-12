@@ -11,7 +11,7 @@
 
 ### Python
 
-Install python3.8.X from <a href="https://www.python.org" target="_blank">python.org</a>
+Install python3.8.X (or better) from <a href="https://www.python.org" target="_blank">python.org</a>
 
 
 ### SQL Database setup
