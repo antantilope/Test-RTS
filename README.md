@@ -126,14 +126,22 @@ $ nodemon index.js
 ```
 
 <hr>
+
 ## How to contribute
 
 ```bash
 # Create a branch
 $ git checkout -b js_readme_update
+
+# Make changes
 $ vim README.md
 
 $ git add .
 $ git commit -m "added change to readme"
-$ git push
+
+# First time pushing, afterwards you can just run "git push"
+$ git push --set-upstream origin js_readme_update
+
 ```
+
+### Create a pull request
