@@ -1,6 +1,12 @@
 # voidstar3
 
-## Tech Stack
+
+![](https://media3.giphy.com/media/3FjEPbKqEPhPpmC8uY/giphy.gif?cid=ecf05e47mhdcyehw2x36vt8rt3rsohj4gf8f0d1dim455am2&rid=giphy.gif&ct=g)
+
+
+<hr>
+
+## Stack
 
 ![VSTS (1)](https://user-images.githubusercontent.com/20848221/141389162-c5eafebc-eac0-47b1-a110-c0262ff9d8e4.jpg)
 
@@ -165,7 +171,7 @@ $ git push
 
 ![Screenshot from 2021-11-12 09-39-32](https://user-images.githubusercontent.com/20848221/141484954-35dfd211-e6bf-4477-bdfa-8358a8103046.png)
 
-### DO NOT MERGE THE PR. I WILL DO IT.
+### 🛑 🚨 DO NOT MERGE THE PR. I WILL DO IT 🚨 🛑
 
 ### After your branch is merged with main
 
