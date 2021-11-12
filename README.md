@@ -169,7 +169,7 @@ $ git add .
 $ git commit -m "more changes"
 $ git push
 
-# When you're done making changes, pdate feature branch with latest commits from master
+# When you're done making changes, update feature branch with latest commits from master
 $ git checkout main
 $ git pull
 $ git checkout js_readme_update
