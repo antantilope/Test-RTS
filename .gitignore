@@ -1,4 +1,8 @@
 
-env/
 *ipynb
+*.sqlite3
+
+env/
 __pycache__/
+.ipynb_checkpoints/
+applocals.*

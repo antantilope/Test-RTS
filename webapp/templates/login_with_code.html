@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="/static/js/jquery.js"></script>
+        <style>
+            html {
+                font-family: arial;
+            }
+        </style>
+    </head>
+    <body>
+        <div style="display:flex; justify-content: center;">
+            <div>
+                <h1>Hello 👋</h1>
+                <h2>Login with Code</h2>
+                <div id="error-area" style="display:none; color:rgb(255, 0, 0);">
+
+                </div>
+                <div style="border:2px solid #727272; border-radius:4px; margin-top:3rem; padding:2rem;">
+                    <div style="margin-bottom: 5px; font-size:125%;">
+                        Game Name*
+                    </div>
+                    <div>
+                        <input
+                            id="login-code-handle"
+                            type="text"
+                            placeholder="Enter Game Name Here"
+                        >
+                    </div>
+                    <div style="margin-bottom: 5px; font-size:125%; margin-top:2rem;">
+                        Login Code*
+                    </div>
+                    <div>
+                        <input
+                            id="login-code-input"
+                            type="text"
+                            placeholder="Enter Login Code Here"
+                        >
+                    </div>
+                    <div style="margin-top:2rem;">
+                        <button
+                            id="login-btn"
+                            style="font-weight:bold; font-size:112%"
+                        >
+                            Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function drawError(text) {
+                $("#error-area").text(text);
+                $("#error-area").css('display', 'block');
+            }
+            function clearErrors() {
+                $("#error-area").text("");
+                $("#error-area").css('display', 'none');
+            }
+            $(document).ready(() => {
+                $('#login-btn').click(()=>{
+                    if ($("#login-btn").prop("disabled")) {
+                        console.warn("button is disabled");
+                        return;
+                    }
+                    clearErrors();
+                    $("#login-btn").prop("disabled", true);
+
+                    const errors = []
+                    const loginCode = $("#login-code-input").val();
+                    const handle = $("#login-code-handle").val();
+                    if (!handle) {
+                        errors.push("Game name is required.");
+                    }
+                    if (!loginCode) {
+                        errors.push("Login code is required.");
+                    }
+                    if (errors.length) {
+                        drawError(errors.join(' '));
+                        $("#login-btn").prop("disabled", false);
+                        return;
+                    }
+
+                    $.post({
+                        url: "/api/players/loginwithcode",
+                        contentType: "application/json",
+                        data: JSON.stringify({handle, loginCode}),
+                        success: (data, status, xhr) => {
+                            if(xhr.status === 200) {
+                                location.reload();
+                            } else {
+                                $("#login-btn").prop("disabled", false);
+                                drawError("Yikes! Received an unexpected response from the server");
+                                console.warn({data, status, xhr});
+                            }
+                        },
+                        error: (xhr, status, error) => {
+                            $("#login-btn").prop("disabled", false);
+                            if(xhr.status === 404) {
+                                drawError("Could not find your player");
+                            } else {
+                                drawError("Yikes! An unknown error occured");
+                            }
+                        }
+
+                    })
+                });
+            })
+        </script>
+    </body>
+</html>

@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="/static/js/jquery.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <style>
+            html {
+                font-family: arial;
+            }
+            .room-row {
+                display: flex;
+                justify-content: space-evenly;
+                padding: 1rem;
+                margin: 2rem;
+                border: 1px solid #a7a7a7;
+            }
+            .join-btn {
+                font-weight: bold;
+                background-color: #003600;
+                color: #ffffff;
+                font-size: 120%;
+                border-radius: 4px;
+            }
+        </style>
+    </head>
+    <body style="margin-left:3rem;">
+        <div>
+            <h1>Join a Room</h1>
+        </div>
+        <div id="room-list">
+
+        </div>
+        <script>
+            function createOrUpdateRoomRow(room) {
+                console.log("updating room list", room);
+                const roomFull = room.player_count >= room.max_players;
+                const roomIsInLobbyPhase = room.phase === '0-lobby';
+                const rowElementId = `room-row-${room.uuid}`;
+                const rowCountsElemId = rowElementId + "-counts";
+                const rowExists = $("#" + rowElementId).length > 0;
+
+                if (!rowExists && !roomFull && roomIsInLobbyPhase) {
+                    /* Add row to table
+                    */
+                    const rowElem = document.createElement('div');
+                    $(rowElem).addClass('room-row');
+                    $(rowElem).attr("id", rowElementId);
+
+                    // First Column, room name
+                    const rowColName = document.createElement('div');
+                    $(rowColName).text(room.name);
+                    $(rowElem).append(rowColName)
+
+                    // Second Column, room player counts
+                    const rowColCounts = document.createElement('div');
+                    $(rowColCounts).attr("id", rowCountsElemId);
+                    $(rowColCounts).text(`${room.player_count} / ${room.max_players}`);
+                    $(rowElem).append(rowColCounts);
+
+                    // Third Column, join room button
+                    const rowColJoinBtn = document.createElement('div');
+                    const joinBtn = document.createElement('button');
+                    $(joinBtn).text("Join");
+                    $(joinBtn).addClass("join-btn");
+
+                    $(joinBtn).click(() => {
+                        $(joinBtn).prop("disabled", true);
+                        $.post({
+                            url: "/api/rooms/join",
+                            contentType: "application/json",
+                            data: JSON.stringify({room_uuid: room.uuid}),
+                            success: (data, status, xhr) => {
+                                if(xhr.status === 201) {
+                                    location.reload();
+                                } else {
+                                    $(joinBtn).prop("disabled", false);
+                                    alert("Yikes! Received an unexpected response from the server");
+                                    console.error({data, status, xhr});
+                                }
+                            },
+                            error: (xhr, status, error) => {
+                                $(joinBtn).prop("disabled", false);
+                                console.error({xhr, status, error});
+                                alert("An Error Occured.");
+                            }
+
+                        })
+                    })
+                    rowColJoinBtn.append(joinBtn);
+                    $(rowElem).append(rowColJoinBtn);
+                    $("#room-list").append(rowElem)
+                }
+
+                else if (rowExists && !roomFull && roomIsInLobbyPhase) {
+                    /* Update row
+                    */
+                    $("#" + rowCountsElemId).text(`${room.player_count} / ${room.max_players}`)
+                }
+
+                else if (rowExists && (roomFull || !roomIsInLobbyPhase)) {
+                    /* Remove row from table
+                    */
+                    $("#" + rowElementId).remove();
+                }
+
+                else {
+                    console.warn("Could not add/update/remove room from table");
+                    console.warn(room);
+                }
+            }
+
+            $(document).ready(() => {
+                // Populate initial list of
+                $.get({
+                    url: "/api/rooms/list",
+                    success: (data, status, xhr) => {
+                        if (xhr.status === 200) {
+                            data.forEach(createOrUpdateRoomRow);
+                        }
+                    }
+                });
+
+                const socket = io("ws://localhost:8000");
+                socket.on("connect", () => {
+                    console.log("Socket Connected...");
+                });
+                socket.on("room_list_update", createOrUpdateRoomRow)
+            });
+        </script>
+    </body>
+</html>

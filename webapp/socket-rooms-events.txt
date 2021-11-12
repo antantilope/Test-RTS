@@ -1,0 +1,88 @@
+
+SOCKET IO ROOM NAMES
+
+██████   ██████   ██████  ███    ███ ███████
+██   ██ ██    ██ ██    ██ ████  ████ ██
+██████  ██    ██ ██    ██ ██ ████ ██ ███████
+██   ██ ██    ██ ██    ██ ██  ██  ██      ██
+██   ██  ██████   ██████  ██      ██ ███████
+
+rooms_page
+    Users are placed in this room when they connect from join_room.html
+    users are removed from this room when they disconnect (by leaving join_room.html)
+    this room receives events anytime a room in phase 0-lobby changes. Changes include
+            > player joins
+            > player leaves
+            > room phase changes
+
+
+room_{ROOM_UUID}
+    users are placed in this room when they connect from "game_lobby.html" or "game.html"
+    users are removed from this room when they leave the lobby/game or the game/lobby is deleted
+        this room receives events that are meant for all players in the room
+            > game start/countdown
+            > game ending (win condition)
+            > chat message
+
+
+room_{ROOM_UUID}_{TEAM_UUID}
+    users are placed in this room when the connect from game.html
+    users are removed from this room when they leave the game or the game is deleted
+        this room receives event's that are scoped for a specific team.
+        If the team is not an observer team then these events respect and enforce "Fog of War"
+
+
+
+------------------------------------------------------------------------
+
+███████ ██    ██ ███████ ███    ██ ████████ ███████
+██      ██    ██ ██      ████   ██    ██    ██
+█████   ██    ██ █████   ██ ██  ██    ██    ███████
+██       ██  ██  ██      ██  ██ ██    ██         ██
+███████   ████   ███████ ██   ████    ██    ███████
+
+
+event name: "room_list_update"
+rooms: rooms_page
+description: this event delivers changes to the "list of rooms" page.
+payload: data:{
+    uuid: { ROOM-UUID }
+    phase: { ROOM-PHASE }
+    name: { ROOM-NAME }
+    player_count: INT
+    max_players: INT
+}
+
+
+event name: "room_lobby_update"
+rooms: room_{ROOM_UUID}
+description: this event delivers changes to a specific game lobby
+payload: msg: str, data {
+    "roomDetails":{
+        "uuid":"48a431e1-969f-4065-abd4-c941c4c45a70",
+        "name":"join now!",
+        "max_players":2,
+        "room_owner":"a5211f08-8a3b-46c0-9e12-533564e2fbe9",
+        "phase":"0-lobby",
+        "player_count":2
+    },
+    "players":[
+        {
+            "player_uuid":"a5211f08-8a3b-46c0-9e12-533564e2fbe9",
+            "handle":"wetswater12",
+            "team_uuid":"4920658a-49dc-4f77-811b-ae30f3aa1f6a",
+            "is_observer":0
+        }, {
+            "player_uuid":"919daafb-d735-418c-a286-cd482b7dded0",
+            "handle":"wetwater",
+            "team_uuid":"1d956ee1-e038-42e3-83ed-ba65c6dc3bc9",
+            "is_observer":0
+        }
+    ],
+    "userIsOwner":true
+}
+
+event name: "pubmsg"
+rooms: room_{ROOM_UUID}, room_{ROOM_UUID}_{TEAM_UUID}
+description a chat (instant message) that is sent to all players in a room/game
+payload: msg: str
