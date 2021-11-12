@@ -1,4 +1,5 @@
 
+static/ng/
 node_modules/
 applocals.js
 *.rdb

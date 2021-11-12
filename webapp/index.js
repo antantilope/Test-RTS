@@ -60,6 +60,14 @@ expressApp.use(session);
 
 /* Register additional middleware.
 */
+expressApp.use((req, res, next) => {
+    if (/^\/static\/ng\/(index\.html)?$/.test(req.url)) {
+        console.warn("WARNING: Blocking direct access to /static/ng/index.html")
+        res.sendStatus(404);
+    } else {
+        next();
+    }
+});
 expressApp.use('/static', express.static('static'));
 expressApp.use(express.json());
 expressApp.use(requestLoggingMiddleware);
