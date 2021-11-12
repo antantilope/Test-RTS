@@ -7,6 +7,8 @@ const path = require('path');
 const express = require('express');
 const socketIO = require("socket.io");
 const helmet = require('helmet');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
 const redis = require("redis");
 const expressSession = require('express-session');
 const redisStore = require('connect-redis')(expressSession);
@@ -39,6 +41,7 @@ const io = new socketIO.Server(httpServer);
 expressApp.set('socketio', io);
 
 // Create session and bind as middleware.
+expressApp.use(cookieParser())
 const redisClient  = redis.createClient();
 session = expressSession({
     secret: locals.sessionKey,
@@ -57,6 +60,15 @@ io.use((socket, next) => {
     session(socket.request, socket.request.res || {}, next);
 });
 expressApp.use(session);
+
+/* Setup CSRF middleware
+*/
+const csrfProtection = csrf({ cookie: true });
+expressApp.use(csrfProtection);
+expressApp.use((req, res, next) => {
+    res.cookie('csrftoken', req.csrfToken());
+    next();
+});
 
 /* Register additional middleware.
 */
@@ -84,7 +96,7 @@ io.on('connection', (socket) => handleSocketConnection(io, socket));
 /*
  *   Register HTTP Routes
  */
-expressApp.get('/', async (req, res) => {
+expressApp.get('/', csrfProtection, async (req, res) => {
     /* Landing Page
     */
 
@@ -143,9 +155,7 @@ expressApp.get('/', async (req, res) => {
             return res.sendFile(path.join(__dirname, 'templates/game_lobby.html'));
         } else {
             // Entry point to angular application.
-            return res.sendFile(
-                path.join(__dirname, 'static/ng/index.html'),
-            );
+            return res.sendFile(path.join(__dirname, 'static/ng/index.html'));
         }
 
     }
