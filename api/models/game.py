@@ -115,6 +115,12 @@ class Game(BaseModel):
         self._validate_can_add_player(request['player_id'])
         self._players[request['player_id']] = request
 
+    def remove_player(self, player_id: str):
+        try:
+            self._players.pop(player_id)
+        except KeyError as e:
+            print("could not delete player, KeyError, player_id ", player_id, e)
+            pass
 
     def _validate_can_add_player(self, player_id: str):
         if self._phase != GamePhase.LOBBY:

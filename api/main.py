@@ -13,10 +13,12 @@ class TCPHandlerException(Exception):
 
 class TCPHandler(socketserver.StreamRequestHandler):
 
+    # TODO Add tthis to init?
     game = Game()
 
     # Phase 0
     CMD_ROOT_ADD_PLAYER = 'add_player'
+    CMD_ROOT_REMOVE_PLAYER = 'remove_player'
     CMD_ROOT_CONFIGURE_MAP = 'configure_map'
     CMD_ROOT_ADVANCE_TO_PHASE_1_STARTING = 'advance_to_phase_1_starting'
 
@@ -45,6 +47,10 @@ class TCPHandler(socketserver.StreamRequestHandler):
 
         elif command_root == self.CMD_ROOT_ADD_PLAYER:
             self.game.register_player(request)
+
+        elif command_root == self.CMD_ROOT_REMOVE_PLAYER:
+            player_id = request
+            self.game.remove_player(player_id)
 
         elif command_root == self.CMD_ROOT_CONFIGURE_MAP:
             self.game.configure_map(request)
