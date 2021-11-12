@@ -143,7 +143,9 @@ expressApp.get('/', async (req, res) => {
             return res.sendFile(path.join(__dirname, 'templates/game_lobby.html'));
         } else {
             // Entry point to angular application.
-            return res.sendFile(path.join(__dirname, 'templates/index.html'));
+            return res.sendFile(
+                path.join(__dirname, 'static/ng/index.html'),
+            );
         }
 
     }
