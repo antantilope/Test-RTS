@@ -158,3 +158,10 @@ $ git push
 ```
 
 ### Create a pull request
+
+![Screenshot from 2021-11-12 09-37-32](https://user-images.githubusercontent.com/20848221/141484910-aacbdc3f-f9e4-47bd-acfb-591d00a3df46.png)
+
+### Add comments describing changes
+
+![Screenshot from 2021-11-12 09-39-32](https://user-images.githubusercontent.com/20848221/141484954-35dfd211-e6bf-4477-bdfa-8358a8103046.png)
+
