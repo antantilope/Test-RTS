@@ -1,8 +1,8 @@
 import socket
 import sys
 
-HOST, PORT = "localhost", 5556
-data = " ".join(sys.argv[1:])
+HOST, PORT = "localhost", 8005
+data = '{"ping":{}}'
 
 # Create a socket (SOCK_STREAM means a TCP socket)
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
