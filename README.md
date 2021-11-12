@@ -107,6 +107,7 @@ $ redis-cli
 
 
 ### Add users and a room
+
 ```bash
 node scripts/create_superuser.js Jonst
 node scripts/create_user.js leeHDrew
@@ -117,6 +118,19 @@ node scripts/print_users.js
 node scripts/create_room.js USE_PLAYER_UUID_HERE "Test Room" 2 8001 0
 node scripts/get_login_code.js USE_PLAYER_UUID_HERE
 node scripts/get_login_code.js USE_PLAYER_UUID_HERE
+```
+
+### Install & Setup Angular
+
+```bash
+$ cd webapp/appclient
+$ npm install
+
+# if you hit dependancy conflict errors because of Jasmin/Karma
+$ npm install --force
+
+# Build dev assets and watch for changes
+$ npm run-script builddev
 ```
 
 
@@ -182,3 +196,11 @@ $ git pull
 # Delete branch
 $ git branch -d js_readme_update
 ```
+
+<hr>
+
+## Cross Site Request Forgery (CSRF)
+ - All responses from the express application will set a cookie called `csrftoken`
+ - All unsafe requests to the express application (POST/PUT/PATCH/DELETE) must include the header `csrf-token`
+
+

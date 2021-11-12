@@ -7,6 +7,8 @@ const path = require('path');
 const express = require('express');
 const socketIO = require("socket.io");
 const helmet = require('helmet');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
 const redis = require("redis");
 const expressSession = require('express-session');
 const redisStore = require('connect-redis')(expressSession);
@@ -39,6 +41,7 @@ const io = new socketIO.Server(httpServer);
 expressApp.set('socketio', io);
 
 // Create session and bind as middleware.
+expressApp.use(cookieParser())
 const redisClient  = redis.createClient();
 session = expressSession({
     secret: locals.sessionKey,
@@ -58,8 +61,25 @@ io.use((socket, next) => {
 });
 expressApp.use(session);
 
+/* Setup CSRF middleware
+*/
+const csrfProtection = csrf({ cookie: true });
+expressApp.use(csrfProtection);
+expressApp.use((req, res, next) => {
+    res.cookie('csrftoken', req.csrfToken());
+    next();
+});
+
 /* Register additional middleware.
 */
+expressApp.use((req, res, next) => {
+    if (/^\/static\/ng\/(index\.html)?$/.test(req.url)) {
+        console.warn("WARNING: Blocking direct access to /static/ng/index.html")
+        res.sendStatus(404);
+    } else {
+        next();
+    }
+});
 expressApp.use('/static', express.static('static'));
 expressApp.use(express.json());
 expressApp.use(requestLoggingMiddleware);
@@ -134,7 +154,8 @@ expressApp.get('/', async (req, res) => {
         if (roomInLobby) {
             return res.sendFile(path.join(__dirname, 'templates/game_lobby.html'));
         } else {
-            return res.send("<h1>GAME PAGE!</h1>")
+            // Entry point to angular application.
+            return res.sendFile(path.join(__dirname, 'static/ng/index.html'));
         }
 
     }

@@ -111,6 +111,35 @@
             }
 
             $(document).ready(() => {
+
+                // Start of CSRF Setup //
+                function csrfSafeMethod(method) {
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+                window.csrftoken = (function (cname) {
+                    let name = cname + "=";
+                    let decodedCookie = decodeURIComponent(document.cookie);
+                    let ca = decodedCookie.split(';');
+                    for(let i = 0; i <ca.length; i++) {
+                        let c = ca[i];
+                        while (c.charAt(0) == ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return "";
+                })("csrftoken");
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("csrf-token", window.csrftoken);
+                        }
+                    }
+                });
+                // End of CSRF Setup //
+
                 // Populate initial list of
                 $.get({
                     url: "/api/rooms/list",
