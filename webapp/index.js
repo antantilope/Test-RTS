@@ -96,7 +96,7 @@ io.on('connection', (socket) => handleSocketConnection(io, socket));
 /*
  *   Register HTTP Routes
  */
-expressApp.get('/', csrfProtection, async (req, res) => {
+expressApp.get('/', async (req, res) => {
     /* Landing Page
     */
 

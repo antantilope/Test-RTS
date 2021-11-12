@@ -196,3 +196,10 @@ $ git pull
 # Delete branch
 $ git branch -d js_readme_update
 ```
+
+
+## Cross Site Request Forgery (CSRF)
+ - All respondes from the express application will set a cookie called `csrftoken`
+ - All unsafe requests to the express application (POST/PUT/PATCH/DELETE) must include the header `csrf-token`
+
+
