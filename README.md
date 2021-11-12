@@ -20,7 +20,7 @@ For now there is nothing that needs to be done here because django is configured
 
 ### Setup a Python Virtual Environment and Install Packages
 ```bash
-# from the project root run
+# from the project root rungit s
 $ pip install virtualenv
 $ virtualenv env
 $ source env/bin/activate
@@ -69,6 +69,9 @@ $ touch applocals.js
 ```
 ```node
 // Example applocals.js
+
+
+// DO NOT COMMIT THIS FILE
 
 exports.sessionKey = "secret key goes here"
 exports.sessionCookieSecureOnly = false // for testing only
