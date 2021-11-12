@@ -138,10 +138,23 @@ $ vim README.md
 
 $ git add .
 $ git commit -m "added change to readme"
-
 # First time pushing, afterwards you can just run "git push"
 $ git push --set-upstream origin js_readme_update
 
+$ git add .
+$ git commit -m "more changes"
+$ git push
+
+$ git add .
+$ git commit -m "more changes"
+$ git push
+
+# When you're done making changes, pdate feature branch with latest commits from master
+$ git checkout main
+$ git pull
+$ git checkout js_readme_update
+$ git merge main
+$ git push
 ```
 
 ### Create a pull request
