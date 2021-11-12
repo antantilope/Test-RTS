@@ -203,4 +203,55 @@ $ git branch -d js_readme_update
  - All responses from the express application will set a cookie called `csrftoken`
  - All unsafe requests to the express application (POST/PUT/PATCH/DELETE) must include the header `csrf-token`
 
+```js
+// Including token on Angular SPA.
+
+// No extra work needs to be done. The http client is configured to include the token.
+@NgModule({
+  imports: [
+    HttpClientXsrfModule.withOptions({
+      cookieName: 'csrftoken',
+      headerName: 'csrf-token',
+    }),
+  ]
+})
+export class AppModule { }
+```
+
+```js
+// Including token on vanilla JS/JQuery page.
+
+// Add this code to "ready" handler
+$(document).ready(() => {
+
+    window.csrftoken = (function (cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    })("csrftoken");
+    function csrfSafeMethod(method) {
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("csrf-token", window.csrftoken);
+            }
+        }
+    });
+
+});
+
+```
+
 
