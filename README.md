@@ -18,6 +18,13 @@ Install python3.8.X from <a href="https://www.python.org" target="_blank">python
 For now there is nothing that needs to be done here because django is configured to use sqlite.
 
 
+### Download Code
+```bash
+$ git clone git@github.com:stricoff92/voidstar3.git
+$ cd voidstar3
+```
+
+
 ### Setup a Python Virtual Environment and Install Packages
 ```bash
 # from the project root rungit s
@@ -107,8 +114,6 @@ node scripts/get_login_code.js USE_PLAYER_UUID_HERE
 ```
 
 
-
-
 <hr>
 
 ## Start webserver & socket server
@@ -118,4 +123,17 @@ $ node index.js
 
 # OR (npm i nodemon)
 $ nodemon index.js
+```
+
+<hr>
+## How to contribute
+
+```bash
+# Create a branch
+$ git checkout -b js_readme_update
+$ vim README.md
+
+$ git add .
+$ git commit -m "added change to readme"
+$ git push
 ```
