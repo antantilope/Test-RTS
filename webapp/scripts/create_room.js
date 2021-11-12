@@ -1,12 +1,14 @@
 
+const tcpPortUsed = require('tcp-port-used');
+
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { mint_room_uuid } = require("../lib/db/mint_room_uuid");
 const { mint_team_uuid } = require("../lib/db/mint_team_uuid");
-const { get_user_details } = require("../lib/db/get_user_details")
-const tcpPortUsed = require('tcp-port-used');
+const { get_user_details } = require("../lib/db/get_user_details");
+const { killProcess,  spawnPythonSocketServer } = require("../lib/pyprocess");
 
 
-const create = async (db, room_uuid, port, owner_uuid, room_name, max_players, owner_is_observer) => {
+const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_players, owner_is_observer) => {
     /*
         Create a room, team, and assign the room owner to the newly created team.
     */
@@ -14,8 +16,8 @@ const create = async (db, room_uuid, port, owner_uuid, room_name, max_players, o
 
     const sql1 = `
         INSERT INTO api_room
-        (uuid, name, port, max_players, room_owner, phase)
-        VALUES (?, ?, ?, ?, ?, "0-lobby")
+        (uuid, name, port, pid, max_players, room_owner, phase)
+        VALUES (?, ?, ?, ?, ?, ?, "0-lobby")
     `;
     const sql2 = `
         INSERT INTO api_team
@@ -26,7 +28,7 @@ const create = async (db, room_uuid, port, owner_uuid, room_name, max_players, o
         UPDATE api_player SET team_id = ? WHERE uuid = ?
     `;
     return Promise.all([
-        db.run(sql1, [room_uuid, room_name, port, max_players, owner_uuid]),
+        db.run(sql1, [room_uuid, room_name, port, pid, max_players, owner_uuid]),
         db.run(sql2, [owner_team_uuid, room_uuid, owner_is_observer]),
         db.run(sql3, [owner_team_uuid, owner_uuid]),
     ]);
@@ -71,7 +73,10 @@ const create = async (db, room_uuid, port, owner_uuid, room_name, max_players, o
         throw new Error("That port is currently in use.");
     }
 
+    // Spawn python socket server process.
+    const pythonPID = spawnPythonSocketServer(port);
 
+    // Write changes to database
     const db = await get_db_connection();
     try {
         const ownerDetails = await get_user_details(db, room_owner);
@@ -85,7 +90,7 @@ const create = async (db, room_uuid, port, owner_uuid, room_name, max_players, o
         }
 
         const roomUUID = await mint_room_uuid(db);
-        const resp = await create(db, roomUUID, port, room_owner, room_name, max_players, ownerIsObserver);
+        const resp = await create(db, roomUUID, port, pythonPID, room_owner, room_name, max_players, ownerIsObserver);
         if (resp.length === resp.filter(r => r.changes === 1).length) {
             console.log("Room Created!");
         } else {
@@ -95,9 +100,11 @@ const create = async (db, room_uuid, port, owner_uuid, room_name, max_players, o
 
     }
     catch (err) {
+        killProcess(pythonPID);
         throw err
     }
     finally {
         db.close();
     }
+
 })();

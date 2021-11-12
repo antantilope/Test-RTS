@@ -3,6 +3,7 @@ import argparse
 import json
 from typing import Dict
 import socketserver
+import uuid
 
 from api.models.game import Game
 
@@ -15,6 +16,9 @@ class TCPHandler(socketserver.StreamRequestHandler):
 
     # TODO Add tthis to init?
     game = Game()
+
+    # Debug
+    CMD_ROOT_PING = 'ping'
 
     # Phase 0
     CMD_ROOT_ADD_PLAYER = 'add_player'
@@ -34,6 +38,9 @@ class TCPHandler(socketserver.StreamRequestHandler):
 
     def build_write_payload(self) -> bytes:
         return json.dumps(self.game.get_state()).encode()
+
+    def build_ping_response(self) -> bytes:
+        return f"Hello {uuid.uuid4().hex[:6]}".encode()
 
     def handle(self):
         payload = self.read_stripped_line()
@@ -60,6 +67,10 @@ class TCPHandler(socketserver.StreamRequestHandler):
 
         elif command_root == self.CMD_ROOT_DECR_PHASE_1_STARTING_COUNTDOWN:
             self.game.decr_phase_1_starting_countdown()
+
+        elif command_root == self.CMD_ROOT_PING:
+            self.wfile.write(self.build_ping_response())
+            return
 
         else:
             raise TCPHandlerException("NotImplementedError")

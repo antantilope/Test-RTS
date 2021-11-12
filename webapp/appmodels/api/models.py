@@ -12,6 +12,7 @@ class BaseModel(models.Model):
 class Room(BaseModel):
     name = models.TextField()
     port = models.PositiveSmallIntegerField()
+    pid = models.PositiveSmallIntegerField()
     max_players = models.PositiveSmallIntegerField()
     room_owner = models.CharField(max_length=100)
 
