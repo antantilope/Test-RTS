@@ -166,7 +166,7 @@ $ git push
 ![Screenshot from 2021-11-12 09-39-32](https://user-images.githubusercontent.com/20848221/141484954-35dfd211-e6bf-4477-bdfa-8358a8103046.png)
 
 
-### After code your branch is merged with main
+### After your branch is merged with main
 
 ```bash
 $ git checkout main
