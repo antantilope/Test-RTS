@@ -40,7 +40,7 @@ exports.leaveRoomController = async (req, res) => {
     const sess_team_id = req.session.team_id;
 
     if (!sess_player_id) {
-        return res.sendStatus(403);
+        return res.sendStatus(401);
     }
     if (!sess_room_id && !sess_team_id) {
         return res.status(400).send("session does not contain room_id or team_id");
