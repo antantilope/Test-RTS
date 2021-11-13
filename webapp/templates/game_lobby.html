@@ -68,6 +68,9 @@
                 font-style: italic;
                 color: #505050;
             }
+            #admin-link-container {
+                display: none;
+            }
         </style>
     </head>
     <body style="margin-left:1rem;">
@@ -80,6 +83,12 @@
                     Leave Room
                 </button>
             </div>
+        </div>
+        <div>
+            Logged in as <span id="logged-in-as-span" style="font-weight:bold;"></span>, <a href="/logout">Logout</a>
+        </div>
+        <div id="admin-link-container">
+            <a href="/admin">Admin</a>
         </div>
         <hr>
         <div style="display:flex; justify-content:space-evenly; ">
@@ -300,8 +309,19 @@
                             data.userIsOwner,
                         );
                     },
+                });
 
-                })
+                $.get({
+                    url: "/api/users/details",
+                    success: (data, status, xhr) => {
+                        if(xhr.status === 200) {
+                            $("#logged-in-as-span").text(data.handle);
+                            if(data.is_superuser) {
+                                $("#admin-link-container").css("display", "block");
+                            }
+                        }
+                    }
+                });
 
                 $("#leave-room-btn").click(() => {
                     $("#leave-room-btn").prop("disabled", true);
