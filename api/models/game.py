@@ -73,6 +73,7 @@ class Game(BaseModel):
 
     def get_state(self) -> GameState:
         base_state = {
+            'ok': True,
             'phase': self._phase,
             'game_frame': self._game_frame,
             'players': self._players,

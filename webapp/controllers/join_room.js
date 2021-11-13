@@ -42,7 +42,7 @@ exports.joinRoomController = async (req, res) => {
 
     // Validate session data
     if (!sess_player_id) {
-        return res.sendStatus(403);
+        return res.sendStatus(401);
     }
     if (sess_room_id || sess_team_id) {
         return res.status(400).send(

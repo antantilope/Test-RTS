@@ -86,3 +86,12 @@ event name: "pubmsg"
 rooms: room_{ROOM_UUID}, room_{ROOM_UUID}_{TEAM_UUID}
 description a chat (instant message) that is sent to all players in a room/game
 payload: msg: str
+
+
+event name: "mapconfig"
+rooms: room_{ROOM_UUID}
+description: an async update from a POST req by room owner to configure the map
+payload: data: {
+    x_km: int,
+    y_km: int,
+}

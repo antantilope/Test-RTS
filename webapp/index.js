@@ -18,6 +18,7 @@ const { loginWithCodeController } = require("./controllers/login");
 const { joinRoomController } = require("./controllers/join_room");
 const { leaveRoomController } = require("./controllers/leave_room");
 const { roomDetailsController } = require("./controllers/room_details");
+const { configureMapController } = require("./controllers/configure_map");
 const { handleSocketConnection } = require("./socket_handler");
 const { get_db_connection } = require("./lib/db/get_db_connection");
 const { get_rooms, get_room } = require("./lib/db/get_rooms");
@@ -185,6 +186,7 @@ expressApp.get('/api/rooms/list', async (req, res) => {
 expressApp.post('/api/rooms/join', joinRoomController);
 expressApp.post('/api/rooms/leave', leaveRoomController);
 expressApp.get('/api/rooms/details', roomDetailsController);
+expressApp.post('/api/rooms/configure', configureMapController);
 
 
 // Launch the HTTP Server

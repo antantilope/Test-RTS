@@ -25,8 +25,10 @@
                 width:40%;
                 border-radius: 4px;;
             }
-            #start-game-btn {
+            #game-owner-form {
                 display: none;
+            }
+            #start-game-btn {
                 background-color: rgb(0, 53, 0);
                 color: #ffffff;
                 font-weight: bold;
@@ -75,10 +77,26 @@
         <div style="display:flex; justify-content:space-evenly; ">
             <div class="room-info-container section-container gray-border">
                 <div><h2 id="room-name-heading"></h2></div>
-                <div>
-                    <button id="start-game-btn">
-                        Start Game
-                    </button>
+                <div id="game-owner-form">
+                    <div style="padding:3px; border:1px solid #000000; display:inline-block">
+                        <h3>Map Size</h3>
+                        <div>
+                            <input type="number" placeholder="X Axis KM Length" id="x-axis-input">
+                        </div>
+                        <div>
+                            <input type="number" placeholder="Y Axis KM Length" id="y-axis-input">
+                        </div>
+                        <div style="margin-top: 4px;">
+                            <button id="save-config-btn" style="background-color: #520055; color:#ffffff; padding:0.2rem; font-weight:bold; border-radius:3px;">
+                                Apply Configuration
+                            </button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <button id="start-game-btn">
+                            Start Game
+                        </button>
+                    </div>
                 </div>
                 <hr>
                 <div class="section-header" style="margin-top:2rem;">Observers</div>
@@ -104,16 +122,48 @@
             </div>
         </div>
         <script>
+            function addToChat(text) {
+                const newMsg = document.createElement("div");
+                $(newMsg).text(text);
+                $(newMsg).css('display', 'none');
+                $("#chat-messages").prepend(newMsg);
+                $(newMsg).slideDown();
+                setTimeout(()=>{
+                    $(newMsg).fadeOut();
+                }, 8000);
+            }
             function drawLobby(roomDetails, players, userIsOwner) {
                 console.log("drawing lobby");
                 console.log({roomDetails, players, userIsOwner});
 
                 if(userIsOwner) {
                     console.log("adding");
-                    $("#start-game-btn").css("display", "block");
+                    $("#game-owner-form").css("display", "block");
+                    $("#save-config-btn").click(()=>{
+                        const x = Math.floor(parseInt($("#x-axis-input").val()) * 10000); // 10 units per M * 1000M = 10000 units per KM
+                        const y = Math.floor(parseInt($("#y-axis-input").val()) * 10000); //
+                        if (x < 10000 || y < 10000 || isNaN(x) || isNaN(y)) {
+                            return alert("x and y must be positive");
+                        }
+
+                        $.post({
+                            url: "/api/rooms/configure",
+                            contentType: "application/json",
+                            data: JSON.stringify({x_unit_length:x, y_unit_length: y}),
+                            success: (data, status, xhr) => {
+                                if(xhr.status === 202) {
+                                    addToChat("Map resize being processed");
+                                    $("#x-axis-input").val('');
+                                    $("#y-axis-input").val('');
+                                } else {
+                                    addToChat("unexpected response from server " + status);
+                                }
+                            }
+                        });
+                    });
                 }
 
-                $("#room-name-heading").text(roomDetails.name)
+                $("#room-name-heading").text(roomDetails.name);
 
                 $("#observers-list").html("");
                 players.filter(p => p.is_observer).forEach(p => {
@@ -140,16 +190,7 @@
                 });
 
             }
-            function addToChat(text) {
-                const newMsg = document.createElement("div");
-                $(newMsg).text(text);
-                $(newMsg).css('display', 'none');
-                $("#chat-messages").prepend(newMsg);
-                $(newMsg).slideDown();
-                setTimeout(()=>{
-                    $(newMsg).fadeOut();
-                }, 8000);
-            }
+
             $(document).ready(() => {
 
                 // Start of CSRF Setup //
@@ -232,6 +273,9 @@
                 socket.on("pubmsg", msg => {
                     console.log({pubmsg: msg});
                     addToChat(msg);
+                });
+                socket.on("mapconfig", (data) => {
+                    addToChat("🤖📢 the map has udated: " + `${data.x_km} x ${data.y_km} KM`);
                 });
                 $("#chat-send-msg").click(() =>{
                     const msg = $("#chat-input").val();
