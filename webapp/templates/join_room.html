@@ -22,11 +22,20 @@
                 font-size: 120%;
                 border-radius: 4px;
             }
+            #admin-link-container {
+                display: none;
+            }
         </style>
     </head>
     <body style="margin-left:3rem;">
         <div>
             <h1>Join a Room</h1>
+        </div>
+        <div>
+            Logged in as <span id="logged-in-as-span" style="font-weight:bold;"></span>, <a href="/logout">Logout</a>
+        </div>
+        <div id="admin-link-container">
+            <a href="/admin">Admin</a>
         </div>
         <div id="room-list">
 
@@ -146,6 +155,18 @@
                     success: (data, status, xhr) => {
                         if (xhr.status === 200) {
                             data.forEach(createOrUpdateRoomRow);
+                        }
+                    }
+                });
+
+                $.get({
+                    url: "/api/users/details",
+                    success: (data, status, xhr) => {
+                        if(xhr.status === 200) {
+                            $("#logged-in-as-span").text(data.handle);
+                            if(data.is_superuser) {
+                                $("#admin-link-container").css("display", "block");
+                            }
                         }
                     }
                 });
