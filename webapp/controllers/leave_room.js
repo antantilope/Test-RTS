@@ -1,4 +1,7 @@
 
+
+const net = require('net');
+
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_team_details } = require("../lib/db/get_team_details")
 const { get_user_details } = require("../lib/db/get_user_details")
@@ -7,6 +10,7 @@ const { get_room, get_room_and_player_details } = require("../lib/db/get_rooms")
 const {
     EVENT_ROOM_LIST_UPDATE,
     EVENT_LOBBY_UPDATE,
+    EVENT_PUBMSG
 } = require("../lib/event_names");
 const {
     PHASE_0_LOBBY,
@@ -92,7 +96,38 @@ exports.leaveRoomController = async (req, res) => {
             EVENT_LOBBY_UPDATE,
             updatedRoom,
             `🤖📢 ${playerDetails.handle} has left 👋`,
-        )
+        );
+
+
+    // Send
+    const client = new net.Socket();
+    client.connect(roomDetails.port, 'localhost', () => {
+        console.log(" write " + JSON.stringify({add_player:{player_name: playerDetails.handle, player_id:playerDetails.uuid}}));
+        client.write(
+            JSON.stringify({remove_player:playerDetails.uuid}) + "\n"
+        );
+    });
+    client.on("data", data => {
+        client.destroy();
+        let respData;
+        try {
+            respData = JSON.parse(data);
+        } catch(err) {
+            console.error("expected JSON data, got", data);
+            throw err;
+        }
+        console.log(respData)
+        if(respData.ok) {
+            req.app.get('socketio')
+                .to(get_room_room_name(sess_room_id))
+                .emit(
+                    EVENT_PUBMSG,
+                    `🤖✅ ${playerDetails.handle} unregistered with game service`,
+                );
+        }
+
+    });
+
 
     return res.sendStatus(204);
 }

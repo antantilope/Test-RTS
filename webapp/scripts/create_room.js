@@ -1,12 +1,15 @@
 
 const tcpPortUsed = require('tcp-port-used');
+const net = require('net');
 
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { mint_room_uuid } = require("../lib/db/mint_room_uuid");
 const { mint_team_uuid } = require("../lib/db/mint_team_uuid");
 const { get_user_details } = require("../lib/db/get_user_details");
 const { killProcess,  spawnPythonSocketServer } = require("../lib/pyprocess");
-
+const {
+    EVENT_PUBMSG
+} = require("../lib/event_names");
 
 const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_players, owner_is_observer) => {
     /*
@@ -78,8 +81,9 @@ const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_playe
 
     // Write changes to database
     const db = await get_db_connection();
+    let ownerDetails;
     try {
-        const ownerDetails = await get_user_details(db, room_owner);
+        ownerDetails = await get_user_details(db, room_owner);
         if (typeof ownerDetails == 'undefined') {
             throw new Error("Room owner not found, id " + room_owner);
         }
@@ -106,5 +110,28 @@ const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_playe
     finally {
         db.close();
     }
+
+    setTimeout(() =>{
+        // delay this action because socket server will refuse connection if we immediatly try to connect.
+        console.log("Opening connection to game socket on port " + port)
+        const client = new net.Socket();
+        client.connect(port, 'localhost', () => {
+            console.log(" write " + JSON.stringify({add_player:{player_name: ownerDetails.handle, player_id:ownerDetails.uuid}}));
+            client.write(
+                JSON.stringify({add_player:{player_name: ownerDetails.handle, player_id:ownerDetails.uuid}}) + "\n"
+            );
+        });
+        client.on("data", data => {
+            client.destroy();
+            let respData;
+            try {
+                respData = JSON.parse(data);
+            } catch(err) {
+                console.error("expected JSON data, got", data);
+                throw err;
+            }
+            console.log(respData)
+        });
+    }, 1000);
 
 })();
