@@ -1,4 +1,7 @@
 
+
+const net = require('net');
+
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_user_details } = require("../lib/db/get_user_details");
 const { get_room_and_player_details, get_room } = require("../lib/db/get_rooms");
@@ -6,7 +9,8 @@ const { mint_team_uuid } = require("../lib/db/mint_team_uuid");
 const { get_rooms_page_name, get_room_room_name } = require("../lib/room_names");
 const {
     EVENT_ROOM_LIST_UPDATE,
-    EVENT_LOBBY_UPDATE
+    EVENT_LOBBY_UPDATE,
+    EVENT_PUBMSG
 } = require("../lib/event_names");
 const {
     PHASE_0_LOBBY,
@@ -66,6 +70,7 @@ exports.joinRoomController = async (req, res) => {
         }
 
         let room = await get_room_and_player_details(db, room_uuid);
+        let port = room.roomDetails.port;
         if (typeof room.roomDetails === 'undefined') {
             console.error("Unable To Find Room to Join.");
             return res.status(500).send("Could not find room with id " + room_uuid)
@@ -115,6 +120,36 @@ exports.joinRoomController = async (req, res) => {
                     room,
                     `🤖📢 ${userDetails.handle} has joined 👋`,
                 );
+
+            console.log("Opening connection to game socket on port " + port)
+            const client = new net.Socket();
+            client.connect(port, 'localhost', () => {
+                console.log(" write " + JSON.stringify({add_player:{player_name: userDetails.handle, player_id:userDetails.uuid}}));
+                client.write(
+                    JSON.stringify({add_player:{player_name: userDetails.handle, player_id:userDetails.uuid}}) + "\n"
+                );
+            });
+            client.on("data", data => {
+                client.destroy();
+                let respData;
+                try {
+                    respData = JSON.parse(data);
+                } catch(err) {
+                    console.error("expected JSON data, got", data);
+                    throw err;
+                }
+                console.log(respData)
+                if(respData.ok) {
+                    console.log("emitting")
+                    req.app.get('socketio')
+                        .to(get_room_room_name(room.roomDetails.uuid))
+                        .emit(
+                            EVENT_PUBMSG,
+                            `🤖✅ ${userDetails.handle} registered with game service`,
+                        );
+                }
+
+            });
 
             return res.sendStatus(201);
 
