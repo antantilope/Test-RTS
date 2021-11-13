@@ -1,7 +1,7 @@
 
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_room_and_player_details } = require("../lib/db/get_rooms");
-
+const { logger } = require("../lib/logger");
 
 exports.roomDetailsController = async (req, res) => {
     if(!req.session.player_id) {
@@ -18,13 +18,14 @@ exports.roomDetailsController = async (req, res) => {
     try {
         roomDetailsAndPlayers = await get_room_and_player_details(db, roomUUID)
     } catch(err) {
-        console.error(err);
+        logger.error(err);
         return res.status(500).send('INTERNAL ERROR');
     } finally {
         await db.close();
     }
 
     delete roomDetailsAndPlayers.roomDetails.port;
+    delete roomDetailsAndPlayers.roomDetails.pid;
     roomDetailsAndPlayers.userIsOwner = roomDetailsAndPlayers.roomDetails.room_owner === req.session.player_id
 
     return res.status(200).json(roomDetailsAndPlayers);

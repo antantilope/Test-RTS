@@ -15,7 +15,7 @@ const {
 const {
     PHASE_0_LOBBY,
 } = require("../constants");
-
+const { logger } = require("../lib/logger");
 
 
 const addPlayerToRoom = async (db, player_uuid, room_uuid, team_uuid) => {
@@ -54,12 +54,15 @@ exports.joinRoomController = async (req, res) => {
         );
     }
 
+
+    logger.info("Adding player too room, saving changes to database...")
+
     const db = await get_db_connection();
     try {
         // Validate database data
         const userDetails = await get_user_details(db, sess_player_id);
         if (typeof userDetails === 'undefined') {
-            console.error("Unable To Find User");
+            logger.error("Unable To Find User " + sess_player_id);
             return res.status(500).send("Could not find user with id " + sess_player_id)
         }
 
@@ -72,7 +75,7 @@ exports.joinRoomController = async (req, res) => {
         let room = await get_room_and_player_details(db, room_uuid);
         let port = room.roomDetails.port;
         if (typeof room.roomDetails === 'undefined') {
-            console.error("Unable To Find Room to Join.");
+            logger.error("Unable To Find Room to Join " + room_uuid);
             return res.status(500).send("Could not find room with id " + room_uuid)
         }
 
@@ -89,16 +92,20 @@ exports.joinRoomController = async (req, res) => {
 
         if (resp.length === resp.filter(r => r.changes === 1).length) {
 
+            logger.silly("Changes saved to database");
+
             // Refresh room data.
             room = await get_room_and_player_details(db, room_uuid);
             delete room.roomDetails.port;
             room.userIsOwner = room.roomDetails.room_owner === req.session.player_id
 
             // Write changes to session.
+            logger.silly("updating session");
             req.session.room_id = room_uuid;
             req.session.team_id = team_uuid;
 
             // Emit socket event to rooms list page.
+            logger.silly("emitting room list update event");
             req.app.get('socketio')
                 .to(get_rooms_page_name())
                 .emit(
@@ -113,6 +120,7 @@ exports.joinRoomController = async (req, res) => {
                 );
 
             // Emit socket event to room that was joined
+            logger.silly("emitting lobby update event");
             req.app.get('socketio')
                 .to(get_room_room_name(room.roomDetails.uuid))
                 .emit(
@@ -121,26 +129,27 @@ exports.joinRoomController = async (req, res) => {
                     `🤖📢 ${userDetails.handle} has joined 👋`,
                 );
 
-            console.log("Opening connection to game socket on port " + port)
+            logger.info("Connecting to GameAPI port " + port);
             const client = new net.Socket();
             client.connect(port, 'localhost', () => {
-                console.log(" write " + JSON.stringify({add_player:{player_name: userDetails.handle, player_id:userDetails.uuid}}));
-                client.write(
-                    JSON.stringify({add_player:{player_name: userDetails.handle, player_id:userDetails.uuid}}) + "\n"
-                );
+                logger.info("connected to GameAPI");
+                const dataToWrite = JSON.stringify({add_player:{player_name: userDetails.handle, player_id:userDetails.uuid}}) + "\n";
+                logger.info("writing data to GameAPI " + dataToWrite);
+                client.write(dataToWrite);
             });
             client.on("data", data => {
+                logger.info("received add_player response from GameAPI, disconnecting...");
                 client.destroy();
                 let respData;
                 try {
                     respData = JSON.parse(data);
                 } catch(err) {
-                    console.error("expected JSON data, got", data);
+                    logger.error("expected JSON data, got", data);
                     throw err;
                 }
-                console.log(respData)
+                logger.silly(data)
                 if(respData.ok) {
-                    console.log("emitting")
+                    logger.info("emitting " + EVENT_PUBMSG + " event");
                     req.app.get('socketio')
                         .to(get_room_room_name(room.roomDetails.uuid))
                         .emit(
@@ -154,6 +163,8 @@ exports.joinRoomController = async (req, res) => {
             return res.sendStatus(201);
 
         } else {
+            logger.error("unexpected database response");
+            logger.error(JSON.stringify(resp));
             return res.status(500).send(
                 "Unable to save all changes."
             );

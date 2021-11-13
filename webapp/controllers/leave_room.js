@@ -15,6 +15,7 @@ const {
 const {
     PHASE_0_LOBBY,
 } = require("../constants");
+const { logger } = require("../lib/logger");
 
 
 const removePlayerFromRoom = async (db, player_uuid, team_uuid, deleteTeam) => {
@@ -53,7 +54,9 @@ exports.leaveRoomController = async (req, res) => {
         return res.status(500).send("invalid session");
     }
 
+
     // Update database
+    logger.info("Removing player from room, saving changes to database...");
     const db = await get_db_connection();
     let roomDetails;
     let updatedRoom;
@@ -70,12 +73,15 @@ exports.leaveRoomController = async (req, res) => {
     } finally {
         db.close()
     }
+    logger.info("Changes saved to database");
 
     // Update Session
+    logger.silly("updating session");
     delete req.session.room_id;
     delete req.session.team_id;
 
     // Emit socket event to rooms list page.
+    logger.silly("emitting room list update event");
     req.app.get("socketio")
         .to(get_rooms_page_name())
         .emit(
@@ -90,6 +96,7 @@ exports.leaveRoomController = async (req, res) => {
         )
 
     // Emit socket event to game lobby.
+    logger.silly("emitting lobby update event");
     req.app.get("socketio")
         .to(get_room_room_name(sess_room_id))
         .emit(
@@ -100,24 +107,29 @@ exports.leaveRoomController = async (req, res) => {
 
 
     // Send
+    logger.info("Connecting to GameAPI port " + roomDetails.port);
     const client = new net.Socket();
     client.connect(roomDetails.port, 'localhost', () => {
-        console.log(" write " + JSON.stringify({add_player:{player_name: playerDetails.handle, player_id:playerDetails.uuid}}));
-        client.write(
-            JSON.stringify({remove_player:playerDetails.uuid}) + "\n"
-        );
+        logger.info("connected to GameAPI");
+        const dataToWrite = JSON.stringify({remove_player:playerDetails.uuid}) + "\n";
+        logger.info("writing data to GameAPI " + dataToWrite);
+        client.write(dataToWrite);
     });
     client.on("data", data => {
+        logger.info("received remove_player response from GameAPI, disconnecting...");
         client.destroy();
         let respData;
         try {
             respData = JSON.parse(data);
         } catch(err) {
-            console.error("expected JSON data, got", data);
+            logger.error("expected JSON data, got");
+            logger.error(err);
+            logger.error(data);
             throw err;
         }
-        console.log(respData)
+        logger.silly(data);
         if(respData.ok) {
+            logger.info("emitting " + EVENT_PUBMSG + " event");
             req.app.get('socketio')
                 .to(get_room_room_name(sess_room_id))
                 .emit(

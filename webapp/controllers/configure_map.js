@@ -7,6 +7,7 @@ const { get_room_room_name } = require("../lib/room_names");
 const { get_room } = require("../lib/db/get_rooms");
 const { PHASE_0_LOBBY } = require("../constants")
 const { EVENT_MAPCONFIG } = require("../lib/event_names");
+const { logger } = require("../lib/logger");
 
 
 exports.configureMapController = async (req, res) => {
@@ -33,7 +34,7 @@ exports.configureMapController = async (req, res) => {
         return res.status(400).send("invalid x_unit_length, y_unit_length, must be > 10000")
     }
 
-
+    logger.silly("Configuring map, saving changes to database...");
     const db = await get_db_connection();
     let userDetails;
     let room;
@@ -64,15 +65,19 @@ exports.configureMapController = async (req, res) => {
         db.close();
     }
 
+    logger.silly("Changes saved to database, updating GameAPI...");
     res.sendStatus(202);
 
+    logger.info("Connecting to GameAPI port " + room.port)
     const client = new net.Socket();
     client.connect(room.port, 'localhost', () => {
-        client.write(
-            `{"configure_map":{"units_per_meter":${units_per_meter}, "x_unit_length":${x_unit_length}, "y_unit_length":${y_unit_length}}}\n`
-        );
+        logger.info("connected to GameAPI");
+        const dataToWrite = `{"configure_map":{"units_per_meter":${units_per_meter}, "x_unit_length":${x_unit_length}, "y_unit_length":${y_unit_length}}}\n`
+        logger.info("writing data to GameAPI" + dataToWrite);
+        client.write(dataToWrite);
     });
     client.on("data", data => {
+        logger.info("received configure configure_map from GameAPI, disconnecting...")
         client.destroy();
         let respData;
         try {
@@ -81,8 +86,9 @@ exports.configureMapController = async (req, res) => {
             console.error("expected JSON data, got", data);
             throw err;
         }
+        logger.silly(data);
         if(respData.ok) {
-            console.log(EVENT_MAPCONFIG);
+            logger.info("emitting " + EVENT_MAPCONFIG + " event");
             req.app.get('socketio')
                 .to(get_room_room_name(room.uuid))
                 .emit(
@@ -94,4 +100,5 @@ exports.configureMapController = async (req, res) => {
                 );
         }
     });
+
 }

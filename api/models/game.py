@@ -52,6 +52,8 @@ class RunFrameDetails(TypedDict):
 
 class Game(BaseModel):
 
+    BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players', 'map_config',)
+
     def __init__(self):
         super().__init__()
 
