@@ -28,10 +28,12 @@ const doCountdown = (room_id, req, port) => {
         try {
             respData = JSON.parse(data);
         } catch(err) {
-            logger.error("expected JSON data, got", data);
+            logger.error("expected JSON data, got");
+            logger.error(err);
+            logger.error(data)
             throw err;
         }
-        logger.silly(respData);
+        logger.silly(data);
 
         if(respData.ok && respData.phase === PHASE_1_STARTING)
         {
@@ -97,7 +99,7 @@ exports.startGameController = startGameController = async (req, res) => {
             return res.status(400).send("not enough players in the room");
         }
 
-        logger.silly("Updating DB, setting phase = ", PHASE_1_STARTING)
+        logger.silly("Updating DB, setting phase = " + PHASE_1_STARTING);
         await db.run(
             'UPDATE api_room SET phase = ? WHERE uuid = ?',
             [PHASE_1_STARTING, room.roomDetails.uuid],
@@ -149,7 +151,7 @@ exports.startGameController = startGameController = async (req, res) => {
             logger.error(data);
             throw err;
         }
-        logger.silly(respData);
+        logger.silly(data);
 
         if(respData.ok && respData.phase === PHASE_1_STARTING) {
             logger.info("emitting " + EVENT_STARTGAME + " event");

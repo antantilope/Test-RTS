@@ -164,7 +164,7 @@ exports.joinRoomController = async (req, res) => {
 
         } else {
             logger.error("unexpected database response");
-            logger.error(resp);
+            logger.error(JSON.stringify(resp));
             return res.status(500).send(
                 "Unable to save all changes."
             );
