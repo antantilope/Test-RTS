@@ -112,7 +112,8 @@ const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_playe
     }
 
     setTimeout(() =>{
-        // delay this action because socket server will refuse connection if we immediatly try to connect.
+        // delay this action because the newly spawned
+        // socket server will refuse connection if we immediately try to connect to it.
         console.log("Opening connection to game socket on port " + port)
         const client = new net.Socket();
         client.connect(port, 'localhost', () => {

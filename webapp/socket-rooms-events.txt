@@ -90,8 +90,16 @@ payload: msg: str
 
 event name: "mapconfig"
 rooms: room_{ROOM_UUID}
-description: an async update from a POST req by room owner to configure the map
+description: an async update triggered by a POST req by room owner to configure the map
 payload: data: {
     x_km: int,
     y_km: int,
+}
+
+
+event name: "startcountdown"
+rooms: room_{ROOM_UUID}
+description:  a repeating async update triggered by a POST req by room owner to start the game
+payload: data: {
+    game_start_countdown: int,
 }

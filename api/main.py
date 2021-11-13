@@ -40,7 +40,7 @@ class TCPHandler(socketserver.StreamRequestHandler):
         return json.dumps(self.game.get_state()).encode()
 
     def build_ping_response(self) -> bytes:
-        return f"Hello {uuid.uuid4().hex[:6]}".encode()
+        return f"Hello {uuid.uuid4().hex[:6]}, game phase:{self.game._phase}".encode()
 
     def handle(self):
         payload = self.read_stripped_line()

@@ -161,6 +161,20 @@
                             }
                         });
                     });
+                    $("#start-game-btn").click(() => {
+                        $.post({
+                            url: "/api/rooms/start",
+                            success: (data, status, xhr) => {
+                                console.log({data, status, xhr});
+                            },
+                            error: (xhr, status, error) => {
+                                console.error({xhr, status, error});
+                                if(xhr.status === 400) {
+                                    alert("An error occured: " + xhr.responseText);
+                                }
+                            }
+                        })
+                    })
                 }
 
                 $("#room-name-heading").text(roomDetails.name);
@@ -277,6 +291,10 @@
                 socket.on("mapconfig", (data) => {
                     addToChat("🤖📢 the map has udated: " + `${data.x_km} x ${data.y_km} KM`);
                 });
+                socket.on("startcountdown", data => {
+                    console.log({startcountdown: data});
+                    location.reload();
+                })
                 $("#chat-send-msg").click(() =>{
                     const msg = $("#chat-input").val();
                     if(msg) {
