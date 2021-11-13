@@ -7,33 +7,36 @@ const { get_rooms_page_name, get_room_room_name } = require("../lib/room_names")
 const { get_user_details } = require("../lib/db/get_user_details");
 const { PHASE_1_STARTING, PHASE_2_LIVE } = require("../constants");
 const { EVENT_STARTGAME, EVENT_ROOM_LIST_UPDATE  } = require("../lib/event_names");
+const { logger } = require("../lib/logger");
 
 
 const doCountdown = (room_id, req, port) => {
     const client = new net.Socket();
-    console.log('connecting to GameAPI on port ' + port)
+    logger.info('connecting to GameAPI on port ' + port)
     client.connect(port, 'localhost', () => {
+        logger.info("connected to GameAPI");
         const dataToWrite = JSON.stringify({decr_phase_1_starting_countdown:{}}) + "\n";
-        console.log("writing: " + dataToWrite);
+        logger.info("writing data to GameAPI: " + dataToWrite);
         client.write(dataToWrite);
     });
 
     client.on("data", data => {
+        logger.info("received decr_phase_1_starting_countdown response from GameAPI, disconnecting...");
         client.destroy();
 
         let respData;
         try {
             respData = JSON.parse(data);
         } catch(err) {
-            console.error("expected JSON data, got", data);
+            logger.error("expected JSON data, got", data);
             throw err;
         }
-        console.log("countdown data")
-        console.log(respData);
+        logger.silly(respData);
 
         if(respData.ok && respData.phase === PHASE_1_STARTING)
         {
-            console.log("COUNT DOWN " + respData.game_start_countdown);
+            logger.info("Count down: " + respData.game_start_countdown);
+            logger.info("emitting " + EVENT_STARTGAME + " event");
             req.app.get("socketio")
                 .to(get_room_room_name(room_id))
                 .emit(
@@ -41,7 +44,7 @@ const doCountdown = (room_id, req, port) => {
                     {game_start_countdown: respData.game_start_countdown},
                 );
             if(respData.game_start_countdown - 1 >= 0) {
-                console.log("scheduling next countdown");
+                logger.info("scheduling next " + EVENT_STARTGAME + " event");
                 setTimeout(()=>{
                     doCountdown(room_id, req, port);
                 }, 1000);
@@ -49,13 +52,16 @@ const doCountdown = (room_id, req, port) => {
         }
         else if (respData.ok && respData.phase === PHASE_2_LIVE)
         {
-            console.log("COUNT DOWN 0");
+            logger.info("Count down: 0");
+            logger.info("emitting final " + EVENT_STARTGAME + " event")
             req.app.get("socketio")
                 .to(get_room_room_name(room_id))
                 .emit(
                     EVENT_STARTGAME,
                     {game_start_countdown: 0},
                 );
+
+                // TODO: Launch Game Loop
         }
     });
 }
@@ -76,6 +82,8 @@ exports.startGameController = startGameController = async (req, res) => {
         return res.status(500).send("invalid session");
     }
 
+    logger.info("starting game, writing changes to database")
+
     const db = await get_db_connection();
     let playerDetails;
     let room;
@@ -89,7 +97,7 @@ exports.startGameController = startGameController = async (req, res) => {
             return res.status(400).send("not enough players in the room");
         }
 
-        console.log("Updating DB, setting phase = ", PHASE_1_STARTING)
+        logger.silly("Updating DB, setting phase = ", PHASE_1_STARTING)
         await db.run(
             'UPDATE api_room SET phase = ? WHERE uuid = ?',
             [PHASE_1_STARTING, room.roomDetails.uuid],
@@ -104,7 +112,7 @@ exports.startGameController = startGameController = async (req, res) => {
     res.sendStatus(202);
 
     // Emit socket event to rooms list page.
-    console.log("emitting event to rooms list page")
+    logger.info("emitting event to rooms list page");
     req.app.get('socketio')
         .to(get_rooms_page_name())
         .emit(
@@ -120,36 +128,39 @@ exports.startGameController = startGameController = async (req, res) => {
 
 
     // Update GameAPI to advance phase to "starting"
-    console.log("connecting to game server on port " + room.roomDetails.port);
+    logger.info("Connecting to GameAPI port " + room.roomDetails.port);
     const client = new net.Socket();
     client.connect(room.roomDetails.port, 'localhost', () => {
+        logger.info("connected to GameAPI");
         const dataToWrite = JSON.stringify({advance_to_phase_1_starting:{}}) + "\n";
-        console.log("connected, writing " + dataToWrite);
+        logger.info("writing data to GameAPI " + dataToWrite);
         client.write(dataToWrite);
     });
 
     client.on("data", data => {
-        console.log("got response from GameAPI")
+        logger.info("received advance_to_phase_1_starting response from GameAPI, disconnecting...");
         client.destroy();
         let respData;
         try {
             respData = JSON.parse(data);
         } catch(err) {
-            console.error("expected JSON data, got", data);
+            logger.error("expected JSON data, got");
+            logger.error(err);
+            logger.error(data);
             throw err;
         }
-        console.log("countdown/phase data")
-        console.log(respData);
+        logger.silly(respData);
 
         if(respData.ok && respData.phase === PHASE_1_STARTING) {
-            console.log("emitting startgame event")
+            logger.info("emitting " + EVENT_STARTGAME + " event");
             req.app.get('socketio')
                 .to(get_room_room_name(sess_room_id))
                 .emit(
                     EVENT_STARTGAME,
                     {game_start_countdown: respData.game_start_countdown},
                 );
-            console.log("scheduling next countdown");
+
+            logger.info("scheduling next countdown");
             setTimeout(()=>{
                 doCountdown(sess_room_id, req, room.roomDetails.port);
             }, 1000);

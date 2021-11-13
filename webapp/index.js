@@ -29,8 +29,8 @@ const {
     requestLoggingMiddleware,
 } = require("./middleware");
 const { PHASE_0_LOBBY } = require("./constants");
+const { logger } = require("./lib/logger");
 const locals = require("./applocals");
-
 
 
 // Setup servers
@@ -76,7 +76,7 @@ expressApp.use((req, res, next) => {
 */
 expressApp.use((req, res, next) => {
     if (/^\/static\/ng\/(index\.html)?$/.test(req.url)) {
-        console.warn("WARNING: Blocking direct access to /static/ng/index.html")
+        logger.warn("WARNING: Blocking direct access to /static/ng/index.html")
         res.sendStatus(404);
     } else {
         next();
@@ -144,7 +144,7 @@ expressApp.get('/', async (req, res) => {
         if(!playerDetails.team_uuid) {
             // Session thinks player is in a room, but database does not have a team.
             // Clean up the session.
-            console.warn(
+            logger.warn(
                 "Session room/team info is mismatched with database. Deleting room/team IDs from session."
             );
             delete req.session.team_id;
@@ -192,5 +192,5 @@ expressApp.post('/api/rooms/start', startGameController);
 
 // Launch the HTTP Server
 httpServer.listen(port, () => {
-    console.log('listening on *:' + port);
+    logger.info('listening on *:' + port);
 });
