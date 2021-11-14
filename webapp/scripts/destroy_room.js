@@ -4,7 +4,7 @@ const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_room } = require("../lib/db/get_rooms");
 
 
-const destroy = (db, roomUUID) => {
+const destroy = async (db, roomUUID) => {
     sql1 = `
         UPDATE api_player SET team_id = NULL WHERE team_id IN (
             SELECT uuid FROM api_team WHERE room_id = ?
