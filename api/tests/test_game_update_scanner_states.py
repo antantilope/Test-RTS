@@ -3,7 +3,6 @@ from uuid import uuid4
 from unittest import TestCase
 
 from api.models.game import Game, GamePhase, ShipScannerMode
-from api.tests.utils import DebugShip
 from api import utils2d
 
 
