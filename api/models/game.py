@@ -7,6 +7,10 @@ from .base import BaseModel
 from .ship import Ship, ShipScannerMode
 from .ship_designator import get_designations
 from api import utils2d
+from api.coord_cache import (
+    CoordDistanceCache,
+    CoordHeadingCache,
+)
 
 
 class GameError(Exception): pass
@@ -260,8 +264,9 @@ class Game(BaseModel):
 
 
     def update_scanner_states(self, ship_ids: Set[str]):
-        cached_distances = {}
-        cached_angles = {}
+        distance_cache = CoordDistanceCache()
+        heading_cache = CoordHeadingCache()
+
         for ship_id in ship_ids:
 
             self._ships[ship_id].scanner_data.clear()
@@ -274,19 +279,18 @@ class Game(BaseModel):
                 other_coords = self._ships[other_id].coords
                 ship_coords = self._ships[ship_id].coords
 
-                distance_cache_key = (
-                    (other_coords, ship_coords,),
-                    (ship_coords, other_coords,),
-                )
-                if distance_cache_key in cached_distances:
-                    distance = cached_distances[distance_cache_key]
-                else:
+                distance = distance_cache.get_val(ship_coords, other_coords)
+                if distance is None:
                     distance = utils2d.calculate_point_distance(ship_coords, other_coords)
-                    cached_distances[distance_cache_key] = distance
-
+                    distance_cache.set_val(ship_coords, other_coords, distance)
                 distance_meters = distance * self._map_units_per_meter
 
                 if scan_range >= distance_meters:
+                    heading = heading_cache.get_val(ship_coords, other_coords)
+                    if heading is None:
+                        heading = round(utils2d.calculate_heading_to_point(ship_coords, other_coords))
+                        heading_cache.set_val(ship_coords, other_coords, heading)
+
                     if self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR:
                         self._ships[ship_id].scanner_data[other_id] = {
                             'designator': self._ships[other_id].scanner_designator,
@@ -294,7 +298,7 @@ class Game(BaseModel):
                             'coord_x': other_coords[0],
                             'coord_y': other_coords[1],
                             'distance': round(distance_meters),
-                            'relative_heading': 124,
+                            'relative_heading': heading,
                         }
                     elif self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
                         self._ships[ship_id].scanner_data[other_id] = {
@@ -303,7 +307,7 @@ class Game(BaseModel):
                             'coord_x': other_coords[0],
                             'coord_y': other_coords[1],
                             'distance': round(distance_meters),
-                            'relative_heading': 124,
+                            'relative_heading': heading,
                         }
                     else:
                         raise NotImplementedError
