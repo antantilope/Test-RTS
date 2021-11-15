@@ -136,9 +136,9 @@ class Ship(BaseModel):
         self.scanner_activation_power_required_total = None
         self.scanner_activation_power_required_per_frame = None
         self.scanner_data: Dict[str, ScannedElement] = {}
-        # Size of the ship on an enemies RADAR mode scanner
+        # Size of the ship as it appears on another ships' RADAR mode scanner
         self.scanner_diameter = None
-        # Temperature of the ship as it appears on an enemies' IR mode scanner1
+        # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
 
 
@@ -191,6 +191,44 @@ class Ship(BaseModel):
     @property
     def scanner_range(self):
         return self.scanner_radar_range if self.scanner_mode == ShipScannerMode.RADAR else self.scanner_ir_range
+
+    def to_dict(self) -> Dict:
+        """ Get JSON serializable representation of the ship.
+        """
+        return {
+            'id': self.id,
+            'mass': self.mass,
+            'coord_x': self.coord_x,
+            'coord_y': self.coord_y,
+            'heading': self.heading,
+            'rel_rot_coord_0': self.rel_rot_coord_0,
+            'rel_rot_coord_1': self.rel_rot_coord_1,
+            'rel_rot_coord_2': self.rel_rot_coord_2,
+            'rel_rot_coord_3': self.rel_rot_coord_3,
+            'heading_0_rel_coord_0': self.heading_0_rel_coord_0,
+            'heading_0_rel_coord_1': self.heading_0_rel_coord_1,
+            'heading_0_rel_coord_2': self.heading_0_rel_coord_2,
+            'heading_0_rel_coord_3': self.heading_0_rel_coord_3,
+            'velocity_x_meters_per_second': self.velocity_x_meters_per_second,
+            'velocity_y_meters_per_second': self.velocity_y_meters_per_second,
+            'battery_power': self.battery_power,
+            'battery_capacity': self.battery_capacity,
+            'fuel_level': self.battery_power,
+            'fuel_capacity': self.battery_capacity,
+            'reaction_wheel_online': self.reaction_wheel_online,
+            'engine_newtons': self.engine_newtons,
+            'engine_online': self.engine_online,
+            'engine_lit': self.engine_lit,
+            'engine_starting': self.engine_starting,
+            'scanner_online': self.scanner_online,
+            'scanner_starting': self.scanner_starting,
+            'scanner_mode': self.scanner_mode,
+            'scanner_radar_range': self.scanner_radar_range,
+            'scanner_ir_range': self.scanner_ir_range,
+            'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
+            'scanner_data': self.scanner_data,
+            'scanner_thermal_signature': self.scanner_thermal_signature,
+        }
 
     @classmethod
     def spawn(cls, map_units_per_meter: int = 1) -> "Ship":

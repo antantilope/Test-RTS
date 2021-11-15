@@ -115,7 +115,7 @@ class Game(BaseModel):
 
     def _get_live_state(self) -> Dict:
         return {
-            'ships': [],
+            'ships': [ship.to_dict() for ship in self._ships.values()],
         }
 
 
