@@ -236,8 +236,8 @@ class Ship(BaseModel):
         instance.engine_battery_charge_per_frame = constants.ENGINE_BATTERY_CHARGE_PER_FRAME
 
         instance.scanner_mode = ShipScannerMode.RADAR
-        instance.scanner_radar_range = constants.SCANNER_MODE_RADAR_RANGE_KM
-        instance.scanner_ir_range = constants.SCANNER_MODE_IR_RANGE_KM
+        instance.scanner_radar_range = constants.SCANNER_MODE_RADAR_RANGE_M
+        instance.scanner_ir_range = constants.SCANNER_MODE_IR_RANGE_M
         instance.scanner_ir_minimum_thermal_signature = constants.SCANNER_IR_MINIMUM_THERMAL_SIGNATURE
         instance.scanner_idle_power_requirement_per_frame = constants.SCANNER_POWER_REQUIREMENT_PER_FRAME
         instance.scanner_frames_to_activate = constants.FRAMES_TO_START_SCANNER

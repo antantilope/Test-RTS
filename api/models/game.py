@@ -233,9 +233,6 @@ class Game(BaseModel):
 
 
     def run_frame(self, request: RunFrameDetails):
-
-        ship_ids_with_scanned_enabled = set()
-
         """ Run frame phases and increment game frame number.
         """
         for ship_id, ship in self._ships.items():
@@ -250,11 +247,9 @@ class Game(BaseModel):
             # Phase 3
             ship.calculate_side_effects()
 
-            if ship.scanner_online:
-                ship_ids_with_scanned_enabled.add(ship.id)
 
         # Phase 3 (again): Top Level side effects
-        self.update_scanner_states(ship_ids_with_scanned_enabled)
+        self.update_scanner_states()
 
         # Phase 4
         for command in request['commands']:
@@ -263,13 +258,16 @@ class Game(BaseModel):
         self.incr_game_frame()
 
 
-    def update_scanner_states(self, ship_ids: Set[str]):
+    def update_scanner_states(self):
         distance_cache = CoordDistanceCache()
         heading_cache = CoordHeadingCache()
 
-        for ship_id in ship_ids:
-
+        for ship_id in self._ships:
             self._ships[ship_id].scanner_data.clear()
+
+            if not self._ships[ship_id].scanner_online:
+                continue
+
             scan_range = self._ships[ship_id].scanner_range
 
             for other_id in self._ships:
@@ -283,7 +281,7 @@ class Game(BaseModel):
                 if distance is None:
                     distance = utils2d.calculate_point_distance(ship_coords, other_coords)
                     distance_cache.set_val(ship_coords, other_coords, distance)
-                distance_meters = distance * self._map_units_per_meter
+                distance_meters = round(distance / self._map_units_per_meter)
 
                 if scan_range >= distance_meters:
                     heading = heading_cache.get_val(ship_coords, other_coords)
@@ -301,14 +299,18 @@ class Game(BaseModel):
                             'relative_heading': heading,
                         }
                     elif self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
-                        self._ships[ship_id].scanner_data[other_id] = {
-                            'designator': self._ships[other_id].scanner_designator,
-                            'thermal_signature': self._ships[other_id].scanner_diameter,
-                            'coord_x': other_coords[0],
-                            'coord_y': other_coords[1],
-                            'distance': round(distance_meters),
-                            'relative_heading': heading,
-                        }
+                        if (
+                            self._ships[other_id].scanner_thermal_signature
+                            >= self._ships[ship_id].scanner_ir_minimum_thermal_signature
+                        ):
+                            self._ships[ship_id].scanner_data[other_id] = {
+                                'designator': self._ships[other_id].scanner_designator,
+                                'thermal_signature': self._ships[other_id].scanner_thermal_signature,
+                                'coord_x': other_coords[0],
+                                'coord_y': other_coords[1],
+                                'distance': round(distance_meters),
+                                'relative_heading': heading,
+                            }
                     else:
                         raise NotImplementedError
 
