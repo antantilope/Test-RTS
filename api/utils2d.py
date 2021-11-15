@@ -122,3 +122,37 @@ def calculate_point_distance(point_a: Tuple, point_b: Tuple) -> float:
     ax, ay = point_a
     bx, by = point_b
     return math.sqrt(((bx - ax) ** 2) + ((by - ay) ** 2))
+
+
+def calculate_heading_to_point(point_a: Tuple, point_b: Tuple) -> float:
+    x1, y1 = point_a
+    x2, y2 = point_b
+    dx = x2 - x1
+    dy = y2 - y1
+    if dx == 0 and dy == 0:
+        return 0
+
+    x_negative = dx < 0
+    y_negative = dy < 0
+    both_positive = (not x_negative) and (not y_negative)
+    both_negative = x_negative and y_negative
+
+    if dy != 0:
+        angle = math.degrees(math.atan(dx / dy))
+    elif dy == 0 and dx > 0:
+        angle = 90
+    elif dy == 0 and dx < 0:
+        angle = 270
+    else:
+        raise NotImplementedError
+
+    if both_positive:
+        return round(angle)
+    elif both_negative:
+        return invert_heading(round(angle))
+    elif y_negative:
+        return invert_heading(signed_angle_to_unsigned_angle(round(angle)))
+    elif x_negative:
+        return signed_angle_to_unsigned_angle(round(angle))
+    else:
+        raise NotImplementedError
