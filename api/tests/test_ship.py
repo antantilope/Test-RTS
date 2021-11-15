@@ -81,23 +81,23 @@ class TestShipAdjustResources(TestCase):
     def test_engine_start_process_uses_power(self):
         ''' ENGINE ACTIVATE '''
         self.ship.game_frame = 1
-        self.ship._state[ShipStateKey.ENGINE] = {
-            'starting': True,
-            'last_frame': 3,
-        }
+        self.ship.engine_starting = True
+        self.ship.engine_start_complete_at_frame = 3
         start_battery_power = self.ship.battery_power
         power_usage_per_frame_eng_start = self.ship.engine_activation_power_required_per_frame
 
         self.ship.adjust_resources()
         assert self.ship.battery_power == start_battery_power - power_usage_per_frame_eng_start * 1
         assert not self.ship.engine_online
-        assert ShipStateKey.ENGINE in self.ship._state
+        assert self.ship.engine_starting
+        assert self.ship.engine_start_complete_at_frame is not None
 
         self.ship.game_frame = 2
         self.ship.adjust_resources()
         assert self.ship.battery_power == start_battery_power - power_usage_per_frame_eng_start * 2
         assert not self.ship.engine_online
-        assert ShipStateKey.ENGINE in self.ship._state
+        assert self.ship.engine_starting
+        assert self.ship.engine_start_complete_at_frame is not None
 
         self.ship.game_frame = 3
         self.ship.adjust_resources()
@@ -109,35 +109,37 @@ class TestShipAdjustResources(TestCase):
         )
         assert self.ship.engine_online
         assert not self.ship.engine_lit
-        assert ShipStateKey.ENGINE not in self.ship._state
+        assert not self.ship.engine_starting
+        assert self.ship.engine_start_complete_at_frame is None
 
     def test_engine_start_process_fails_if_not_enough_power(self):
         ''' ENGINE ACTIVATE '''
         self.ship.game_frame = 1
-        self.ship._state[ShipStateKey.ENGINE] = {
-            'starting': True,
-            'last_frame': 3,
-        }
+        self.ship.engine_starting = True
+        self.ship.engine_start_complete_at_frame = 3
         start_battery_power = self.ship.battery_power
         power_usage_per_frame_eng_start = self.ship.engine_activation_power_required_per_frame
 
         self.ship.adjust_resources()
         assert self.ship.battery_power == start_battery_power - power_usage_per_frame_eng_start * 1
         assert not self.ship.engine_online
-        assert ShipStateKey.ENGINE in self.ship._state
+        assert self.ship.engine_starting
+        assert self.ship.engine_start_complete_at_frame is not None
 
         self.ship.game_frame = 2
         self.ship.adjust_resources()
         assert self.ship.battery_power == start_battery_power - power_usage_per_frame_eng_start * 2
         assert not self.ship.engine_online
-        assert ShipStateKey.ENGINE in self.ship._state
+        assert self.ship.engine_starting
+        assert self.ship.engine_start_complete_at_frame is not None
 
         self.ship.game_frame = 3
         self.ship.battery_power = 0
         self.ship.adjust_resources()
         assert not self.ship.engine_online
         assert not self.ship.engine_lit
-        assert ShipStateKey.ENGINE not in self.ship._state
+        assert not self.ship.engine_starting
+        assert self.ship.engine_start_complete_at_frame is None
 
     def test_idle_engine_uses_power(self):
         ''' ENGINE IDLE '''
@@ -218,6 +220,112 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.battery_power == start_power + power_gen_per_frame * 1
         assert not self.ship.engine_online
         assert not self.ship.engine_lit
+
+
+    def test_scanner_start_process_uses_power(self):
+        ''' SCANNER ACTIVATE '''
+        start_power = self.ship.battery_power
+        self.ship.game_frame = 1
+        self.ship.scanner_start_complete_at_frame = 3
+        self.ship.scanner_online = False
+        self.ship.scanner_starting = True
+
+        self.ship.adjust_resources()
+        assert self.ship.scanner_starting
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (self.ship.scanner_activation_power_required_per_frame * 1)
+
+        self.ship.game_frame = 2
+        self.ship.adjust_resources()
+        assert self.ship.scanner_starting
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (self.ship.scanner_activation_power_required_per_frame * 2)
+
+        # Startup Complete on this frame.
+        self.ship.game_frame = 3
+        self.ship.adjust_resources()
+        assert not self.ship.scanner_starting
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (
+            (self.ship.scanner_activation_power_required_per_frame * 2) + (self.ship.scanner_idle_power_requirement_per_frame * 1)
+        )
+        # Scanner is idling
+        self.ship.adjust_resources()
+        assert not self.ship.scanner_starting
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (
+            (self.ship.scanner_activation_power_required_per_frame * 2) + (self.ship.scanner_idle_power_requirement_per_frame * 2)
+        )
+
+    def test_scanner_start_process_fails_if_not_enough_power(self):
+        ''' SCANNER ACTIVATE '''
+        self.ship.game_frame = 1
+        self.ship.scanner_start_complete_at_frame = 5
+        self.ship.scanner_online = False
+        self.ship.scanner_starting = True
+        self.ship.battery_power = self.ship.scanner_activation_power_required_per_frame * 3
+        start_power = self.ship.battery_power
+
+        self.ship.adjust_resources()
+        assert self.ship.scanner_starting
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (self.ship.scanner_activation_power_required_per_frame * 1)
+
+        self.ship.game_frame += 1
+        self.ship.adjust_resources()
+        assert self.ship.scanner_starting
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (self.ship.scanner_activation_power_required_per_frame * 2)
+
+        self.ship.game_frame += 1
+        self.ship.adjust_resources()
+        assert self.ship.scanner_starting
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == 0
+
+        # No more power
+        self.ship.game_frame += 1
+        self.ship.adjust_resources()
+        assert not self.ship.scanner_starting
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == 0
+
+    def test_idle_scanner_uses_power(self):
+        ''' SCANNER IDLE '''
+        self.ship.game_frame = 1
+        self.ship.scanner_online = True
+        self.ship.battery_power = self.ship.scanner_idle_power_requirement_per_frame * 20
+        start_power = self.ship.battery_power
+
+        for i in range(10):
+            self.ship.adjust_resources()
+            assert not self.ship.scanner_starting
+            assert self.ship.scanner_online
+            assert self.ship.battery_power == start_power - (self.ship.scanner_idle_power_requirement_per_frame * (i  + 1))
+
+    def test_idle_scanner_deactivates_if_not_enough_power(self):
+        ''' SCANNER IDLE '''
+        self.ship.scanner_online = True
+        self.ship.battery_power = self.ship.scanner_idle_power_requirement_per_frame * 2
+        start_power = self.ship.battery_power
+
+        self.ship.adjust_resources()
+        assert not self.ship.scanner_starting
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (self.ship.scanner_idle_power_requirement_per_frame * 1)
+
+        # Scanner will function this frame, but will drain last of battery power
+        self.ship.adjust_resources()
+        assert not self.ship.scanner_starting
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == start_power - (self.ship.scanner_idle_power_requirement_per_frame * 2)
+        assert self.ship.battery_power == 0
+
+        # Scanner is deactivated this frame.
+        self.ship.adjust_resources()
+        assert not self.ship.scanner_starting
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == 0
 
 
 '''
@@ -1658,12 +1766,8 @@ class TestShipCMDActivateDeactivateLightEngine(TestCase):
         assert self.ship._state == {}
         self.ship.game_frame = current_frame
         self.ship.cmd_activate_engine()
-        assert self.ship._state == {
-            ShipStateKey.ENGINE: {
-                'starting': True,
-                'last_frame': current_frame + self.ship.engine_frames_to_activate,
-            }
-        }
+        assert self.ship.engine_starting
+        assert self.ship.engine_start_complete_at_frame == current_frame + self.ship.engine_frames_to_activate
 
     def test_deactivate_engine_command_updates_ship_state(self):
         self.ship.engine_online = True

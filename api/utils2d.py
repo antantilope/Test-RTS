@@ -116,3 +116,9 @@ def calculate_x_y_components(
         (meters * math.sin(radians)),
         (meters * math.cos(radians)),
     )
+
+
+def calculate_point_distance(point_a: Tuple, point_b: Tuple) -> float:
+    ax, ay = point_a
+    bx, by = point_b
+    return math.sqrt(((bx - ax) ** 2) + ((by - ay) ** 2))

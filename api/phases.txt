@@ -6,14 +6,17 @@ Frame Phases
     > calculate collisions between ships, weapons, and asterioids
     > update ship
 
-> SHIP RESOURCE & MULTIFRAME SIDE EFFECTS
+> SHIP RESOURCE & RESOURCE SIDE EFFECTS
     update ship battery power based on current ship state
+    engine start side effect
 
 > PHYSICS
     update the positions of server tracked objects
 
 > SHIP SIDE EFFECTS
-    update ship state
+    update ship scanner state (Fog of war)
+    resource collection
+
 
 > SHIP COMMANDS
     process user commands and update state

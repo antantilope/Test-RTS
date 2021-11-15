@@ -372,3 +372,16 @@ class TestUtils(TestCase):
         distance = 10
         end = utils2d.translate_point(start, heading, distance)
         assert end == (5, 19,)
+
+    def test_calculate_point_distance(self):
+        assert round(utils2d.calculate_point_distance((0, 0), (0, 8))) == 8
+        assert round(utils2d.calculate_point_distance((0, 0), (0, -8))) == 8
+        assert round(utils2d.calculate_point_distance((0, 0), (8, 0))) == 8
+        assert round(utils2d.calculate_point_distance((0, 0), (-8, 0))) == 8
+        assert round(utils2d.calculate_point_distance((0, 8), (0, 0))) == 8
+        assert round(utils2d.calculate_point_distance((0, -8), (0, 0))) == 8
+        assert round(utils2d.calculate_point_distance((8, 0), (0, 0))) == 8
+        assert round(utils2d.calculate_point_distance((-8, 0), (0, 0))) == 8
+
+        assert round(utils2d.calculate_point_distance((-4, -4), (8, 8))) == 17
+        assert round(utils2d.calculate_point_distance((8, 8), (-4, -4))) == 17

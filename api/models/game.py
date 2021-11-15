@@ -1,10 +1,12 @@
 
 import random
-from typing import TypedDict, Optional, List, Dict
+from typing import TypedDict, Optional, List, Dict, Set
 import uuid
 
 from .base import BaseModel
-from .ship import Ship
+from .ship import Ship, ShipScannerMode
+from .ship_designator import get_designations
+from api import utils2d
 
 
 class GameError(Exception): pass
@@ -160,6 +162,9 @@ class Game(BaseModel):
         self._phase = GamePhase.STARTING
         self._spawn_ships()
 
+        for ship_id, designator in get_designations(list(self._ships.keys())).items():
+            self._ships[ship_id].scanner_designator = designator
+
 
     def _validate_can_advance_to_phase_1_starting(self):
         if self._phase != GamePhase.LOBBY:
@@ -224,25 +229,83 @@ class Game(BaseModel):
 
 
     def run_frame(self, request: RunFrameDetails):
+
+        ship_ids_with_scanned_enabled = set()
+
         """ Run frame phases and increment game frame number.
         """
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
 
             # Phase 0
-            self._calculate_ship_damage(ship)
+            ship.calculate_damage()
             # Phase 1
-            self._calculate_ship_resources(ship)
+            ship.adjust_resources()
             # Phase 2
-            self._calculate_physics(ship)
+            ship.calculate_physics(self._fps)
             # Phase 3
-            self._calculate_ship_side_effects(ship)
+            ship.calculate_side_effects()
+
+            if ship.scanner_online:
+                ship_ids_with_scanned_enabled.add(ship.id)
+
+        # Phase 3 (again): Top Level side effects
+        self.update_scanner_states(ship_ids_with_scanned_enabled)
 
         # Phase 4
         for command in request['commands']:
             self._process_ship_command(command)
 
         self.incr_game_frame()
+
+
+    def update_scanner_states(self, ship_ids: Set[str]):
+        cached_distances = {}
+        for ship_id in ship_ids:
+
+            self._ships[ship_id].scanner_data.clear()
+            scan_range = self._ships[ship_id].scanner_range
+
+            for other_id in self._ships:
+                if other_id == ship_id:
+                    continue
+
+                other_coords = self._ships[other_id].coords
+                ship_coords = self._ships[ship_id].coords
+
+                cache_key = (
+                    (other_coords, ship_coords,),
+                    (ship_coords, other_coords,),
+                )
+                if cache_key in cached_distances:
+                    distance = cached_distances[cache_key]
+                else:
+                    distance = utils2d.calculate_point_distance(ship_coords, other_coords)
+                    cached_distances[cache_key] = distance
+
+                distance_meters = distance * self._map_units_per_meter
+
+                if scan_range >= distance_meters:
+                    if self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR:
+                        self._ships[ship_id].scanner_data[other_id] = {
+                            'designator': self._ships[other_id].scanner_designator,
+                            'diameter_meters': self._ships[other_id].scanner_diameter,
+                            'coord_x': other_coords[0],
+                            'coord_y': other_coords[1],
+                            'distance': round(distance_meters),
+                            'relative_heading': 124,
+                        }
+                    elif self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
+                        self._ships[ship_id].scanner_data[other_id] = {
+                            'designator': self._ships[other_id].scanner_designator,
+                            'thermal_signature': self._ships[other_id].scanner_diameter,
+                            'coord_x': other_coords[0],
+                            'coord_y': other_coords[1],
+                            'distance': round(distance_meters),
+                            'relative_heading': 124,
+                        }
+                    else:
+                        raise NotImplementedError
 
 
     def _process_ship_command(self, command: FrameCommand):
@@ -258,15 +321,3 @@ class Game(BaseModel):
             **kwargs,
         )
 
-
-    def _calculate_ship_damage(self, ship: Ship):
-        ship.calculate_damage()
-
-    def _calculate_ship_resources(self, ship: Ship):
-        ship.adjust_resources()
-
-    def _calculate_physics(self, ship: Ship):
-        ship.calculate_physics(self._fps)
-
-    def _calculate_ship_side_effects(self, ship: Ship):
-        ship.calculate_side_effects()

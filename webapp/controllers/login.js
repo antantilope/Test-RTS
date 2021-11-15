@@ -38,9 +38,9 @@ exports.loginWithCodeController = async (req, res) => {
         await set_login_code(db, user.uuid, newCode);
 
         logger.info("user found! updating session");
-        req.session.player_id = user.uuid
-        req.session.room_id = user.room_id
-        req.session.team_id = user.team_id
+        req.session.player_id = user.uuid;
+        req.session.room_id = user.room_id;
+        req.session.team_id = user.team_id;
         req.session.cookie.maxAge = 1 * 24 * 60 * 60 * 1000; // 1 day
         return res.sendStatus(200);
 
@@ -88,9 +88,9 @@ exports.loginWithMagicLink = async (req, res) => {
     }
 
     logger.info("logging in user " + user.handle + " using magic link");
-    req.session.player_id = user.uuid
-    req.session.room_id = user.room_id
-    req.session.team_id = user.team_id
+    req.session.player_id = user.uuid;
+    req.session.room_id = user.room_id;
+    req.session.team_id = user.team_id;
     req.session.cookie.maxAge = 1 * 24 * 60 * 60 * 1000; // 1 day
 
     return res.redirect('/');
