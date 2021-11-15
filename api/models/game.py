@@ -261,6 +261,7 @@ class Game(BaseModel):
 
     def update_scanner_states(self, ship_ids: Set[str]):
         cached_distances = {}
+        cached_angles = {}
         for ship_id in ship_ids:
 
             self._ships[ship_id].scanner_data.clear()
@@ -273,15 +274,15 @@ class Game(BaseModel):
                 other_coords = self._ships[other_id].coords
                 ship_coords = self._ships[ship_id].coords
 
-                cache_key = (
+                distance_cache_key = (
                     (other_coords, ship_coords,),
                     (ship_coords, other_coords,),
                 )
-                if cache_key in cached_distances:
-                    distance = cached_distances[cache_key]
+                if distance_cache_key in cached_distances:
+                    distance = cached_distances[distance_cache_key]
                 else:
                     distance = utils2d.calculate_point_distance(ship_coords, other_coords)
-                    cached_distances[cache_key] = distance
+                    cached_distances[distance_cache_key] = distance
 
                 distance_meters = distance * self._map_units_per_meter
 
