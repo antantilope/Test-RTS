@@ -288,11 +288,12 @@ class Game(BaseModel):
         # Run Frame Phases
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
+            self._ships[ship_id].timestamp = self._last_frame_at
 
             # Phase 0
             ship.calculate_damage()
             # Phase 1
-            ship.adjust_resources()
+            ship.adjust_resources(self._fps, self._last_frame_at)
             # Phase 2
             ship.calculate_physics(self._fps)
             # Phase 3
