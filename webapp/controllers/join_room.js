@@ -133,7 +133,13 @@ exports.joinRoomController = async (req, res) => {
             const client = new net.Socket();
             client.connect(port, 'localhost', () => {
                 logger.info("connected to GameAPI");
-                const dataToWrite = JSON.stringify({add_player:{player_name: userDetails.handle, player_id:userDetails.uuid}}) + "\n";
+                const dataToWrite = JSON.stringify({
+                    add_player:{
+                        player_name: userDetails.handle,
+                        player_id:userDetails.uuid,
+                        team_id: team_uuid,
+                    }
+                }) + "\n";
                 logger.info("writing data to GameAPI " + dataToWrite);
                 client.write(dataToWrite);
             });

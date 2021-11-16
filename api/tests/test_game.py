@@ -139,10 +139,12 @@ class TestGame(TestCase):
         game._players['666777888'] = {
             'player_name': 'foobar1',
             'player_id': '666777888',
+            'team_id': '3546235',
         }
         game._players['1112223333'] = {
             'player_name': 'foobar2',
             'player_id': '1112223333',
+            'team_id': '06786785',
         }
         game.configure_map({
             'units_per_meter': 10,
@@ -160,10 +162,12 @@ class TestGame(TestCase):
         game._players['666777888'] = {
             'player_name': 'foobar1',
             'player_id': '666777888',
+            'team_id': '06876856',
         }
         game._players['1112223333'] = {
             'player_name': 'foobar2',
             'player_id': '1112223333',
+            'team_id': '54783456',
         }
         game.configure_map({
             'units_per_meter': 10,
@@ -185,6 +189,7 @@ class TestGame(TestCase):
         game._players['666777888'] = {
             'player_name': 'foobar1',
             'player_id': '666777888',
+            'team_id': '656566565',
         }
         game.configure_map({
             'units_per_meter': 10,
@@ -202,6 +207,7 @@ class TestGame(TestCase):
         game._players['1112223333'] = {
             'player_name': 'foobar2',
             'player_id': '1112223333',
+            'team_id': '775686565',
         }
         game.advance_to_phase_1_starting()
         assert game._phase == GamePhase.STARTING
@@ -214,10 +220,12 @@ class TestGame(TestCase):
         game._players['666777888'] = {
             'player_name': 'foobar1',
             'player_id': '666777888',
+            'team_id': '3546235',
         }
         game._players['1112223333'] = {
             'player_name': 'foobar2',
             'player_id': '1112223333',
+            'team_id': '6457476',
         }
         # Missing map config.
 
@@ -245,10 +253,12 @@ class TestGame(TestCase):
         game._players['666777888'] = {
             'player_name': 'foobar1',
             'player_id': '666777888',
+            'team_id':'123456',
         }
         game._players['1112223333'] = {
             'player_name': 'foobar2',
             'player_id': '1112223333',
+            'team_id':'665544',
         }
         game.configure_map({
             'units_per_meter': 10,
@@ -260,6 +270,9 @@ class TestGame(TestCase):
         assert len(game._player_id_to_ship_id_map) == 2
         assert '666777888' in game._player_id_to_ship_id_map
         assert '1112223333' in game._player_id_to_ship_id_map
+        assert len(game._team_id_to_ship_id_map) == 2
+        assert '123456' in game._team_id_to_ship_id_map
+        assert '665544' in game._team_id_to_ship_id_map
 
     def test_spawn_ships_places_ships_in_bounds(self):
         for _i in range(100):
@@ -270,10 +283,12 @@ class TestGame(TestCase):
             game._players['666777888'] = {
                 'player_name': 'foobar1',
                 'player_id': '666777888',
+                'team_id':'4563453',
             }
             game._players['1112223333'] = {
                 'player_name': 'foobar2',
                 'player_id': '1112223333',
+                'team_id':'756854',
             }
             game.configure_map({
                 'units_per_meter': 10,
@@ -293,10 +308,12 @@ class TestGame(TestCase):
             game._players['666777888'] = {
                 'player_name': 'foobar1',
                 'player_id': '666777888',
+                'team_id':'7698554',
             }
             game._players['1112223333'] = {
                 'player_name': 'foobar2',
                 'player_id': '1112223333',
+                'team_id':'78654564',
             }
             game.configure_map({
                 'units_per_meter': 10,
@@ -316,10 +333,12 @@ class TestGame(TestCase):
             game._players['666777888'] = {
                 'player_name': 'foobar1',
                 'player_id': '666777888',
+                'team_id':'778456982',
             }
             game._players['1112223333'] = {
                 'player_name': 'foobar2',
                 'player_id': '1112223333',
+                'team_id':'0643255',
             }
             game.configure_map({
                 'units_per_meter': 10,

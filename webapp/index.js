@@ -14,7 +14,10 @@ const expressSession = require('express-session');
 const redisStore = require('connect-redis')(expressSession);
 
 // Webapp imports
-const { loginWithCodeController } = require("./controllers/login");
+const {
+    loginWithCodeController,
+    loginWithMagicLink,
+} = require("./controllers/login");
 const { joinRoomController } = require("./controllers/join_room");
 const { leaveRoomController } = require("./controllers/leave_room");
 const { roomDetailsController } = require("./controllers/room_details");
@@ -170,6 +173,7 @@ expressApp.get('/', async (req, res) => {
 /* Log In, Log Out
 */
 expressApp.post('/api/players/loginwithcode', loginWithCodeController);
+expressApp.get('/loginwithlink', loginWithMagicLink);
 expressApp.get('/logout', (req, res) => {
     req.session.destroy();
     return res.redirect('/');

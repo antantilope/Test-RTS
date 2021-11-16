@@ -103,3 +103,9 @@ description:  a repeating async update triggered by a POST req by room owner to 
 payload: data: {
     game_start_countdown: int,
 }
+
+
+event name: "framedata"
+room_{ROOM_UUID}_{TEAM_UUID}
+
+

@@ -193,8 +193,127 @@ class TestUtils(TestCase):
         assert rotated == (-47, -25,)
 
 
-    # RESULTANT FORCE # # #
+    # Angle measurement
+    def test_calculate_heading_to_point(self):
+        # north
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 0), (0, 6)
+        )) == constants.DEGREES_NORTH
+        assert round(utils2d.calculate_heading_to_point(
+            (2, -12), (2, 5)
+        )) == constants.DEGREES_NORTH
+        assert round(utils2d.calculate_heading_to_point(
+            (-4, -7), (-4, 1000)
+        )) == constants.DEGREES_NORTH
 
+        # south
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 6), (0, 2)
+        )) == constants.DEGREES_SOUTH
+        assert round(utils2d.calculate_heading_to_point(
+            (2, -12), (2, -20)
+        )) == constants.DEGREES_SOUTH
+        assert round(utils2d.calculate_heading_to_point(
+            (-4, 1000), (-4, 250)
+        )) == constants.DEGREES_SOUTH
+
+        # east
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 6), (8, 6)
+        )) == constants.DEGREES_EAST
+        assert round(utils2d.calculate_heading_to_point(
+            (2, -12), (12, -12)
+        )) == constants.DEGREES_EAST
+        assert round(utils2d.calculate_heading_to_point(
+            (-4, 1000), (0, 1000)
+        )) == constants.DEGREES_EAST
+
+        # west
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 6), (-8, 6)
+        )) == constants.DEGREES_WEST
+        assert round(utils2d.calculate_heading_to_point(
+            (2, -12), (-12, -12)
+        )) == constants.DEGREES_WEST
+        assert round(utils2d.calculate_heading_to_point(
+            (-4, 1000), (-12, 1000)
+        )) == constants.DEGREES_WEST
+
+        # NW/SW/NE/SE
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 0), (6, 6)
+        )) == constants.DEGREES_NORTH_EAST
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 0), (6, -6)
+        )) == constants.DEGREES_SOUTH_EAST
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 0), (-6, -6)
+        )) == constants.DEGREES_SOUTH_WEST
+        assert round(utils2d.calculate_heading_to_point(
+            (0, 0), (-6, 6)
+        )) == constants.DEGREES_NORTH_WEST
+
+        # Misc South Westernly angles
+        assert (round(utils2d.calculate_heading_to_point(
+            (9, 4), (-3, -6)
+        ))) == 230
+        assert (round(utils2d.calculate_heading_to_point(
+            (9, 1), (-12, -1)
+        ))) == 265
+        assert (round(utils2d.calculate_heading_to_point(
+            (-3, -2), (-25, -3)
+        ))) == 267
+        assert (round(utils2d.calculate_heading_to_point(
+            (10, 10), (8, 0)
+        ))) == 191
+
+        # Misc North Westernly angles
+        assert (round(utils2d.calculate_heading_to_point(
+            (10, 10), (-3, 22)
+        ))) == 313
+        assert (round(utils2d.calculate_heading_to_point(
+            (2, -10), (-12, -8)
+        ))) == 278
+        assert (round(utils2d.calculate_heading_to_point(
+            (7, 7), (-25, 8)
+        ))) == 272
+        assert (round(utils2d.calculate_heading_to_point(
+            (-10, -10), (-11, 10)
+        ))) == 357
+
+        # Misc North Easternly angles
+        assert (round(utils2d.calculate_heading_to_point(
+            (2, 3), (12, 5)
+        ))) == 79
+        assert (round(utils2d.calculate_heading_to_point(
+            (2, 3), (12, 100)
+        ))) == 6
+        assert (round(utils2d.calculate_heading_to_point(
+            (-2, 2), (1, 9)
+        ))) == 23
+        assert (round(utils2d.calculate_heading_to_point(
+            (-2, -20), (25, -3)
+        ))) == 58
+        assert (round(utils2d.calculate_heading_to_point(
+            (-10, -10), (5, 4)
+        ))) == 47
+
+        # Misc South Easternly angles
+        assert (round(utils2d.calculate_heading_to_point(
+            (12, 17), (23, 5)
+        ))) == 137
+        assert (round(utils2d.calculate_heading_to_point(
+            (2, 12), (3, -10)
+        ))) == 177
+        assert (round(utils2d.calculate_heading_to_point(
+            (-12, 2), (12, -1)
+        ))) == 97
+        assert (round(utils2d.calculate_heading_to_point(
+            (-12, 12), (4, 7)
+        ))) == 107
+
+
+    # RESULTANT FORCE # # #
     def test_calc_resultant_force_due_north(self):
         meters, angle = utils2d.calculate_resultant_vector(0, 12)
         assert round(meters) == 12
@@ -372,3 +491,16 @@ class TestUtils(TestCase):
         distance = 10
         end = utils2d.translate_point(start, heading, distance)
         assert end == (5, 19,)
+
+    def test_calculate_point_distance(self):
+        assert round(utils2d.calculate_point_distance((0, 0), (0, 8))) == 8
+        assert round(utils2d.calculate_point_distance((0, 0), (0, -8))) == 8
+        assert round(utils2d.calculate_point_distance((0, 0), (8, 0))) == 8
+        assert round(utils2d.calculate_point_distance((0, 0), (-8, 0))) == 8
+        assert round(utils2d.calculate_point_distance((0, 8), (0, 0))) == 8
+        assert round(utils2d.calculate_point_distance((0, -8), (0, 0))) == 8
+        assert round(utils2d.calculate_point_distance((8, 0), (0, 0))) == 8
+        assert round(utils2d.calculate_point_distance((-8, 0), (0, 0))) == 8
+
+        assert round(utils2d.calculate_point_distance((-4, -4), (8, 8))) == 17
+        assert round(utils2d.calculate_point_distance((8, 8), (-4, -4))) == 17

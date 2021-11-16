@@ -1,10 +1,22 @@
 
+import datetime as dt
 import random
-from typing import TypedDict, Optional, List, Dict
+from typing import TypedDict, Optional, List, Dict, Set
+from time import sleep
 import uuid
 
 from .base import BaseModel
-from .ship import Ship
+from .ship import Ship, ShipScannerMode
+from .ship_designator import get_designations
+from api import utils2d
+from api.constants import (
+    MAX_SERVER_FPS,
+    MIN_ELAPSED_TIME_PER_FRAME,
+)
+from api.coord_cache import (
+    CoordDistanceCache,
+    CoordHeadingCache,
+)
 
 
 class GameError(Exception): pass
@@ -22,6 +34,7 @@ class GamePhase:
 class PlayerDetails(TypedDict):
     player_name: str
     player_id: str
+    team_id: str
 
 
 class MapConfigDetails(TypedDict):
@@ -59,7 +72,11 @@ class Game(BaseModel):
 
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
+
         self._player_id_to_ship_id_map: Dict[str, str] = {}
+
+        self._team_id_to_ship_id_map: Dict[str, str] = {}
+        self._ship_id_to_team_id_map: Dict[str, str] = {}
 
         self._phase = GamePhase.LOBBY
         self._game_frame = 0
@@ -70,7 +87,9 @@ class Game(BaseModel):
         self._map_x_unit_length = None
         self._map_y_unit_length = None
 
-        self._fps = 20
+        self._fps = 24
+        self._last_frame_at = None
+        self._frame_sleep = None
 
 
     def get_state(self) -> GameState:
@@ -79,6 +98,8 @@ class Game(BaseModel):
             'phase': self._phase,
             'game_frame': self._game_frame,
             'players': self._players,
+            'server_fps': self._fps,
+            'server_fps_throttle_seconds': self._frame_sleep,
             'map_config': {
                 "units_per_meter": self._map_units_per_meter,
                 "x_unit_length": self._map_x_unit_length,
@@ -109,7 +130,7 @@ class Game(BaseModel):
 
     def _get_live_state(self) -> Dict:
         return {
-            'ships': [],
+            'ships': [ship.to_dict() for ship in self._ships.values()],
         }
 
 
@@ -160,6 +181,9 @@ class Game(BaseModel):
         self._phase = GamePhase.STARTING
         self._spawn_ships()
 
+        for ship_id, designator in get_designations(list(self._ships.keys())).items():
+            self._ships[ship_id].scanner_designator = designator
+
 
     def _validate_can_advance_to_phase_1_starting(self):
         if self._phase != GamePhase.LOBBY:
@@ -176,7 +200,10 @@ class Game(BaseModel):
         """
         placed_points = []
         for player_id in self._players.keys():
+            team_id = self._players[player_id]['team_id']
+
             ship = Ship.spawn(
+                team_id,
                 map_units_per_meter=self._map_units_per_meter
             )
 
@@ -191,6 +218,10 @@ class Game(BaseModel):
             ship.coord_y = coord_y
 
             self._player_id_to_ship_id_map[player_id] = ship.id
+
+            self._team_id_to_ship_id_map[team_id] = ship.id
+            self._ship_id_to_team_id_map[ship.id] = team_id
+
             self._ships[ship.id] = ship
 
 
@@ -226,23 +257,113 @@ class Game(BaseModel):
     def run_frame(self, request: RunFrameDetails):
         """ Run frame phases and increment game frame number.
         """
+
+        # Calculate Frame Per Second, throttle with sleep command if FPS is too high
+        now_ts = dt.datetime.now()
+        if self._last_frame_at is None:
+            if self._game_frame != 1:
+                raise Exception(
+                    "Expected game_frame number to be 1 when _last_frame_at is None."
+                )
+            self._last_frame_at = now_ts
+            self._fps = 60
+
+        else:
+            ellapsed_seconds = (now_ts - self._last_frame_at).total_seconds()
+            fps = round(1 / ellapsed_seconds)
+
+            if fps > MAX_SERVER_FPS:
+                # Apply throttle
+                diff = MIN_ELAPSED_TIME_PER_FRAME - ellapsed_seconds
+                self._frame_sleep = diff
+                sleep(diff)
+                self._last_frame_at = dt.datetime.now() # Must set last_frame_at AFTER sleeping.
+                self._fps = MAX_SERVER_FPS
+            else:
+                # No throttle needed
+                self._frame_sleep = None
+                self._fps = fps
+                self._last_frame_at = now_ts
+
+        # Run Frame Phases
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
 
             # Phase 0
-            self._calculate_ship_damage(ship)
+            ship.calculate_damage()
             # Phase 1
-            self._calculate_ship_resources(ship)
+            ship.adjust_resources()
             # Phase 2
-            self._calculate_physics(ship)
+            ship.calculate_physics(self._fps)
             # Phase 3
-            self._calculate_ship_side_effects(ship)
+            ship.calculate_side_effects()
+
+
+        # Phase 3 (again): Top Level side effects
+        self.update_scanner_states()
 
         # Phase 4
         for command in request['commands']:
             self._process_ship_command(command)
 
         self.incr_game_frame()
+
+
+    def update_scanner_states(self):
+        distance_cache = CoordDistanceCache()
+        heading_cache = CoordHeadingCache()
+
+        for ship_id in self._ships:
+            self._ships[ship_id].scanner_data.clear()
+
+            if not self._ships[ship_id].scanner_online:
+                continue
+
+            scan_range = self._ships[ship_id].scanner_range
+
+            for other_id in self._ships:
+                if other_id == ship_id:
+                    continue
+
+                other_coords = self._ships[other_id].coords
+                ship_coords = self._ships[ship_id].coords
+
+                distance = distance_cache.get_val(ship_coords, other_coords)
+                if distance is None:
+                    distance = utils2d.calculate_point_distance(ship_coords, other_coords)
+                    distance_cache.set_val(ship_coords, other_coords, distance)
+                distance_meters = round(distance / self._map_units_per_meter)
+
+                if scan_range >= distance_meters:
+                    heading = heading_cache.get_val(ship_coords, other_coords)
+                    if heading is None:
+                        heading = round(utils2d.calculate_heading_to_point(ship_coords, other_coords))
+                        heading_cache.set_val(ship_coords, other_coords, heading)
+
+                    if self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR:
+                        self._ships[ship_id].scanner_data[other_id] = {
+                            'designator': self._ships[other_id].scanner_designator,
+                            'diameter_meters': self._ships[other_id].scanner_diameter,
+                            'coord_x': other_coords[0],
+                            'coord_y': other_coords[1],
+                            'distance': round(distance_meters),
+                            'relative_heading': heading,
+                        }
+                    elif self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
+                        if (
+                            self._ships[other_id].scanner_thermal_signature
+                            >= self._ships[ship_id].scanner_ir_minimum_thermal_signature
+                        ):
+                            self._ships[ship_id].scanner_data[other_id] = {
+                                'designator': self._ships[other_id].scanner_designator,
+                                'thermal_signature': self._ships[other_id].scanner_thermal_signature,
+                                'coord_x': other_coords[0],
+                                'coord_y': other_coords[1],
+                                'distance': round(distance_meters),
+                                'relative_heading': heading,
+                            }
+                    else:
+                        raise NotImplementedError
 
 
     def _process_ship_command(self, command: FrameCommand):
@@ -258,15 +379,3 @@ class Game(BaseModel):
             **kwargs,
         )
 
-
-    def _calculate_ship_damage(self, ship: Ship):
-        ship.calculate_damage()
-
-    def _calculate_ship_resources(self, ship: Ship):
-        ship.adjust_resources()
-
-    def _calculate_physics(self, ship: Ship):
-        ship.calculate_physics(self._fps)
-
-    def _calculate_ship_side_effects(self, ship: Ship):
-        ship.calculate_side_effects()

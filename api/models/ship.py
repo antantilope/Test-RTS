@@ -1,6 +1,6 @@
 
 from decimal import Decimal
-from typing import Tuple
+from typing import Tuple, Dict, TypedDict, Optional
 
 from api.models.base import BaseModel
 from api import utils2d
@@ -33,10 +33,29 @@ class ShipCommands:
     DEACTIVATE_ENGINE = 'deactivate_engine'
     LIGHT_ENGINE = 'light_engine'
 
+    ACTIVATE_SCANNER = 'activate_scanner'
+    DEACTIVATE_SCANNER = 'deactivate_scanner'
+    SET_SCANNER_MODE_RADAR = 'set_scanner_mode_radar'
+    SET_SCANNER_MODE_IR = 'set_scanner_mode_ir'
+
 
 class ShipStateKey:
-    ENGINE = 'engine'
     MASS = 'mass'
+
+
+class ShipScannerMode:
+    RADAR = 'radar'
+    IR = 'ir'
+
+
+class ScannedElement(TypedDict):
+    designator: str
+    diameter_meters: Optional[int]
+    thermal_signature: Optional[int]
+    coord_x: int
+    coord_y: int
+    relative_heading: int
+    distance: int
 
 
 class Ship(BaseModel):
@@ -47,6 +66,8 @@ class Ship(BaseModel):
 
         self.map_units_per_meter = None
 
+        self.team_id = None
+
         # x,y coords for the center of the ship.
         # These coords show where on the map the ship is
         self.coord_x = 0
@@ -54,7 +75,6 @@ class Ship(BaseModel):
 
         # heading of ship in degrees (between 0 and 359)
         self.heading = 0
-
 
         # <START OF RELATIVE COORDINATES>
         # These are the coordinates for the ship if the ship's center is at the origin: (coord_x, coord_y) == (0, 0,)
@@ -79,7 +99,6 @@ class Ship(BaseModel):
         self.velocity_x_meters_per_second = float(0)
         self.velocity_y_meters_per_second = float(0)
 
-
         # Battery
         self.battery_power = 0
         self.battery_capacity = 0
@@ -94,6 +113,8 @@ class Ship(BaseModel):
         self.engine_newtons = 0
         self.engine_lit = False
         self.engine_online = False
+        self.engine_starting = False
+        self.engine_start_complete_at_frame = None
         self.engine_idle_power_requirement_per_frame = None
         self.engine_frames_to_activate = None
         self.engine_activation_power_required_total = None
@@ -101,11 +122,30 @@ class Ship(BaseModel):
         self.engine_fuel_usage_per_frame = None
         self.engine_battery_charge_per_frame = None
 
+        # Scanner
+        self.scanner_designator = None # A unique "human readable" identifier used to identify this ship on other ships' scanners
+        self.scanner_online = False
+        self.scanner_starting = False
+        self.scanner_start_complete_at_frame = None
+        self.scanner_mode = None
+        self.scanner_radar_range = None
+        self.scanner_ir_range = None
+        self.scanner_ir_minimum_thermal_signature = None
+        self.scanner_idle_power_requirement_per_frame = None
+        self.scanner_frames_to_activate = None
+        self.scanner_activation_power_required_total = None
+        self.scanner_activation_power_required_per_frame = None
+        self.scanner_data: Dict[str, ScannedElement] = {}
+        # Size of the ship as it appears on another ships' RADAR mode scanner
+        self.scanner_diameter = None
+        # Temperature of the ship as it appears on an other ships' IR mode scanner
+        self.scanner_thermal_signature = None
+
+
         # Ship reaction wheel
         self.reaction_wheel_online = False
 
         # Arbitrary ship state data
-        # to support operations that occur over multiple frames.
         self._state = {}
 
     @property
@@ -128,6 +168,11 @@ class Ship(BaseModel):
     def h0_y2(self) -> int:
         return self.heading_0_rel_coord_2[1]
 
+    def refresh_scanner_diameter(self):
+        # This method should be called when the ship's physical dimentions change
+        d1 = self.h0_x2 - self.h0_x1
+        d2 = self.h0_y2 - self.h0_y1
+        self.scanner_diameter = round((d1 + d2) / 2)
 
     @property
     def mass(self) -> int:
@@ -143,14 +188,57 @@ class Ship(BaseModel):
     def engine_heading(self) -> int:
         return (self.heading - 180) if self.heading >= 180 else (self.heading + 180)
 
+    @property
+    def scanner_range(self):
+        return self.scanner_radar_range if self.scanner_mode == ShipScannerMode.RADAR else self.scanner_ir_range
+
+    def to_dict(self) -> Dict:
+        """ Get JSON serializable representation of the ship.
+        """
+        return {
+            'id': self.id,
+            'team_id': self.team_id,
+            'mass': self.mass,
+            'coord_x': self.coord_x,
+            'coord_y': self.coord_y,
+            'heading': self.heading,
+            'rel_rot_coord_0': self.rel_rot_coord_0,
+            'rel_rot_coord_1': self.rel_rot_coord_1,
+            'rel_rot_coord_2': self.rel_rot_coord_2,
+            'rel_rot_coord_3': self.rel_rot_coord_3,
+            'heading_0_rel_coord_0': self.heading_0_rel_coord_0,
+            'heading_0_rel_coord_1': self.heading_0_rel_coord_1,
+            'heading_0_rel_coord_2': self.heading_0_rel_coord_2,
+            'heading_0_rel_coord_3': self.heading_0_rel_coord_3,
+            'velocity_x_meters_per_second': self.velocity_x_meters_per_second,
+            'velocity_y_meters_per_second': self.velocity_y_meters_per_second,
+            'battery_power': self.battery_power,
+            'battery_capacity': self.battery_capacity,
+            'fuel_level': self.battery_power,
+            'fuel_capacity': self.battery_capacity,
+            'reaction_wheel_online': self.reaction_wheel_online,
+            'engine_newtons': self.engine_newtons,
+            'engine_online': self.engine_online,
+            'engine_lit': self.engine_lit,
+            'engine_starting': self.engine_starting,
+            'scanner_online': self.scanner_online,
+            'scanner_starting': self.scanner_starting,
+            'scanner_mode': self.scanner_mode,
+            'scanner_radar_range': self.scanner_radar_range,
+            'scanner_ir_range': self.scanner_ir_range,
+            'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
+            'scanner_data': self.scanner_data,
+            'scanner_thermal_signature': self.scanner_thermal_signature,
+        }
 
     @classmethod
-    def spawn(cls, map_units_per_meter: int = 1) -> "Ship":
-        """ Spawn unpositioned ship with defaults
+    def spawn(cls, team_id: str, map_units_per_meter: int = 1) -> "Ship":
+        """ Create new unpositioned ship with defaults
         """
         instance = cls()
 
         instance.map_units_per_meter = map_units_per_meter
+        instance.team_id = team_id
 
         x_len = constants.SHIP_X_LEN * map_units_per_meter
         y_len = constants.SHIP_Y_LEN * map_units_per_meter
@@ -164,6 +252,7 @@ class Ship(BaseModel):
         instance.heading_0_rel_coord_1 = (x1, y2,)
         instance.heading_0_rel_coord_2 = (x2, y2,)
         instance.heading_0_rel_coord_3 = (x2, y1,)
+        instance.refresh_scanner_diameter()
 
         instance.rel_rot_coord_0 = (x1, y1,)
         instance.rel_rot_coord_1 = (x1, y2,)
@@ -185,6 +274,16 @@ class Ship(BaseModel):
         instance.engine_idle_power_requirement_per_frame = constants.ENGINE_IDLE_POWER_REQUIREMENT_PER_FRAME
         instance.engine_fuel_usage_per_frame = constants.ENGINE_FUEL_USAGE_PER_FRAME
         instance.engine_battery_charge_per_frame = constants.ENGINE_BATTERY_CHARGE_PER_FRAME
+
+        instance.scanner_mode = ShipScannerMode.RADAR
+        instance.scanner_radar_range = constants.SCANNER_MODE_RADAR_RANGE_M
+        instance.scanner_ir_range = constants.SCANNER_MODE_IR_RANGE_M
+        instance.scanner_ir_minimum_thermal_signature = constants.SCANNER_IR_MINIMUM_THERMAL_SIGNATURE
+        instance.scanner_idle_power_requirement_per_frame = constants.SCANNER_POWER_REQUIREMENT_PER_FRAME
+        instance.scanner_frames_to_activate = constants.FRAMES_TO_START_SCANNER
+        instance.scanner_activation_power_required_total = constants.ACTIVATE_SCANNER_POWER_REQUIREMENT_TOTAL
+        instance.scanner_activation_power_required_per_frame = constants.ACTIVATE_ENGINE_POWER_REQUIREMENT_PER_FRAME
+        instance.scanner_thermal_signature = 0
 
         return instance
 
@@ -220,35 +319,71 @@ class Ship(BaseModel):
             except InsufficientPowerError:
                 self.reaction_wheel_online = False
 
-        ''' ENGINE '''
-        if ShipStateKey.ENGINE in self._state:
-            ''' ENGINE POWER DRAW (STARTING) # # # '''
-            state = self._state[ShipStateKey.ENGINE]
-            if 'starting' in state:
-                if not state['starting']:
-                    raise NotImplementedError
-                if self.engine_online:
-                    raise NotImplementedError
+        ''' Scanner POWER DRAW (RUNNING) '''
+        if self.scanner_online:
+            try:
+                self.use_battery_power(
+                    self.scanner_idle_power_requirement_per_frame
+                )
+            except InsufficientPowerError:
+                self.scanner_online = False
 
-                startup_complete = state['last_frame'] <= self.game_frame
-                if startup_complete:
-                    del self._state[ShipStateKey.ENGINE]
-                    try:
-                        self.use_battery_power(
-                            self.engine_idle_power_requirement_per_frame
-                        )
-                    except InsufficientPowerError:
-                        pass
-                    else:
-                        self.engine_online = True
+        elif self.scanner_starting:
+            ''' Scanner POWER DRAW (STARTING) '''
+            startup_complete = self.scanner_start_complete_at_frame <= self.game_frame
+            if startup_complete:
+                self.scanner_starting = False
+                self.scanner_start_complete_at_frame = None
+                try:
+                    self.use_battery_power(
+                        self.scanner_idle_power_requirement_per_frame
+                    )
+                except InsufficientPowerError:
+                    # Scanner startup complete but not enough power to idle scanner
+                    pass
                 else:
-                    try:
-                        self.use_battery_power(
-                            self.engine_activation_power_required_per_frame
-                        )
-                    except InsufficientPowerError:
-                        del self._state[ShipStateKey.ENGINE]
+                    # Scanner Startup successful.
+                    self.scanner_online = True
 
+            else:
+                # continue scanner startup
+                try:
+                    self.use_battery_power(
+                        self.scanner_activation_power_required_per_frame
+                    )
+                except InsufficientPowerError:
+                    # Cancel startup, not enough power.
+                    self.scanner_starting = False
+                    self.scanner_start_complete_at_frame = None
+
+
+
+        ''' ENGINE POWER DRAW (STARTING) # # # '''
+        if self.engine_starting:
+            startup_complete = self.engine_start_complete_at_frame <= self.game_frame
+            if startup_complete:
+                self.engine_starting = False
+                self.engine_start_complete_at_frame = None
+                try:
+                    self.use_battery_power(
+                        self.engine_idle_power_requirement_per_frame
+                    )
+                except InsufficientPowerError:
+                    # Engine startup complete but not enough power to idle engine.
+                    pass
+                else:
+                    # Engine Startup successful.
+                    self.engine_online = True
+            else:
+                # Continue engine startup.
+                try:
+                    self.use_battery_power(
+                        self.engine_activation_power_required_per_frame
+                    )
+                except InsufficientPowerError:
+                    # Cancel startup, not enough power.
+                    self.engine_starting = False
+                    self.engine_start_complete_at_frame = None
 
         elif self.engine_online and not self.engine_lit:
             ''' ENGINE POWER DRAW (IDLE) '''
@@ -322,6 +457,14 @@ class Ship(BaseModel):
             self.cmd_deactivate_engine()
         elif command == ShipCommands.LIGHT_ENGINE:
             self.cmd_light_engine()
+        elif command == ShipCommands.ACTIVATE_SCANNER:
+            self.cmd_activate_scanner()
+        elif command == ShipCommands.DEACTIVATE_SCANNER:
+            self.cmd_deactivate_scanner()
+        elif command == ShipCommands.SET_SCANNER_MODE_RADAR:
+            self.cmd_set_scanner_mode_radar()
+        elif command == ShipCommands.SET_SCANNER_MODE_IR:
+            self.cmd_set_scanner_mode_ir()
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -380,21 +523,16 @@ class Ship(BaseModel):
             delta_radians
         )
 
-
     def cmd_activate_engine(self) -> None:
         if self.engine_online:
             return
-        if ShipStateKey.ENGINE in self._state:
+        if self.engine_starting:
             return
-        self._state[ShipStateKey.ENGINE] = {
-            'starting': True,
-            'last_frame': self.game_frame + self.engine_frames_to_activate,
-        }
+        self.engine_starting = True
+        self.engine_start_complete_at_frame = self.game_frame + self.engine_frames_to_activate
 
     def cmd_deactivate_engine(self) -> None:
         if not self.engine_online:
-            return
-        if ShipStateKey.ENGINE in self._state:
             return
         self.engine_lit = False
         self.engine_online = False
@@ -402,6 +540,23 @@ class Ship(BaseModel):
     def cmd_light_engine(self) -> None:
         if not self.engine_online or self.engine_lit:
             return
-        if ShipStateKey.ENGINE in self._state:
-            return
         self.engine_lit = True
+
+
+    def cmd_activate_scanner(self) -> None:
+        if self.scanner_online or self.scanner_starting:
+            return
+        self.scanner_starting = True
+        self.scanner_start_complete_at_frame = self.game_frame + self.scanner_frames_to_activate
+
+    def cmd_deactivate_scanner(self) -> None:
+        if not self.scanner_online or self.scanner_starting:
+            return
+        self.scanner_online = False
+        self.scanner_data.clear()
+
+    def cmd_set_scanner_mode_radar(self) -> None:
+        self.scanner_mode = ShipScannerMode.RADAR
+
+    def cmd_set_scanner_mode_ir(self) -> None:
+        self.scanner_mode = ShipScannerMode.IR
