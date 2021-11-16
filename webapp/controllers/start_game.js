@@ -10,6 +10,42 @@ const { EVENT_STARTGAME, EVENT_ROOM_LIST_UPDATE  } = require("../lib/event_names
 const { logger } = require("../lib/logger");
 
 
+
+const runGameLoop = (port, room_id) => {
+    // TODO: query command queue
+    // TODO: research KeepAlive for TCP sockets.
+    const client = new net.Socket();
+    client.connect(port, 'localhost', () => {
+        logger.info("connected to GameAPI on port " + port);
+        const payload = '{"run_frame":{"commands":[]}}\n';
+        logger.info("writing data to GameAPI: " + payload);
+        client.write(payload);
+    });
+    client.on("data", data => {
+        logger.info("received response from GameAPI, disconnecting...");
+        client.destroy();
+        let respData;
+        try {
+            respData = JSON.parse(data);
+        } catch(err) {
+            logger.error("expected JSON data, got: " + data);
+            logger.error(err);
+            logger.error(data);
+            throw err;
+        }
+        logger.silly(data);
+
+        if (respData.phase == PHASE_2_LIVE) {
+            setTimeout(() => {
+                runGameLoop(port, room_id);
+            });
+        } else {
+            logger.info("game phase is " + respData.phase);
+        }
+    });
+}
+
+
 const doCountdown = (room_id, req, port) => {
     const client = new net.Socket();
     logger.info('connecting to GameAPI on port ' + port)
@@ -63,7 +99,9 @@ const doCountdown = (room_id, req, port) => {
                     {game_start_countdown: 0},
                 );
 
-                // TODO: Launch Game Loop
+            setTimeout(() => {
+                runGameLoop(port, room_id);
+            });
         }
     });
 }

@@ -1,12 +1,18 @@
 
+import datetime as dt
 import random
 from typing import TypedDict, Optional, List, Dict, Set
+from time import sleep
 import uuid
 
 from .base import BaseModel
 from .ship import Ship, ShipScannerMode
 from .ship_designator import get_designations
 from api import utils2d
+from api.constants import (
+    MAX_SERVER_FPS,
+    MIN_ELAPSED_TIME_PER_FRAME,
+)
 from api.coord_cache import (
     CoordDistanceCache,
     CoordHeadingCache,
@@ -76,15 +82,19 @@ class Game(BaseModel):
         self._map_x_unit_length = None
         self._map_y_unit_length = None
 
-        self._fps = 20
+        self._fps = 24
+        self._last_frame_at = None
+        self._frame_sleep = None
 
 
     def get_state(self) -> GameState:
         base_state = {
             'ok': True,
-            'phase': self._phase,
+            'phase': self._phase if self._game_frame < 10 else GamePhase.COMPLETE,
             'game_frame': self._game_frame,
             'players': self._players,
+            'server_fps': self._fps,
+            'server_fps_throttle_seconds': self._frame_sleep,
             'map_config': {
                 "units_per_meter": self._map_units_per_meter,
                 "x_unit_length": self._map_x_unit_length,
@@ -235,6 +245,29 @@ class Game(BaseModel):
     def run_frame(self, request: RunFrameDetails):
         """ Run frame phases and increment game frame number.
         """
+
+        # Calculate Frame Per Second, throttle with sleep command if FPS is too high
+        now_ts = dt.datetime.now()
+        if self._last_frame_at is None:
+            self._last_frame_at = now_ts
+        else:
+            ellapsed_seconds = (now_ts - self._last_frame_at).total_seconds()
+            fps = round(1 / ellapsed_seconds)
+
+            if fps > MAX_SERVER_FPS:
+                # Apply throttle
+                diff = MIN_ELAPSED_TIME_PER_FRAME - ellapsed_seconds
+                self._frame_sleep = diff
+                sleep(diff)
+                self._last_frame_at = dt.datetime.now()
+                self._fps = MAX_SERVER_FPS
+            else:
+                # No throttle needed
+                self._frame_sleep = None
+                self._fps = fps
+                self._last_frame_at = now_ts
+
+        # Run Frame Phases
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
 

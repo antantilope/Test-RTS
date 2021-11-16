@@ -4,8 +4,18 @@ from typing import Dict
 
 def get_designations(ship_ids) -> Dict:
 
-    part_1 = ('red', 'blue', 'green', 'pink', 'wild', 'lost', 'big', 'dusty', 'little', 'young', 'old', 'bad', 'high')
-    part_2 = ('fox', 'dog', 'cat', 'fly', 'bear', 'crow', 'pig', 'eye', 'night', 'alpha', 'beta', 'gamma', 'delta')
+    part_1 = (
+        'red', 'blue', 'green', 'pink', 'grey',
+        'wild', 'lost', 'big', 'dusty', 'long',
+        'little', 'old', 'bad', 'high', 'cold',
+        'lucky', 'crazy', 'open', 'mad', 'wide', 'early',
+    )
+    part_2 = (
+        'fox', 'dog', 'cat', 'fly', 'crow', 'pig',
+        'eye', 'night', 'light', 'ranger', 'tale', 'rail',
+        'flight', 'year', 'lake',
+        'alpha', 'beta', 'gamma', 'delta', 'iota', 'lambda', 'omega', 'sigma',
+    )
 
     if len(ship_ids) > len(part_1) or len(ship_ids) > len(part_2):
         raise Exception("too many ships to assign a unique identifier")

@@ -16,11 +16,11 @@ const destroy = async (db, roomUUID) => {
     sql3 = `
         DELETE FROM api_room WHERE uuid = ?;
     `;
-    return Promise.all([
-        db.run(sql1, [roomUUID]),
-        db.run(sql2, [roomUUID]),
-        db.run(sql3, [roomUUID]),
-    ])
+
+    await db.run(sql1, [roomUUID]);
+    await db.run(sql2, [roomUUID]);
+    await db.run(sql3, [roomUUID]);
+
 }
 
 

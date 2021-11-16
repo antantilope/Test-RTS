@@ -342,6 +342,13 @@
                     });
                 });
 
+                $(document).on('keypress', event => {
+                    const ENTER_KEY = 13;
+                    if(event.which == ENTER_KEY) {
+                        $("#chat-send-msg").trigger("click");
+                    }
+                });
+
                 const socket = io("ws://localhost:8000");
                 socket.on("connect", () => {
                     console.log("Socket Connected...");
