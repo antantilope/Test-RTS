@@ -249,7 +249,13 @@ class Game(BaseModel):
         # Calculate Frame Per Second, throttle with sleep command if FPS is too high
         now_ts = dt.datetime.now()
         if self._last_frame_at is None:
+            if self._game_frame != 1:
+                raise Exception(
+                    "Expected game_frame number to be 1 when _last_frame_at is None."
+                )
             self._last_frame_at = now_ts
+            self._fps = 60
+
         else:
             ellapsed_seconds = (now_ts - self._last_frame_at).total_seconds()
             fps = round(1 / ellapsed_seconds)
@@ -259,7 +265,7 @@ class Game(BaseModel):
                 diff = MIN_ELAPSED_TIME_PER_FRAME - ellapsed_seconds
                 self._frame_sleep = diff
                 sleep(diff)
-                self._last_frame_at = dt.datetime.now()
+                self._last_frame_at = dt.datetime.now() # Must set last_frame_at AFTER sleeping.
                 self._fps = MAX_SERVER_FPS
             else:
                 # No throttle needed

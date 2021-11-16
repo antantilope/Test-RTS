@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { ApiService } from "../api.service";
+
 
 @Component({
   selector: 'app-takeover',
@@ -7,7 +9,11 @@ import { Component, OnInit } from '@angular/core';
 })
 export class TakeoverComponent implements OnInit {
 
-  constructor() { }
+  constructor(
+    private _api: ApiService,
+  ) {
+    console.log("takeover::constructor");
+  }
 
   ngOnInit(): void {
   }
