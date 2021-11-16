@@ -34,6 +34,7 @@ class GamePhase:
 class PlayerDetails(TypedDict):
     player_name: str
     player_id: str
+    team_id: str
 
 
 class MapConfigDetails(TypedDict):
@@ -71,7 +72,11 @@ class Game(BaseModel):
 
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
+
         self._player_id_to_ship_id_map: Dict[str, str] = {}
+
+        self._team_id_to_ship_id_map: Dict[str, str] = {}
+        self._ship_id_to_team_id_map: Dict[str, str] = {}
 
         self._phase = GamePhase.LOBBY
         self._game_frame = 0
@@ -90,7 +95,7 @@ class Game(BaseModel):
     def get_state(self) -> GameState:
         base_state = {
             'ok': True,
-            'phase': self._phase if self._game_frame < 10 else GamePhase.COMPLETE,
+            'phase': self._phase,
             'game_frame': self._game_frame,
             'players': self._players,
             'server_fps': self._fps,
@@ -195,7 +200,10 @@ class Game(BaseModel):
         """
         placed_points = []
         for player_id in self._players.keys():
+            team_id = self._players[player_id]['team_id']
+
             ship = Ship.spawn(
+                team_id,
                 map_units_per_meter=self._map_units_per_meter
             )
 
@@ -210,6 +218,10 @@ class Game(BaseModel):
             ship.coord_y = coord_y
 
             self._player_id_to_ship_id_map[player_id] = ship.id
+
+            self._team_id_to_ship_id_map[team_id] = ship.id
+            self._ship_id_to_team_id_map[ship.id] = team_id
+
             self._ships[ship.id] = ship
 
 

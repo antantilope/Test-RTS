@@ -3,15 +3,36 @@ const net = require('net');
 
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_room_and_player_details } = require("../lib/db/get_rooms");
-const { get_rooms_page_name, get_room_room_name } = require("../lib/room_names");
+const { get_rooms_page_name, get_room_room_name, get_team_room_name } = require("../lib/room_names");
 const { get_user_details } = require("../lib/db/get_user_details");
-const { PHASE_1_STARTING, PHASE_2_LIVE } = require("../constants");
-const { EVENT_STARTGAME, EVENT_ROOM_LIST_UPDATE  } = require("../lib/event_names");
+const {
+    PHASE_1_STARTING,
+    PHASE_2_LIVE,
+} = require("../constants");
+const {
+    EVENT_STARTGAME,
+    EVENT_ROOM_LIST_UPDATE,
+    EVENT_FRAMEDATA
+} = require("../lib/event_names");
 const { logger } = require("../lib/logger");
 
 
+function shuffledRange(start, end) {
+    const shuffle = array => {
+        // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+        let currentIndex = array.length,  randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+    return shuffle(Array(end - start + 1).fill().map((_, idx) => start + idx));
+}
 
-const runGameLoop = (port, room_id) => {
+const runGameLoop = (room_id, port, io) => {
     // TODO: query command queue
     // TODO: research KeepAlive for TCP sockets.
     const client = new net.Socket();
@@ -36,8 +57,22 @@ const runGameLoop = (port, room_id) => {
         logger.silly(data);
 
         if (respData.phase == PHASE_2_LIVE) {
+            // For fairness, randomize the order in which a ship's state is emitted as an event.
+            const range = shuffledRange(0, respData.ships.length - 1);
+            for(let i in range)
+            {
+                const ship = respData.ships[i];
+                const roomName = get_team_room_name(room_id, ship.team_id);
+                logger.info("emmiting ship state to room " + roomName);
+                io.to(roomName).emit(
+                    EVENT_FRAMEDATA,
+                    ship,
+                );
+            }
+
+            // Recursively call the game loop function.
             setTimeout(() => {
-                runGameLoop(port, room_id);
+                runGameLoop(room_id, port, io);
             });
         } else {
             logger.info("game phase is " + respData.phase);
@@ -46,7 +81,7 @@ const runGameLoop = (port, room_id) => {
 }
 
 
-const doCountdown = (room_id, req, port) => {
+const doCountdown = (room_id, port, io) => {
     const client = new net.Socket();
     logger.info('connecting to GameAPI on port ' + port)
     client.connect(port, 'localhost', () => {
@@ -75,8 +110,7 @@ const doCountdown = (room_id, req, port) => {
         {
             logger.info("Count down: " + respData.game_start_countdown);
             logger.info("emitting " + EVENT_STARTGAME + " event");
-            req.app.get("socketio")
-                .to(get_room_room_name(room_id))
+            io.to(get_room_room_name(room_id))
                 .emit(
                     EVENT_STARTGAME,
                     {game_start_countdown: respData.game_start_countdown},
@@ -84,7 +118,7 @@ const doCountdown = (room_id, req, port) => {
             if(respData.game_start_countdown - 1 >= 0) {
                 logger.info("scheduling next " + EVENT_STARTGAME + " event");
                 setTimeout(()=>{
-                    doCountdown(room_id, req, port);
+                    doCountdown(room_id, port, io);
                 }, 1000);
             }
         }
@@ -92,15 +126,14 @@ const doCountdown = (room_id, req, port) => {
         {
             logger.info("Count down: 0");
             logger.info("emitting final " + EVENT_STARTGAME + " event")
-            req.app.get("socketio")
-                .to(get_room_room_name(room_id))
+            io.to(get_room_room_name(room_id))
                 .emit(
                     EVENT_STARTGAME,
                     {game_start_countdown: 0},
                 );
 
             setTimeout(() => {
-                runGameLoop(port, room_id);
+                runGameLoop(room_id, port, io);
             });
         }
     });
@@ -202,7 +235,7 @@ exports.startGameController = startGameController = async (req, res) => {
 
             logger.info("scheduling next countdown");
             setTimeout(()=>{
-                doCountdown(sess_room_id, req, room.roomDetails.port);
+                doCountdown(sess_room_id, room.roomDetails.port, req.app.get('socketio'));
             }, 1000);
         }
     });

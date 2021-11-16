@@ -66,6 +66,8 @@ class Ship(BaseModel):
 
         self.map_units_per_meter = None
 
+        self.team_id = None
+
         # x,y coords for the center of the ship.
         # These coords show where on the map the ship is
         self.coord_x = 0
@@ -73,7 +75,6 @@ class Ship(BaseModel):
 
         # heading of ship in degrees (between 0 and 359)
         self.heading = 0
-
 
         # <START OF RELATIVE COORDINATES>
         # These are the coordinates for the ship if the ship's center is at the origin: (coord_x, coord_y) == (0, 0,)
@@ -97,7 +98,6 @@ class Ship(BaseModel):
         # Velocity
         self.velocity_x_meters_per_second = float(0)
         self.velocity_y_meters_per_second = float(0)
-
 
         # Battery
         self.battery_power = 0
@@ -197,6 +197,7 @@ class Ship(BaseModel):
         """
         return {
             'id': self.id,
+            'team_id': self.team_id,
             'mass': self.mass,
             'coord_x': self.coord_x,
             'coord_y': self.coord_y,
@@ -231,12 +232,13 @@ class Ship(BaseModel):
         }
 
     @classmethod
-    def spawn(cls, map_units_per_meter: int = 1) -> "Ship":
+    def spawn(cls, team_id: str, map_units_per_meter: int = 1) -> "Ship":
         """ Create new unpositioned ship with defaults
         """
         instance = cls()
 
         instance.map_units_per_meter = map_units_per_meter
+        instance.team_id = team_id
 
         x_len = constants.SHIP_X_LEN * map_units_per_meter
         y_len = constants.SHIP_Y_LEN * map_units_per_meter

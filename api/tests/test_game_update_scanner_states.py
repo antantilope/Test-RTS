@@ -15,19 +15,23 @@ class TestGameUpdateScannerStates(TestCase):
         self.player_1_id = str(uuid4())
         self.player_1_handle = "foobar"
         self.player_1_ship_id = None
+        self.player_1_team_id = str(uuid4())
         self.player_2_id = str(uuid4())
         self.player_2_handle = "derpy"
         self.player_2_ship_id = None
+        self.player_2_team_id = str(uuid4())
 
         self.game = Game()
 
         self.game.register_player({
             'player_id':self.player_1_id,
             'player_name': self.player_1_handle,
+            'team_id': self.player_1_team_id,
         })
         self.game.register_player({
             'player_id':self.player_2_id,
             'player_name': self.player_2_handle,
+            'team_id': self.player_2_team_id,
         })
 
         self.game.configure_map({

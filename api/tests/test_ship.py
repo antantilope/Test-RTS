@@ -1,5 +1,6 @@
 
 from unittest import TestCase
+from uuid import uuid4
 
 from api.models.ship import ShipStateKey
 from api import constants
@@ -33,7 +34,8 @@ from .utils import (
 
 class TestShipAdjustResources(TestCase):
     def setUp(self):
-        self.ship = Ship.spawn(map_units_per_meter=10)
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
         self.ship.reaction_wheel_online = False
 
     def test_battery_power_reduced_if_reaction_wheel_online(self):
@@ -374,7 +376,8 @@ class TestShipAdjustResources(TestCase):
 class TestShipCMDCalculatePhysics(TestCase):
     def setUp(self):
         self.map_units_per_meter = 10
-        self.ship = Ship.spawn(map_units_per_meter=self.map_units_per_meter)
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=self.map_units_per_meter)
 
         # Set values that are used in physics calculations.
         self.ship.engine_newtons = 1100
@@ -1599,7 +1602,8 @@ class TestShipCMDCalculatePhysics(TestCase):
 class TestShipCMDSetHeading(TestCase):
 
     def setUp(self):
-        self.ship = Ship.spawn(map_units_per_meter=10)
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
         self.ship.reaction_wheel_online = True
 
     def _assert_ship_heading_0(self):
@@ -1720,7 +1724,8 @@ class TestShipCMDSetHeading(TestCase):
 class TestShipCMDActivateAndDeactivateReactionWheel(TestCase):
 
     def setUp(self):
-        self.ship = Ship.spawn(map_units_per_meter=10)
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
         self.ship.reaction_wheel_online = False
 
     def test_reaction_wheel_can_be_activated(self):
@@ -1759,7 +1764,8 @@ class TestShipCMDActivateAndDeactivateReactionWheel(TestCase):
 
 class TestShipCMDActivateDeactivateLightEngine(TestCase):
     def setUp(self):
-        self.ship = Ship.spawn(map_units_per_meter=10)
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
 
     def test_activate_engine_command_updates_ship_state(self):
         current_frame = 10

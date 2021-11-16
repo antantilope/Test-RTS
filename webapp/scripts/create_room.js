@@ -11,12 +11,10 @@ const {
     EVENT_PUBMSG
 } = require("../lib/event_names");
 
-const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_players, owner_is_observer) => {
+const create = async (db, room_uuid, team_uuid, port, pid, owner_uuid, room_name, max_players, owner_is_observer) => {
     /*
         Create a room, team, and assign the room owner to the newly created team.
     */
-    const owner_team_uuid = await mint_team_uuid(db);
-
     const sql1 = `
         INSERT INTO api_room
         (uuid, name, port, pid, max_players, room_owner, phase)
@@ -32,8 +30,8 @@ const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_playe
     `;
     return Promise.all([
         db.run(sql1, [room_uuid, room_name, port, pid, max_players, owner_uuid]),
-        db.run(sql2, [owner_team_uuid, room_uuid, owner_is_observer]),
-        db.run(sql3, [owner_team_uuid, owner_uuid]),
+        db.run(sql2, [team_uuid, room_uuid, owner_is_observer]),
+        db.run(sql3, [team_uuid, owner_uuid]),
     ]);
 }
 
@@ -82,7 +80,9 @@ const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_playe
     // Write changes to database
     const db = await get_db_connection();
     let ownerDetails;
+    let teamUUID;
     try {
+
         ownerDetails = await get_user_details(db, room_owner);
         if (typeof ownerDetails == 'undefined') {
             throw new Error("Room owner not found, id " + room_owner);
@@ -94,7 +94,8 @@ const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_playe
         }
 
         const roomUUID = await mint_room_uuid(db);
-        const resp = await create(db, roomUUID, port, pythonPID, room_owner, room_name, max_players, ownerIsObserver);
+        teamUUID = await mint_team_uuid(db);
+        const resp = await create(db, roomUUID, teamUUID, port, pythonPID, room_owner, room_name, max_players, ownerIsObserver);
         if (resp.length === resp.filter(r => r.changes === 1).length) {
             console.log("Room Created!");
         } else {
@@ -117,10 +118,15 @@ const create = async (db, room_uuid, port, pid, owner_uuid, room_name, max_playe
         console.log("Opening connection to game socket on port " + port)
         const client = new net.Socket();
         client.connect(port, 'localhost', () => {
-            console.log(" write " + JSON.stringify({add_player:{player_name: ownerDetails.handle, player_id:ownerDetails.uuid}}));
-            client.write(
-                JSON.stringify({add_player:{player_name: ownerDetails.handle, player_id:ownerDetails.uuid}}) + "\n"
-            );
+            const dataToWrite = JSON.stringify({
+                add_player: {
+                    player_name: ownerDetails.handle,
+                    player_id:ownerDetails.uuid,
+                    team_id: teamUUID,
+                }
+            });
+            console.log("writing " + dataToWrite);
+            client.write(dataToWrite + "\n");
         });
         client.on("data", data => {
             client.destroy();
