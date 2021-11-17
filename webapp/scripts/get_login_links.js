@@ -12,7 +12,7 @@ const locals = require("../applocals");
     const db = await get_db_connection();
     let users;
     try{
-        users = await db.all("select * from api_player");
+        users = await db.all("SELECT * FROM api_player");
     } catch(err) {
         throw err;
     }
@@ -26,7 +26,7 @@ const locals = require("../applocals");
             cacheBreaker: uuid4(),
         }
         const token = jwt.sign(claims, locals.sessionKey, { algorithm: 'HS256'});
-        console.log(`\n${user.handle}: /loginwithlink?token=${token}\n`);
+        console.log(`\n${user.handle}: ${locals.host}:${locals.port}/loginwithlink?token=${token}\n`);
     });
 
 })();

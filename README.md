@@ -86,8 +86,10 @@ $ touch applocals.js
 
 // DO NOT COMMIT THIS FILE
 
-exports.sessionKey = "secret key goes here"
-exports.sessionCookieSecureOnly = false // for testing only
+exports.port = 8000
+exports.host = 'localhost'
+exports.sessionKey = "secret key goes here";
+exports.sessionCookieSecureOnly = false; // for testing only
 
 ```
 

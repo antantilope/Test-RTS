@@ -39,7 +39,6 @@ const locals = require("./applocals");
 
 
 // Setup servers
-const port = 8000;
 const expressApp = express();
 const httpServer = http.createServer(expressApp);
 const io = new socketIO.Server(httpServer);
@@ -200,6 +199,6 @@ expressApp.post('/api/rooms/start', startGameController);
 
 
 // Launch the HTTP Server
-httpServer.listen(port, () => {
-    logger.info('listening on *:' + port);
+httpServer.listen(locals.port, () => {
+    logger.info('listening on *:' + locals.port);
 });
