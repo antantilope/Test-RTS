@@ -240,3 +240,28 @@ exports.startGameController = startGameController = async (req, res) => {
         }
     });
 }
+
+
+exports.relaunchGameLoops = async (io) => {
+    logger.info("Relaunching game loops...");
+
+    const db = await get_db_connection();
+    let rooms;
+    try {
+        // TODO: use a prepared statement.
+        rooms = await db.all(`SELECT * FROM api_room WHERE phase = "${PHASE_2_LIVE}"`);
+    }catch (err) {
+        throw err
+    } finally {
+        db.close();
+    }
+    console.log({LIVEROOMS: rooms});
+
+    for(let i in rooms)
+    {
+        let room = rooms[i];
+        setTimeout(() => {
+            runGameLoop(room.uuid, room.port, io);
+        });
+    }
+}

@@ -22,7 +22,10 @@ const { joinRoomController } = require("./controllers/join_room");
 const { leaveRoomController } = require("./controllers/leave_room");
 const { roomDetailsController } = require("./controllers/room_details");
 const { configureMapController } = require("./controllers/configure_map");
-const { startGameController } = require("./controllers/start_game");
+const {
+    startGameController,
+    relaunchGameLoops,
+} = require("./controllers/start_game");
 const { userDetailsController } = require("./controllers/user_details");
 const { pingServerController } = require("./controllers/ping_server");
 const { handleSocketConnection } = require("./socket_handler");
@@ -202,3 +205,9 @@ expressApp.post('/api/rooms/start', startGameController);
 httpServer.listen(locals.port, () => {
     logger.info('listening on *:' + locals.port);
 });
+
+
+logger.info("Scheduling relaunchGameLoops")
+setTimeout(() => {
+    relaunchGameLoops(io);
+}, 3000);

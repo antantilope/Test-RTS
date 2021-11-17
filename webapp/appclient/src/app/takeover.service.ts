@@ -16,6 +16,7 @@ export class TakeoverService {
   public takeoverMessage: string = this.defaultMessage;
 
   private startCountdownEventSubscription: Subscription;
+  private frameDataEventSubscription: Subscription;
 
   constructor(
     private _api: ApiService,
@@ -34,11 +35,18 @@ export class TakeoverService {
         }
       }
     );
+
+    this.frameDataEventSubscription = this._api.frameDataEvent.subscribe((data: any) => {
+      this.showTakeover = false;
+      this.takeoverMessage = this.defaultMessage;
+    });
+
   }
 
   ngOnDestroy() {
     console.log("TakeoverService::ngOnDestroy");
     this.startCountdownEventSubscription.unsubscribe();
+    this.frameDataEventSubscription.unsubscribe();
   }
 
 }

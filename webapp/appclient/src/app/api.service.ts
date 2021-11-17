@@ -14,6 +14,7 @@ export class ApiService {
   private socket;
 
   private EVENT_FRAMEDATA: string = "framedata";
+  public frameDataEvent: Subject<any> = new Subject();
 
   private EVENT_STARTCOUNTDOWN: string = "startcountdown";
   public startCountdownEvent: Subject<StartCountdownPayload> = new Subject();
@@ -23,8 +24,8 @@ export class ApiService {
     console.log("ApiService::constructor connecting to socket server on " + url);
     this.socket = io(url);
 
-    this.socket.on(this.EVENT_FRAMEDATA, data => {
-
+    this.socket.on(this.EVENT_FRAMEDATA, (data: any) => {
+      this.frameDataEvent.next(data);
     });
 
     this.socket.on(this.EVENT_STARTCOUNTDOWN, (data: StartCountdownPayload) => {
