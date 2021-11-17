@@ -5,7 +5,7 @@ const winstonColors = {
     error: "red",
     warn: "yellow",
     info: "blue",
-    http: "white",
+    http: "cyan",
     verbose:"green",
     debug:"green",
     silly:"green",
@@ -25,9 +25,30 @@ const terminalFormat = winston.format.combine(
 );
 const logger = winston.createLogger({
     transports: [
-        new winston.transports.File({filename:'error.log',level:'error',format:fileFormat}),
-        new winston.transports.File({filename:'combined.log',level:'info',format:fileFormat}),
-        new winston.transports.Console({level:'silly',prettyPrint:true,colorize:true,silent:false,timestamp:true,format:terminalFormat})
+        new winston.transports.File(
+            {
+                filename: 'error.log',
+                level: 'error',
+                format: fileFormat
+            }
+        ),
+        new winston.transports.File(
+            {
+                filename: 'combined.log',
+                level:'info',
+                format:fileFormat
+            }
+        ),
+        new winston.transports.Console(
+            {
+                level: 'silly',
+                prettyPrint: true,
+                colorize: true,
+                silent: false,
+                timestamp: true,
+                format:terminalFormat
+            }
+        ),
     ]
 });
 
