@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from "../api.service";
+import { TakeoverService } from '../takeover.service';
 
 
 @Component({
@@ -10,7 +10,7 @@ import { ApiService } from "../api.service";
 export class TakeoverComponent implements OnInit {
 
   constructor(
-    private _api: ApiService,
+    public takeover: TakeoverService,
   ) {
     console.log("takeover::constructor");
   }

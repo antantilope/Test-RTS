@@ -12,6 +12,7 @@ from api import utils2d
 from api.constants import (
     MAX_SERVER_FPS,
     MIN_ELAPSED_TIME_PER_FRAME,
+    GAME_START_COUNTDOWN_FROM,
 )
 from api.coord_cache import (
     CoordDistanceCache,
@@ -81,7 +82,7 @@ class Game(BaseModel):
         self._phase = GamePhase.LOBBY
         self._game_frame = 0
         self._max_players = 8
-        self._game_start_countdown = 5
+        self._game_start_countdown = GAME_START_COUNTDOWN_FROM
 
         self._map_units_per_meter = None
         self._map_x_unit_length = None

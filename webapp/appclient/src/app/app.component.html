@@ -1,5 +1,5 @@
 
-<app-takeover>
+<app-takeover *ngIf="takeover.showTakeover">
 </app-takeover>
-<app-gamedisplay>
+<app-gamedisplay *ngIf="!takeover.showTakeover">
 </app-gamedisplay>
