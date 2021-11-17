@@ -292,7 +292,7 @@ class Game(BaseModel):
             # Phase 0
             ship.calculate_damage()
             # Phase 1
-            ship.adjust_resources(self._fps, self._last_frame_at)
+            ship.adjust_resources(self._fps)
             # Phase 2
             ship.calculate_physics(self._fps)
             # Phase 3
