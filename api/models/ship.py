@@ -64,7 +64,6 @@ class Ship(BaseModel):
         super().__init__()
 
         self.game_frame = None
-        self.timestamp = None
 
         self.map_units_per_meter = None
 
