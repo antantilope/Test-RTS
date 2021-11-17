@@ -127,7 +127,6 @@ class Ship(BaseModel):
         self.scanner_designator = None # A unique "human readable" identifier used to identify this ship on other ships' scanners
         self.scanner_online = False
         self.scanner_starting = False
-        self.scanner_start_complete_at_timestamp = None
         self.scanner_mode = None
         self.scanner_radar_range = None
         self.scanner_ir_range = None
@@ -333,7 +332,10 @@ class Ship(BaseModel):
         if self.scanner_online:
             try:
                 self.use_battery_power(
-                    round(self.scanner_idle_power_requirement_per_second / fps)
+                    max(
+                        round(self.scanner_idle_power_requirement_per_second / fps),
+                        1,
+                    )
                 )
             except InsufficientPowerError:
                 self.scanner_online = False
@@ -346,7 +348,10 @@ class Ship(BaseModel):
                 self.scanner_startup_power_used = None
                 try:
                     self.use_battery_power(
-                       round(self.scanner_idle_power_requirement_per_second / fps)
+                        max(
+                            round(self.scanner_idle_power_requirement_per_second / fps),
+                            1,
+                        )
                     )
                 except InsufficientPowerError:
                     # Scanner startup complete but not enough power to idle scanner
@@ -380,7 +385,10 @@ class Ship(BaseModel):
                 self.engine_startup_power_used = None
                 try:
                     self.use_battery_power(
-                        round(self.engine_idle_power_requirement_per_second / fps)
+                        max(
+                            round(self.engine_idle_power_requirement_per_second / fps),
+                            1,
+                        )
                     )
                 except InsufficientPowerError:
                     # Engine startup complete but not enough power to idle engine.
@@ -390,11 +398,11 @@ class Ship(BaseModel):
                     self.engine_online = True
             else:
                 # Continue engine startup.
+                adj = min(
+                    round(self.engine_activation_power_required_per_second / fps),
+                    self.engine_activation_power_required_total - self.engine_startup_power_used,
+                )
                 try:
-                    adj = min(
-                        round(self.engine_activation_power_required_per_second / fps),
-                        self.engine_activation_power_required_total - self.engine_startup_power_used,
-                    )
                     self.use_battery_power(adj)
                 except InsufficientPowerError:
                     # Cancel startup, not enough power.
@@ -419,7 +427,10 @@ class Ship(BaseModel):
             ''' ENGINE POWER GENERATION & FUEL CONSUMPTION (LIT) '''
             try:
                 self.use_fuel(
-                    round(self.engine_fuel_usage_per_second / fps)
+                    max(
+                        round(self.engine_fuel_usage_per_second / fps),
+                        1,
+                    )
                 )
             except InsufficientFuelError:
                 # Flame out.
