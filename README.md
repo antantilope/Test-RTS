@@ -116,8 +116,7 @@ node scripts/create_user.js leeHDrew
 node scripts/print_users.js
 
 node scripts/create_room.js USE_PLAYER_UUID_HERE "Test Room" 2 8001 0
-node scripts/get_login_code.js USE_PLAYER_UUID_HERE
-node scripts/get_login_code.js USE_PLAYER_UUID_HERE
+node scripts/get_login_links.js
 ```
 
 ### Install & Setup Angular
