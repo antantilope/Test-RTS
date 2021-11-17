@@ -1796,29 +1796,31 @@ class TestShipCMDActivateAndDeactivateReactionWheel(TestCase):
         self.ship.reaction_wheel_online = False
 
     def test_reaction_wheel_can_be_activated(self):
+        self.ship.activate_reaction_wheel_power_requirement = 500
+        self.ship.battery_power = 1700
         assert not self.ship.reaction_wheel_online
         start_power = self.ship.battery_power
-        self.ship.cmd_set_reaction_wheel_status(True)
 
+        self.ship.cmd_set_reaction_wheel_status(True)
         assert self.ship.reaction_wheel_online
-        assert (
-            self.ship.battery_power
-            == (start_power - constants.ACTIVATE_REACTION_WHEEL_POWER_REQUIREMENT)
-        )
+        assert self.ship.battery_power == 1700 - 500
 
     def test_reaction_wheel_cant_be_activated_if_not_enough_power(self):
+        self.ship.activate_reaction_wheel_power_requirement = 500
+        self.ship.battery_power = 400
         assert not self.ship.reaction_wheel_online
-        self.ship.battery_power = constants.ACTIVATE_REACTION_WHEEL_POWER_REQUIREMENT // 2
         start_power = self.ship.battery_power
-        self.ship.cmd_set_reaction_wheel_status(True)
 
+        self.ship.cmd_set_reaction_wheel_status(True)
         assert not self.ship.reaction_wheel_online
-        assert self.ship.battery_power == start_power
+        assert self.ship.battery_power == 400
 
     def test_reaction_wheel_can_be_shut_off(self):
+        self.ship.battery_power = 400
         self.ship.reaction_wheel_online = True
         self.ship.cmd_set_reaction_wheel_status(False)
         assert not self.ship.reaction_wheel_online
+        assert self.ship.battery_power == 400
 
 
 '''
@@ -1835,7 +1837,8 @@ class TestShipCMDActivateDeactivateLightEngine(TestCase):
         self.ship = Ship.spawn(team_id, map_units_per_meter=10)
 
     def test_activate_engine_command_updates_ship_state(self):
-        assert self.ship._state == {}
+        assert self.ship.engine_startup_power_used is None
+        assert not self.ship.engine_starting
         self.ship.cmd_activate_engine()
         assert self.ship.engine_starting
         assert self.ship.engine_startup_power_used == 0

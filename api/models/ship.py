@@ -144,6 +144,7 @@ class Ship(BaseModel):
         self.scanner_thermal_signature = None
 
         # Ship reaction wheel
+        self.activate_reaction_wheel_power_requirement = None
         self.reaction_wheel_power_required_per_second = None
         self.reaction_wheel_online = False
 
@@ -271,6 +272,7 @@ class Ship(BaseModel):
         instance.fuel_capacity = constants.FUEL_CAPACITY
 
         instance.reaction_wheel_power_required_per_second = constants.REACTION_WHEEL_POWER_REQUIREMENT_PER_SECOND
+        instance.activate_reaction_wheel_power_requirement = constants.ACTIVATE_REACTION_WHEEL_POWER_REQUIREMENT
 
         instance.engine_mass = constants.ENGINE_MASS
         instance.engine_newtons = constants.ENGINE_BASE_FORCE_N
@@ -500,7 +502,7 @@ class Ship(BaseModel):
                 return
             try:
                 self.use_battery_power(
-                    constants.ACTIVATE_REACTION_WHEEL_POWER_REQUIREMENT
+                    self.activate_reaction_wheel_power_requirement
                 )
             except InsufficientPowerError:
                 return
