@@ -112,9 +112,11 @@ const create = async (db, room_uuid, team_uuid, port, pid, owner_uuid, room_name
         db.close();
     }
 
+    console.log("Scheduling add_player request...");
     setTimeout(() =>{
         // delay this action because the newly spawned
         // socket server will refuse connection if we immediately try to connect to it.
+        // TODO: use a less brittle method for waiting for the python process to spin up.
         console.log("Opening connection to game socket on port " + port)
         const client = new net.Socket();
         client.connect(port, 'localhost', () => {
@@ -139,6 +141,6 @@ const create = async (db, room_uuid, team_uuid, port, pid, owner_uuid, room_name
             }
             console.log(respData)
         });
-    }, 1000);
+    }, 2000);
 
 })();

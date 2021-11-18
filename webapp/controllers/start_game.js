@@ -32,6 +32,22 @@ function shuffledRange(start, end) {
     return shuffle(Array(end - start + 1).fill().map((_, idx) => start + idx));
 }
 
+
+
+const updateDBSetGameToLive = async (roomUUID) => {
+    const db = await get_db_connection();
+    try {
+        await db.run(
+            "UPDATE api_room SET phase = ? WHERE uuid = ?",
+            [PHASE_2_LIVE, roomUUID]
+        );
+    } catch(err) {
+        throw err;
+    } finally {
+        db.close();
+    }
+}
+
 const runGameLoop = (room_id, port, io) => {
     // TODO: query command queue
     // TODO: research KeepAlive for TCP sockets.
@@ -135,6 +151,7 @@ const doCountdown = (room_id, port, io) => {
             setTimeout(() => {
                 runGameLoop(room_id, port, io);
             });
+            updateDBSetGameToLive(room_id);
         }
     });
 }
