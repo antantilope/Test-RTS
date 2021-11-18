@@ -15,6 +15,7 @@ export class ApiService {
 
   private EVENT_FRAMEDATA: string = "framedata";
   public frameDataEvent: Subject<any> = new Subject();
+  public frameData: any = null;
 
   private EVENT_STARTCOUNTDOWN: string = "startcountdown";
   public startCountdownEvent: Subject<StartCountdownPayload> = new Subject();
@@ -25,7 +26,11 @@ export class ApiService {
     this.socket = io(url);
 
     this.socket.on(this.EVENT_FRAMEDATA, (data: any) => {
+      this.frameData = data;
       this.frameDataEvent.next(data);
+      if(data.game_frame % 500 === 0) {
+        console.log({framedata: data})
+      }
     });
 
     this.socket.on(this.EVENT_STARTCOUNTDOWN, (data: StartCountdownPayload) => {
