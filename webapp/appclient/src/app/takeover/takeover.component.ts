@@ -12,7 +12,7 @@ export class TakeoverComponent implements OnInit {
   constructor(
     public takeover: TakeoverService,
   ) {
-    console.log("takeover::constructor");
+    console.log("TakeoverComponent::constructor");
   }
 
   ngOnInit(): void {

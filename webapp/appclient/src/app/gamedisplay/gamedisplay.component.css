@@ -1,0 +1,30 @@
+
+#outer-game-display-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#sidebar-canvas-container {
+    display: flex;
+    flex-grow: 1;
+}
+
+#sidebar-container {
+    width: 10%;
+    max-width: 60px;
+}
+
+#canvas-container {
+    flex-grow: 1;
+}
+
+#command-bar-container {
+    height: 25%;
+    max-height: 400px;
+}
+
+.game-display-container {
+    margin: 1px;
+    border: 1px solid black;
+}
