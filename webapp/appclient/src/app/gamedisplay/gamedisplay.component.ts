@@ -8,7 +8,12 @@ import {
 } from '@angular/core'
 
 import { ApiService } from "../api.service"
-import { CameraService } from '../camera.service'
+import {
+  CameraService,
+  CAMERA_MODE_SHIP,
+  CAMERA_MODE_SCANNER,
+  CAMERA_MODE_FREE,
+} from '../camera.service'
 import { FormattingService } from '../formatting.service'
 
 
@@ -22,9 +27,9 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  private ctx: any = null;
+  private ctx: any = null
 
-  private isDebug: boolean = false;
+  private isDebug: boolean = false
   private lastFrameTime:any = null
   private clientFPS: number = 0
   private clientFrames: number = 0
@@ -42,7 +47,7 @@ export class GamedisplayComponent implements OnInit {
   }
 
   ngAfterViewInit() {
-    console.log("GamedisplayComponent::ngAfterViewInit");
+    console.log("GamedisplayComponent::ngAfterViewInit")
     this.isDebug = window.location.search.indexOf("debug") !== -1
     this.resizeCanvas()
     this.setupCanvasContext()
@@ -53,21 +58,23 @@ export class GamedisplayComponent implements OnInit {
 
   @HostListener('window:resize', ['$event'])
   private handleWindowResize():void {
-    location.reload(); // TODO: This is shit. Need a better solution.
+    location.reload() // TODO: This is shit. Need a better solution.
   }
 
   private setupCanvasContext(): void {
-    this.ctx = this.ctx || this.canvas.nativeElement.getContext("2d");
+    this.ctx = this.ctx || this.canvas.nativeElement.getContext("2d")
   }
 
   private resizeCanvas() {
     setTimeout(() => {
-      console.log("resizeCanvas()");
+      console.log("resizeCanvas()")
       this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth
       this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight
-      this._camera.canvasWidth = this.canvas.nativeElement.offsetWidth
-      this._camera.canvasHeight = this.canvas.nativeElement.offsetHeight
-    });
+      this._camera.setCanvasWidthHeight(
+        this.canvas.nativeElement.offsetWidth,
+        this.canvas.nativeElement.offsetHeight,
+      )
+    })
   }
 
   private setCanvasColor(): void {
@@ -75,10 +82,18 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private paintDisplay(): void {
-    this.clearCanvas();
+    this.clearCanvas()
     if(this.isDebug) {
-      this.paintDebugData();
+      this.paintDebugData()
     }
+
+    if (this._camera.getMode() === CAMERA_MODE_SHIP) {
+      this._camera.setPosition(
+        this._api.frameData.ship.coord_x,
+        this._api.frameData.ship.coord_y,
+      )
+    }
+
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
@@ -93,7 +108,7 @@ export class GamedisplayComponent implements OnInit {
     let yOffset = 25
     const yInterval = 20
 
-    const gameFrame = this._formatting.formatNumber(this._api.frameData.game_frame);
+    const gameFrame = this._formatting.formatNumber(this._api.frameData.game_frame)
     this.ctx.fillText(`frame: ${gameFrame}`, xOffset, yOffset)
     yOffset += yInterval
 
