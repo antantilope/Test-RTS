@@ -82,7 +82,13 @@ const runGameLoop = (room_id, port, io) => {
                 logger.info("emmiting ship state to room " + roomName);
                 io.to(roomName).emit(
                     EVENT_FRAMEDATA,
-                    ship,
+                    {
+                        ship,
+                        phase: respData.phase,
+                        game_frame: respData.game_frame,
+                        server_fps: respData.server_fps,
+                        server_fps_throttle_seconds: respData.server_fps_throttle_seconds,
+                    },
                 );
             }
 
