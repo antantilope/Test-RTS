@@ -1,7 +1,7 @@
 
-import { Component } from '@angular/core';
+import { Component } from '@angular/core'
 
-import { TakeoverService } from './takeover.service';
+import { TakeoverService } from './takeover.service'
 
 
 
@@ -11,21 +11,21 @@ import { TakeoverService } from './takeover.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'voidstar';
+  title = 'voidstar'
 
   constructor(
     public takeover: TakeoverService,
   ) {
-    console.log("AppComponent::constructor");
+    console.log("AppComponent::constructor")
   }
 
   ngAfterViewInit():void {
-    console.log("AppComponent::ngAfterViewInit");
+    console.log("AppComponent::ngAfterViewInit")
 
   }
 
   ngOnDestroy() {
-    console.log("AppComponent::ngOnDestroy");
+    console.log("AppComponent::ngOnDestroy")
   }
 
 

@@ -88,6 +88,7 @@ const runGameLoop = (room_id, port, io) => {
                         game_frame: respData.game_frame,
                         server_fps: respData.server_fps,
                         server_fps_throttle_seconds: respData.server_fps_throttle_seconds,
+                        map_config: respData.map_config,
                     },
                 );
             }
