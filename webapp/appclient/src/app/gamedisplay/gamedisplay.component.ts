@@ -7,6 +7,10 @@ import {
   HostListener,
 } from '@angular/core'
 
+import {
+  DrawableCanvasItems,
+  DrawableShip,
+} from '../models/drawable-objects.model';
 import { ApiService } from "../api.service"
 import {
   CameraService,
@@ -89,9 +93,24 @@ export class GamedisplayComponent implements OnInit {
 
     if (this._camera.getMode() === CAMERA_MODE_SHIP) {
       this._camera.setPosition(
-        this._api.frameData.ship.coord_x,
-        this._api.frameData.ship.coord_y,
+        this._api.frameData.ship.coord_x + 150,
+        this._api.frameData.ship.coord_y + 150,
       )
+    }
+
+    const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
+
+    // Ship
+    const ship: DrawableShip | undefined = drawableObjects.ship
+    if(typeof ship !== "undefined") {
+      this.ctx.fillStyle = "#919191"
+      this.ctx.beginPath()
+      this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
+      this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y);
+      this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y);
+      this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y);
+      this.ctx.closePath()
+      this.ctx.fill()
     }
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
@@ -105,11 +124,13 @@ export class GamedisplayComponent implements OnInit {
 
 
   private paintDebugData(): void {
+    /* Draw Debug info on the top right corner of the screen.
+    */
     this.ctx.beginPath()
     this.ctx.font = '16px Arial'
     this.ctx.fillStyle = '#ffffff'
     this.ctx.textAlign = 'right'
-9
+
     const xOffset = this._camera.canvasWidth - 15
     let yOffset = 25
     const yInterval = 20
@@ -148,6 +169,10 @@ export class GamedisplayComponent implements OnInit {
     yOffset += yInterval
 
     this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
+    yOffset += yInterval
+
+    const [shipX, shipY] = [this._api.frameData.ship.coord_x, this._api.frameData.ship.coord_y]
+    this.ctx.fillText(`ship pos: X: ${shipX} Y: ${shipY}`, xOffset, yOffset)
     yOffset += yInterval
 
   }

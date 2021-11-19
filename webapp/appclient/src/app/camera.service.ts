@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
 import { BoxCoords } from './models/box-coords.model';
-import { DrawableObjects } from './models/drawable-objects.model';
+import { DrawableCanvasItems } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
 
 
@@ -34,7 +34,7 @@ export class CameraService {
   /*
     Zoom is an integer.
     1 is the most zoomed in.
-    "Zooming out" increases
+    "Zooming out" increases this value
   */
   private zoom: number = 1;
 
@@ -80,7 +80,7 @@ export class CameraService {
     this.mode = CAMERA_MODE_FREE
   }
 
-  public getCameraAbsoluteBoxCoords(): BoxCoords {
+  private getCameraMapBoxCoords(): BoxCoords {
     /* Return coords that describe which part of the game map are visible on the canvas.
     */
     const x1 = this.xPosition - (this.canvasHalfWidth * this.zoom)
@@ -90,7 +90,7 @@ export class CameraService {
     return {x1, y1, x2, y2}
   }
 
-  public rectCoordsToBoxCoords(
+  private rectCoordsToBoxCoords(
     p0: PointCoord,
     p1: PointCoord,
     p2: PointCoord,
@@ -104,18 +104,18 @@ export class CameraService {
     }
   }
 
-  public relativeCoordToAbsoluteCoord(relative: PointCoord, origin: PointCoord): PointCoord {
+  private relativeCoordToAbsoluteCoord(relative: PointCoord, origin: PointCoord): PointCoord {
     return {
       x: origin.x + relative.x,
       y: origin.y + relative.y,
     }
   }
 
-  public arrayToCoords(coords: number[]): PointCoord {
+  private arrayToCoords(coords: number[]): PointCoord {
     return {x: coords[0], y: coords[1]}
   }
 
-  public boxesOverlap(box1: BoxCoords, box2: BoxCoords): boolean {
+  private boxesOverlap(box1: BoxCoords, box2: BoxCoords): boolean {
     const completeXOverlap = (box1.x1 <= box2.x1) && (box1.x2 >= box2.x2)
     const completeYOverlap = (box1.y1 <= box2.y1) && (box1.y2 >= box2.y2)
     if(completeXOverlap && completeYOverlap) {
@@ -137,40 +137,66 @@ export class CameraService {
     return false
   }
 
+  private mapCoordToCanvasCoord(mapCoord: PointCoord, origin: PointCoord): PointCoord {
+    const mapDx = mapCoord.x - origin.x
+    const mapDy = mapCoord.y - origin.y
+    const camDx = Math.round(mapDx / this.zoom)
+    const camDy = Math.round(mapDy / this.zoom)
+    return {
+      x: camDx + this.canvasHalfWidth,
+      /* Must reorient Y coord
+         because canvas origin is top left, where as map origin is bottom left.
+      */
+      y: this.canvasHeight - (camDy + this.canvasHalfHeight),
+    }
+  }
 
-  public getDrawableObjects(): DrawableObjects {
-    /* Get objects that should be drawn on the canvas
+  public getDrawableCanvasObjects(): DrawableCanvasItems {
+    /* Get objects to draw on the canvas.
+        All coordinate points returned by the function are CANVAS coordinates.
     */
-    const drawableObjects: DrawableObjects = {}
-    const cameraBoxCoords: BoxCoords = this.getCameraAbsoluteBoxCoords()
+
+    const cameraMapBoxCoords: BoxCoords = this.getCameraMapBoxCoords()
 
     // Ship
     const ship: any = this._api.frameData.ship
     const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
-    const shipP0: PointCoord = this.relativeCoordToAbsoluteCoord(
+    const shipMapCoordP0: PointCoord = this.relativeCoordToAbsoluteCoord(
       this.arrayToCoords(ship.rel_rot_coord_0),
       shipCoord,
     )
-    const shipP1: PointCoord = this.relativeCoordToAbsoluteCoord(
+    const shipMapCoordP1: PointCoord = this.relativeCoordToAbsoluteCoord(
       this.arrayToCoords(ship.rel_rot_coord_1),
       shipCoord,
     )
-    const shipP2: PointCoord = this.relativeCoordToAbsoluteCoord(
+    const shipMapCoordP2: PointCoord = this.relativeCoordToAbsoluteCoord(
       this.arrayToCoords(ship.rel_rot_coord_2),
       shipCoord,
     )
-    const shipP3: PointCoord = this.relativeCoordToAbsoluteCoord(
+    const shipMapCoordP3: PointCoord = this.relativeCoordToAbsoluteCoord(
       this.arrayToCoords(ship.rel_rot_coord_3),
       shipCoord,
     )
-    const shipBoxCoords: BoxCoords = this.rectCoordsToBoxCoords(shipP0, shipP1, shipP2, shipP3)
-    if (this.boxesOverlap(shipBoxCoords, cameraBoxCoords)) {
-      drawableObjects.ship = {
+    const shipMapBoxCoords: BoxCoords = this.rectCoordsToBoxCoords(
+      shipMapCoordP0,
+      shipMapCoordP1,
+      shipMapCoordP2,
+      shipMapCoordP3
+    )
 
+    const drawableItems: DrawableCanvasItems = {}
+
+    if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
+      const cameraPosition: PointCoord = this.getPosition()
+      drawableItems.ship = {
+        canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
+        canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
+        canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
+        canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
       }
     }
 
-    return drawableObjects
+    return drawableItems
   }
 
 }

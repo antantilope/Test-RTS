@@ -88,7 +88,7 @@ class Game(BaseModel):
         self._map_x_unit_length = None
         self._map_y_unit_length = None
 
-        self._fps = 24
+        self._fps = MAX_SERVER_FPS
         self._last_frame_at = None
         self._frame_sleep = None
 
