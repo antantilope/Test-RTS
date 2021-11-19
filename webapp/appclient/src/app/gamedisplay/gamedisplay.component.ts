@@ -57,12 +57,21 @@ export class GamedisplayComponent implements OnInit {
     this.setupCanvasContext()
     this.setCanvasColor()
     this.paintDisplay()
+
+    this.registerMouseWheelEventListener()
   }
 
 
   @HostListener('window:resize', ['$event'])
   private handleWindowResize():void {
     location.reload() // TODO: This is shit. Need a better solution.
+  }
+
+  private registerMouseWheelEventListener(): void {
+    window.addEventListener('wheel', event => {
+      const zoomIn = event.deltaY < 0
+      this._camera.manualAdjustZoom(zoomIn)
+    })
   }
 
   private setupCanvasContext(): void {

@@ -58,6 +58,14 @@ export class CameraService {
     return this.zoom
   }
 
+  public manualAdjustZoom(zoomIn: boolean): void {
+    if(zoomIn && this.zoom > 1) {
+      this.zoom--
+    } else if (!zoomIn && this.zoom < MAX_ZOOM_MANUAL) {
+      this.zoom++
+    }
+  }
+
   public setPosition(x: number, y: number) : void {
     this.xPosition = x
     this.yPosition = y
