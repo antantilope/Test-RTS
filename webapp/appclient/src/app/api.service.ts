@@ -15,7 +15,7 @@ export class ApiService {
 
   private EVENT_FRAMEDATA: string = "framedata"
   public frameDataEvent: Subject<any> = new Subject()
-  public frameData: any = null
+  public frameData: any | null = null
 
   private EVENT_STARTCOUNTDOWN: string = "startcountdown"
   public startCountdownEvent: Subject<StartCountdownPayload> = new Subject()

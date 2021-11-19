@@ -18,6 +18,7 @@ export const CAMERA_MODE_SCANNER = 'scanner'
 export const CAMERA_MODE_FREE = 'free'
 
 
+
 const MAX_ZOOM_MANUAL = 12
 
 
@@ -58,12 +59,28 @@ export class CameraService {
     return this.zoom
   }
 
-  public manualAdjustZoom(zoomIn: boolean): void {
+  public canManualZoom(): boolean {
+    return this.mode !== CAMERA_MODE_SCANNER
+  }
+
+  public canManualPan(): boolean {
+    return this.mode === CAMERA_MODE_FREE
+  }
+
+  public adjustZoom(zoomIn: boolean): void {
     if(zoomIn && this.zoom > 1) {
       this.zoom--
     } else if (!zoomIn && this.zoom < MAX_ZOOM_MANUAL) {
       this.zoom++
     }
+  }
+
+  public xPan(delta: number): void {
+    this.xPosition += delta
+  }
+
+  public yPan(delta: number): void {
+    this.yPosition += delta
   }
 
   public setPosition(x: number, y: number) : void {

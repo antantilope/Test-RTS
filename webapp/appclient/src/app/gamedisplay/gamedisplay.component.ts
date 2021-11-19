@@ -10,7 +10,7 @@ import {
 import {
   DrawableCanvasItems,
   DrawableShip,
-} from '../models/drawable-objects.model';
+} from '../models/drawable-objects.model'
 import { ApiService } from "../api.service"
 import {
   CameraService,
@@ -31,8 +31,15 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  private ctx: any = null
+  private ctx: any | null = null
 
+  /* Props to track the user's mouse */
+  private mouseInCanvas = false
+  private mouseClickDownInCanvas = false
+  private mousePanLastX: number | null = null
+  private mousePanLastY: number | null = null
+
+  /* Props used to hold debug data */
   private isDebug: boolean = false
   private lastFrameTime:any = null
   private clientFPS: number = 0
@@ -58,7 +65,7 @@ export class GamedisplayComponent implements OnInit {
     this.setCanvasColor()
     this.paintDisplay()
 
-    this.registerMouseWheelEventListener()
+    this.registerMouseEventListener()
   }
 
 
@@ -67,10 +74,59 @@ export class GamedisplayComponent implements OnInit {
     location.reload() // TODO: This is shit. Need a better solution.
   }
 
-  private registerMouseWheelEventListener(): void {
+  private registerMouseEventListener(): void {
+    // Zoom camera
     window.addEventListener('wheel', event => {
-      const zoomIn = event.deltaY < 0
-      this._camera.manualAdjustZoom(zoomIn)
+      if (this._camera.canManualZoom()) {
+        const zoomIn = event.deltaY < 0
+        this._camera.adjustZoom(zoomIn)
+      }
+    })
+
+    // Pan camera
+    this.canvas.nativeElement.addEventListener('mouseenter', ()=>{
+      this.mouseInCanvas = true
+    })
+    this.canvas.nativeElement.addEventListener('mouseleave', event => {
+      const canvasWidth = this.canvas.nativeElement.width
+      const canvasHeight = this.canvas.nativeElement.height
+      const eventXPos = event.clientX
+      const eventYPos = event.clientY
+      if (eventYPos < 0 || eventYPos > canvasHeight || eventXPos < 0 || eventXPos > canvasWidth) {
+        this.mouseClickDownInCanvas = false
+        this.mouseInCanvas = false
+        this.mousePanLastX = null
+        this.mousePanLastY = null
+      }
+    })
+    this.canvas.nativeElement.addEventListener('mousedown', ()=>{
+      if(this.mouseInCanvas) {
+        this.mouseClickDownInCanvas = true
+      }
+    })
+    window.addEventListener('mouseup', ()=>{
+      this.mouseClickDownInCanvas = false
+      this.mousePanLastX = null
+      this.mousePanLastY = null
+    })
+    window.addEventListener('mousemove', event => {
+      if(!this._camera.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
+        return
+      }
+      else if(this.mousePanLastX === null || this.mousePanLastY === null) {
+        this.mousePanLastX = event.screenX
+        this.mousePanLastY = event.screenY
+        return
+      }
+      else {
+        const cameraZoom = this._camera.getZoom()
+        const scaledDeltaX = (this.mousePanLastX - event.screenX) * cameraZoom
+        const scaledDeltaY = (this.mousePanLastY - event.screenY) * cameraZoom * -1
+        this._camera.xPan(scaledDeltaX)
+        this._camera.yPan(scaledDeltaY)
+        this.mousePanLastX = event.screenX
+        this.mousePanLastY = event.screenY
+      }
     })
   }
 
@@ -95,15 +151,26 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private paintDisplay(): void {
+
+    const camCoords = this._camera.getPosition()
+    const camMode = this._camera.getMode()
+    if((camCoords.x === null || camCoords.y === null) && this._api.frameData !== null) {
+      this._api.frameData
+      this._camera.setPosition(
+        this._api.frameData.ship.coord_x,
+        this._api.frameData.ship.coord_y,
+      )
+    }
+
     this.clearCanvas()
     if(this.isDebug) {
       this.paintDebugData()
     }
 
-    if (this._camera.getMode() === CAMERA_MODE_SHIP) {
+    if (camMode === CAMERA_MODE_SHIP) {
       this._camera.setPosition(
-        this._api.frameData.ship.coord_x + 150,
-        this._api.frameData.ship.coord_y + 150,
+        this._api.frameData.ship.coord_x,
+        this._api.frameData.ship.coord_y,
       )
     }
 
@@ -115,9 +182,9 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = "#919191"
       this.ctx.beginPath()
       this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
-      this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y);
-      this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y);
-      this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y);
+      this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y)
+      this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y)
+      this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
       this.ctx.closePath()
       this.ctx.fill()
     }
