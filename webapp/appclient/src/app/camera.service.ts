@@ -8,10 +8,17 @@ import { PointCoord } from './models/point-coord.model';
 
 
 
-
+/* CAMERA_MODE_SHIP Camera Position automatically follows the ships coords. */
 export const CAMERA_MODE_SHIP = 'ship'
+
+/* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner target. */
 export const CAMERA_MODE_SCANNER = 'scanner'
+
+/* CAMERA_MODE_FREE Camera Position AND zoom are manually adjusted by the user. */
 export const CAMERA_MODE_FREE = 'free'
+
+
+const MAX_ZOOM_MANUAL = 12
 
 
 @Injectable({
@@ -47,9 +54,17 @@ export class CameraService {
     this.canvasHalfHeight = Number((height / 2).toFixed())
   }
 
+  public getZoom(): number {
+    return this.zoom
+  }
+
   public setPosition(x: number, y: number) : void {
     this.xPosition = x
     this.yPosition = y
+  }
+
+  public getPosition(): PointCoord {
+    return {x: this.xPosition, y: this.yPosition}
   }
 
   public getMode(): string {
@@ -65,7 +80,9 @@ export class CameraService {
     this.mode = CAMERA_MODE_FREE
   }
 
-  public getCameraBoxCoords(): BoxCoords {
+  public getCameraAbsoluteBoxCoords(): BoxCoords {
+    /* Return coords that describe which part of the game map are visible on the canvas.
+    */
     const x1 = this.xPosition - (this.canvasHalfWidth * this.zoom)
     const y1 = this.yPosition - (this.canvasHalfHeight * this.zoom)
     const x2 = this.xPosition + (this.canvasHalfWidth * this.zoom)
@@ -85,6 +102,17 @@ export class CameraService {
       x2: Math.max(p0.x, p1.x, p2.x, p3.x),
       y2: Math.max(p0.y, p1.y, p2.y, p3.y),
     }
+  }
+
+  public relativeCoordToAbsoluteCoord(relative: PointCoord, origin: PointCoord): PointCoord {
+    return {
+      x: origin.x + relative.x,
+      y: origin.y + relative.y,
+    }
+  }
+
+  public arrayToCoords(coords: number[]): PointCoord {
+    return {x: coords[0], y: coords[1]}
   }
 
   public boxesOverlap(box1: BoxCoords, box2: BoxCoords): boolean {
@@ -109,18 +137,33 @@ export class CameraService {
     return false
   }
 
+
   public getDrawableObjects(): DrawableObjects {
+    /* Get objects that should be drawn on the canvas
+    */
     const drawableObjects: DrawableObjects = {}
-    const cameraBoxCoords: BoxCoords = this.getCameraBoxCoords()
+    const cameraBoxCoords: BoxCoords = this.getCameraAbsoluteBoxCoords()
 
     // Ship
     const ship: any = this._api.frameData.ship
-    const shipBoxCoords: BoxCoords = this.rectCoordsToBoxCoords(
-      ship.rel_rot_coord_0,
-      ship.rel_rot_coord_1,
-      ship.rel_rot_coord_2,
-      ship.rel_rot_coord_3,
+    const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
+    const shipP0: PointCoord = this.relativeCoordToAbsoluteCoord(
+      this.arrayToCoords(ship.rel_rot_coord_0),
+      shipCoord,
     )
+    const shipP1: PointCoord = this.relativeCoordToAbsoluteCoord(
+      this.arrayToCoords(ship.rel_rot_coord_1),
+      shipCoord,
+    )
+    const shipP2: PointCoord = this.relativeCoordToAbsoluteCoord(
+      this.arrayToCoords(ship.rel_rot_coord_2),
+      shipCoord,
+    )
+    const shipP3: PointCoord = this.relativeCoordToAbsoluteCoord(
+      this.arrayToCoords(ship.rel_rot_coord_3),
+      shipCoord,
+    )
+    const shipBoxCoords: BoxCoords = this.rectCoordsToBoxCoords(shipP0, shipP1, shipP2, shipP3)
     if (this.boxesOverlap(shipBoxCoords, cameraBoxCoords)) {
       drawableObjects.ship = {
 

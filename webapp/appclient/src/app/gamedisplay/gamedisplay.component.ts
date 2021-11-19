@@ -94,16 +94,22 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
-
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
+
+
+  private clearCanvas(): void {
+    this.ctx.beginPath()
+    this.ctx.clearRect(0, 0, this._camera.canvasWidth, this._camera.canvasHeight)
+  }
+
 
   private paintDebugData(): void {
     this.ctx.beginPath()
     this.ctx.font = '16px Arial'
     this.ctx.fillStyle = '#ffffff'
     this.ctx.textAlign = 'right'
-
+9
     const xOffset = this._camera.canvasWidth - 15
     let yOffset = 25
     const yInterval = 20
@@ -114,6 +120,12 @@ export class GamedisplayComponent implements OnInit {
 
     this.ctx.fillText(`server FPS: ${this._api.frameData.server_fps}`, xOffset, yOffset)
     yOffset += yInterval
+
+    if(this._api.frameData.server_fps_throttle_seconds) {
+      const serverSleep = this._api.frameData.server_fps_throttle_seconds.toFixed(3)
+      this.ctx.fillText(`server sleep: ${serverSleep}`, xOffset, yOffset)
+      yOffset += yInterval
+    }
 
     this.clientFrames++
     if(this.lastFrameTime === null) {
@@ -128,11 +140,16 @@ export class GamedisplayComponent implements OnInit {
       yOffset += yInterval
     }
 
-  }
+    const {x, y} = this._camera.getPosition()
+    this.ctx.fillText(`camera pos: X: ${x} Y: ${y}`, xOffset, yOffset)
+    yOffset += yInterval
 
-  private clearCanvas(): void {
-    this.ctx.beginPath()
-    this.ctx.clearRect(0, 0, this._camera.canvasWidth, this._camera.canvasHeight)
+    this.ctx.fillText(`camera zoom: ${this._camera.getZoom()}`, xOffset, yOffset)
+    yOffset += yInterval
+
+    this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
+    yOffset += yInterval
+
   }
 
 }
