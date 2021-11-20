@@ -8,7 +8,14 @@ export class DrawableShip {
     canvasCoordP3: PointCoord
 }
 
+export class DrawableReactionWheelOverlay {
+    centerCanvasCoord: PointCoord
+    radiusPx: number
+    compassPoint0: PointCoord
+    compassPoint1: PointCoord
+}
 
 export class DrawableCanvasItems {
-    ship?: DrawableShip;
+    ship?: DrawableShip
+    reactionWheelOverlay?: DrawableReactionWheelOverlay
 }

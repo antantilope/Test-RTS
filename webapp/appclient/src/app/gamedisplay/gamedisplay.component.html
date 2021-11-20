@@ -15,14 +15,14 @@
             </div>
             <div>
                 <button
-                    *ngIf="cmdBtnActivateReactionWheelActive"
+                    *ngIf="reactionWheelActive"
                     (click)="btnActivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw.jpg'); background-size:100% 100%;"
                 >
                 </button>
                 <button
-                    *ngIf="!cmdBtnActivateReactionWheelActive"
+                    *ngIf="!reactionWheelActive"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw-gs.jpg'); background-size:100% 100%;"
                 >
@@ -30,14 +30,14 @@
             </div>
             <div>
                 <button
-                    *ngIf="!cmdBtnActivateReactionWheelActive"
+                    *ngIf="!reactionWheelActive"
                     (click)="btnDeactivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw.jpg'); background-size:100% 100%;"
                 >
                 </button>
                 <button
-                    *ngIf="cmdBtnActivateReactionWheelActive"
+                    *ngIf="reactionWheelActive"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw-gs.jpg'); background-size:100% 100%;"
                 >

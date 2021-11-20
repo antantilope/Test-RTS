@@ -219,6 +219,21 @@ export class CameraService {
         canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
         canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
       }
+
+      if(ship.reaction_wheel_online) {
+        const headingRads = ship.heading * (Math.PI / 180)
+        const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
+        drawableItems.reactionWheelOverlay = {
+          centerCanvasCoord: overlayCenter,
+          radiusPx: Math.round(this.canvasHeight / 6),
+          compassPoint0: overlayCenter,
+          compassPoint1: {
+            x: overlayCenter.x + Math.round((this.canvasHeight / 5) * Math.sin(headingRads)),
+            y: overlayCenter.y - Math.round((this.canvasHeight / 5) * Math.cos(headingRads)),
+          }
+        }
+      }
+
     }
 
     return drawableItems

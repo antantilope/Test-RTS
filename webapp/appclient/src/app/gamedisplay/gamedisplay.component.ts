@@ -11,6 +11,7 @@ import { Subscription } from 'rxjs'
 import {
   DrawableCanvasItems,
   DrawableShip,
+  DrawableReactionWheelOverlay,
 } from '../models/drawable-objects.model'
 import { ApiService } from "../api.service"
 import { UserService } from "../user.service"
@@ -36,7 +37,7 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  public cmdBtnActivateReactionWheelActive = false
+  public reactionWheelActive = false
 
   private ctx: any | null = null
 
@@ -201,14 +202,43 @@ export class GamedisplayComponent implements OnInit {
     // Ship
     const ship: DrawableShip | undefined = drawableObjects.ship
     if(typeof ship !== "undefined") {
-      this.ctx.fillStyle = "#919191"
       this.ctx.beginPath()
+      this.ctx.fillStyle = "#919191"
       this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
       this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y)
       this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y)
       this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
       this.ctx.closePath()
       this.ctx.fill()
+    }
+
+    // Reaction Wheel overlay
+    const reactionWheelOverlay: DrawableReactionWheelOverlay | undefined = drawableObjects.reactionWheelOverlay
+    if(typeof reactionWheelOverlay !== "undefined") {
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = "rgb(43, 255, 0, 0.6)"
+      this.ctx.lineWidth = 1
+      this.ctx.arc(
+        reactionWheelOverlay.centerCanvasCoord.x,
+        reactionWheelOverlay.centerCanvasCoord.y,
+        reactionWheelOverlay.radiusPx,
+        0,
+        2 * Math.PI);
+      this.ctx.stroke();
+
+      this.ctx.beginPath()
+      this.ctx.moveTo(reactionWheelOverlay.compassPoint0.x, reactionWheelOverlay.compassPoint0.y)
+      this.ctx.lineTo(reactionWheelOverlay.compassPoint1.x, reactionWheelOverlay.compassPoint1.y)
+      this.ctx.stroke();
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 18px Courier New'
+      this.ctx.fillStyle = 'rgb(43, 255, 0,  0.8)'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText(
+        this._api.frameData.ship.heading,
+        reactionWheelOverlay.compassPoint1.x,
+        reactionWheelOverlay.compassPoint1.y,
+      )
     }
 
 
@@ -267,16 +297,6 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
     tlcYOffset += tlcYInterval
 
-    // Minimap placeholder
-    this.ctx.beginPath()
-    this.ctx.fillStyle = "blue";
-    this.ctx.rect(
-      this._camera.canvasWidth - (this._camera.canvasWidth / 4),
-      this._camera.canvasHeight - (this._camera.canvasHeight / 4),
-      this._camera.canvasWidth / 4,
-      this._camera.canvasHeight / 4,
-    );
-    this.ctx.fill();
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
 
@@ -347,16 +367,16 @@ export class GamedisplayComponent implements OnInit {
       return
     }
     if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
-      this.cmdBtnActivateReactionWheelActive = true
+      this.reactionWheelActive = true
     }
     else {
-      this.cmdBtnActivateReactionWheelActive = false
+      this.reactionWheelActive = false
     }
   }
 
 
   public async btnActivateReactionWheel() {
-    if(!this.cmdBtnActivateReactionWheelActive) {
+    if(!this.reactionWheelActive) {
       return
     }
     console.log("btnActivateReactionWheel()")
@@ -367,7 +387,7 @@ export class GamedisplayComponent implements OnInit {
   }
 
   public async btnDeactivateReactionWheel() {
-    if(this.cmdBtnActivateReactionWheelActive) {
+    if(this.reactionWheelActive) {
       return
     }
     console.log("btnDeactivateReactionWheel()")
