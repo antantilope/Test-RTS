@@ -65,7 +65,7 @@ const runGameLoop = (room_id, port, app, io) => {
         const payload = JSON.stringify({run_frame:{commands}});
 
         logger.info("writing data to GameAPI: " + payload);
-        client.write(payload + "\n");
+        client.write((payload + "\n"));
     });
     client.on("data", data => {
         logger.info("received response from GameAPI, disconnecting...");
@@ -288,7 +288,7 @@ exports.relaunchGameLoops = async (io, app) => {
     let rooms;
     try {
         // TODO: use a prepared statement.
-        rooms = await db.all(`SELECT * FROM api_room WHERE phase = "${PHASE_2_LIVE}"`);
+        rooms = await db.all('SELECT * FROM api_room WHERE phase = ?', [PHASE_2_LIVE]);
     }catch (err) {
         throw err
     } finally {
