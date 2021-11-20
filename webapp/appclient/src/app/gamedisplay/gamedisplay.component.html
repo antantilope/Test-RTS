@@ -9,5 +9,40 @@
         </div>
     </div>
     <div id="command-bar-container" class="game-display-container">
+        <div class=command-bar-column>
+            <div class="command-bar-column-header">
+                REACTION WHEEL
+            </div>
+            <div>
+                <button
+                    *ngIf="cmdBtnActivateReactionWheelActive"
+                    (click)="btnActivateReactionWheel()"
+                    class="command-btn"
+                    style="background: url('/static/img/activate-rw.jpg'); background-size:100% 100%;"
+                >
+                </button>
+                <button
+                    *ngIf="!cmdBtnActivateReactionWheelActive"
+                    class="command-btn"
+                    style="background: url('/static/img/activate-rw-gs.jpg'); background-size:100% 100%;"
+                >
+                </button>
+            </div>
+            <div>
+                <button
+                    *ngIf="!cmdBtnActivateReactionWheelActive"
+                    (click)="btnDeactivateReactionWheel()"
+                    class="command-btn"
+                    style="background: url('/static/img/deactivate-rw.jpg'); background-size:100% 100%;"
+                >
+                </button>
+                <button
+                    *ngIf="cmdBtnActivateReactionWheelActive"
+                    class="command-btn"
+                    style="background: url('/static/img/deactivate-rw-gs.jpg'); background-size:100% 100%;"
+                >
+                </button>
+            </div>
+        </div>
     </div>
 </div>

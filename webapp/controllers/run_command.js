@@ -4,7 +4,32 @@ const { get_room } = require("../lib/db/get_rooms");
 const { getQueueName } = require("../lib/command_queue");
 const { PHASE_2_LIVE } = require("../constants")
 const { logger } = require("../lib/logger");
+const { CommandValidationError } = require("../lib/command_validators/validation_error");
+const { validateSetHeadingCommand } = require("../lib/command_validators/set_heading");
 
+
+const commandHandlers = {
+    set_heading: (req, queueName) => {
+        const validatedData = validateSetHeadingCommand(req.body);
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'set_heading',
+            args: [validatedData.heading],
+        });
+    },
+    activate_reaction_wheel: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'activate_reaction_wheel',
+        });
+    },
+    deactivate_reaction_wheel: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'deactivate_reaction_wheel',
+        });
+    },
+};
 
 exports.RunCommandController = async (req, res) => {
     const sess_player_id = req.session.player_id;
@@ -49,10 +74,25 @@ exports.RunCommandController = async (req, res) => {
         }
     }
 
-    const command = req.query.command;
+    const command = req.body.command;
     if(!command) {
         return res.sendStatus(400)
     }
-    req.app.get(queueName).push({command})
-    return res.status(200).json(req.app.get(queueName))
+    const handler = commandHandlers[command];
+    if(typeof handler === "undefined") {
+        return res.status(400).send("unknown command")
+    }
+    try {
+        handler(req, queueName);
+    } catch (e) {
+        if(e instanceof CommandValidationError) {
+            return res.sendStatus(400);
+        }
+        else {
+            logger.error(e);
+            return res.sendStatus(500);
+        }
+    }
+
+    return res.sendStatus(202)
 }

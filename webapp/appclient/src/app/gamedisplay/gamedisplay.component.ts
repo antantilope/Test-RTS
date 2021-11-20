@@ -6,6 +6,7 @@ import {
   ElementRef,
   HostListener,
 } from '@angular/core'
+import { Subscription } from 'rxjs'
 
 import {
   DrawableCanvasItems,
@@ -29,8 +30,13 @@ import { FormattingService } from '../formatting.service'
 })
 export class GamedisplayComponent implements OnInit {
 
+  private frameDataEventSubscription: Subscription
+
+
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
+
+  public cmdBtnActivateReactionWheelActive = false
 
   private ctx: any | null = null
 
@@ -68,6 +74,15 @@ export class GamedisplayComponent implements OnInit {
     this.paintDisplay()
 
     this.registerMouseEventListener()
+
+    this.frameDataEventSubscription = this._api.frameDataEvent.subscribe((data: any) => {
+      this.refreshButtonStates()
+    })
+  }
+
+  ngOnDestroy() {
+    console.log("GamedisplayComponent::ngOnDestroy")
+    this.frameDataEventSubscription.unsubscribe()
   }
 
 
@@ -235,16 +250,42 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
     lrcYOffset -= lrcYInterval
 
+    // Resources
+    const tlcYInterval = 34
+    let tlcYOffset = 25
+    const tlcXOffset = 15
+    this.ctx.beginPath()
+    this.ctx.font = '24px Courier New'
+    this.ctx.fillStyle = '#fcb8b8'
+    this.ctx.textAlign = 'left'
+    this.ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
+    tlcYOffset += tlcYInterval
+
+    this.ctx.beginPath()
+    this.ctx.fillStyle = '#fcf9b8'
+    this.ctx.textAlign = 'left'
+    this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+    tlcYOffset += tlcYInterval
+
+    // Minimap placeholder
+    this.ctx.beginPath()
+    this.ctx.fillStyle = "blue";
+    this.ctx.rect(
+      this._camera.canvasWidth - (this._camera.canvasWidth / 4),
+      this._camera.canvasHeight - (this._camera.canvasHeight / 4),
+      this._camera.canvasWidth / 4,
+      this._camera.canvasHeight / 4,
+    );
+    this.ctx.fill();
+
     window.requestAnimationFrame(this.paintDisplay.bind(this))
 
   }
-
 
   private clearCanvas(): void {
     this.ctx.beginPath()
     this.ctx.clearRect(0, 0, this._camera.canvasWidth, this._camera.canvasHeight)
   }
-
 
   private paintDebugData(): void {
     /* Draw Debug info on the top right corner of the screen.
@@ -299,5 +340,42 @@ export class GamedisplayComponent implements OnInit {
     yOffset += yInterval
 
   }
+
+
+  public async refreshButtonStates() {
+    if(this._api.frameData === null) {
+      return
+    }
+    if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
+      this.cmdBtnActivateReactionWheelActive = true
+    }
+    else {
+      this.cmdBtnActivateReactionWheelActive = false
+    }
+  }
+
+
+  public async btnActivateReactionWheel() {
+    if(!this.cmdBtnActivateReactionWheelActive) {
+      return
+    }
+    console.log("btnActivateReactionWheel()")
+    const response = await this._api.post(
+      "/api/rooms/command",
+      {command:'activate_reaction_wheel'},
+    )
+  }
+
+  public async btnDeactivateReactionWheel() {
+    if(this.cmdBtnActivateReactionWheelActive) {
+      return
+    }
+    console.log("btnDeactivateReactionWheel()")
+    const response = await this._api.post(
+      "/api/rooms/command",
+      {command:'deactivate_reaction_wheel'},
+    )
+  }
+
 
 }

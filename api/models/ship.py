@@ -17,12 +17,9 @@ class InsufficientPowerError(ShipCommandError):
 class InsufficientFuelError(ShipCommandError):
     pass
 
-
-
 class ShipCoatType:
     NONE = None
     RADAR_DEFEATING = "radar_defeating"
-
 
 class ShipCommands:
     SET_HEADING = 'set_heading'
@@ -39,15 +36,12 @@ class ShipCommands:
     SET_SCANNER_MODE_RADAR = 'set_scanner_mode_radar'
     SET_SCANNER_MODE_IR = 'set_scanner_mode_ir'
 
-
 class ShipStateKey:
     MASS = 'mass'
-
 
 class ShipScannerMode:
     RADAR = 'radar'
     IR = 'ir'
-
 
 class ScannedElement(TypedDict):
     designator: str
@@ -198,6 +192,7 @@ class Ship(BaseModel):
         """
         return {
             'id': self.id,
+            'available_commands': list(self.get_available_commands()),
             'team_id': self.team_id,
             'mass': self.mass,
             'coord_x': self.coord_x,
@@ -215,8 +210,8 @@ class Ship(BaseModel):
             'velocity_y_meters_per_second': self.velocity_y_meters_per_second,
             'battery_power': self.battery_power,
             'battery_capacity': self.battery_capacity,
-            'fuel_level': self.battery_power,
-            'fuel_capacity': self.battery_capacity,
+            'fuel_level': self.fuel_level,
+            'fuel_capacity': self.fuel_capacity,
             'reaction_wheel_online': self.reaction_wheel_online,
 
             'engine_newtons': self.engine_newtons,
@@ -479,6 +474,20 @@ class Ship(BaseModel):
         pass
 
 
+    def get_available_commands(self):
+        if not self.reaction_wheel_online:
+            yield ShipCommands.ACTIVATE_REACTION_WHEEL
+        else:
+            yield ShipCommands.DEACTIVATE_REACTION_WHEEL
+
+        if not self.engine_online:
+            yield ShipCommands.ACTIVATE_ENGINE
+        elif not self.engine_lit:
+            yield ShipCommands.LIGHT_ENGINE
+        else:
+            yield ShipCommands.DEACTIVATE_ENGINE
+
+
     def process_command(self, command: str, *args, **kwargs):
         if command == ShipCommands.SET_HEADING:
             return self.cmd_set_heading(args[0])
@@ -506,8 +515,8 @@ class Ship(BaseModel):
             raise ShipCommandError("NotImplementedError")
 
     # Reaction Wheel Commands.
-    def cmd_set_reaction_wheel_status(self, is_online: bool):
-        if is_online:
+    def cmd_set_reaction_wheel_status(self, set_online: bool):
+        if set_online:
             if self.reaction_wheel_online:
                 return
             try:

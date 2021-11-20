@@ -41,7 +41,9 @@ exports.handleSocketConnection = async (io, socket) => {
         try {
             roomDetails = await get_room(db, sess_room_id);
             if (typeof roomDetails === 'undefined') {
-                throw new Error("could not find room");
+                logger.warn("disconnecting socket " + socket.id + ", Could not find room");
+                socket.disconnect(true);
+                return;
             }
         }
         catch (err) {

@@ -30,8 +30,26 @@
     height: 25vh;
     max-height: 400px;
     background-color: #383838;
+    display: flex;
 }
 
 .game-display-container {
     /* border: 2px solid red; */
+}
+
+.command-bar-column {
+    padding:8px;
+    text-align: center;
+}
+
+.command-btn {
+    width:70px;
+    height:70px;
+    margin: 2px;
+}
+
+.command-bar-column-header {
+    color: #ffffff;
+    font-family: 'Courier New', Courier, monospace;
+    margin-bottom: 4px;
 }

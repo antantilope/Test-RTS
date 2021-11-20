@@ -58,9 +58,14 @@ const runGameLoop = (room_id, port, app, io) => {
     const client = new net.Socket();
     client.connect(port, 'localhost', () => {
         logger.info("connected to GameAPI on port " + port);
-        const payload = '{"run_frame":{"commands":[]}}\n';
+
+        const queueName = getQueueName(room_id)
+        const commands = app.get(queueName) || [];
+        app.set(queueName, []);
+        const payload = JSON.stringify({run_frame:{commands}});
+
         logger.info("writing data to GameAPI: " + payload);
-        client.write(payload);
+        client.write(payload + "\n");
     });
     client.on("data", data => {
         logger.info("received response from GameAPI, disconnecting...");
