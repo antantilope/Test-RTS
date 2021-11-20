@@ -290,12 +290,6 @@ class Game(BaseModel):
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
 
-            if ship.reaction_wheel_online:
-                self._ships[ship_id].cmd_set_heading(
-                   utils2d.signed_angle_to_unsigned_angle(ship.heading + 1)
-                )
-
-
             # Phase 0
             ship.calculate_damage()
             # Phase 1
