@@ -1,5 +1,6 @@
 
 import { Injectable } from '@angular/core'
+import { HttpClient } from '@angular/common/http';
 import { io } from 'socket.io-client'
 import { Subject } from 'rxjs'
 
@@ -20,10 +21,16 @@ export class ApiService {
   private EVENT_STARTCOUNTDOWN: string = "startcountdown"
   public startCountdownEvent: Subject<StartCountdownPayload> = new Subject()
 
-  constructor() {
+  constructor(
+    private _http: HttpClient,
+  ) {
     const url: string = document.location.origin.replace(/^https?/, 'ws')
     console.log("ApiService::constructor connecting to socket server on " + url)
     this.socket = io(url)
+
+    this.socket.on("connect", () => {
+      console.log("Socket Connected!")
+    })
 
     this.socket.on(this.EVENT_FRAMEDATA, (data: any) => {
       this.frameData = data
@@ -38,4 +45,14 @@ export class ApiService {
     })
 
   }
+
+  public async get(url:string) {
+    return this._http.get(url).toPromise();
+  }
+
+  public async post(url:string, data: any){
+    return this._http.post(url, data).toPromise();
+  }
+
+
 }

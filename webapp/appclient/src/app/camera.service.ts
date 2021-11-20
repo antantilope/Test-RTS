@@ -11,7 +11,7 @@ import { PointCoord } from './models/point-coord.model';
 /* CAMERA_MODE_SHIP Camera Position automatically follows the ships coords. */
 export const CAMERA_MODE_SHIP = 'ship'
 
-/* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner target. */
+/* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner data. */
 export const CAMERA_MODE_SCANNER = 'scanner'
 
 /* CAMERA_MODE_FREE Camera Position AND zoom are manually adjusted by the user. */

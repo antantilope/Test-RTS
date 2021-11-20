@@ -12,6 +12,7 @@ import {
   DrawableShip,
 } from '../models/drawable-objects.model'
 import { ApiService } from "../api.service"
+import { UserService } from "../user.service"
 import {
   CameraService,
   CAMERA_MODE_SHIP,
@@ -48,7 +49,8 @@ export class GamedisplayComponent implements OnInit {
   constructor(
     private _api: ApiService,
     private _camera: CameraService,
-    private _formatting: FormattingService
+    private _formatting: FormattingService,
+    public _user: UserService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
@@ -152,9 +154,14 @@ export class GamedisplayComponent implements OnInit {
 
   private paintDisplay(): void {
 
+    if (this._api.frameData === null) {
+      window.requestAnimationFrame(this.paintDisplay.bind(this))
+      return
+    }
+
     const camCoords = this._camera.getPosition()
     const camMode = this._camera.getMode()
-    if((camCoords.x === null || camCoords.y === null) && this._api.frameData !== null) {
+    if(camCoords.x === null || camCoords.y === null) {
       this._api.frameData
       this._camera.setPosition(
         this._api.frameData.ship.coord_x,
@@ -189,7 +196,47 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fill()
     }
 
+
+    // lower right corner
+    let lrcYOffset = this._camera.canvasHeight - 30
+    const lrcYInterval = 40
+    const lrcXOffset = 15
+    // Scale Bar
+    const barLengthMeters = (
+      (
+        (this._camera.canvasWidth / 4)
+        * this._camera.getZoom()
+      )
+      / this._api.frameData.map_config.units_per_meter
+    )
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = "#ffffff"
+    this.ctx.lineWidth = 3
+    this.ctx.moveTo(lrcXOffset, lrcYOffset);
+    this.ctx.lineTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
+    this.ctx.stroke()
+    this.ctx.beginPath()
+    this.ctx.moveTo(lrcXOffset, lrcYOffset);
+    this.ctx.lineTo( lrcXOffset, lrcYOffset - 10);
+    this.ctx.stroke()
+    this.ctx.beginPath()
+    this.ctx.moveTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
+    this.ctx.lineTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset - 10);
+    this.ctx.stroke()
+    // Scale meters and user handle
+    this.ctx.beginPath()
+    this.ctx.font = '24px serif'
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.textAlign = 'left'
+    this.ctx.fillText(Math.round(barLengthMeters) + " Meters", lrcXOffset + 8, lrcYOffset - 12)
+    lrcYOffset -= lrcYInterval
+    this.ctx.beginPath()
+    this.ctx.font = '20px Courier New'
+    this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
+    lrcYOffset -= lrcYInterval
+
     window.requestAnimationFrame(this.paintDisplay.bind(this))
+
   }
 
 
