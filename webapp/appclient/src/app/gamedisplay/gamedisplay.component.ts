@@ -6,12 +6,15 @@ import {
   ElementRef,
   HostListener,
 } from '@angular/core'
+import { Subscription } from 'rxjs'
 
 import {
   DrawableCanvasItems,
   DrawableShip,
+  DrawableReactionWheelOverlay,
 } from '../models/drawable-objects.model'
 import { ApiService } from "../api.service"
+import { UserService } from "../user.service"
 import {
   CameraService,
   CAMERA_MODE_SHIP,
@@ -28,8 +31,13 @@ import { FormattingService } from '../formatting.service'
 })
 export class GamedisplayComponent implements OnInit {
 
+  private frameDataEventSubscription: Subscription
+
+
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
+
+  public reactionWheelActive = false
 
   private ctx: any | null = null
 
@@ -48,7 +56,8 @@ export class GamedisplayComponent implements OnInit {
   constructor(
     private _api: ApiService,
     private _camera: CameraService,
-    private _formatting: FormattingService
+    private _formatting: FormattingService,
+    public _user: UserService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
@@ -66,6 +75,15 @@ export class GamedisplayComponent implements OnInit {
     this.paintDisplay()
 
     this.registerMouseEventListener()
+
+    this.frameDataEventSubscription = this._api.frameDataEvent.subscribe((data: any) => {
+      this.refreshButtonStates()
+    })
+  }
+
+  ngOnDestroy() {
+    console.log("GamedisplayComponent::ngOnDestroy")
+    this.frameDataEventSubscription.unsubscribe()
   }
 
 
@@ -152,9 +170,14 @@ export class GamedisplayComponent implements OnInit {
 
   private paintDisplay(): void {
 
+    if (this._api.frameData === null) {
+      window.requestAnimationFrame(this.paintDisplay.bind(this))
+      return
+    }
+
     const camCoords = this._camera.getPosition()
     const camMode = this._camera.getMode()
-    if((camCoords.x === null || camCoords.y === null) && this._api.frameData !== null) {
+    if(camCoords.x === null || camCoords.y === null) {
       this._api.frameData
       this._camera.setPosition(
         this._api.frameData.ship.coord_x,
@@ -179,8 +202,8 @@ export class GamedisplayComponent implements OnInit {
     // Ship
     const ship: DrawableShip | undefined = drawableObjects.ship
     if(typeof ship !== "undefined") {
-      this.ctx.fillStyle = "#919191"
       this.ctx.beginPath()
+      this.ctx.fillStyle = "#919191"
       this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
       this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y)
       this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y)
@@ -189,15 +212,100 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fill()
     }
 
-    window.requestAnimationFrame(this.paintDisplay.bind(this))
-  }
+    // Reaction Wheel overlay
+    const reactionWheelOverlay: DrawableReactionWheelOverlay | undefined = drawableObjects.reactionWheelOverlay
+    if(typeof reactionWheelOverlay !== "undefined") {
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = "rgb(43, 255, 0, 0.6)"
+      this.ctx.lineWidth = 1
+      this.ctx.arc(
+        reactionWheelOverlay.centerCanvasCoord.x,
+        reactionWheelOverlay.centerCanvasCoord.y,
+        reactionWheelOverlay.radiusPx,
+        0,
+        2 * Math.PI);
+      this.ctx.stroke();
 
+      this.ctx.beginPath()
+      this.ctx.moveTo(reactionWheelOverlay.compassPoint0.x, reactionWheelOverlay.compassPoint0.y)
+      this.ctx.lineTo(reactionWheelOverlay.compassPoint1.x, reactionWheelOverlay.compassPoint1.y)
+      this.ctx.stroke();
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 18px Courier New'
+      this.ctx.fillStyle = 'rgb(43, 255, 0,  0.8)'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText(
+        this._api.frameData.ship.heading,
+        reactionWheelOverlay.compassPoint1.x,
+        reactionWheelOverlay.compassPoint1.y,
+      )
+    }
+
+
+    // lower right corner
+    let lrcYOffset = this._camera.canvasHeight - 30
+    const lrcYInterval = 40
+    const lrcXOffset = 15
+    // Scale Bar
+    const barLengthMeters = (
+      (
+        (this._camera.canvasWidth / 4)
+        * this._camera.getZoom()
+      )
+      / this._api.frameData.map_config.units_per_meter
+    )
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = "#ffffff"
+    this.ctx.lineWidth = 3
+    this.ctx.moveTo(lrcXOffset, lrcYOffset);
+    this.ctx.lineTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
+    this.ctx.stroke()
+    this.ctx.beginPath()
+    this.ctx.moveTo(lrcXOffset, lrcYOffset);
+    this.ctx.lineTo( lrcXOffset, lrcYOffset - 10);
+    this.ctx.stroke()
+    this.ctx.beginPath()
+    this.ctx.moveTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
+    this.ctx.lineTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset - 10);
+    this.ctx.stroke()
+    // Scale meters and user handle
+    this.ctx.beginPath()
+    this.ctx.font = '24px serif'
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.textAlign = 'left'
+    this.ctx.fillText(Math.round(barLengthMeters) + " Meters", lrcXOffset + 8, lrcYOffset - 12)
+    lrcYOffset -= lrcYInterval
+    this.ctx.beginPath()
+    this.ctx.font = '20px Courier New'
+    this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
+    lrcYOffset -= lrcYInterval
+
+    // Resources
+    const tlcYInterval = 34
+    let tlcYOffset = 25
+    const tlcXOffset = 15
+    this.ctx.beginPath()
+    this.ctx.font = '24px Courier New'
+    this.ctx.fillStyle = '#fcb8b8'
+    this.ctx.textAlign = 'left'
+    this.ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
+    tlcYOffset += tlcYInterval
+
+    this.ctx.beginPath()
+    this.ctx.fillStyle = '#fcf9b8'
+    this.ctx.textAlign = 'left'
+    this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+    tlcYOffset += tlcYInterval
+
+
+    window.requestAnimationFrame(this.paintDisplay.bind(this))
+
+  }
 
   private clearCanvas(): void {
     this.ctx.beginPath()
     this.ctx.clearRect(0, 0, this._camera.canvasWidth, this._camera.canvasHeight)
   }
-
 
   private paintDebugData(): void {
     /* Draw Debug info on the top right corner of the screen.
@@ -252,5 +360,42 @@ export class GamedisplayComponent implements OnInit {
     yOffset += yInterval
 
   }
+
+
+  public async refreshButtonStates() {
+    if(this._api.frameData === null) {
+      return
+    }
+    if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
+      this.reactionWheelActive = true
+    }
+    else {
+      this.reactionWheelActive = false
+    }
+  }
+
+
+  public async btnActivateReactionWheel() {
+    if(!this.reactionWheelActive) {
+      return
+    }
+    console.log("btnActivateReactionWheel()")
+    const response = await this._api.post(
+      "/api/rooms/command",
+      {command:'activate_reaction_wheel'},
+    )
+  }
+
+  public async btnDeactivateReactionWheel() {
+    if(this.reactionWheelActive) {
+      return
+    }
+    console.log("btnDeactivateReactionWheel()")
+    const response = await this._api.post(
+      "/api/rooms/command",
+      {command:'deactivate_reaction_wheel'},
+    )
+  }
+
 
 }

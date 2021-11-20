@@ -1,9 +1,14 @@
 
 const net = require('net');
 
+const { getQueueName } = require("../lib/command_queue")
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_room_and_player_details } = require("../lib/db/get_rooms");
-const { get_rooms_page_name, get_room_room_name, get_team_room_name } = require("../lib/room_names");
+const {
+    get_rooms_page_name,
+    get_room_room_name,
+    get_team_room_name,
+} = require("../lib/room_names");
 const { get_user_details } = require("../lib/db/get_user_details");
 const {
     PHASE_1_STARTING,
@@ -33,7 +38,6 @@ function shuffledRange(start, end) {
 }
 
 
-
 const updateDBSetGameToLive = async (roomUUID) => {
     const db = await get_db_connection();
     try {
@@ -48,15 +52,20 @@ const updateDBSetGameToLive = async (roomUUID) => {
     }
 }
 
-const runGameLoop = (room_id, port, io) => {
+const runGameLoop = (room_id, port, app, io) => {
     // TODO: query command queue
     // TODO: research KeepAlive for TCP sockets.
     const client = new net.Socket();
     client.connect(port, 'localhost', () => {
         logger.info("connected to GameAPI on port " + port);
-        const payload = '{"run_frame":{"commands":[]}}\n';
+
+        const queueName = getQueueName(room_id)
+        const commands = app.get(queueName) || [];
+        app.set(queueName, []);
+        const payload = JSON.stringify({run_frame:{commands}});
+
         logger.info("writing data to GameAPI: " + payload);
-        client.write(payload);
+        client.write((payload + "\n"));
     });
     client.on("data", data => {
         logger.info("received response from GameAPI, disconnecting...");
@@ -70,7 +79,6 @@ const runGameLoop = (room_id, port, io) => {
             logger.error(data);
             throw err;
         }
-        logger.silly(data);
 
         if (respData.phase == PHASE_2_LIVE) {
             // For fairness, randomize the order in which a ship's state is emitted as an event.
@@ -95,7 +103,7 @@ const runGameLoop = (room_id, port, io) => {
 
             // Recursively call the game loop function.
             setTimeout(() => {
-                runGameLoop(room_id, port, io);
+                runGameLoop(room_id, port, app, io);
             });
         } else {
             logger.info("game phase is " + respData.phase);
@@ -104,7 +112,7 @@ const runGameLoop = (room_id, port, io) => {
 }
 
 
-const doCountdown = (room_id, port, io) => {
+const doCountdown = (room_id, port, app, io) => {
     const client = new net.Socket();
     logger.info('connecting to GameAPI on port ' + port)
     client.connect(port, 'localhost', () => {
@@ -141,7 +149,7 @@ const doCountdown = (room_id, port, io) => {
             if(respData.game_start_countdown - 1 >= 0) {
                 logger.info("scheduling next " + EVENT_STARTGAME + " event");
                 setTimeout(()=>{
-                    doCountdown(room_id, port, io);
+                    doCountdown(room_id, port, app, io);
                 }, 1000);
             }
         }
@@ -156,7 +164,7 @@ const doCountdown = (room_id, port, io) => {
                 );
 
             setTimeout(() => {
-                runGameLoop(room_id, port, io);
+                runGameLoop(room_id, port, app, io);
             });
             updateDBSetGameToLive(room_id);
         }
@@ -204,6 +212,8 @@ exports.startGameController = startGameController = async (req, res) => {
     } finally {
         db.close()
     }
+
+    req.app.set(getQueueName(sess_room_id), [])
 
     // Return HTTP response.
     res.sendStatus(202);
@@ -259,21 +269,26 @@ exports.startGameController = startGameController = async (req, res) => {
 
             logger.info("scheduling next countdown");
             setTimeout(()=>{
-                doCountdown(sess_room_id, room.roomDetails.port, req.app.get('socketio'));
+                doCountdown(
+                    sess_room_id,
+                    room.roomDetails.port,
+                    req.app,
+                    req.app.get('socketio'),
+                );
             }, 1000);
         }
     });
 }
 
 
-exports.relaunchGameLoops = async (io) => {
+exports.relaunchGameLoops = async (io, app) => {
     logger.info("Relaunching game loops...");
 
     const db = await get_db_connection();
     let rooms;
     try {
         // TODO: use a prepared statement.
-        rooms = await db.all(`SELECT * FROM api_room WHERE phase = "${PHASE_2_LIVE}"`);
+        rooms = await db.all('SELECT * FROM api_room WHERE phase = ?', [PHASE_2_LIVE]);
     }catch (err) {
         throw err
     } finally {
@@ -285,7 +300,7 @@ exports.relaunchGameLoops = async (io) => {
     {
         let room = rooms[i];
         setTimeout(() => {
-            runGameLoop(room.uuid, room.port, io);
+            runGameLoop(room.uuid, room.port, app, io);
         });
     }
 }

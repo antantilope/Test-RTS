@@ -322,9 +322,9 @@ class TestGame(TestCase):
             })
             game.advance_to_phase_1_starting()
 
-            assert game._game_start_countdown == 5
+            assert game._game_start_countdown == 6
             game.decr_phase_1_starting_countdown()
-            assert game._game_start_countdown == 4
+            assert game._game_start_countdown == 5
 
     def test_can_decr_phase_1_starting_countdown_to_zero_which_advances_to_phase_2_live(self):
             game = Game()

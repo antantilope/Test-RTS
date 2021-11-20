@@ -11,7 +11,7 @@ import { PointCoord } from './models/point-coord.model';
 /* CAMERA_MODE_SHIP Camera Position automatically follows the ships coords. */
 export const CAMERA_MODE_SHIP = 'ship'
 
-/* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner target. */
+/* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner data. */
 export const CAMERA_MODE_SCANNER = 'scanner'
 
 /* CAMERA_MODE_FREE Camera Position AND zoom are manually adjusted by the user. */
@@ -219,6 +219,21 @@ export class CameraService {
         canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
         canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
       }
+
+      if(ship.reaction_wheel_online) {
+        const headingRads = ship.heading * (Math.PI / 180)
+        const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
+        drawableItems.reactionWheelOverlay = {
+          centerCanvasCoord: overlayCenter,
+          radiusPx: Math.round(this.canvasHeight / 6),
+          compassPoint0: overlayCenter,
+          compassPoint1: {
+            x: overlayCenter.x + Math.round((this.canvasHeight / 5) * Math.sin(headingRads)),
+            y: overlayCenter.y - Math.round((this.canvasHeight / 5) * Math.cos(headingRads)),
+          }
+        }
+      }
+
     }
 
     return drawableItems
