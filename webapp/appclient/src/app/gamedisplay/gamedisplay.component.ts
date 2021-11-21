@@ -13,6 +13,7 @@ import {
   DrawableShip,
   DrawableReactionWheelOverlay,
 } from '../models/drawable-objects.model'
+import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
 import { UserService } from "../user.service"
 import {
@@ -323,7 +324,7 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
     lrcYOffset -= lrcYInterval
 
-    // Resources
+    // Resources (TOP LEFT)
     const tlcYInterval = 34
     let tlcYOffset = 25
     const tlcXOffset = 15
@@ -340,6 +341,48 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
     tlcYOffset += tlcYInterval
 
+    // Timers (BOTTOM RIGHT)
+    const brcYInterval = 45
+    let brcYOffset = 30
+    const brcXOffset = 15
+    const timerBarLength = Math.round(this._camera.canvasWidth / 8)
+    const textRAlignXOffset = brcXOffset + timerBarLength + 10
+    const barRAlignXOffset = brcXOffset + timerBarLength
+
+    this.ctx.strokeStyle = '#00ff00'
+    this.ctx.lineWidth = 1
+    this.ctx.textAlign = 'right'
+    this.ctx.font = '20px Courier New'
+    this.ctx.fillStyle = '#00ff00'
+    for(let i in this._api.frameData.ship.timers) {
+      const timer: TimerItem = this._api.frameData.ship.timers[i]
+      const fillLength = Math.round((timer.percent / 100) * timerBarLength)
+      this.ctx.beginPath()
+      this.ctx.fillText(
+        timer.name,
+        this._camera.canvasWidth - textRAlignXOffset,
+        this._camera.canvasHeight - brcYOffset,
+      )
+      this.ctx.beginPath()
+      this.ctx.rect(
+        this._camera.canvasWidth - barRAlignXOffset, //    top left x
+        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+        timerBarLength, // width
+        30,             // height
+      )
+      this.ctx.stroke()
+      this.ctx.beginPath()
+      this.ctx.rect(
+        this._camera.canvasWidth - barRAlignXOffset, //    top left x
+        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+        fillLength, // width
+        30,         // height
+      )
+      this.ctx.fill()
+
+      brcYOffset += brcYInterval
+
+    }
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
 
@@ -400,6 +443,13 @@ export class GamedisplayComponent implements OnInit {
 
     const [shipX, shipY] = [this._api.frameData.ship.coord_x, this._api.frameData.ship.coord_y]
     this.ctx.fillText(`ship pos: X: ${shipX} Y: ${shipY}`, xOffset, yOffset)
+    yOffset += yInterval
+
+    const [shipVelX, shipVelY] = [
+      this._api.frameData.ship.velocity_x_meters_per_second,
+      this._api.frameData.ship.velocity_y_meters_per_second,
+    ]
+    this.ctx.fillText(`ship Velocity: X: ${shipVelX.toFixed(2)} Y: ${shipVelY.toFixed(2)}`, xOffset, yOffset)
     yOffset += yInterval
 
   }

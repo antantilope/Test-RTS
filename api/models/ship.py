@@ -1,7 +1,7 @@
 
 import datetime as dt
 from decimal import Decimal
-from typing import Tuple, Dict, TypedDict, Optional
+from typing import Tuple, Dict, TypedDict, Optional, Generator
 
 from api.models.base import BaseModel
 from api import utils2d
@@ -55,6 +55,11 @@ class ScannedElement(TypedDict):
     coord_y: int
     relative_heading: int
     distance: int
+
+
+class TimerItem(TypedDict):
+    name: str
+    percent: int
 
 
 class Ship(BaseModel):
@@ -235,6 +240,8 @@ class Ship(BaseModel):
             'scanner_thermal_signature': self.scanner_thermal_signature,
 
             'autopilot_online': self.autopilot_online,
+
+            'timers': list(self.get_timer_items()),
         }
 
     @classmethod
@@ -296,6 +303,15 @@ class Ship(BaseModel):
 
         return instance
 
+
+    def get_timer_items(self) -> Generator[TimerItem, None, None]:
+        if self.engine_starting:
+            yield {
+                'name': 'Engine Startup',
+                'percent': round(
+                    self.engine_startup_power_used / self.engine_activation_power_required_total * 100
+                ),
+            }
 
     def use_battery_power(self, quantity: int) -> None:
         if quantity > self.battery_power:
@@ -482,7 +498,7 @@ class Ship(BaseModel):
         pass
 
 
-    def get_available_commands(self):
+    def get_available_commands(self) -> Generator[str, None, None]:
         if not self.reaction_wheel_online:
             yield ShipCommands.ACTIVATE_REACTION_WHEEL
         else:
