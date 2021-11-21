@@ -18,6 +18,7 @@ from api.coord_cache import (
     CoordDistanceCache,
     CoordHeadingCache,
 )
+from api.logger import get_logger
 
 
 class GameError(Exception): pass
@@ -70,6 +71,8 @@ class Game(BaseModel):
 
     def __init__(self):
         super().__init__()
+
+        self.logger = get_logger("Game-Logger")
 
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}

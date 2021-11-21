@@ -19,7 +19,7 @@ export const CAMERA_MODE_FREE = 'free'
 
 
 
-const MAX_ZOOM_MANUAL = 12
+const MAX_ZOOM_MANUAL = 15
 
 
 @Injectable({
