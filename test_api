@@ -1,6 +1,6 @@
 
 #!/bin/bash
 
-python3 -m unittest discover $1
+ISPYTESTING=1 python3 -m unittest discover $1
 
 

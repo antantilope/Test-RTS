@@ -30,6 +30,7 @@ class ShipCommands:
     ACTIVATE_ENGINE = 'activate_engine'
     DEACTIVATE_ENGINE = 'deactivate_engine'
     LIGHT_ENGINE = 'light_engine'
+    UNLIGHT_ENGINE = 'unlight_engine'
 
     ACTIVATE_SCANNER = 'activate_scanner'
     DEACTIVATE_SCANNER = 'deactivate_scanner'
@@ -487,12 +488,15 @@ class Ship(BaseModel):
         else:
             yield ShipCommands.DEACTIVATE_REACTION_WHEEL
 
-        if not self.engine_online:
-            yield ShipCommands.ACTIVATE_ENGINE
-        elif not self.engine_lit:
-            yield ShipCommands.LIGHT_ENGINE
-        else:
-            yield ShipCommands.DEACTIVATE_ENGINE
+        if not self.engine_starting:
+            if not self.engine_online:
+                yield ShipCommands.ACTIVATE_ENGINE
+            else:
+                if self.engine_lit:
+                    yield ShipCommands.UNLIGHT_ENGINE
+                else:
+                    yield ShipCommands.LIGHT_ENGINE
+                    yield ShipCommands.DEACTIVATE_ENGINE
 
 
     def process_command(self, command: str, *args, **kwargs):
@@ -510,6 +514,8 @@ class Ship(BaseModel):
             self.cmd_deactivate_engine()
         elif command == ShipCommands.LIGHT_ENGINE:
             self.cmd_light_engine()
+        elif command == ShipCommands.UNLIGHT_ENGINE:
+            self.cmd_unlight_engine()
         elif command == ShipCommands.ACTIVATE_SCANNER:
             self.cmd_activate_scanner()
         elif command == ShipCommands.DEACTIVATE_SCANNER:
@@ -587,6 +593,11 @@ class Ship(BaseModel):
             return
         self.engine_lit = False
         self.engine_online = False
+
+    def cmd_unlight_engine(self) -> None:
+        if not self.engine_lit:
+            return
+        self.engine_lit = False
 
     def cmd_light_engine(self) -> None:
         if not self.engine_online or self.engine_lit:

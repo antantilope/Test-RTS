@@ -19,6 +19,8 @@ def get_log_file_path(level, name) -> str:
     )
 
 def get_logger(name: str):
+    ISPYTESTING = os.getenv('ISPYTESTING') is not None
+
     logger = logging.getLogger(name)
 
     logger.setLevel(logging.DEBUG)
@@ -26,12 +28,12 @@ def get_logger(name: str):
     logger.handlers = []
 
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    info_file = logging.FileHandler(get_log_file_path(logging.INFO, name), "a")
+    info_file = logging.FileHandler(get_log_file_path(logging.INFO, name), "a") if not ISPYTESTING else logging.NullHandler()
     info_file.setLevel(logging.INFO)
     info_file.setFormatter(formatter)
     logger.addHandler(info_file)
 
-    warn_file = logging.FileHandler(get_log_file_path(logging.WARNING, name), "a")
+    warn_file = logging.FileHandler(get_log_file_path(logging.WARNING, name), "a") if not ISPYTESTING else logging.NullHandler()
     warn_file.setLevel(logging.WARNING)
     warn_file.setFormatter(formatter)
     logger.addHandler(warn_file)

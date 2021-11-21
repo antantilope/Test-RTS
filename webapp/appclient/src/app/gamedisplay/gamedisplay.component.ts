@@ -38,7 +38,11 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  public reactionWheelActive = false
+  public enableActivateReactionWheelBtn = false
+  public enableEngineOnlineBtn = false
+  public enableEngineOfflineBtn = false
+  public enableEngineLightBtn = false
+  public enableEngineUnLightBtn = false
 
   private ctx: any | null = null
 
@@ -406,35 +410,68 @@ export class GamedisplayComponent implements OnInit {
       return
     }
     if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
-      this.reactionWheelActive = true
+      this.enableActivateReactionWheelBtn = true
     }
     else {
-      this.reactionWheelActive = false
+      this.enableActivateReactionWheelBtn = false
     }
+
+    this.enableEngineOnlineBtn = this._api.frameData.ship.available_commands.includes('activate_engine')
+    this.enableEngineOfflineBtn = this._api.frameData.ship.available_commands.includes('deactivate_engine')
+    this.enableEngineLightBtn = this._api.frameData.ship.available_commands.includes('light_engine')
+    this.enableEngineUnLightBtn = this._api.frameData.ship.available_commands.includes('unlight_engine')
+
   }
 
 
   public async btnActivateReactionWheel() {
-    if(!this.reactionWheelActive) {
+    if(!this.enableActivateReactionWheelBtn) {
       return
     }
     console.log("btnActivateReactionWheel()")
-    const response = await this._api.post(
+    await this._api.post(
       "/api/rooms/command",
       {command:'activate_reaction_wheel'},
     )
   }
 
   public async btnDeactivateReactionWheel() {
-    if(this.reactionWheelActive) {
+    if(this.enableActivateReactionWheelBtn) {
       return
     }
     console.log("btnDeactivateReactionWheel()")
-    const response = await this._api.post(
+    await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_reaction_wheel'},
     )
   }
 
+  public async btnActivateEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'activate_engine'},
+    )
+  }
+
+  public async btnDeactivateEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'deactivate_engine'},
+    )
+  }
+
+  public async btnLightEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'light_engine'},
+    )
+  }
+
+  public async btnUnlightEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'unlight_engine'},
+    )
+  }
 
 }

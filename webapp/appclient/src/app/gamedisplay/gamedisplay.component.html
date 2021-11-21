@@ -15,14 +15,14 @@
             </div>
             <div>
                 <button
-                    *ngIf="reactionWheelActive"
+                    *ngIf="enableActivateReactionWheelBtn"
                     (click)="btnActivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw.jpg'); background-size:100% 100%;"
                 >
                 </button>
                 <button
-                    *ngIf="!reactionWheelActive"
+                    *ngIf="!enableActivateReactionWheelBtn"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw-gs.jpg'); background-size:100% 100%;"
                     disabled
@@ -31,14 +31,14 @@
             </div>
             <div>
                 <button
-                    *ngIf="!reactionWheelActive"
+                    *ngIf="!enableActivateReactionWheelBtn"
                     (click)="btnDeactivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw.jpg'); background-size:100% 100%;"
                 >
                 </button>
                 <button
-                    *ngIf="reactionWheelActive"
+                    *ngIf="enableActivateReactionWheelBtn"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw-gs.jpg'); background-size:100% 100%;"
                     disabled
@@ -46,5 +46,84 @@
                 </button>
             </div>
         </div>
+
+        <div class=command-bar-column>
+            <div class="command-bar-column-header">
+                ENGINE
+            </div>
+            <div style="display:flex;">
+                <div>
+                    <!-- Engine Sub Column 1 -->
+                    <div>
+                        <button
+                            *ngIf="enableEngineOnlineBtn"
+                            (click)="btnActivateEngine()"
+                            class="command-btn"
+                            style="background: url('/static/img/activate-engine.jpg'); background-size:100% 100%;"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableEngineOnlineBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/activate-engine-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            *ngIf="enableEngineOfflineBtn"
+                            (click)="btnDeactivateEngine()"
+                            class="command-btn"
+                            style="background: url('/static/img/deactivate-engine.jpg'); background-size:100% 100%;"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableEngineOfflineBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/deactivate-engine-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                </div>
+                <div style="margin-left:3px;">
+                    <!-- Engine Sub Column 2 -->
+                    <div>
+                        <button
+                            *ngIf="enableEngineLightBtn"
+                            (click)="btnLightEngine()"
+                            class="command-btn"
+                            style="background: url('/static/img/light-engine.jpg'); background-size:100% 100%;"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableEngineLightBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/light-engine-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            *ngIf="enableEngineUnLightBtn"
+                            (click)="btnUnlightEngine()"
+                            class="command-btn"
+                            style="background: url('/static/img/unlight-engine.jpg'); background-size:100% 100%;"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableEngineUnLightBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/unlight-engine-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
