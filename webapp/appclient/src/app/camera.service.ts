@@ -1,5 +1,6 @@
 
 import { Injectable } from '@angular/core';
+import { loggers } from 'winston';
 
 import { ApiService } from './api.service';
 import { BoxCoords } from './models/box-coords.model';
@@ -218,6 +219,7 @@ export class CameraService {
         canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
         canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
         canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
+        canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
       }
 
       if(ship.reaction_wheel_online) {
@@ -235,8 +237,69 @@ export class CameraService {
       }
 
     }
-
     return drawableItems
+  }
+
+
+  // GEOMETRY HELPERS // // // //
+
+  private invertAngle(angle: number): number {
+    return angle >= 180 ? angle - 180 : angle + 180
+  }
+
+  private signedAngleToUnsignedAngle(angle: number): number {
+    if (angle >= 0) {
+      return angle % 360
+    }
+    const posAngle = Math.abs(angle)
+    if (posAngle <= 360) {
+      return 360 - posAngle
+    } else {
+      return 360 - (posAngle % 360)
+    }
+  }
+
+  public getCanvasAngleBetween(canvasPointA: PointCoord, canvasPointB: PointCoord): number {
+    const dx = canvasPointB.x - canvasPointA.x
+    const dy = (this.canvasHeight - canvasPointB.y) - (this.canvasHeight - canvasPointA.y)
+    if(dx === 0 && dy === 0) {
+      return 0
+    }
+    let angle;
+    if (dy !== 0) {
+      angle = Math.atan(dx / dy) * (180 / Math.PI)
+    }
+    else if (dy === 0 && dx > 0) {
+      angle = 90
+    }
+    else if (dy === 0 && dx < 0) {
+      angle = 270
+    }
+    else {
+      throw new Error("not implemented")
+    }
+
+    const xNegative = dx < 0
+    const yNegative = dy < 0
+    const bothPositive = Boolean((!xNegative) && (!yNegative))
+    const bothNegative = Boolean(xNegative && yNegative)
+    if(bothPositive) {
+      return Math.round(angle)
+    }
+    else if(bothNegative) {
+      return Math.round(this.invertAngle(angle))
+    }
+    else if (yNegative) {
+      return this.signedAngleToUnsignedAngle(this.invertAngle(Math.round(angle)))
+    }
+    else if (xNegative) {
+      return this.signedAngleToUnsignedAngle(Math.round(angle))
+    }
+    else {
+      throw new Error("Not Implemented")
+    }
+
+
   }
 
 }

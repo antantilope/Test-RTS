@@ -94,5 +94,5 @@ exports.RunCommandController = async (req, res) => {
         }
     }
 
-    return res.sendStatus(202)
+    return res.status(202).json({})
 }

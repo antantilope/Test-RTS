@@ -4,6 +4,7 @@ from functools import wraps
 import json
 from typing import Dict
 import socketserver
+import traceback
 import uuid
 
 from api.models.game import Game
@@ -18,11 +19,12 @@ class TCPHandlerException(Exception):
 def log_handle(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
-        self.tcplogger.info("calling handle")
         try:
             return method(self, *args, **kwargs)
         except Exception as e:
+            tb = traceback.format_exc()
             self.tcplogger.error(str(e))
+            self.tcplogger.error(tb)
             raise
 
     return wrapper
@@ -71,7 +73,6 @@ class TCPHandler(socketserver.StreamRequestHandler):
 
         data: Dict = json.loads(payload.decode())
         command_root: str = next(iter(data.keys()))
-        self.tcplogger.info(f"command: {command_root}")
 
         request = data[command_root]
 

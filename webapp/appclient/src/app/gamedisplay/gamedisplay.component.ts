@@ -22,6 +22,7 @@ import {
   CAMERA_MODE_FREE,
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
+import { PointCoord } from '../models/point-coord.model'
 
 
 @Component({
@@ -46,12 +47,15 @@ export class GamedisplayComponent implements OnInit {
   private mouseClickDownInCanvas = false
   private mousePanLastX: number | null = null
   private mousePanLastY: number | null = null
+  private mouseMovedWhileDown = false
 
   /* Props used to hold debug data */
   private isDebug: boolean = false
   private lastFrameTime:any = null
   private clientFPS: number = 0
   private clientFrames: number = 0
+
+  private drawableObjects: DrawableCanvasItems | null = null
 
   constructor(
     private _api: ApiService,
@@ -118,23 +122,29 @@ export class GamedisplayComponent implements OnInit {
       }
     })
     this.canvas.nativeElement.addEventListener('mousedown', ()=>{
+      this.mouseMovedWhileDown = false
       if(this.mouseInCanvas) {
         this.mouseClickDownInCanvas = true
       }
     })
-    window.addEventListener('mouseup', ()=>{
+    window.addEventListener('mouseup', (event) => {
+      if(!this.mouseMovedWhileDown && this.mouseInCanvas) {
+        this.handleMouseClickInCanvas(event)
+      }
       this.mouseClickDownInCanvas = false
+      this.mouseMovedWhileDown = false
       this.mousePanLastX = null
       this.mousePanLastY = null
+
     })
     window.addEventListener('mousemove', event => {
+      this.mouseMovedWhileDown = true
       if(!this._camera.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
         return
       }
       else if(this.mousePanLastX === null || this.mousePanLastY === null) {
         this.mousePanLastX = event.screenX
         this.mousePanLastY = event.screenY
-        return
       }
       else {
         const cameraZoom = this._camera.getZoom()
@@ -146,6 +156,34 @@ export class GamedisplayComponent implements OnInit {
         this.mousePanLastY = event.screenY
       }
     })
+  }
+
+  public handleMouseClickInCanvas(event: any): void {
+    console.log("handleMouseClickInCanvas")
+    if(this._api.frameData === null) {
+      return
+    }
+    const mouseCanvasX = event.clientX - this.canvas.nativeElement.offsetLeft
+    const mouseCanvasY = event.clientY - this.canvas.nativeElement.offsetTop
+    if(
+      this._api.frameData.ship.reaction_wheel_online
+      && !this._api.frameData.ship.autopilot_online
+      && this.drawableObjects !== null
+      && typeof this.drawableObjects.ship !== "undefined"
+    ) {
+      this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
+    }
+  }
+
+  private async handleMouseClickInCanvasHeadingAdjust(canvasClickX: number, canvasClickY: number) {
+    const canvasClickPoint: PointCoord = {x: canvasClickX, y: canvasClickY}
+    const canvasShipPoint: PointCoord = this.drawableObjects.ship.canvasCoordCenter
+    const heading = this._camera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
+    console.log({set_heading: heading})
+    await this._api.post(
+      "/api/rooms/command",
+      {command: "set_heading", heading},
+    )
   }
 
   private setupCanvasContext(): void {
@@ -198,6 +236,7 @@ export class GamedisplayComponent implements OnInit {
     }
 
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
+    this.drawableObjects = drawableObjects
 
     // Ship
     const ship: DrawableShip | undefined = drawableObjects.ship
