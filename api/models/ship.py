@@ -36,6 +36,9 @@ class ShipCommands:
     SET_SCANNER_MODE_RADAR = 'set_scanner_mode_radar'
     SET_SCANNER_MODE_IR = 'set_scanner_mode_ir'
 
+    ACTIVATE_AUTO_PILOT = 'activate_autopilot'
+    DEACTIVATE_AUTO_PILOT = 'deactivate_autopilot'
+
 class ShipStateKey:
     MASS = 'mass'
 
@@ -140,6 +143,8 @@ class Ship(BaseModel):
         self.reaction_wheel_power_required_per_second = None
         self.reaction_wheel_online = False
 
+        self.autopilot_online = False
+
         # Arbitrary ship state data
         self._state = {}
 
@@ -227,6 +232,8 @@ class Ship(BaseModel):
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
             'scanner_data': self.scanner_data,
             'scanner_thermal_signature': self.scanner_thermal_signature,
+
+            'autopilot_online': self.autopilot_online,
         }
 
     @classmethod

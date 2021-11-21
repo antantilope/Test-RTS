@@ -18,6 +18,7 @@ from api.coord_cache import (
     CoordDistanceCache,
     CoordHeadingCache,
 )
+from api.logger import get_logger
 
 
 class GameError(Exception): pass
@@ -70,6 +71,8 @@ class Game(BaseModel):
 
     def __init__(self):
         super().__init__()
+
+        self.logger = get_logger("Game-Logger")
 
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
@@ -267,7 +270,7 @@ class Game(BaseModel):
                     "Expected game_frame number to be 1 when _last_frame_at is None."
                 )
             self._last_frame_at = now_ts
-            self._fps = 60
+            self._fps = MAX_SERVER_FPS
 
         else:
             ellapsed_seconds = (now_ts - self._last_frame_at).total_seconds()
@@ -285,6 +288,10 @@ class Game(BaseModel):
                 self._frame_sleep = None
                 self._fps = fps
                 self._last_frame_at = now_ts
+
+        if self._fps == 0:
+            self.logger.warn("FPS set to 0, artificially adjusting to 1")
+            self._fps = 1
 
         # Run Frame Phases
         for ship_id, ship in self._ships.items():

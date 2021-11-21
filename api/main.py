@@ -1,21 +1,41 @@
 
 import argparse
+from functools import wraps
 import json
 from typing import Dict
 import socketserver
+import traceback
 import uuid
 
 from api.models.game import Game
+from api.logger import get_logger
 
 
 class TCPHandlerException(Exception):
     pass
 
 
+
+def log_handle(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.tcplogger.error(str(e))
+            self.tcplogger.error(tb)
+            raise
+
+    return wrapper
+
+
 class TCPHandler(socketserver.StreamRequestHandler):
 
-    # TODO Add tthis to init?
     game = Game()
+
+    tcplogger = get_logger("tcp")
+
 
     # Debug
     CMD_ROOT_PING = 'ping'
@@ -47,11 +67,13 @@ class TCPHandler(socketserver.StreamRequestHandler):
         }
         return json.dumps(data).encode()
 
+    @log_handle
     def handle(self):
         payload = self.read_stripped_line()
 
         data: Dict = json.loads(payload.decode())
         command_root: str = next(iter(data.keys()))
+
         request = data[command_root]
 
         if command_root == self.CMD_ROOT_RUN_FRAME:
