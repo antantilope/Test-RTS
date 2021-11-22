@@ -12,7 +12,10 @@ import {
   DrawableCanvasItems,
   DrawableShip,
   DrawableReactionWheelOverlay,
+  DrawableEngineOverlay,
+  DrawableLitEngineFlame,
 } from '../models/drawable-objects.model'
+import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
 import { UserService } from "../user.service"
 import {
@@ -38,7 +41,11 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  public reactionWheelActive = false
+  public enableActivateReactionWheelBtn = false
+  public enableEngineOnlineBtn = false
+  public enableEngineOfflineBtn = false
+  public enableEngineLightBtn = false
+  public enableEngineUnLightBtn = false
 
   private ctx: any | null = null
 
@@ -240,6 +247,7 @@ export class GamedisplayComponent implements OnInit {
 
     // Ship
     const ship: DrawableShip | undefined = drawableObjects.ship
+    const litEngineFlames: DrawableLitEngineFlame[] = drawableObjects.litEngineFlames
     if(typeof ship !== "undefined") {
       this.ctx.beginPath()
       this.ctx.fillStyle = "#919191"
@@ -249,6 +257,28 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
       this.ctx.closePath()
       this.ctx.fill()
+      litEngineFlames.forEach((engFlame: DrawableLitEngineFlame) => {
+        this.ctx.beginPath()
+        this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
+        this.ctx.arc(
+          engFlame.sourceCanvasCoord.x,
+          engFlame.sourceCanvasCoord.y,
+          engFlame.pixelRadius,
+          0,
+          2 * Math.PI,
+        )
+        this.ctx.fill()
+        this.ctx.beginPath()
+        this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
+        this.ctx.arc(
+          engFlame.sourceCanvasCoord.x + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
+          engFlame.sourceCanvasCoord.y + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
+          engFlame.pixelRadius / 1.5,
+          0,
+          2 * Math.PI,
+        )
+        this.ctx.fill()
+      })
     }
 
     // Reaction Wheel overlay
@@ -280,6 +310,25 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+    // Engine overlay
+    const engineOverlay: DrawableEngineOverlay | undefined = drawableObjects.engineOverlay
+    if(typeof engineOverlay !== "undefined") {
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(engineOverlay.vectorPoint0.x, engineOverlay.vectorPoint0.y)
+      this.ctx.lineTo(engineOverlay.vectorPoint1.x, engineOverlay.vectorPoint1.y)
+      this.ctx.stroke();
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 18px Courier New'
+      this.ctx.fillStyle = 'rgb(255, 0, 0,  0.8)'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText(
+        engineOverlay.metersPerSecond + " M/S",
+        engineOverlay.vectorPoint1.x,
+        engineOverlay.vectorPoint1.y,
+      )
+    }
 
     // lower right corner
     let lrcYOffset = this._camera.canvasHeight - 30
@@ -293,6 +342,13 @@ export class GamedisplayComponent implements OnInit {
       )
       / this._api.frameData.map_config.units_per_meter
     )
+    let scaleLabel;
+    if(barLengthMeters >= 5000) {
+      scaleLabel = (barLengthMeters / 1000).toFixed(2) + " KM"
+    }
+    else {
+      scaleLabel = Math.round(barLengthMeters) + " Meters"
+    }
     this.ctx.beginPath()
     this.ctx.strokeStyle = "#ffffff"
     this.ctx.lineWidth = 3
@@ -312,14 +368,14 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.font = '24px serif'
     this.ctx.fillStyle = '#ffffff'
     this.ctx.textAlign = 'left'
-    this.ctx.fillText(Math.round(barLengthMeters) + " Meters", lrcXOffset + 8, lrcYOffset - 12)
+    this.ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
     lrcYOffset -= lrcYInterval
     this.ctx.beginPath()
     this.ctx.font = '20px Courier New'
     this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
     lrcYOffset -= lrcYInterval
 
-    // Resources
+    // Resources (TOP LEFT)
     const tlcYInterval = 34
     let tlcYOffset = 25
     const tlcXOffset = 15
@@ -336,6 +392,56 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
     tlcYOffset += tlcYInterval
 
+    // Timers (BOTTOM RIGHT)
+    const brcYInterval = 45
+    let brcYOffset = 30
+    const brcXOffset = 15
+    const timerBarLength = Math.round(this._camera.canvasWidth / 8)
+    const textRAlignXOffset = brcXOffset + timerBarLength + 10
+    const barRAlignXOffset = brcXOffset + timerBarLength
+
+    this.ctx.strokeStyle = '#00ff00'
+    this.ctx.lineWidth = 1
+    this.ctx.textAlign = 'right'
+    this.ctx.font = 'bold 24px Courier New'
+    this.ctx.fillStyle = '#00ff00'
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      this._api.frameData.elapsed_time,
+      this._camera.canvasWidth - 15,
+      this._camera.canvasHeight - brcYOffset,
+    )
+    this.ctx.font = '20px Courier New'
+    brcYOffset += brcYInterval
+    for(let i in this._api.frameData.ship.timers) {
+      const timer: TimerItem = this._api.frameData.ship.timers[i]
+      const fillLength = Math.round((timer.percent / 100) * timerBarLength)
+      this.ctx.beginPath()
+      this.ctx.fillText(
+        timer.name,
+        this._camera.canvasWidth - textRAlignXOffset,
+        this._camera.canvasHeight - brcYOffset,
+      )
+      this.ctx.beginPath()
+      this.ctx.rect(
+        this._camera.canvasWidth - barRAlignXOffset, //    top left x
+        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+        timerBarLength, // width
+        30,             // height
+      )
+      this.ctx.stroke()
+      this.ctx.beginPath()
+      this.ctx.rect(
+        this._camera.canvasWidth - barRAlignXOffset, //    top left x
+        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+        fillLength, // width
+        30,         // height
+      )
+      this.ctx.fill()
+
+      brcYOffset += brcYInterval
+
+    }
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
 
@@ -398,6 +504,13 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText(`ship pos: X: ${shipX} Y: ${shipY}`, xOffset, yOffset)
     yOffset += yInterval
 
+    const [shipVelX, shipVelY] = [
+      this._api.frameData.ship.velocity_x_meters_per_second,
+      this._api.frameData.ship.velocity_y_meters_per_second,
+    ]
+    this.ctx.fillText(`ship Velocity: X: ${shipVelX.toFixed(2)} Y: ${shipVelY.toFixed(2)}`, xOffset, yOffset)
+    yOffset += yInterval
+
   }
 
 
@@ -406,35 +519,68 @@ export class GamedisplayComponent implements OnInit {
       return
     }
     if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
-      this.reactionWheelActive = true
+      this.enableActivateReactionWheelBtn = true
     }
     else {
-      this.reactionWheelActive = false
+      this.enableActivateReactionWheelBtn = false
     }
+
+    this.enableEngineOnlineBtn = this._api.frameData.ship.available_commands.includes('activate_engine')
+    this.enableEngineOfflineBtn = this._api.frameData.ship.available_commands.includes('deactivate_engine')
+    this.enableEngineLightBtn = this._api.frameData.ship.available_commands.includes('light_engine')
+    this.enableEngineUnLightBtn = this._api.frameData.ship.available_commands.includes('unlight_engine')
+
   }
 
 
   public async btnActivateReactionWheel() {
-    if(!this.reactionWheelActive) {
+    if(!this.enableActivateReactionWheelBtn) {
       return
     }
     console.log("btnActivateReactionWheel()")
-    const response = await this._api.post(
+    await this._api.post(
       "/api/rooms/command",
       {command:'activate_reaction_wheel'},
     )
   }
 
   public async btnDeactivateReactionWheel() {
-    if(this.reactionWheelActive) {
+    if(this.enableActivateReactionWheelBtn) {
       return
     }
     console.log("btnDeactivateReactionWheel()")
-    const response = await this._api.post(
+    await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_reaction_wheel'},
     )
   }
 
+  public async btnActivateEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'activate_engine'},
+    )
+  }
+
+  public async btnDeactivateEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'deactivate_engine'},
+    )
+  }
+
+  public async btnLightEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'light_engine'},
+    )
+  }
+
+  public async btnUnlightEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'unlight_engine'},
+    )
+  }
 
 }

@@ -4,6 +4,7 @@ import random
 from typing import TypedDict, Optional, List, Dict, Set
 from time import sleep
 import uuid
+import re
 
 from .base import BaseModel
 from .ship import Ship, ShipScannerMode
@@ -19,6 +20,9 @@ from api.coord_cache import (
     CoordHeadingCache,
 )
 from api.logger import get_logger
+
+
+LEADING_ZEROS_TIME = re.compile(r"^0+\:")
 
 
 class GameError(Exception): pass
@@ -95,6 +99,8 @@ class Game(BaseModel):
         self._last_frame_at = None
         self._frame_sleep = None
 
+        self._game_start_time = None
+
 
     def get_state(self) -> GameState:
         base_state = {
@@ -134,6 +140,7 @@ class Game(BaseModel):
 
     def _get_live_state(self) -> Dict:
         return {
+            'elapsed_time': LEADING_ZEROS_TIME.sub("", str(dt.datetime.now() - self._game_start_time)).split(".")[0],
             'ships': [ship.to_dict() for ship in self._ships.values()],
         }
 
@@ -246,6 +253,7 @@ class Game(BaseModel):
     def advance_to_phase_2_live(self):
         self._validate_advance_to_phase_2_live()
         self._phase = GamePhase.LIVE
+        self._game_start_time = dt.datetime.now()
         self.incr_game_frame()
 
     def incr_game_frame(self):

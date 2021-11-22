@@ -29,6 +29,30 @@ const commandHandlers = {
             ship_command: 'deactivate_reaction_wheel',
         });
     },
+    activate_engine: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'activate_engine',
+        });
+    },
+    deactivate_engine: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'deactivate_engine',
+        });
+    },
+    light_engine: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'light_engine',
+        });
+    },
+    unlight_engine: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'unlight_engine',
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {

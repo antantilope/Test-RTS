@@ -20,7 +20,7 @@ export const CAMERA_MODE_FREE = 'free'
 
 
 
-const MAX_ZOOM_MANUAL = 15
+const MAX_ZOOM_MANUAL = 10000
 
 
 @Injectable({
@@ -38,11 +38,14 @@ export class CameraService {
     1 is the most zoomed in.
     "Zooming out" increases this value
   */
-  private zoom: number = 1;
+  private zoom: number = 10;
+  private zoomLevels = [1, 5, 10, 17, 25, 50, 100, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000]
+  private zoomIndex = this.zoomLevels.indexOf(this.zoom)
+  private finalZoomIndex = this.zoomLevels.length - 1
 
   private xPosition: number = null;
   private yPosition: number = null;
-  private mode = CAMERA_MODE_SHIP;
+  private mode = CAMERA_MODE_FREE;
 
   constructor(
     private _api: ApiService,
@@ -68,11 +71,19 @@ export class CameraService {
     return this.mode === CAMERA_MODE_FREE
   }
 
+
+
   public adjustZoom(zoomIn: boolean): void {
-    if(zoomIn && this.zoom > 1) {
-      this.zoom--
-    } else if (!zoomIn && this.zoom < MAX_ZOOM_MANUAL) {
-      this.zoom++
+    if(zoomIn) {
+      if (this.zoomIndex > 1) {
+        this.zoomIndex--
+        this.zoom = this.zoomLevels[this.zoomIndex]
+      }
+    } else if (!zoomIn) {
+      if(this.zoomIndex < this.finalZoomIndex) {
+        this.zoomIndex++
+        this.zoom = this.zoomLevels[this.zoomIndex]
+      }
     }
   }
 
@@ -210,10 +221,14 @@ export class CameraService {
       shipMapCoordP3
     )
 
-    const drawableItems: DrawableCanvasItems = {}
+    const drawableItems: DrawableCanvasItems = {
+      litEngineFlames: [],
+    }
 
     if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
+
       const cameraPosition: PointCoord = this.getPosition()
+      const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
       drawableItems.ship = {
         canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
         canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
@@ -224,7 +239,6 @@ export class CameraService {
 
       if(ship.reaction_wheel_online) {
         const headingRads = ship.heading * (Math.PI / 180)
-        const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
         drawableItems.reactionWheelOverlay = {
           centerCanvasCoord: overlayCenter,
           radiusPx: Math.round(this.canvasHeight / 6),
@@ -234,6 +248,52 @@ export class CameraService {
             y: overlayCenter.y - Math.round((this.canvasHeight / 5) * Math.cos(headingRads)),
           }
         }
+      }
+
+      const velocityRadians = this.getCanvasAngleBetween(
+        {x:0, y:0},
+        {
+          x: Math.round(ship.velocity_x_meters_per_second * 1000),
+          y: Math.round(ship.velocity_y_meters_per_second * 1000),
+        }
+      )  * (Math.PI / 180)
+
+      if(ship.engine_online && (ship.velocity_x_meters_per_second || ship.velocity_y_meters_per_second)) {
+
+        drawableItems.engineOverlay = {
+          vectorPoint0: overlayCenter,
+          vectorPoint1: {
+            x: overlayCenter.x + Math.round((this.canvasHeight / 4) * Math.sin(velocityRadians)),
+            y: overlayCenter.y + Math.round((this.canvasHeight / 4) * Math.cos(velocityRadians)), // TODO: Why is this + and not -
+          },
+          metersPerSecond: Math.sqrt(
+            Math.pow(ship.velocity_x_meters_per_second, 2)
+            + Math.pow(ship.velocity_y_meters_per_second, 2)
+          ).toFixed(2),
+        }
+      }
+
+      if(ship.engine_lit) {
+        const engineBottomCanvasCoord = this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition)
+        const engineTopCanvasCoord = this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition)
+        const engineNozzleCanvasCoord: PointCoord = {
+          x: Math.round((engineTopCanvasCoord.x + engineBottomCanvasCoord.x) / 2),
+          y: Math.round((engineTopCanvasCoord.y + engineBottomCanvasCoord.y) / 2),
+        }
+        let engineDiameterCanvasPx = Math.round(Math.sqrt(
+          Math.pow(engineTopCanvasCoord.x - engineBottomCanvasCoord.x, 2)
+          + Math.pow(engineTopCanvasCoord.y - engineBottomCanvasCoord.y, 2)
+        ))
+        if (engineDiameterCanvasPx > 5) {
+          const min = 2
+          const max = engineDiameterCanvasPx / 2
+          engineDiameterCanvasPx += Math.random() * (max - min) + min;
+        }
+        drawableItems.litEngineFlames.push({
+          sourceCanvasCoord: engineNozzleCanvasCoord,
+          pixelRadius: Math.max(engineDiameterCanvasPx / 2, 3),
+        })
+
       }
 
     }

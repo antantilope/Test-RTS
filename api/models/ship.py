@@ -1,7 +1,7 @@
 
 import datetime as dt
 from decimal import Decimal
-from typing import Tuple, Dict, TypedDict, Optional
+from typing import Tuple, Dict, TypedDict, Optional, Generator
 
 from api.models.base import BaseModel
 from api import utils2d
@@ -30,6 +30,7 @@ class ShipCommands:
     ACTIVATE_ENGINE = 'activate_engine'
     DEACTIVATE_ENGINE = 'deactivate_engine'
     LIGHT_ENGINE = 'light_engine'
+    UNLIGHT_ENGINE = 'unlight_engine'
 
     ACTIVATE_SCANNER = 'activate_scanner'
     DEACTIVATE_SCANNER = 'deactivate_scanner'
@@ -54,6 +55,11 @@ class ScannedElement(TypedDict):
     coord_y: int
     relative_heading: int
     distance: int
+
+
+class TimerItem(TypedDict):
+    name: str
+    percent: int
 
 
 class Ship(BaseModel):
@@ -234,6 +240,8 @@ class Ship(BaseModel):
             'scanner_thermal_signature': self.scanner_thermal_signature,
 
             'autopilot_online': self.autopilot_online,
+
+            'timers': list(self.get_timer_items()),
         }
 
     @classmethod
@@ -295,6 +303,15 @@ class Ship(BaseModel):
 
         return instance
 
+
+    def get_timer_items(self) -> Generator[TimerItem, None, None]:
+        if self.engine_starting:
+            yield {
+                'name': 'Engine Startup',
+                'percent': round(
+                    self.engine_startup_power_used / self.engine_activation_power_required_total * 100
+                ),
+            }
 
     def use_battery_power(self, quantity: int) -> None:
         if quantity > self.battery_power:
@@ -481,18 +498,21 @@ class Ship(BaseModel):
         pass
 
 
-    def get_available_commands(self):
+    def get_available_commands(self) -> Generator[str, None, None]:
         if not self.reaction_wheel_online:
             yield ShipCommands.ACTIVATE_REACTION_WHEEL
         else:
             yield ShipCommands.DEACTIVATE_REACTION_WHEEL
 
-        if not self.engine_online:
-            yield ShipCommands.ACTIVATE_ENGINE
-        elif not self.engine_lit:
-            yield ShipCommands.LIGHT_ENGINE
-        else:
-            yield ShipCommands.DEACTIVATE_ENGINE
+        if not self.engine_starting:
+            if not self.engine_online:
+                yield ShipCommands.ACTIVATE_ENGINE
+            else:
+                if self.engine_lit:
+                    yield ShipCommands.UNLIGHT_ENGINE
+                else:
+                    yield ShipCommands.LIGHT_ENGINE
+                    yield ShipCommands.DEACTIVATE_ENGINE
 
 
     def process_command(self, command: str, *args, **kwargs):
@@ -510,6 +530,8 @@ class Ship(BaseModel):
             self.cmd_deactivate_engine()
         elif command == ShipCommands.LIGHT_ENGINE:
             self.cmd_light_engine()
+        elif command == ShipCommands.UNLIGHT_ENGINE:
+            self.cmd_unlight_engine()
         elif command == ShipCommands.ACTIVATE_SCANNER:
             self.cmd_activate_scanner()
         elif command == ShipCommands.DEACTIVATE_SCANNER:
@@ -587,6 +609,11 @@ class Ship(BaseModel):
             return
         self.engine_lit = False
         self.engine_online = False
+
+    def cmd_unlight_engine(self) -> None:
+        if not self.engine_lit:
+            return
+        self.engine_lit = False
 
     def cmd_light_engine(self) -> None:
         if not self.engine_online or self.engine_lit:

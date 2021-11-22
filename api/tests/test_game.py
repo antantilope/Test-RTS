@@ -347,9 +347,11 @@ class TestGame(TestCase):
             })
             game.advance_to_phase_1_starting()
             game._game_start_countdown = 1
+            assert game._game_start_time is None
 
             game.decr_phase_1_starting_countdown()
             assert game._game_start_countdown == 0
             assert game._phase == GamePhase.LIVE
             assert game._game_frame == 1
+            assert game._game_start_time is not None
 

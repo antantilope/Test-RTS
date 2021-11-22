@@ -16,7 +16,22 @@ export class DrawableReactionWheelOverlay {
     compassPoint1: PointCoord
 }
 
+export class DrawableEngineOverlay {
+    vectorPoint0: PointCoord
+    vectorPoint1: PointCoord
+    metersPerSecond: number | string
+}
+
+
+
+export class DrawableLitEngineFlame {
+    sourceCanvasCoord: PointCoord
+    pixelRadius: number
+}
+
 export class DrawableCanvasItems {
     ship?: DrawableShip
     reactionWheelOverlay?: DrawableReactionWheelOverlay
+    engineOverlay?: DrawableEngineOverlay
+    litEngineFlames: DrawableLitEngineFlame[]
 }

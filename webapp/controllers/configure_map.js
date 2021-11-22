@@ -24,7 +24,7 @@ exports.configureMapController = async (req, res) => {
     }
 
     // Validate request body
-    const units_per_meter = 10;
+    const units_per_meter = 100;
     const x_unit_length = parseInt(req.body.x_unit_length);
     const y_unit_length = parseInt(req.body.y_unit_length);
     if (isNaN(units_per_meter) || isNaN(x_unit_length) || isNaN(y_unit_length)) {

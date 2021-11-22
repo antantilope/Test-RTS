@@ -1857,3 +1857,10 @@ class TestShipCMDActivateDeactivateLightEngine(TestCase):
         self.ship.cmd_light_engine()
         assert self.ship.engine_lit
         assert self.ship.engine_online
+
+    def test_unlight_engine_command_updates_ship_state(self):
+        self.ship.engine_online = True
+        self.ship.engine_lit = True
+        self.ship.cmd_unlight_engine()
+        assert self.ship.engine_online
+        assert not self.ship.engine_lit
