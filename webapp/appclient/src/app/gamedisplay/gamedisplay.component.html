@@ -2,6 +2,26 @@
 <div id="outer-game-display-container">
     <div id="sidebar-canvas-container" class="game-display-container">
         <div id="sidebar-container" class="game-display-container">
+            <div>
+                <button class="sidebar-btn dark-btn" style="padding-top:3px">
+                    🏳️
+                </button>
+            </div>
+            <div *ngIf="_camera.getMode() !== 'ship'">
+                <button class="sidebar-btn" (click)="_camera.setModeShip()">
+                    🚀🎥
+                </button>
+            </div>
+            <div  *ngIf="_camera.getMode() !== 'scanner'">
+                <button class="sidebar-btn" (click)="_camera.setModeScanner()">
+                    📡🎥
+                </button>
+            </div>
+            <div  *ngIf="_camera.getMode() !== 'free'">
+                <button class="sidebar-btn" (click)="_camera.setModeFree()">
+                    💠🎥
+                </button>
+            </div>
         </div>
         <div #graphicsCanvasContainer id="canvas-container" class="game-display-container">
             <canvas #graphicsCanvas id="graphics-2d-canvas">

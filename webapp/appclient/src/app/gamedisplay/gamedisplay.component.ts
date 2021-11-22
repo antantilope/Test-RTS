@@ -66,7 +66,7 @@ export class GamedisplayComponent implements OnInit {
 
   constructor(
     private _api: ApiService,
-    private _camera: CameraService,
+    public _camera: CameraService,
     private _formatting: FormattingService,
     public _user: UserService,
   ) {
@@ -257,6 +257,16 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
       this.ctx.closePath()
       this.ctx.fill()
+      if(Math.abs(ship.canvasCoordP3.x - ship.canvasCoordP0.x) === 0) {
+        this.ctx.beginPath()
+        this.ctx.font = 'bold 24px Courier New'
+        this.ctx.textAlign = 'center'
+        this.ctx.fillText(
+          "🚀",
+          ship.canvasCoordCenter.x,
+          ship.canvasCoordCenter.y,
+        )
+      }
       litEngineFlames.forEach((engFlame: DrawableLitEngineFlame) => {
         this.ctx.beginPath()
         this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
