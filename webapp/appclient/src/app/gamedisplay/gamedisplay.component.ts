@@ -372,8 +372,16 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.strokeStyle = '#00ff00'
     this.ctx.lineWidth = 1
     this.ctx.textAlign = 'right'
-    this.ctx.font = '20px Courier New'
+    this.ctx.font = 'bold 24px Courier New'
     this.ctx.fillStyle = '#00ff00'
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      this._api.frameData.elapsed_time,
+      this._camera.canvasWidth - 15,
+      this._camera.canvasHeight - brcYOffset,
+    )
+    this.ctx.font = '20px Courier New'
+    brcYOffset += brcYInterval
     for(let i in this._api.frameData.ship.timers) {
       const timer: TimerItem = this._api.frameData.ship.timers[i]
       const fillLength = Math.round((timer.percent / 100) * timerBarLength)

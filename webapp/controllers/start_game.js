@@ -93,6 +93,7 @@ const runGameLoop = (room_id, port, app, io) => {
                     {
                         ship,
                         phase: respData.phase,
+                        elapsed_time: respData.elapsed_time,
                         game_frame: respData.game_frame,
                         server_fps: respData.server_fps,
                         server_fps_throttle_seconds: respData.server_fps_throttle_seconds,
