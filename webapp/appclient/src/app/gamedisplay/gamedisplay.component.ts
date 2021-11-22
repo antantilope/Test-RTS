@@ -13,6 +13,7 @@ import {
   DrawableShip,
   DrawableReactionWheelOverlay,
   DrawableEngineOverlay,
+  DrawableLitEngineFlame,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
@@ -246,6 +247,7 @@ export class GamedisplayComponent implements OnInit {
 
     // Ship
     const ship: DrawableShip | undefined = drawableObjects.ship
+    const litEngineFlames: DrawableLitEngineFlame[] = drawableObjects.litEngineFlames
     if(typeof ship !== "undefined") {
       this.ctx.beginPath()
       this.ctx.fillStyle = "#919191"
@@ -255,6 +257,28 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
       this.ctx.closePath()
       this.ctx.fill()
+      litEngineFlames.forEach((engFlame: DrawableLitEngineFlame) => {
+        this.ctx.beginPath()
+        this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
+        this.ctx.arc(
+          engFlame.sourceCanvasCoord.x,
+          engFlame.sourceCanvasCoord.y,
+          engFlame.pixelRadius,
+          0,
+          2 * Math.PI,
+        )
+        this.ctx.fill()
+        this.ctx.beginPath()
+        this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
+        this.ctx.arc(
+          engFlame.sourceCanvasCoord.x + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
+          engFlame.sourceCanvasCoord.y + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
+          engFlame.pixelRadius / 1.5,
+          0,
+          2 * Math.PI,
+        )
+        this.ctx.fill()
+      })
     }
 
     // Reaction Wheel overlay

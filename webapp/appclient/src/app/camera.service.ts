@@ -243,19 +243,21 @@ export class CameraService {
         }
       }
 
+      const velocityRadians = this.getCanvasAngleBetween(
+        {x:0, y:0},
+        {
+          x: Math.round(ship.velocity_x_meters_per_second * 1000),
+          y: Math.round(ship.velocity_y_meters_per_second * 1000),
+        }
+      )  * (Math.PI / 180)
+
       if(ship.engine_online && (ship.velocity_x_meters_per_second || ship.velocity_y_meters_per_second)) {
-        const radians = this.getCanvasAngleBetween(
-          {x:0, y:0},
-          {
-            x: Math.round(ship.velocity_x_meters_per_second * 1000),
-            y: Math.round(ship.velocity_y_meters_per_second * 1000),
-          }
-        )  * (Math.PI / 180)
+
         drawableItems.engineOverlay = {
           vectorPoint0: overlayCenter,
           vectorPoint1: {
-            x: overlayCenter.x + Math.round((this.canvasHeight / 4) * Math.sin(radians)),
-            y: overlayCenter.y + Math.round((this.canvasHeight / 4) * Math.cos(radians)), // TODO: Why is this + and not -
+            x: overlayCenter.x + Math.round((this.canvasHeight / 4) * Math.sin(velocityRadians)),
+            y: overlayCenter.y + Math.round((this.canvasHeight / 4) * Math.cos(velocityRadians)), // TODO: Why is this + and not -
           },
           metersPerSecond: Math.sqrt(
             Math.pow(ship.velocity_x_meters_per_second, 2)
@@ -265,6 +267,25 @@ export class CameraService {
       }
 
       if(ship.engine_lit) {
+        const engineBottomCanvasCoord = this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition)
+        const engineTopCanvasCoord = this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition)
+        const engineNozzleCanvasCoord: PointCoord = {
+          x: Math.round((engineTopCanvasCoord.x + engineBottomCanvasCoord.x) / 2),
+          y: Math.round((engineTopCanvasCoord.y + engineBottomCanvasCoord.y) / 2),
+        }
+        let engineDiameterCanvasPx = Math.round(Math.sqrt(
+          Math.pow(engineTopCanvasCoord.x - engineBottomCanvasCoord.x, 2)
+          + Math.pow(engineTopCanvasCoord.y - engineBottomCanvasCoord.y, 2)
+        ))
+        if (engineDiameterCanvasPx > 5) {
+          const min = 2
+          const max = engineDiameterCanvasPx / 2
+          engineDiameterCanvasPx += Math.random() * (max - min) + min;
+        }
+        drawableItems.litEngineFlames.push({
+          sourceCanvasCoord: engineNozzleCanvasCoord,
+          pixelRadius: Math.max(engineDiameterCanvasPx / 2, 3),
+        })
 
       }
 

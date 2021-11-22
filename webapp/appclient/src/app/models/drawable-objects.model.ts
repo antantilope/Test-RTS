@@ -26,7 +26,7 @@ export class DrawableEngineOverlay {
 
 export class DrawableLitEngineFlame {
     sourceCanvasCoord: PointCoord
-    maxPixelRadius: number
+    pixelRadius: number
 }
 
 export class DrawableCanvasItems {
