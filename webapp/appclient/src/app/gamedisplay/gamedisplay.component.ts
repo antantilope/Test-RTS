@@ -342,6 +342,13 @@ export class GamedisplayComponent implements OnInit {
       )
       / this._api.frameData.map_config.units_per_meter
     )
+    let scaleLabel;
+    if(barLengthMeters >= 5000) {
+      scaleLabel = (barLengthMeters / 1000).toFixed(2) + " KM"
+    }
+    else {
+      scaleLabel = Math.round(barLengthMeters) + " Meters"
+    }
     this.ctx.beginPath()
     this.ctx.strokeStyle = "#ffffff"
     this.ctx.lineWidth = 3
@@ -361,7 +368,7 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.font = '24px serif'
     this.ctx.fillStyle = '#ffffff'
     this.ctx.textAlign = 'left'
-    this.ctx.fillText(Math.round(barLengthMeters) + " Meters", lrcXOffset + 8, lrcYOffset - 12)
+    this.ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
     lrcYOffset -= lrcYInterval
     this.ctx.beginPath()
     this.ctx.font = '20px Courier New'

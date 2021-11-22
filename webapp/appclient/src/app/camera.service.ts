@@ -39,6 +39,9 @@ export class CameraService {
     "Zooming out" increases this value
   */
   private zoom: number = 10;
+  private zoomLevels = [1, 5, 10, 17, 25, 50, 100, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000]
+  private zoomIndex = this.zoomLevels.indexOf(this.zoom)
+  private finalZoomIndex = this.zoomLevels.length - 1
 
   private xPosition: number = null;
   private yPosition: number = null;
@@ -68,15 +71,19 @@ export class CameraService {
     return this.mode === CAMERA_MODE_FREE
   }
 
-  private getZoomInterval(zoomIn: boolean): number {
-    return 1
-  }
+
 
   public adjustZoom(zoomIn: boolean): void {
-    if(zoomIn && this.zoom > 1) {
-      this.zoom -= this.getZoomInterval(true)
-    } else if (!zoomIn && this.zoom < MAX_ZOOM_MANUAL) {
-      this.zoom += this.getZoomInterval(false)
+    if(zoomIn) {
+      if (this.zoomIndex > 1) {
+        this.zoomIndex--
+        this.zoom = this.zoomLevels[this.zoomIndex]
+      }
+    } else if (!zoomIn) {
+      if(this.zoomIndex < this.finalZoomIndex) {
+        this.zoomIndex++
+        this.zoom = this.zoomLevels[this.zoomIndex]
+      }
     }
   }
 
