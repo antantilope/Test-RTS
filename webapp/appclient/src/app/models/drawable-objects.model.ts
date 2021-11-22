@@ -22,8 +22,16 @@ export class DrawableEngineOverlay {
     metersPerSecond: number | string
 }
 
+
+
+export class DrawableLitEngineFlame {
+    sourceCanvasCoord: PointCoord
+    maxPixelRadius: number
+}
+
 export class DrawableCanvasItems {
     ship?: DrawableShip
     reactionWheelOverlay?: DrawableReactionWheelOverlay
     engineOverlay?: DrawableEngineOverlay
+    litEngineFlames: DrawableLitEngineFlame[]
 }

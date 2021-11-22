@@ -214,11 +214,14 @@ export class CameraService {
       shipMapCoordP3
     )
 
-    const drawableItems: DrawableCanvasItems = {}
+    const drawableItems: DrawableCanvasItems = {
+      litEngineFlames: [],
+    }
 
     if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
 
       const cameraPosition: PointCoord = this.getPosition()
+      const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
       drawableItems.ship = {
         canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
         canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
@@ -229,7 +232,6 @@ export class CameraService {
 
       if(ship.reaction_wheel_online) {
         const headingRads = ship.heading * (Math.PI / 180)
-        const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
         drawableItems.reactionWheelOverlay = {
           centerCanvasCoord: overlayCenter,
           radiusPx: Math.round(this.canvasHeight / 6),
@@ -242,7 +244,6 @@ export class CameraService {
       }
 
       if(ship.engine_online && (ship.velocity_x_meters_per_second || ship.velocity_y_meters_per_second)) {
-        const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
         const radians = this.getCanvasAngleBetween(
           {x:0, y:0},
           {
@@ -261,6 +262,10 @@ export class CameraService {
             + Math.pow(ship.velocity_y_meters_per_second, 2)
           ).toFixed(2),
         }
+      }
+
+      if(ship.engine_lit) {
+
       }
 
     }
