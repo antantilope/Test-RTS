@@ -12,6 +12,7 @@ import {
   DrawableCanvasItems,
   DrawableShip,
   DrawableReactionWheelOverlay,
+  DrawableEngineOverlay,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
@@ -285,6 +286,25 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+    // Engine overlay
+    const engineOverlay: DrawableEngineOverlay | undefined = drawableObjects.engineOverlay
+    if(typeof engineOverlay !== "undefined") {
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(engineOverlay.vectorPoint0.x, engineOverlay.vectorPoint0.y)
+      this.ctx.lineTo(engineOverlay.vectorPoint1.x, engineOverlay.vectorPoint1.y)
+      this.ctx.stroke();
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 18px Courier New'
+      this.ctx.fillStyle = 'rgb(255, 0, 0,  0.8)'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText(
+        engineOverlay.metersPerSecond + " M/S",
+        engineOverlay.vectorPoint1.x,
+        engineOverlay.vectorPoint1.y,
+      )
+    }
 
     // lower right corner
     let lrcYOffset = this._camera.canvasHeight - 30

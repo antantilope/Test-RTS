@@ -20,7 +20,7 @@ export const CAMERA_MODE_FREE = 'free'
 
 
 
-const MAX_ZOOM_MANUAL = 15
+const MAX_ZOOM_MANUAL = 10000
 
 
 @Injectable({
@@ -38,11 +38,11 @@ export class CameraService {
     1 is the most zoomed in.
     "Zooming out" increases this value
   */
-  private zoom: number = 1;
+  private zoom: number = 10;
 
   private xPosition: number = null;
   private yPosition: number = null;
-  private mode = CAMERA_MODE_SHIP;
+  private mode = CAMERA_MODE_FREE;
 
   constructor(
     private _api: ApiService,
@@ -68,11 +68,15 @@ export class CameraService {
     return this.mode === CAMERA_MODE_FREE
   }
 
+  private getZoomInterval(zoomIn: boolean): number {
+    return 1
+  }
+
   public adjustZoom(zoomIn: boolean): void {
     if(zoomIn && this.zoom > 1) {
-      this.zoom--
+      this.zoom -= this.getZoomInterval(true)
     } else if (!zoomIn && this.zoom < MAX_ZOOM_MANUAL) {
-      this.zoom++
+      this.zoom += this.getZoomInterval(false)
     }
   }
 
@@ -213,6 +217,7 @@ export class CameraService {
     const drawableItems: DrawableCanvasItems = {}
 
     if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
+
       const cameraPosition: PointCoord = this.getPosition()
       drawableItems.ship = {
         canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
@@ -233,6 +238,28 @@ export class CameraService {
             x: overlayCenter.x + Math.round((this.canvasHeight / 5) * Math.sin(headingRads)),
             y: overlayCenter.y - Math.round((this.canvasHeight / 5) * Math.cos(headingRads)),
           }
+        }
+      }
+
+      if(ship.engine_online && (ship.velocity_x_meters_per_second || ship.velocity_y_meters_per_second)) {
+        const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
+        const radians = this.getCanvasAngleBetween(
+          {x:0, y:0},
+          {
+            x: Math.round(ship.velocity_x_meters_per_second * 1000),
+            y: Math.round(ship.velocity_y_meters_per_second * 1000),
+          }
+        )  * (Math.PI / 180)
+        drawableItems.engineOverlay = {
+          vectorPoint0: overlayCenter,
+          vectorPoint1: {
+            x: overlayCenter.x + Math.round((this.canvasHeight / 4) * Math.sin(radians)),
+            y: overlayCenter.y + Math.round((this.canvasHeight / 4) * Math.cos(radians)), // TODO: Why is this + and not -
+          },
+          metersPerSecond: Math.sqrt(
+            Math.pow(ship.velocity_x_meters_per_second, 2)
+            + Math.pow(ship.velocity_y_meters_per_second, 2)
+          ).toFixed(2),
         }
       }
 
