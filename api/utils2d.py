@@ -144,7 +144,7 @@ def calculate_heading_to_point(point_a: Tuple, point_b: Tuple) -> float:
     elif dy == 0 and dx < 0:
         angle = 270
     else:
-        raise NotImplementedError
+        return 0 # dx and dy are both 0
 
     if both_positive:
         return round(angle)

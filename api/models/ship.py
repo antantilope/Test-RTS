@@ -42,19 +42,34 @@ class ShipCommands:
 
 class ShipStateKey:
     MASS = 'mass'
-
+933
 class ShipScannerMode:
     RADAR = 'radar'
     IR = 'ir'
 
+
+class VisibleElementShapeType:
+    ARC = 'arc'
+    RECT = 'rect'
+
+
 class ScannedElement(TypedDict):
     designator: str
-    diameter_meters: Optional[int]
     thermal_signature: Optional[int]
     coord_x: int
     coord_y: int
     relative_heading: int
     distance: int
+
+    visual_fill_color: Optional[str]
+    visual_stroke_color: Optional[str]
+    visual_shape: Optional[str]     # 'arc' or 'rect'
+    visual_radius: Optional[int]    # arc
+    visual_p0: Optional[Tuple[int]] # rect
+    visual_p1: Optional[Tuple[int]] #
+    visual_p2: Optional[Tuple[int]] #
+    visual_p3: Optional[Tuple[int]]  #
+    visual_engine_lit: Optional[bool] #
 
 
 class TimerItem(TypedDict):
@@ -103,6 +118,8 @@ class Ship(BaseModel):
         self.velocity_x_meters_per_second = float(0)
         self.velocity_y_meters_per_second = float(0)
 
+        self.visual_range = None
+
         # Battery
         self.battery_power = 0
         self.battery_capacity = 0
@@ -139,8 +156,6 @@ class Ship(BaseModel):
         self.scanner_activation_power_required_per_second = None
         self.scanner_startup_power_used = None
         self.scanner_data: Dict[str, ScannedElement] = {}
-        # Size of the ship as it appears on another ships' RADAR mode scanner
-        self.scanner_diameter = None
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
 
@@ -173,12 +188,6 @@ class Ship(BaseModel):
     @property
     def h0_y2(self) -> int:
         return self.heading_0_rel_coord_2[1]
-
-    def refresh_scanner_diameter(self):
-        # This method should be called when the ship's physical dimentions change
-        d1 = self.h0_x2 - self.h0_x1
-        d2 = self.h0_y2 - self.h0_y1
-        self.scanner_diameter = round((d1 + d2) / 2)
 
     @property
     def mass(self) -> int:
@@ -265,7 +274,6 @@ class Ship(BaseModel):
         instance.heading_0_rel_coord_1 = (x1, y2,)
         instance.heading_0_rel_coord_2 = (x2, y2,)
         instance.heading_0_rel_coord_3 = (x2, y1,)
-        instance.refresh_scanner_diameter()
 
         instance.rel_rot_coord_0 = (x1, y1,)
         instance.rel_rot_coord_1 = (x1, y2,)
@@ -278,6 +286,8 @@ class Ship(BaseModel):
 
         instance.fuel_level = constants.FUEL_START_LEVEL
         instance.fuel_capacity = constants.FUEL_CAPACITY
+
+        instance.visual_range = constants.MAX_VISUAL_RANGE_M
 
         instance.reaction_wheel_power_required_per_second = constants.REACTION_WHEEL_POWER_REQUIREMENT_PER_SECOND
         instance.activate_reaction_wheel_power_requirement = constants.ACTIVATE_REACTION_WHEEL_POWER_REQUIREMENT

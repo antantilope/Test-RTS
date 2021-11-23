@@ -52,6 +52,9 @@ class TestGameUpdateScannerStates(TestCase):
         for ship_id in self.game._ships:
             assert self.game._ships[ship_id].scanner_data == {}
 
+        self.game._ships[self.player_1_ship_id].visual_range = 1
+        self.game._ships[self.player_2_ship_id].visual_range = 1
+
 
     def test_ship_1_and_ship_2_can_detect_eachother_with_radar(self):
         self.game._ships[self.player_1_ship_id].scanner_online = True
@@ -83,14 +86,12 @@ class TestGameUpdateScannerStates(TestCase):
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['coord_y'] == 750 * self.upm
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['distance'] == 354
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['relative_heading'] == 45
-        assert 'diameter_meters' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
         assert 'thermal_signature' not in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
 
         assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['coord_x'] == 500 * self.upm
         assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['coord_y'] == 500 * self.upm
         assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['distance'] == 354
         assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['relative_heading'] == 225
-        assert 'diameter_meters' in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
         assert 'thermal_signature' not in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
 
 
@@ -124,7 +125,6 @@ class TestGameUpdateScannerStates(TestCase):
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['coord_y'] == 750 * self.upm
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['distance'] == 354
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['relative_heading'] == 45
-        assert 'diameter_meters' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
         assert 'thermal_signature' not in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
 
 
@@ -185,7 +185,6 @@ class TestGameUpdateScannerStates(TestCase):
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['coord_y'] == 750 * self.upm
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['distance'] == 354
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['relative_heading'] == 45
-        assert 'diameter_meters' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
         assert 'thermal_signature' not in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
 
         # Flip Ranges
