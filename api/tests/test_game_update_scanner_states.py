@@ -291,3 +291,59 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['thermal_signature'] == 100
+
+
+    def test_ship1_and_ship2_can_see_eachother_within_visual_range_scanners_offline(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = False
+        self.game._ships[self.player_2_ship_id].scanner_online = False
+        self.game._ships[self.player_1_ship_id].visual_range = 1000
+        self.game._ships[self.player_2_ship_id].visual_range = 1000
+
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1000, 1000 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1000 * self.upm
+
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
+
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
+        assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id] == {
+            'designator': self.game._ships[self.player_2_ship_id].scanner_designator,
+            'coord_x': 1000 * self.upm,
+            'coord_y': 1000 * self.upm,
+        }
+        assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id] == {
+            'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
+            'coord_x': 500 * self.upm,
+            'coord_y': 500 * self.upm,
+        }
+
+    def test_ship2_can_see_ship1_if_ship2_has_enough_visual_range_and_ship1_does_not(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = False
+        self.game._ships[self.player_2_ship_id].scanner_online = False
+        self.game._ships[self.player_1_ship_id].visual_range = 250
+        self.game._ships[self.player_2_ship_id].visual_range = 1000
+
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1000, 1000 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1000 * self.upm
+
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
+
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
+        assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id] == {
+            'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
+            'coord_x': 500 * self.upm,
+            'coord_y': 500 * self.upm,
+        }
