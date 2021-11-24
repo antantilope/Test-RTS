@@ -7,7 +7,7 @@ import uuid
 import re
 
 from .base import BaseModel
-from .ship import Ship, ShipScannerMode
+from .ship import Ship, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType
 from .ship_designator import get_designations
 from api import utils2d
 from api.constants import (
@@ -362,11 +362,22 @@ class Game(BaseModel):
                     is_scannable = False
 
                 if is_visual or is_scannable:
-                    scanner_data = {
+                    scanner_data: ScannedElement = {
                         'designator': self._ships[other_id].scanner_designator,
                         'coord_x': other_coords[0],
                         'coord_y': other_coords[1],
+                        'element_type': ScannedElementType.SHIP,
                     }
+                    if is_visual:
+                        scanner_data.update({
+                            'visual_shape': VisibleElementShapeType.RECT,
+                            'visual_p0': self._ships[other_id].map_p0,
+                            'visual_p1': self._ships[other_id].map_p1,
+                            'visual_p2': self._ships[other_id].map_p2,
+                            'visual_p3': self._ships[other_id].map_p3,
+                            'visual_engine_lit': self._ships[other_id].engine_lit,
+                            'visual_stroke_color': '#ffc7c7',
+                        })
                     if is_scannable:
                         heading = heading_cache.get_val(ship_coords, other_coords)
                         if heading is None:

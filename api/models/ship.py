@@ -1,7 +1,7 @@
 
 import datetime as dt
 from decimal import Decimal
-from typing import Tuple, Dict, TypedDict, Optional, Generator
+from typing import Tuple, Dict, TypedDict, Optional, Generator, List
 
 from api.models.base import BaseModel
 from api import utils2d
@@ -52,9 +52,14 @@ class VisibleElementShapeType:
     ARC = 'arc'
     RECT = 'rect'
 
+class ScannedElementType:
+    SHIP = 'ship'
+    FIXTURE = 'fixture'
+    SCRAP = 'scrap'
 
 class ScannedElement(TypedDict):
     designator: str
+    element_type: str
     thermal_signature: Optional[int]
     coord_x: int
     coord_y: int
@@ -69,6 +74,7 @@ class ScannedElement(TypedDict):
     visual_p1: Optional[Tuple[int]] #
     visual_p2: Optional[Tuple[int]] #
     visual_p3: Optional[Tuple[int]]  #
+    visual_polygon_points: Optional[List[Tuple]]
     visual_engine_lit: Optional[bool] #
 
 
@@ -188,6 +194,34 @@ class Ship(BaseModel):
     @property
     def h0_y2(self) -> int:
         return self.heading_0_rel_coord_2[1]
+
+    @property
+    def map_p0(self) -> Tuple:
+        return (
+            self.coord_x + self.rel_rot_coord_0[0],
+            self.coord_y + self.rel_rot_coord_0[1],
+        )
+
+    @property
+    def map_p1(self) -> Tuple:
+        return (
+            self.coord_x + self.rel_rot_coord_1[0],
+            self.coord_y + self.rel_rot_coord_1[1],
+        )
+
+    @property
+    def map_p2(self) -> Tuple:
+        return (
+            self.coord_x + self.rel_rot_coord_2[0],
+            self.coord_y + self.rel_rot_coord_2[1],
+        )
+
+    @property
+    def map_p3(self) -> Tuple:
+        return (
+            self.coord_x + self.rel_rot_coord_3[0],
+            self.coord_y + self.rel_rot_coord_3[1],
+        )
 
     @property
     def mass(self) -> int:
