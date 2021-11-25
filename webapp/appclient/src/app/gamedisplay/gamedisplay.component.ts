@@ -264,6 +264,25 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
         this.ctx.closePath()
         this.ctx.fill()
+
+        if (drawableShip.isSelf) {
+          const visibleRangeCanvasPXRadius = Math.round(
+            (this._api.frameData.map_config.units_per_meter
+            * this._api.frameData.ship.visual_range) / this._camera.getZoom()
+          )
+          this.ctx.beginPath()
+          this.ctx.strokeStyle = "#808080"
+          this.ctx.lineWidth = 1
+          this.ctx.arc(
+            drawableShip.canvasCoordCenter.x,
+            drawableShip.canvasCoordCenter.y,
+            visibleRangeCanvasPXRadius,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.stroke()
+        }
+
         if(drawableShip.engineLit) {
           const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
           const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)

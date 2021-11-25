@@ -282,6 +282,8 @@ class Ship(BaseModel):
             'scanner_data': self.scanner_data,
             'scanner_thermal_signature': self.scanner_thermal_signature,
 
+            'visual_range': self.visual_range,
+
             'autopilot_online': self.autopilot_online,
 
             'timers': list(self.get_timer_items()),
