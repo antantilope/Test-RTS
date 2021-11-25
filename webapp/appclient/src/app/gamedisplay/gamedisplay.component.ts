@@ -27,6 +27,13 @@ import { FormattingService } from '../formatting.service'
 import { PointCoord } from '../models/point-coord.model'
 
 
+
+const randomInt = function (min: number, max: number): number  {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
+
+
 @Component({
   selector: 'app-gamedisplay',
   templateUrl: './gamedisplay.component.html',
@@ -260,17 +267,32 @@ export class GamedisplayComponent implements OnInit {
         if(drawableShip.engineLit) {
           const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
           const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
-          let engineFlameRadius = Math.max(4, Math.round(
-            (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
-            + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
-            / 2
+          let engineOuterFlameRadius = Math.max(4, Math.round(
+            Math.sqrt(
+              (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
+              + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
+            ) / 2
           ))
-          engineFlameRadius += Math.round(Math.random() * ((engineFlameRadius / 2) - (engineFlameRadius / -2)) + (engineFlameRadius / -2))
+          engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
+          this.ctx.beginPath()
           this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
           this.ctx.arc(
             engineFlameX,
             engineFlameY,
-            engineFlameRadius,
+            engineOuterFlameRadius,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+          this.ctx.beginPath()
+          this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
+          const engineInnerFlameRadius = Math.floor(engineOuterFlameRadius / 2) + randomInt(
+            engineOuterFlameRadius / -5, engineOuterFlameRadius / 5
+          )
+          this.ctx.arc(
+            engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+            engineFlameY+ randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+            engineInnerFlameRadius,
             0,
             2 * Math.PI,
           )
@@ -278,50 +300,6 @@ export class GamedisplayComponent implements OnInit {
         }
       }
     }
-    // const ship: DrawableShip | undefined = drawableObjects.ship
-    // const litEngineFlames: DrawableLitEngineFlame[] = drawableObjects.litEngineFlames
-    // if(typeof ship !== "undefined") {
-    //   this.ctx.beginPath()
-    //   this.ctx.fillStyle = "#919191"
-    //   this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
-    //   this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y)
-    //   this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y)
-    //   this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
-    //   this.ctx.closePath()
-    //   this.ctx.fill()
-    //   if(Math.abs(ship.canvasCoordP3.x - ship.canvasCoordP0.x) === 0) {
-    //     this.ctx.beginPath()
-    //     this.ctx.font = 'bold 24px Courier New'
-    //     this.ctx.textAlign = 'center'
-    //     this.ctx.fillText(
-    //       "🚀",
-    //       ship.canvasCoordCenter.x,
-    //       ship.canvasCoordCenter.y,
-    //     )
-    //   }
-    //   litEngineFlames.forEach((engFlame: DrawableLitEngineFlame) => {
-    //     this.ctx.beginPath()
-    //     this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
-    //     this.ctx.arc(
-    //       engFlame.sourceCanvasCoord.x,
-    //       engFlame.sourceCanvasCoord.y,
-    //       engFlame.pixelRadius,
-    //       0,
-    //       2 * Math.PI,
-    //     )
-    //     this.ctx.fill()
-    //     this.ctx.beginPath()
-    //     this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
-    //     this.ctx.arc(
-    //       engFlame.sourceCanvasCoord.x + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
-    //       engFlame.sourceCanvasCoord.y + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
-    //       engFlame.pixelRadius / 1.5,
-    //       0,
-    //       2 * Math.PI,
-    //     )
-    //     this.ctx.fill()
-    //   })
-    // }
 
     // Reaction Wheel overlay
     const reactionWheelOverlay: DrawableReactionWheelOverlay | undefined = drawableObjects.reactionWheelOverlay
