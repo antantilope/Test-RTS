@@ -4,7 +4,7 @@ import { loggers } from 'winston';
 
 import { ApiService } from './api.service';
 import { BoxCoords } from './models/box-coords.model';
-import { DrawableCanvasItems } from './models/drawable-objects.model';
+import { DrawableCanvasItems, DrawableShip, ScannerDataElement } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
 
 
@@ -222,20 +222,26 @@ export class CameraService {
     )
 
     const drawableItems: DrawableCanvasItems = {
-      litEngineFlames: [],
+      ships: [],
     }
+    const cameraPosition: PointCoord = this.getPosition()
 
+    // Add own ship to drawable ships array
     if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
 
-      const cameraPosition: PointCoord = this.getPosition()
+
       const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
-      drawableItems.ship = {
+      drawableItems.ships.push({
+        isSelf: true,
+        designator: "you",
         canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
         canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
         canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
         canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
         canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
-      }
+        engineLit: ship.engine_lit,
+        fillColor: "#919191",
+      })
 
       if(ship.reaction_wheel_online) {
         const headingRads = ship.heading * (Math.PI / 180)
@@ -273,30 +279,57 @@ export class CameraService {
         }
       }
 
-      if(ship.engine_lit) {
-        const engineBottomCanvasCoord = this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition)
-        const engineTopCanvasCoord = this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition)
-        const engineNozzleCanvasCoord: PointCoord = {
-          x: Math.round((engineTopCanvasCoord.x + engineBottomCanvasCoord.x) / 2),
-          y: Math.round((engineTopCanvasCoord.y + engineBottomCanvasCoord.y) / 2),
+    }
+
+    // Draw other scanner elements
+    const scannerObjKeys: string[] = Object.keys(ship.scanner_data)
+    for(let i in scannerObjKeys) {
+      const scannerKey: string = scannerObjKeys[i]
+      const scannerData: ScannerDataElement = ship.scanner_data[scannerKey]
+      if (scannerData.element_type === 'ship') {
+        let scannedShip: DrawableShip = {
+          isSelf: false,
+          canvasCoordCenter: this.mapCoordToCanvasCoord({
+            x: scannerData.coord_x,
+            y: scannerData.coord_y,
+          }, cameraPosition),
+          designator: scannerData.designator,
         }
-        let engineDiameterCanvasPx = Math.round(Math.sqrt(
-          Math.pow(engineTopCanvasCoord.x - engineBottomCanvasCoord.x, 2)
-          + Math.pow(engineTopCanvasCoord.y - engineBottomCanvasCoord.y, 2)
-        ))
-        if (engineDiameterCanvasPx > 5) {
-          const min = 2
-          const max = engineDiameterCanvasPx / 2
-          engineDiameterCanvasPx += Math.random() * (max - min) + min;
+        if(scannerData.visual_shape) {
+          scannedShip = {
+            canvasCoordP0: this.mapCoordToCanvasCoord({
+                x: scannerData.visual_p0[0],
+                y: scannerData.visual_p0[1],
+              }, cameraPosition),
+            canvasCoordP1: this.mapCoordToCanvasCoord({
+              x: scannerData.visual_p1[0],
+              y: scannerData.visual_p1[1],
+            }, cameraPosition),
+            canvasCoordP2: this.mapCoordToCanvasCoord({
+              x: scannerData.visual_p2[0],
+              y: scannerData.visual_p2[1],
+            }, cameraPosition),
+            canvasCoordP3: this.mapCoordToCanvasCoord({
+              x: scannerData.visual_p3[0],
+              y: scannerData.visual_p3[1],
+            }, cameraPosition),
+            engineLit: scannerData.visual_engine_lit,
+            fillColor: scannerData.visual_fill_color,
+            ...scannedShip
+          }
         }
-        drawableItems.litEngineFlames.push({
-          sourceCanvasCoord: engineNozzleCanvasCoord,
-          pixelRadius: Math.max(engineDiameterCanvasPx / 2, 3),
-        })
+        if(scannerData.distance) {
+          scannedShip.distance = scannerData.distance
+          scannedShip.relativeHeading = scannerData.relative_heading
+        }
+        if(scannerData.thermal_signature) {
+          scannedShip.thermalSignature = scannerData.thermal_signature
+        }
+        drawableItems.ships.push(scannedShip)
 
       }
-
     }
+
     return drawableItems
   }
 

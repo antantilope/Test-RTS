@@ -376,7 +376,7 @@ class Game(BaseModel):
                             'visual_p2': self._ships[other_id].map_p2,
                             'visual_p3': self._ships[other_id].map_p3,
                             'visual_engine_lit': self._ships[other_id].engine_lit,
-                            'visual_stroke_color': '#ffc7c7',
+                            'visual_fill_color': '#ffc7c7',
                         })
                     if is_scannable:
                         heading = heading_cache.get_val(ship_coords, other_coords)

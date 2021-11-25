@@ -13,7 +13,6 @@ import {
   DrawableShip,
   DrawableReactionWheelOverlay,
   DrawableEngineOverlay,
-  DrawableLitEngineFlame,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
@@ -176,7 +175,8 @@ export class GamedisplayComponent implements OnInit {
       this._api.frameData.ship.reaction_wheel_online
       && !this._api.frameData.ship.autopilot_online
       && this.drawableObjects !== null
-      && typeof this.drawableObjects.ship !== "undefined"
+      && typeof this.drawableObjects.ships[0] !== 'undefined'
+      && this.drawableObjects.ships[0].isSelf
     ) {
       this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
     }
@@ -184,7 +184,7 @@ export class GamedisplayComponent implements OnInit {
 
   private async handleMouseClickInCanvasHeadingAdjust(canvasClickX: number, canvasClickY: number) {
     const canvasClickPoint: PointCoord = {x: canvasClickX, y: canvasClickY}
-    const canvasShipPoint: PointCoord = this.drawableObjects.ship.canvasCoordCenter
+    const canvasShipPoint: PointCoord = this.drawableObjects.ships[0].canvasCoordCenter
     const heading = this._camera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
     console.log({set_heading: heading})
     await this._api.post(
@@ -245,51 +245,83 @@ export class GamedisplayComponent implements OnInit {
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
 
-    // Ship
-    const ship: DrawableShip | undefined = drawableObjects.ship
-    const litEngineFlames: DrawableLitEngineFlame[] = drawableObjects.litEngineFlames
-    if(typeof ship !== "undefined") {
-      this.ctx.beginPath()
-      this.ctx.fillStyle = "#919191"
-      this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
-      this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y)
-      this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y)
-      this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
-      this.ctx.closePath()
-      this.ctx.fill()
-      if(Math.abs(ship.canvasCoordP3.x - ship.canvasCoordP0.x) === 0) {
+    // draw visual ships and scanned ships
+    for(let i in drawableObjects.ships) {
+      const drawableShip: DrawableShip = drawableObjects.ships[i]
+      if(drawableShip.canvasCoordP0) {
         this.ctx.beginPath()
-        this.ctx.font = 'bold 24px Courier New'
-        this.ctx.textAlign = 'center'
-        this.ctx.fillText(
-          "🚀",
-          ship.canvasCoordCenter.x,
-          ship.canvasCoordCenter.y,
-        )
+        this.ctx.fillStyle = drawableShip.fillColor
+        this.ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
+        this.ctx.lineTo(drawableShip.canvasCoordP1.x, drawableShip.canvasCoordP1.y)
+        this.ctx.lineTo(drawableShip.canvasCoordP2.x, drawableShip.canvasCoordP2.y)
+        this.ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+        this.ctx.closePath()
+        this.ctx.fill()
+        if(drawableShip.engineLit) {
+          const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
+          const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
+          let engineFlameRadius = Math.max(4, Math.round(
+            (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
+            + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
+            / 2
+          ))
+          engineFlameRadius += Math.round(Math.random() * ((engineFlameRadius / 2) - (engineFlameRadius / -2)) + (engineFlameRadius / -2))
+          this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
+          this.ctx.arc(
+            engineFlameX,
+            engineFlameY,
+            engineFlameRadius,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+        }
       }
-      litEngineFlames.forEach((engFlame: DrawableLitEngineFlame) => {
-        this.ctx.beginPath()
-        this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
-        this.ctx.arc(
-          engFlame.sourceCanvasCoord.x,
-          engFlame.sourceCanvasCoord.y,
-          engFlame.pixelRadius,
-          0,
-          2 * Math.PI,
-        )
-        this.ctx.fill()
-        this.ctx.beginPath()
-        this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
-        this.ctx.arc(
-          engFlame.sourceCanvasCoord.x + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
-          engFlame.sourceCanvasCoord.y + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
-          engFlame.pixelRadius / 1.5,
-          0,
-          2 * Math.PI,
-        )
-        this.ctx.fill()
-      })
     }
+    // const ship: DrawableShip | undefined = drawableObjects.ship
+    // const litEngineFlames: DrawableLitEngineFlame[] = drawableObjects.litEngineFlames
+    // if(typeof ship !== "undefined") {
+    //   this.ctx.beginPath()
+    //   this.ctx.fillStyle = "#919191"
+    //   this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
+    //   this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y)
+    //   this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y)
+    //   this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
+    //   this.ctx.closePath()
+    //   this.ctx.fill()
+    //   if(Math.abs(ship.canvasCoordP3.x - ship.canvasCoordP0.x) === 0) {
+    //     this.ctx.beginPath()
+    //     this.ctx.font = 'bold 24px Courier New'
+    //     this.ctx.textAlign = 'center'
+    //     this.ctx.fillText(
+    //       "🚀",
+    //       ship.canvasCoordCenter.x,
+    //       ship.canvasCoordCenter.y,
+    //     )
+    //   }
+    //   litEngineFlames.forEach((engFlame: DrawableLitEngineFlame) => {
+    //     this.ctx.beginPath()
+    //     this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
+    //     this.ctx.arc(
+    //       engFlame.sourceCanvasCoord.x,
+    //       engFlame.sourceCanvasCoord.y,
+    //       engFlame.pixelRadius,
+    //       0,
+    //       2 * Math.PI,
+    //     )
+    //     this.ctx.fill()
+    //     this.ctx.beginPath()
+    //     this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
+    //     this.ctx.arc(
+    //       engFlame.sourceCanvasCoord.x + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
+    //       engFlame.sourceCanvasCoord.y + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
+    //       engFlame.pixelRadius / 1.5,
+    //       0,
+    //       2 * Math.PI,
+    //     )
+    //     this.ctx.fill()
+    //   })
+    // }
 
     // Reaction Wheel overlay
     const reactionWheelOverlay: DrawableReactionWheelOverlay | undefined = drawableObjects.reactionWheelOverlay
