@@ -1,3 +1,4 @@
+import { BoxCoords } from './box-coords.model';
 import { PointCoord } from './point-coord.model';
 
 export class ScannerDataElement {

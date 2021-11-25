@@ -39,7 +39,7 @@ export class CameraService {
     "Zooming out" increases this value
   */
   private zoom: number = 10;
-  private zoomLevels = [1, 5, 10, 17, 25, 50, 100, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000]
+  private zoomLevels = [1, 5, 10, 17, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000]
   private zoomIndex = this.zoomLevels.indexOf(this.zoom)
   private finalZoomIndex = this.zoomLevels.length - 1
 
