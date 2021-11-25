@@ -42,7 +42,7 @@ class ShipCommands:
 
 class ShipStateKey:
     MASS = 'mass'
-933
+
 class ShipScannerMode:
     RADAR = 'radar'
     IR = 'ir'
