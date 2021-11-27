@@ -2,6 +2,10 @@ import { BoxCoords } from './box-coords.model';
 import { PointCoord } from './point-coord.model';
 
 export class ScannerDataElement {
+    /*
+        Data returned from the server representing
+        an object that has been picked up by the scanner
+    */
     element_type: string
     coord_x: number
     coord_y: number

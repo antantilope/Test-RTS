@@ -174,7 +174,7 @@ export class CameraService {
     return false
   }
 
-  private mapCoordToCanvasCoord(mapCoord: PointCoord, origin: PointCoord): PointCoord {
+  public mapCoordToCanvasCoord(mapCoord: PointCoord, origin: PointCoord): PointCoord {
     const mapDx = mapCoord.x - origin.x
     const mapDy = mapCoord.y - origin.y
     const camDx = Math.round(mapDx / this.zoom)

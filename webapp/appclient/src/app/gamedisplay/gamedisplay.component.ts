@@ -249,6 +249,28 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+
+    const visibleRangeCanvasPXRadius = Math.round(
+      (this._api.frameData.map_config.units_per_meter
+      * this._api.frameData.ship.visual_range) / this._camera.getZoom()
+    )
+    const shipCanvasCoords = this._camera.mapCoordToCanvasCoord(
+      {x:this._api.frameData.ship.coord_x, y:this._api.frameData.ship.coord_y},
+      camCoords,
+    )
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = "#808080"
+    this.ctx.lineWidth = 1
+    this.ctx.arc(
+      shipCanvasCoords.x,
+      shipCanvasCoords.y,
+      visibleRangeCanvasPXRadius,
+      0,
+      2 * Math.PI,
+    )
+    this.ctx.stroke()
+
+
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
 
@@ -264,24 +286,6 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
         this.ctx.closePath()
         this.ctx.fill()
-
-        if (drawableShip.isSelf) {
-          const visibleRangeCanvasPXRadius = Math.round(
-            (this._api.frameData.map_config.units_per_meter
-            * this._api.frameData.ship.visual_range) / this._camera.getZoom()
-          )
-          this.ctx.beginPath()
-          this.ctx.strokeStyle = "#808080"
-          this.ctx.lineWidth = 1
-          this.ctx.arc(
-            drawableShip.canvasCoordCenter.x,
-            drawableShip.canvasCoordCenter.y,
-            visibleRangeCanvasPXRadius,
-            0,
-            2 * Math.PI,
-          )
-          this.ctx.stroke()
-        }
 
         if(drawableShip.engineLit) {
           const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
