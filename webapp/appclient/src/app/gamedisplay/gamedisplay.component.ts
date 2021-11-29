@@ -13,7 +13,6 @@ import {
   DrawableShip,
   DrawableReactionWheelOverlay,
   DrawableEngineOverlay,
-  DrawableLitEngineFlame,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
@@ -26,6 +25,13 @@ import {
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
 import { PointCoord } from '../models/point-coord.model'
+
+
+
+const randomInt = function (min: number, max: number): number  {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
 
 
 @Component({
@@ -66,7 +72,7 @@ export class GamedisplayComponent implements OnInit {
 
   constructor(
     private _api: ApiService,
-    private _camera: CameraService,
+    public _camera: CameraService,
     private _formatting: FormattingService,
     public _user: UserService,
   ) {
@@ -176,7 +182,8 @@ export class GamedisplayComponent implements OnInit {
       this._api.frameData.ship.reaction_wheel_online
       && !this._api.frameData.ship.autopilot_online
       && this.drawableObjects !== null
-      && typeof this.drawableObjects.ship !== "undefined"
+      && typeof this.drawableObjects.ships[0] !== 'undefined'
+      && this.drawableObjects.ships[0].isSelf
     ) {
       this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
     }
@@ -184,7 +191,7 @@ export class GamedisplayComponent implements OnInit {
 
   private async handleMouseClickInCanvasHeadingAdjust(canvasClickX: number, canvasClickY: number) {
     const canvasClickPoint: PointCoord = {x: canvasClickX, y: canvasClickY}
-    const canvasShipPoint: PointCoord = this.drawableObjects.ship.canvasCoordCenter
+    const canvasShipPoint: PointCoord = this.drawableObjects.ships[0].canvasCoordCenter
     const heading = this._camera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
     console.log({set_heading: heading})
     await this._api.post(
@@ -242,43 +249,79 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+
+    const visibleRangeCanvasPXRadius = Math.round(
+      (this._api.frameData.map_config.units_per_meter
+      * this._api.frameData.ship.visual_range) / this._camera.getZoom()
+    )
+    const shipCanvasCoords = this._camera.mapCoordToCanvasCoord(
+      {x:this._api.frameData.ship.coord_x, y:this._api.frameData.ship.coord_y},
+      camCoords,
+    )
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = "#808080"
+    this.ctx.lineWidth = 1
+    this.ctx.arc(
+      shipCanvasCoords.x,
+      shipCanvasCoords.y,
+      visibleRangeCanvasPXRadius,
+      0,
+      2 * Math.PI,
+    )
+    this.ctx.stroke()
+
+
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
 
-    // Ship
-    const ship: DrawableShip | undefined = drawableObjects.ship
-    const litEngineFlames: DrawableLitEngineFlame[] = drawableObjects.litEngineFlames
-    if(typeof ship !== "undefined") {
-      this.ctx.beginPath()
-      this.ctx.fillStyle = "#919191"
-      this.ctx.moveTo(ship.canvasCoordP0.x, ship.canvasCoordP0.y)
-      this.ctx.lineTo(ship.canvasCoordP1.x, ship.canvasCoordP1.y)
-      this.ctx.lineTo(ship.canvasCoordP2.x, ship.canvasCoordP2.y)
-      this.ctx.lineTo(ship.canvasCoordP3.x, ship.canvasCoordP3.y)
-      this.ctx.closePath()
-      this.ctx.fill()
-      litEngineFlames.forEach((engFlame: DrawableLitEngineFlame) => {
+    // draw visual ships and scanned ships
+    for(let i in drawableObjects.ships) {
+      const drawableShip: DrawableShip = drawableObjects.ships[i]
+      if(drawableShip.canvasCoordP0) {
         this.ctx.beginPath()
-        this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
-        this.ctx.arc(
-          engFlame.sourceCanvasCoord.x,
-          engFlame.sourceCanvasCoord.y,
-          engFlame.pixelRadius,
-          0,
-          2 * Math.PI,
-        )
+        this.ctx.fillStyle = drawableShip.fillColor
+        this.ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
+        this.ctx.lineTo(drawableShip.canvasCoordP1.x, drawableShip.canvasCoordP1.y)
+        this.ctx.lineTo(drawableShip.canvasCoordP2.x, drawableShip.canvasCoordP2.y)
+        this.ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+        this.ctx.closePath()
         this.ctx.fill()
-        this.ctx.beginPath()
-        this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
-        this.ctx.arc(
-          engFlame.sourceCanvasCoord.x + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
-          engFlame.sourceCanvasCoord.y + (Math.random() * (engFlame.pixelRadius / 3 - engFlame.pixelRadius / -3) + engFlame.pixelRadius / -3),
-          engFlame.pixelRadius / 1.5,
-          0,
-          2 * Math.PI,
-        )
-        this.ctx.fill()
-      })
+
+        if(drawableShip.engineLit) {
+          const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
+          const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
+          let engineOuterFlameRadius = Math.max(4, Math.round(
+            Math.sqrt(
+              (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
+              + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
+            ) / 2
+          ))
+          engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
+          this.ctx.beginPath()
+          this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
+          this.ctx.arc(
+            engineFlameX,
+            engineFlameY,
+            engineOuterFlameRadius,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+          this.ctx.beginPath()
+          this.ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
+          const engineInnerFlameRadius = Math.floor(engineOuterFlameRadius / 2) + randomInt(
+            engineOuterFlameRadius / -5, engineOuterFlameRadius / 5
+          )
+          this.ctx.arc(
+            engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+            engineFlameY+ randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+            engineInnerFlameRadius,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+        }
+      }
     }
 
     // Reaction Wheel overlay
@@ -400,11 +443,11 @@ export class GamedisplayComponent implements OnInit {
     const textRAlignXOffset = brcXOffset + timerBarLength + 10
     const barRAlignXOffset = brcXOffset + timerBarLength
 
-    this.ctx.strokeStyle = '#00ff00'
+    this.ctx.strokeStyle = '#ffffff'
+    this.ctx.fillStyle = '#ffffff'
     this.ctx.lineWidth = 1
     this.ctx.textAlign = 'right'
     this.ctx.font = 'bold 24px Courier New'
-    this.ctx.fillStyle = '#00ff00'
     this.ctx.beginPath()
     this.ctx.fillText(
       this._api.frameData.elapsed_time,
@@ -412,6 +455,8 @@ export class GamedisplayComponent implements OnInit {
       this._camera.canvasHeight - brcYOffset,
     )
     this.ctx.font = '20px Courier New'
+    this.ctx.strokeStyle = '#00ff00'
+    this.ctx.fillStyle = '#00ff00'
     brcYOffset += brcYInterval
     for(let i in this._api.frameData.ship.timers) {
       const timer: TimerItem = this._api.frameData.ship.timers[i]

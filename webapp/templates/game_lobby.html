@@ -161,8 +161,8 @@
                     $("#game-owner-form").css("display", "block");
 
                     $("#save-config-btn").click(()=>{
-                        const x = Math.floor(parseInt($("#x-axis-input").val()) * 10000); // 10 units per M * 1000M = 10000 units per KM
-                        const y = Math.floor(parseInt($("#y-axis-input").val()) * 10000); //
+                        const x = Math.floor(parseInt($("#x-axis-input").val()) * 100000); // 100 units per M * 1000M = 10000 units per KM
+                        const y = Math.floor(parseInt($("#y-axis-input").val()) * 100000); //
                         if (x < 10000 || y < 10000 || isNaN(x) || isNaN(y)) {
                             return alert("x and y must be positive");
                         }

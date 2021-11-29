@@ -54,3 +54,13 @@
     font-family: 'Courier New', Courier, monospace;
     margin-bottom: 4px;
 }
+
+.sidebar-btn {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+    width: 100%;
+}
+
+.dark-btn {
+    background-color: #2f2f2f;
+}

@@ -313,6 +313,12 @@ class TestUtils(TestCase):
         ))) == 107
 
 
+        # Try with the same exact point
+        assert (round(utils2d.calculate_heading_to_point(
+            (-12, 12), (-12, 12)
+        ))) == 0
+
+
     # RESULTANT FORCE # # #
     def test_calc_resultant_force_due_north(self):
         meters, angle = utils2d.calculate_resultant_vector(0, 12)

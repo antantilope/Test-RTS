@@ -7,7 +7,7 @@ import uuid
 import re
 
 from .base import BaseModel
-from .ship import Ship, ShipScannerMode
+from .ship import Ship, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType
 from .ship_designator import get_designations
 from api import utils2d
 from api.constants import (
@@ -332,10 +332,8 @@ class Game(BaseModel):
         for ship_id in self._ships:
             self._ships[ship_id].scanner_data.clear()
 
-            if not self._ships[ship_id].scanner_online:
-                continue
-
-            scan_range = self._ships[ship_id].scanner_range
+            scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
+            visual_range = self._ships[ship_id].visual_range
 
             for other_id in self._ships:
                 if other_id == ship_id:
@@ -350,36 +348,47 @@ class Game(BaseModel):
                     distance_cache.set_val(ship_coords, other_coords, distance)
                 distance_meters = round(distance / self._map_units_per_meter)
 
-                if scan_range >= distance_meters:
-                    heading = heading_cache.get_val(ship_coords, other_coords)
-                    if heading is None:
-                        heading = round(utils2d.calculate_heading_to_point(ship_coords, other_coords))
-                        heading_cache.set_val(ship_coords, other_coords, heading)
+                is_visual = visual_range >= distance_meters
+                is_scannable = scan_range is not None and scan_range >= distance_meters
 
-                    if self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR:
-                        self._ships[ship_id].scanner_data[other_id] = {
-                            'designator': self._ships[other_id].scanner_designator,
-                            'diameter_meters': self._ships[other_id].scanner_diameter,
-                            'coord_x': other_coords[0],
-                            'coord_y': other_coords[1],
-                            'distance': round(distance_meters),
-                            'relative_heading': heading,
-                        }
-                    elif self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
-                        if (
-                            self._ships[other_id].scanner_thermal_signature
-                            >= self._ships[ship_id].scanner_ir_minimum_thermal_signature
-                        ):
-                            self._ships[ship_id].scanner_data[other_id] = {
-                                'designator': self._ships[other_id].scanner_designator,
-                                'thermal_signature': self._ships[other_id].scanner_thermal_signature,
-                                'coord_x': other_coords[0],
-                                'coord_y': other_coords[1],
-                                'distance': round(distance_meters),
-                                'relative_heading': heading,
-                            }
-                    else:
-                        raise NotImplementedError
+                if (
+                    is_scannable
+                    and not is_visual
+                    and self._ships[ship_id].scanner_mode == ShipScannerMode.IR
+                    and not (
+                        self._ships[other_id].scanner_thermal_signature
+                        >= self._ships[ship_id].scanner_ir_minimum_thermal_signature)
+                ):
+                    is_scannable = False
+
+                if is_visual or is_scannable:
+                    scanner_data: ScannedElement = {
+                        'designator': self._ships[other_id].scanner_designator,
+                        'coord_x': other_coords[0],
+                        'coord_y': other_coords[1],
+                        'element_type': ScannedElementType.SHIP,
+                    }
+                    if is_visual:
+                        scanner_data.update({
+                            'visual_shape': VisibleElementShapeType.RECT,
+                            'visual_p0': self._ships[other_id].map_p0,
+                            'visual_p1': self._ships[other_id].map_p1,
+                            'visual_p2': self._ships[other_id].map_p2,
+                            'visual_p3': self._ships[other_id].map_p3,
+                            'visual_engine_lit': self._ships[other_id].engine_lit,
+                            'visual_fill_color': '#ffc7c7',
+                        })
+                    if is_scannable:
+                        heading = heading_cache.get_val(ship_coords, other_coords)
+                        if heading is None:
+                            heading = round(utils2d.calculate_heading_to_point(ship_coords, other_coords))
+                            heading_cache.set_val(ship_coords, other_coords, heading)
+                        scanner_data['distance'] = round(distance_meters)
+                        scanner_data['relative_heading'] = heading
+                        if self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
+                            scanner_data['thermal_signature'] = self._ships[other_id].scanner_thermal_signature
+
+                    self._ships[ship_id].scanner_data[other_id] = scanner_data
 
 
     def _process_ship_command(self, command: FrameCommand):
