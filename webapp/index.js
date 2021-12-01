@@ -111,7 +111,7 @@ io.on('connection', (socket) => handleSocketConnection(io, socket));
 expressApp.get('/', async (req, res) => {
     /* Landing Page
     */
-    res.set('Content-Type', 'text/html; charset=UTF-8');
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
 
     if(req.session.player_id){
         // Player is logged in, Sync Session with SSOT
