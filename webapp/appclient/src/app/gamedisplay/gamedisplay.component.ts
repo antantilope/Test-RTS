@@ -17,6 +17,7 @@ import {
 import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
 import { UserService } from "../user.service"
+import { PaneService } from '../pane.service'
 import {
   CameraService,
   CAMERA_MODE_SHIP,
@@ -79,6 +80,7 @@ export class GamedisplayComponent implements OnInit {
     public _camera: CameraService,
     private _formatting: FormattingService,
     public _user: UserService,
+    public _pane: PaneService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
@@ -116,6 +118,9 @@ export class GamedisplayComponent implements OnInit {
   private registerMouseEventListener(): void {
     // Zoom camera
     window.addEventListener('wheel', event => {
+      if (this._pane.mouseInPane) {
+        return
+      }
       if (this._camera.canManualZoom()) {
         const zoomIn = event.deltaY < 0
         this._camera.adjustZoom(zoomIn)
@@ -178,6 +183,9 @@ export class GamedisplayComponent implements OnInit {
   public handleMouseClickInCanvas(event: any): void {
     console.log("handleMouseClickInCanvas")
     if(this._api.frameData === null) {
+      return
+    }
+    if (this._pane.mouseInPane) {
       return
     }
     const mouseCanvasX = event.clientX - this.canvas.nativeElement.offsetLeft
@@ -488,8 +496,12 @@ export class GamedisplayComponent implements OnInit {
 
     this.ctx.beginPath()
     this.ctx.fillStyle = '#fcf9b8'
-    this.ctx.textAlign = 'left'
     this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+    tlcYOffset += tlcYInterval
+
+    this.ctx.beginPath()
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
     tlcYOffset += tlcYInterval
 
     // Timers (BOTTOM RIGHT)
@@ -551,7 +563,7 @@ export class GamedisplayComponent implements OnInit {
 
   private clearCanvas(): void {
     this.ctx.beginPath()
-    this.ctx.clearRect(0, 0, this._camera.canvasWidth, this._camera.canvasHeight)
+    this.ctx.clearRect(0, 0, this._camera.canvasWidth * 2, this._camera.canvasHeight * 2) // *2 because of bug where corner is not cleared
   }
 
   private paintDebugData(): void {

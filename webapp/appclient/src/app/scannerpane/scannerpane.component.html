@@ -1,0 +1,50 @@
+
+<div
+    #paneElem
+    ngDraggable
+    ngResizable
+    [rzHandles]="'n,e,s,w,se,sw,ne,nw'"
+    [handle]="paneElem"
+    class="scanner-pane"
+>
+    <div #paneHeader class="scanner-pane-header">
+        <div>
+            <strong>SCANNER</strong>
+        </div>
+        <div>
+            <span class="close-btn" (click)="_pane.closeScannerPane()">
+            </span>
+        </div>
+    </div>
+    <div #paneBody *ngIf="_api.frameData !== null && _api.frameData.ship" class="scanner-pane-body">
+        <div *ngIf="!_api.frameData.ship.scanner_online && !_api.frameData.ship.scanner_starting">
+            <h2 style="color:rgb(182, 182, 182); font-style: italic;">SCANNER OFFLINE</h2>
+        </div>
+        <div *ngIf="_api.frameData.ship.scanner_starting">
+            <h2>SCANNER STARTING...</h2>
+        </div>
+        <div *ngIf="_api.frameData.ship.scanner_online">
+            <h3>MODE: {{ _api.frameData.ship.scanner_mode.toUpperCase() }}</h3>
+
+            <ng-container *ngIf="getTargets().length === 0">
+                <h4>No Targets</h4>
+            </ng-container>
+
+            <ng-container *ngIf="getTargets().length > 0">
+                <h4>Targets</h4>
+                <table>
+                    <tr>
+                        <th>DESIGNATOR</th>
+                        <th>BEARING</th>
+                        <th>DISTANCE</th>
+                    </tr>
+                    <tr *ngFor="let targ of getTargets()">
+                        <td>{{ targ.designator }}</td>
+                        <td>{{ targ.relative_heading }}°</td>
+                        <td>{{ targ.distance }} M</td>
+                    </tr>
+                </table>
+            </ng-container>
+        </div>
+    </div>
+</div>

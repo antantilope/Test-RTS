@@ -61,6 +61,18 @@
     width: 100%;
 }
 
-.dark-btn {
-    background-color: #2f2f2f;
+.purple-btn {
+    background-color: #e3cbff;
+}
+
+.yellow-btn {
+    background-color: #ffef60;
+}
+
+.btn-gap {
+    margin-top: 8px;
+}
+
+.btn-gap-bottom {
+    margin-bottom: 8px;
 }
