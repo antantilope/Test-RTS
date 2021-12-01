@@ -14,8 +14,8 @@ export class ScannerpaneComponent implements OnInit {
   @ViewChild("paneElem") paneElem: ElementRef;
 
   constructor(
-    private _pane: PaneService,
-    private _api: ApiService,
+    public _pane: PaneService,
+    public _api: ApiService,
 
   ) { }
 
@@ -34,12 +34,6 @@ export class ScannerpaneComponent implements OnInit {
     this.paneElem.nativeElement.addEventListener('mouseleave', ()=>{
       this._pane.mouseInPane = false
     })
-  }
-
-
-  public closePane(): void {
-    this._pane.showScannerPane = false
-    this._pane.mouseInPane = false
   }
 
 }

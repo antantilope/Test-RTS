@@ -162,6 +162,7 @@ export class GamedisplayComponent implements OnInit {
     window.addEventListener('mousemove', event => {
       this.mouseMovedWhileDown = true
       if(!this._camera.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
+        console.log(this.mouseClickDownInCanvas)
         return
       }
       else if(this.mousePanLastX === null || this.mousePanLastY === null) {
@@ -496,8 +497,12 @@ export class GamedisplayComponent implements OnInit {
 
     this.ctx.beginPath()
     this.ctx.fillStyle = '#fcf9b8'
-    this.ctx.textAlign = 'left'
     this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+    tlcYOffset += tlcYInterval
+
+    this.ctx.beginPath()
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
     tlcYOffset += tlcYInterval
 
     // Timers (BOTTOM RIGHT)
