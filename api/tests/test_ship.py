@@ -1689,6 +1689,10 @@ class TestShipCMDSetHeading(TestCase):
         assert self.ship.heading_0_rel_coord_1 == (-20, 60)
         assert self.ship.heading_0_rel_coord_2 == (20, 60)
         assert self.ship.heading_0_rel_coord_3 == (20, -60)
+        # assert self.ship.heading_0_fin_0_rel_coord_0 == (-20, -20,) #TODO FIX ME
+        # assert self.ship.heading_0_fin_0_rel_coord_1 == (-51, -40,)
+        # assert self.ship.heading_0_fin_1_rel_coord_0 == (20, -20,)
+        # assert self.ship.heading_0_fin_0_rel_coord_1 == (32, -40,)
 
     def test_ship_cannot_rotate_if_reaction_wheel_is_offline(self):
         self._assert_ship_heading_0()

@@ -238,6 +238,10 @@ export class CameraService {
         canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
         canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
         canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
+        canvasCoordFin0P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_0), shipCoord), cameraPosition),
+        canvasCoordFin0P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_1), shipCoord), cameraPosition),
+        canvasCoordFin1P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_0), shipCoord), cameraPosition),
+        canvasCoordFin1P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_1), shipCoord), cameraPosition),
         canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
         engineLit: ship.engine_lit,
         fillColor: "#919191",
@@ -287,7 +291,7 @@ export class CameraService {
       const scannerKey: string = scannerObjKeys[i]
       const scannerData: ScannerDataElement = ship.scanner_data[scannerKey]
       if (scannerData.element_type === 'ship') {
-        let scannedShip: DrawableShip = {
+        let drawableShip: DrawableShip = {
           isSelf: false,
           canvasCoordCenter: this.mapCoordToCanvasCoord({
             x: scannerData.coord_x,
@@ -296,36 +300,63 @@ export class CameraService {
           designator: scannerData.designator,
         }
         if(scannerData.visual_shape) {
-          scannedShip = {
-            canvasCoordP0: this.mapCoordToCanvasCoord({
-                x: scannerData.visual_p0[0],
-                y: scannerData.visual_p0[1],
-              }, cameraPosition),
-            canvasCoordP1: this.mapCoordToCanvasCoord({
-              x: scannerData.visual_p1[0],
-              y: scannerData.visual_p1[1],
-            }, cameraPosition),
-            canvasCoordP2: this.mapCoordToCanvasCoord({
-              x: scannerData.visual_p2[0],
-              y: scannerData.visual_p2[1],
-            }, cameraPosition),
-            canvasCoordP3: this.mapCoordToCanvasCoord({
-              x: scannerData.visual_p3[0],
-              y: scannerData.visual_p3[1],
-            }, cameraPosition),
+
+          const canvasCoordP0 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_p0[0],
+            y: scannerData.visual_p0[1],
+          }, cameraPosition)
+          const canvasCoordP1 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_p1[0],
+            y: scannerData.visual_p1[1],
+          }, cameraPosition)
+          const canvasCoordP2 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_p2[0],
+            y: scannerData.visual_p2[1],
+          }, cameraPosition)
+          const canvasCoordP3 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_p3[0],
+            y: scannerData.visual_p3[1],
+          }, cameraPosition)
+
+          const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_fin_0_rel_rot_coord_0[0],
+            y: scannerData.visual_fin_0_rel_rot_coord_0[1],
+          }, cameraPosition)
+          const canvasCoordFin0P1 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_fin_0_rel_rot_coord_1[0],
+            y: scannerData.visual_fin_0_rel_rot_coord_1[1],
+          }, cameraPosition)
+          const canvasCoordFin1P0 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_fin_1_rel_rot_coord_0[0],
+            y: scannerData.visual_fin_1_rel_rot_coord_0[1],
+          }, cameraPosition)
+          const canvasCoordFin1P1 = this.mapCoordToCanvasCoord({
+            x: scannerData.visual_fin_1_rel_rot_coord_1[0],
+            y: scannerData.visual_fin_1_rel_rot_coord_1[1],
+          }, cameraPosition)
+
+          drawableShip = {
+            canvasCoordP0,
+            canvasCoordP1,
+            canvasCoordP2,
+            canvasCoordP3,
+            canvasCoordFin0P0,
+            canvasCoordFin0P1,
+            canvasCoordFin1P0,
+            canvasCoordFin1P1,
             engineLit: scannerData.visual_engine_lit,
             fillColor: scannerData.visual_fill_color,
-            ...scannedShip
+            ...drawableShip
           }
         }
         if(scannerData.distance) {
-          scannedShip.distance = scannerData.distance
-          scannedShip.relativeHeading = scannerData.relative_heading
+          drawableShip.distance = scannerData.distance
+          drawableShip.relativeHeading = scannerData.relative_heading
         }
         if(scannerData.thermal_signature) {
-          scannedShip.thermalSignature = scannerData.thermal_signature
+          drawableShip.thermalSignature = scannerData.thermal_signature
         }
-        drawableItems.ships.push(scannedShip)
+        drawableItems.ships.push(drawableShip)
 
       }
     }

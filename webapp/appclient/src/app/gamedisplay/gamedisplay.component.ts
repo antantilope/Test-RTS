@@ -287,6 +287,24 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.closePath()
         this.ctx.fill()
 
+        if(drawableShip.canvasCoordFin0P0) {
+          // fin 0
+          this.ctx.beginPath()
+          this.ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
+          this.ctx.lineTo(drawableShip.canvasCoordFin0P0.x, drawableShip.canvasCoordFin0P0.y)
+          this.ctx.lineTo(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y)
+          this.ctx.closePath()
+          this.ctx.fill()
+          // fin 1
+          this.ctx.beginPath()
+          this.ctx.moveTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+          this.ctx.lineTo(drawableShip.canvasCoordFin1P0.x, drawableShip.canvasCoordFin1P0.y)
+          this.ctx.lineTo(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y)
+          this.ctx.closePath()
+          this.ctx.fill()
+        }
+
+
         if(drawableShip.engineLit) {
           const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
           const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
@@ -314,7 +332,7 @@ export class GamedisplayComponent implements OnInit {
           )
           this.ctx.arc(
             engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
-            engineFlameY+ randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+            engineFlameY + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
             engineInnerFlameRadius,
             0,
             2 * Math.PI,

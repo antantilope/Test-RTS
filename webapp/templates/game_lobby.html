@@ -368,7 +368,7 @@
                     addToChat(msg);
                 });
                 socket.on("mapconfig", (data) => {
-                    addToChat("🤖📢 the map has udated: " + `${data.x_km} x ${data.y_km} KM`);
+                    addToChat("🤖📢 the map has updated: " + `${data.x_km} x ${data.y_km} KM`);
                 });
                 socket.on("startcountdown", data => {
                     console.log({startcountdown: data});

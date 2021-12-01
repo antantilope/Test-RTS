@@ -375,8 +375,12 @@ class Game(BaseModel):
                             'visual_p1': self._ships[other_id].map_p1,
                             'visual_p2': self._ships[other_id].map_p2,
                             'visual_p3': self._ships[other_id].map_p3,
+                            'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
+                            'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
+                            'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
+                            'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
                             'visual_engine_lit': self._ships[other_id].engine_lit,
-                            'visual_fill_color': '#ffc7c7',
+                            'visual_fill_color': '#ffa6a6',
                         })
                     if is_scannable:
                         heading = heading_cache.get_val(ship_coords, other_coords)

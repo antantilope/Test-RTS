@@ -15,6 +15,10 @@ export class ScannerDataElement {
     visual_p1?: number[]
     visual_p2?: number[]
     visual_p3?: number[]
+    visual_fin_0_rel_rot_coord_0?: number[]
+    visual_fin_0_rel_rot_coord_1?: number[]
+    visual_fin_1_rel_rot_coord_0?: number[]
+    visual_fin_1_rel_rot_coord_1?: number[]
     visual_engine_lit?: boolean
     visual_fill_color?: string
     visual_stroke_color?: string
@@ -32,6 +36,10 @@ export class DrawableShip {
     canvasCoordP1?: PointCoord
     canvasCoordP2?: PointCoord
     canvasCoordP3?: PointCoord
+    canvasCoordFin0P0?: PointCoord
+    canvasCoordFin0P1?: PointCoord
+    canvasCoordFin1P0?: PointCoord
+    canvasCoordFin1P1?: PointCoord
     engineLit?: boolean
     fillColor?: string
     strokeColor?: string
@@ -39,6 +47,7 @@ export class DrawableShip {
     distance?: number
     relativeHeading?: number
     thermalSignature?: number
+
 }
 
 export class DrawableReactionWheelOverlay {
