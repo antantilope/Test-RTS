@@ -18,7 +18,7 @@
     </div>
     <div #paneBody *ngIf="_api.frameData !== null && _api.frameData.ship" class="scanner-pane-body">
         <div *ngIf="!_api.frameData.ship.scanner_online && !_api.frameData.ship.scanner_starting">
-            <h2>⚠️ SCANNER OFFLINE</h2>
+            <h2 style="color:rgb(182, 182, 182); font-style: italic;">SCANNER OFFLINE</h2>
         </div>
         <div *ngIf="_api.frameData.ship.scanner_starting">
             <h2>SCANNER STARTING...</h2>
