@@ -40,6 +40,7 @@ export class DrawableShip {
     canvasCoordFin0P1?: PointCoord
     canvasCoordFin1P0?: PointCoord
     canvasCoordFin1P1?: PointCoord
+    canvasBoundingBox?: BoxCoords
     engineLit?: boolean
     fillColor?: string
     strokeColor?: string

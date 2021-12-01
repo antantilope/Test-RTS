@@ -132,12 +132,22 @@ export class CameraService {
     p1: PointCoord,
     p2: PointCoord,
     p3: PointCoord,
+    buffer: number = 0,
   ): BoxCoords {
     return {
-      x1: Math.min(p0.x, p1.x, p2.x, p3.x),
-      y1: Math.min(p0.y, p1.y, p2.y, p3.y),
-      x2: Math.max(p0.x, p1.x, p2.x, p3.x),
-      y2: Math.max(p0.y, p1.y, p2.y, p3.y),
+      x1: Math.min(p0.x, p1.x, p2.x, p3.x) - buffer,
+      y1: Math.min(p0.y, p1.y, p2.y, p3.y) - buffer,
+      x2: Math.max(p0.x, p1.x, p2.x, p3.x) + buffer,
+      y2: Math.max(p0.y, p1.y, p2.y, p3.y) + buffer,
+    }
+  }
+
+  private coordToBoxCoord(point: PointCoord, buffer: number = 0): BoxCoords {
+    return {
+      x1: point.x - buffer,
+      y1: point.y - buffer,
+      x2: point.x + buffer,
+      y2: point.y + buffer,
     }
   }
 
@@ -287,6 +297,7 @@ export class CameraService {
 
     // Draw other scanner elements
     const scannerObjKeys: string[] = Object.keys(ship.scanner_data)
+    const boundingBoxBuffer = 10
     for(let i in scannerObjKeys) {
       const scannerKey: string = scannerObjKeys[i]
       const scannerData: ScannerDataElement = ship.scanner_data[scannerKey]
@@ -300,6 +311,7 @@ export class CameraService {
           designator: scannerData.designator,
         }
         if(scannerData.visual_shape) {
+          // Ship is within visual range
 
           const canvasCoordP0 = this.mapCoordToCanvasCoord({
             x: scannerData.visual_p0[0],
@@ -344,11 +356,17 @@ export class CameraService {
             canvasCoordFin0P1,
             canvasCoordFin1P0,
             canvasCoordFin1P1,
+            canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
             engineLit: scannerData.visual_engine_lit,
             fillColor: scannerData.visual_fill_color,
             ...drawableShip
           }
         }
+        else {
+          // Ship is not within visual range
+          drawableShip.canvasBoundingBox = this.coordToBoxCoord(drawableShip.canvasCoordCenter, 25)
+        }
+
         if(scannerData.distance) {
           drawableShip.distance = scannerData.distance
           drawableShip.relativeHeading = scannerData.relative_heading
