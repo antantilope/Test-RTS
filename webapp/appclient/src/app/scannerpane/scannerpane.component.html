@@ -17,8 +17,14 @@
         </div>
     </div>
     <div #paneBody *ngIf="_api.frameData !== null && _api.frameData.ship" class="scanner-pane-body">
-        <div *ngIf="!_api.frameData.ship.scanner_online">
+        <div *ngIf="!_api.frameData.ship.scanner_online && !_api.frameData.ship.scanner_starting">
             <h2>⚠️ SCANNER OFFLINE</h2>
+        </div>
+        <div *ngIf="_api.frameData.ship.scanner_starting">
+            <h2>SCANNER STARTING...</h2>
+        </div>
+        <div *ngIf="_api.frameData.ship.scanner_online">
+            <h3>MODE: {{ _api.frameData.ship.scanner_mode.toUpperCase() }}</h3>
         </div>
     </div>
 </div>
