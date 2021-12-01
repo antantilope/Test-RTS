@@ -39,12 +39,14 @@
                     (click)="btnActivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw.jpg'); background-size:100% 100%;"
+                    title="ACTIVATE"
                 >
                 </button>
                 <button
                     *ngIf="!enableActivateReactionWheelBtn"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw-gs.jpg'); background-size:100% 100%;"
+                    title="ACTIVATE"
                     disabled
                 >
                 </button>
@@ -55,12 +57,14 @@
                     (click)="btnDeactivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw.jpg'); background-size:100% 100%;"
+                    title="DEACTIVATE"
                 >
                 </button>
                 <button
                     *ngIf="enableActivateReactionWheelBtn"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw-gs.jpg'); background-size:100% 100%;"
+                    title="DEACTIVATE"
                     disabled
                 >
                 </button>
@@ -80,12 +84,14 @@
                             (click)="btnActivateEngine()"
                             class="command-btn"
                             style="background: url('/static/img/activate-engine.jpg'); background-size:100% 100%;"
+                            title="ACTIVATE"
                         >
                         </button>
                         <button
                             *ngIf="!enableEngineOnlineBtn"
                             class="command-btn"
                             style="background: url('/static/img/activate-engine-gs.jpg'); background-size:100% 100%;"
+                            title="ACTIVATE"
                             disabled
                         >
                         </button>
@@ -96,12 +102,14 @@
                             (click)="btnDeactivateEngine()"
                             class="command-btn"
                             style="background: url('/static/img/deactivate-engine.jpg'); background-size:100% 100%;"
+                            title="DEACTIVATE"
                         >
                         </button>
                         <button
                             *ngIf="!enableEngineOfflineBtn"
                             class="command-btn"
                             style="background: url('/static/img/deactivate-engine-gs.jpg'); background-size:100% 100%;"
+                            title="DEACTIVATE"
                             disabled
                         >
                         </button>
@@ -115,12 +123,14 @@
                             (click)="btnLightEngine()"
                             class="command-btn"
                             style="background: url('/static/img/light-engine.jpg'); background-size:100% 100%;"
+                            title="FIRE ENGINE"
                         >
                         </button>
                         <button
                             *ngIf="!enableEngineLightBtn"
                             class="command-btn"
                             style="background: url('/static/img/light-engine-gs.jpg'); background-size:100% 100%;"
+                            title="FIRE ENGINE"
                             disabled
                         >
                         </button>
@@ -131,12 +141,14 @@
                             (click)="btnUnlightEngine()"
                             class="command-btn"
                             style="background: url('/static/img/unlight-engine.jpg'); background-size:100% 100%;"
+                            title="STOP ENGINE"
                         >
                         </button>
                         <button
                             *ngIf="!enableEngineUnLightBtn"
                             class="command-btn"
                             style="background: url('/static/img/unlight-engine-gs.jpg'); background-size:100% 100%;"
+                            title="STOP ENGINE"
                             disabled
                         >
                         </button>
@@ -147,7 +159,7 @@
 
         <div class=command-bar-column>
             <div class="command-bar-column-header">
-                Scanner
+                SCANNER
             </div>
             <div style="display:flex;">
                 <div>
@@ -158,12 +170,14 @@
                             class="command-btn"
                             style="background: url('/static/img/activate-scanner.jpg'); background-size:100% 100%;"
                             (click)="btnActivateScanner()"
+                            title="ACTIVATE"
                         >
                         </button>
                         <button
                             *ngIf="!enableScannerActivateBtn"
                             class="command-btn"
                             style="background: url('/static/img/activate-scanner-gs.jpg'); background-size:100% 100%;"
+                            title="ACTIVATE"
                             disabled
                         >
                         </button>
@@ -174,12 +188,14 @@
                             class="command-btn"
                             style="background: url('/static/img/deactivate-scanner.jpg'); background-size:100% 100%;"
                             (click)="btnDeactivateScanner()"
+                            title="DEACTIVATE"
                         >
                         </button>
                         <button
                             *ngIf="!enableScannerDeactivateBtn"
                             class="command-btn"
                             style="background: url('/static/img/deactivate-scanner-gs.jpg'); background-size:100% 100%;"
+                            title="DEACTIVATE"
                             disabled
                         >
                         </button>
@@ -193,12 +209,14 @@
                             class="command-btn"
                             style="background: url('/static/img/scanner-mode-radar.jpg'); background-size:100% 100%;"
                             (click)="btnSetScannerModeRadar()"
+                            title="RADAR mode"
                         >
                         </button>
                         <button
                             *ngIf="!enableScannerModeRadarBtn"
                             class="command-btn"
                             style="background: url('/static/img/scanner-mode-radar-gs.jpg'); background-size:100% 100%;"
+                            title="RADAR mode"
                             disabled
                         >
                         </button>
@@ -209,12 +227,14 @@
                             class="command-btn"
                             style="background: url('/static/img/scanner-mode-ir.jpg'); background-size:100% 100%;"
                             (click)="btnSetScannerModeIR()"
+                            title="INFRA RED mode"
                         >
                         </button>
                         <button
                             *ngIf="!enableScannerModeIRBtn"
                             class="command-btn"
                             style="background: url('/static/img/scanner-mode-ir-gs.jpg'); background-size:100% 100%;"
+                            title="INFRA RED mode"
                             disabled
                         >
                         </button>
