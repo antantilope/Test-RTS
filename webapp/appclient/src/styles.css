@@ -1,6 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
 
-
 body {
     font-family: arial;
     margin: 0;
@@ -8,10 +7,16 @@ body {
     width: 100vw;
 }
 
-
 .fake-link {
     cursor: pointer;
     text-decoration: underline;
 }
 
-
+.pane-bounds {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(255, 255, 255, 0);
+}
