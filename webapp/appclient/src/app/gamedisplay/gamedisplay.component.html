@@ -144,5 +144,84 @@
                 </div>
             </div>
         </div>
+
+        <div class=command-bar-column>
+            <div class="command-bar-column-header">
+                Scanner
+            </div>
+            <div style="display:flex;">
+                <div>
+                    <!-- Scanner Sub Column 1 -->
+                    <div>
+                        <button
+                            *ngIf="enableScannerActivateBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/activate-scanner.jpg'); background-size:100% 100%;"
+                            (click)="btnActivateScanner()"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableScannerActivateBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/activate-scanner-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            *ngIf="enableScannerDeactivateBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/deactivate-scanner.jpg'); background-size:100% 100%;"
+                            (click)="btnDeactivateScanner()"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableScannerDeactivateBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/deactivate-scanner-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                </div>
+                <div style="margin-left:3px;">
+                    <!-- Scanner Sub Column 2 -->
+                    <div>
+                        <button
+                            *ngIf="enableScannerModeRadarBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/scanner-mode-radar.jpg'); background-size:100% 100%;"
+                            (click)="btnSetScannerModeRadar()"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableScannerModeRadarBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/scanner-mode-radar-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            *ngIf="enableScannerModeIRBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/scanner-mode-ir.jpg'); background-size:100% 100%;"
+                            (click)="btnSetScannerModeIR()"
+                        >
+                        </button>
+                        <button
+                            *ngIf="!enableScannerModeIRBtn"
+                            class="command-btn"
+                            style="background: url('/static/img/scanner-mode-ir-gs.jpg'); background-size:100% 100%;"
+                            disabled
+                        >
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>

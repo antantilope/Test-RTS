@@ -52,6 +52,10 @@ export class GamedisplayComponent implements OnInit {
   public enableEngineOfflineBtn = false
   public enableEngineLightBtn = false
   public enableEngineUnLightBtn = false
+  public enableScannerActivateBtn = false
+  public enableScannerDeactivateBtn = false
+  public enableScannerModeRadarBtn = false
+  public enableScannerModeIRBtn = false
 
   private ctx: any | null = null
 
@@ -361,6 +365,17 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.textAlign = 'left'
         this.ctx.fillText(drawableShip.designator, bbXOffset, bbYOffset)
         bbYOffset += bbYInterval
+
+        if(drawableShip.distance) {
+          this.ctx.beginPath()
+          this.ctx.fillText("DIST: " + drawableShip.distance + " M", bbXOffset, bbYOffset)
+          bbYOffset += bbYInterval
+        }
+        if(drawableShip.relativeHeading) {
+          this.ctx.beginPath()
+          this.ctx.fillText("BEAR: " + drawableShip.relativeHeading + "°", bbXOffset, bbYOffset)
+          bbYOffset += bbYInterval
+        }
       }
 
 
@@ -605,6 +620,7 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData === null) {
       return
     }
+    // Reaction wheel
     if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
       this.enableActivateReactionWheelBtn = true
     }
@@ -612,10 +628,17 @@ export class GamedisplayComponent implements OnInit {
       this.enableActivateReactionWheelBtn = false
     }
 
+    // Engine
     this.enableEngineOnlineBtn = this._api.frameData.ship.available_commands.includes('activate_engine')
     this.enableEngineOfflineBtn = this._api.frameData.ship.available_commands.includes('deactivate_engine')
     this.enableEngineLightBtn = this._api.frameData.ship.available_commands.includes('light_engine')
     this.enableEngineUnLightBtn = this._api.frameData.ship.available_commands.includes('unlight_engine')
+
+    // Scanner
+    this.enableScannerActivateBtn = this._api.frameData.ship.available_commands.includes('activate_scanner')
+    this.enableScannerDeactivateBtn = this._api.frameData.ship.available_commands.includes('deactivate_scanner')
+    this.enableScannerModeRadarBtn = this._api.frameData.ship.available_commands.includes('set_scanner_mode_radar')
+    this.enableScannerModeIRBtn = this._api.frameData.ship.available_commands.includes('set_scanner_mode_ir')
 
   }
 
@@ -667,6 +690,34 @@ export class GamedisplayComponent implements OnInit {
     await this._api.post(
       "/api/rooms/command",
       {command:'unlight_engine'},
+    )
+  }
+
+  public async btnSetScannerModeRadar() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'set_scanner_mode_radar'},
+    )
+  }
+
+  public async btnSetScannerModeIR() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'set_scanner_mode_ir'},
+    )
+  }
+
+  public async btnActivateScanner() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'activate_scanner'},
+    )
+  }
+
+  public async btnDeactivateScanner() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'deactivate_scanner'},
     )
   }
 

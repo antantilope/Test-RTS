@@ -416,6 +416,14 @@ class Ship(BaseModel):
                     self.engine_startup_power_used / self.engine_activation_power_required_total * 100
                 ),
             }
+        if self.scanner_starting:
+            yield {
+                'name': 'Scanner Startup',
+                'percent': round(
+                    self.scanner_startup_power_used / self.scanner_activation_power_required_total * 100
+                ),
+            }
+
 
     def use_battery_power(self, quantity: int) -> None:
         if quantity > self.battery_power:
@@ -603,11 +611,13 @@ class Ship(BaseModel):
 
 
     def get_available_commands(self) -> Generator[str, None, None]:
+        # Reaction Wheel
         if not self.reaction_wheel_online:
             yield ShipCommands.ACTIVATE_REACTION_WHEEL
         else:
             yield ShipCommands.DEACTIVATE_REACTION_WHEEL
 
+        # Engine
         if not self.engine_starting:
             if not self.engine_online:
                 yield ShipCommands.ACTIVATE_ENGINE
@@ -617,6 +627,19 @@ class Ship(BaseModel):
                 else:
                     yield ShipCommands.LIGHT_ENGINE
                     yield ShipCommands.DEACTIVATE_ENGINE
+
+        # Scanner
+        if not self.scanner_starting:
+            if not self.scanner_online:
+                yield ShipCommands.ACTIVATE_SCANNER
+            else:
+                yield ShipCommands.DEACTIVATE_SCANNER
+        yield (
+            ShipCommands.SET_SCANNER_MODE_RADAR
+            if self.scanner_mode == ShipScannerMode.IR
+            else ShipCommands.SET_SCANNER_MODE_IR
+        )
+
 
 
     def process_command(self, command: str, *args, **kwargs):
