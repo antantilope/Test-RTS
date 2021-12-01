@@ -314,32 +314,44 @@ class TestGameUpdateScannerStates(TestCase):
         self.game.update_scanner_states()
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
-        assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id] == {
-            'designator': self.game._ships[self.player_2_ship_id].scanner_designator,
-            'coord_x': 1000 * self.upm,
-            'coord_y': 1000 * self.upm,
-            'element_type': ScannedElementType.SHIP,
-            'visual_shape': VisibleElementShapeType.RECT,
-            'visual_p0': self.game._ships[self.player_2_ship_id].map_p0,
-            'visual_p1': self.game._ships[self.player_2_ship_id].map_p1,
-            'visual_p2': self.game._ships[self.player_2_ship_id].map_p2,
-            'visual_p3': self.game._ships[self.player_2_ship_id].map_p3,
-            'visual_engine_lit': True,
-            'visual_fill_color': '#ffffff',
-        }
-        assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id] == {
-            'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
-            'coord_x': 500 * self.upm,
-            'coord_y': 500 * self.upm,
-            'element_type': ScannedElementType.SHIP,
-            'visual_shape': VisibleElementShapeType.RECT,
-            'visual_p0': self.game._ships[self.player_1_ship_id].map_p0,
-            'visual_p1': self.game._ships[self.player_1_ship_id].map_p1,
-            'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
-            'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
-            'visual_engine_lit': False,
-            'visual_fill_color': '#ffffff',
-        }
+        self.assertEqual(self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id],
+            {
+                'designator': self.game._ships[self.player_2_ship_id].scanner_designator,
+                'coord_x': 1000 * self.upm,
+                'coord_y': 1000 * self.upm,
+                'element_type': ScannedElementType.SHIP,
+                'visual_shape': VisibleElementShapeType.RECT,
+                'visual_p0': self.game._ships[self.player_2_ship_id].map_p0,
+                'visual_p1': self.game._ships[self.player_2_ship_id].map_p1,
+                'visual_p2': self.game._ships[self.player_2_ship_id].map_p2,
+                'visual_p3': self.game._ships[self.player_2_ship_id].map_p3,
+                'visual_engine_lit': True,
+                'visual_fill_color': '#ffffff',
+                'visual_fin_0_rel_rot_coord_0': (9980, 9970),
+                'visual_fin_0_rel_rot_coord_1': (9952, 9940),
+                'visual_fin_1_rel_rot_coord_0': (10020, 9970),
+                'visual_fin_1_rel_rot_coord_1': (10048, 9940),
+            }
+        )
+        self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id],
+            {
+                'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
+                'coord_x': 500 * self.upm,
+                'coord_y': 500 * self.upm,
+                'element_type': ScannedElementType.SHIP,
+                'visual_shape': VisibleElementShapeType.RECT,
+                'visual_p0': self.game._ships[self.player_1_ship_id].map_p0,
+                'visual_p1': self.game._ships[self.player_1_ship_id].map_p1,
+                'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
+                'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
+                'visual_engine_lit': False,
+                'visual_fill_color': '#ffffff',
+                'visual_fin_0_rel_rot_coord_0': (4980, 4970),
+                'visual_fin_0_rel_rot_coord_1': (4952, 4940),
+                'visual_fin_1_rel_rot_coord_0': (5020, 4970),
+                'visual_fin_1_rel_rot_coord_1': (5048, 4940),
+            }
+        )
 
     def test_ship2_can_see_ship1_if_ship2_has_enough_visual_range_and_ship1_does_not(self):
         self.game._ships[self.player_1_ship_id].scanner_online = False
@@ -372,4 +384,109 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
             'visual_engine_lit': False,
             'visual_fill_color': '#ffffff',
+            'visual_fin_0_rel_rot_coord_0': (4980, 4970),
+            'visual_fin_0_rel_rot_coord_1': (4952, 4940),
+            'visual_fin_1_rel_rot_coord_0': (5020, 4970),
+            'visual_fin_1_rel_rot_coord_1': (5048, 4940),
         })
+
+    def test_ship_1_and_ship_2_can_spot_eachother_with_radar_scanner_only(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_2_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_2_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_radar_sensitivity = 0
+        self.game._ships[self.player_2_ship_id].scanner_radar_sensitivity = 0
+        self.game._ships[self.player_1_ship_id].anti_radar_coating_level = 0
+        self.game._ships[self.player_2_ship_id].anti_radar_coating_level = 0
+        self.game._ships[self.player_1_ship_id].visual_range = 1000
+        self.game._ships[self.player_2_ship_id].visual_range = 1000
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_2_ship_id].scanner_radar_range = 2000
+
+        # Place ships outside of visual range, but withing radar range (both)
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
+
+        # scanner data is loaded
+        assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
+        assert 'relative_heading' in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
+
+
+    def test_ship_1_can_spot_ship_2_radar_scanner_only_and_Ship_2_cannot_spot_ship_1_due_to_anti_radar_coating(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_2_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_2_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_radar_sensitivity = 0
+        self.game._ships[self.player_2_ship_id].scanner_radar_sensitivity = 0
+        self.game._ships[self.player_1_ship_id].anti_radar_coating_level = 1
+        self.game._ships[self.player_2_ship_id].anti_radar_coating_level = 0
+        self.game._ships[self.player_1_ship_id].visual_range = 1000
+        self.game._ships[self.player_2_ship_id].visual_range = 1000
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_2_ship_id].scanner_radar_range = 2000
+
+        # Place ships outside of visual range, but withing radar range (both)
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0 # Ship 2 radar sensitivity too low
+
+        self.game._ships[self.player_2_ship_id].scanner_radar_sensitivity = 1
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1 # ship 2 can now spot
+        assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
+        assert 'relative_heading' in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
+
+
+    def test_ships_can_visual_spot_each_other_if_one_ship_has_higher_anti_radar_value(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_2_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_2_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_radar_sensitivity = 0
+        self.game._ships[self.player_2_ship_id].scanner_radar_sensitivity = 0
+        self.game._ships[self.player_1_ship_id].anti_radar_coating_level = 1
+        self.game._ships[self.player_2_ship_id].anti_radar_coating_level = 0
+        self.game._ships[self.player_1_ship_id].visual_range = 2000
+        self.game._ships[self.player_2_ship_id].visual_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_2_ship_id].scanner_radar_range = 2000
+
+        # Place ships inside both visual range and radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
+        assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
+        assert 'relative_heading' in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
+
+        self.game._ships[self.player_2_ship_id].scanner_radar_sensitivity = 1
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
+        assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
+        assert 'relative_heading' in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]

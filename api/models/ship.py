@@ -166,6 +166,7 @@ class Ship(BaseModel):
         self.scanner_radar_range = None
         self.scanner_ir_range = None
         self.scanner_ir_minimum_thermal_signature = None
+        self.scanner_radar_sensitivity = None
         self.scanner_idle_power_requirement_per_second = None
         self.scanner_activation_power_required_total = None
         self.scanner_activation_power_required_per_second = None
@@ -173,6 +174,7 @@ class Ship(BaseModel):
         self.scanner_data: Dict[str, ScannedElement] = {}
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
+        self.anti_radar_coating_level = None
 
         # Ship reaction wheel
         self.activate_reaction_wheel_power_requirement = None
@@ -395,11 +397,13 @@ class Ship(BaseModel):
         instance.scanner_radar_range = constants.SCANNER_MODE_RADAR_RANGE_M
         instance.scanner_ir_range = constants.SCANNER_MODE_IR_RANGE_M
         instance.scanner_ir_minimum_thermal_signature = constants.SCANNER_IR_MINIMUM_THERMAL_SIGNATURE
+        instance.scanner_radar_sensitivity = 0
         instance.scanner_idle_power_requirement_per_second = constants.SCANNER_POWER_REQUIREMENT_PER_SECOND
         instance.scanner_seconds_to_activate = constants.SCANNER_SECONDS_TO_START
         instance.scanner_activation_power_required_total = constants.ACTIVATE_SCANNER_POWER_REQUIREMENT_TOTAL
         instance.scanner_activation_power_required_per_second = constants.ACTIVATE_SCANNER_POWER_REQUIREMENT_PER_SECOND
         instance.scanner_thermal_signature = 0
+        instance.anti_radar_coating_level = 0
 
         return instance
 
@@ -412,6 +416,14 @@ class Ship(BaseModel):
                     self.engine_startup_power_used / self.engine_activation_power_required_total * 100
                 ),
             }
+        if self.scanner_starting:
+            yield {
+                'name': 'Scanner Startup',
+                'percent': round(
+                    self.scanner_startup_power_used / self.scanner_activation_power_required_total * 100
+                ),
+            }
+
 
     def use_battery_power(self, quantity: int) -> None:
         if quantity > self.battery_power:
@@ -599,11 +611,13 @@ class Ship(BaseModel):
 
 
     def get_available_commands(self) -> Generator[str, None, None]:
+        # Reaction Wheel
         if not self.reaction_wheel_online:
             yield ShipCommands.ACTIVATE_REACTION_WHEEL
         else:
             yield ShipCommands.DEACTIVATE_REACTION_WHEEL
 
+        # Engine
         if not self.engine_starting:
             if not self.engine_online:
                 yield ShipCommands.ACTIVATE_ENGINE
@@ -613,6 +627,19 @@ class Ship(BaseModel):
                 else:
                     yield ShipCommands.LIGHT_ENGINE
                     yield ShipCommands.DEACTIVATE_ENGINE
+
+        # Scanner
+        if not self.scanner_starting:
+            if not self.scanner_online:
+                yield ShipCommands.ACTIVATE_SCANNER
+            else:
+                yield ShipCommands.DEACTIVATE_SCANNER
+        yield (
+            ShipCommands.SET_SCANNER_MODE_RADAR
+            if self.scanner_mode == ShipScannerMode.IR
+            else ShipCommands.SET_SCANNER_MODE_IR
+        )
+
 
 
     def process_command(self, command: str, *args, **kwargs):

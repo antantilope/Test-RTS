@@ -53,6 +53,30 @@ const commandHandlers = {
             ship_command: 'unlight_engine',
         });
     },
+    activate_scanner: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'activate_scanner',
+        });
+    },
+    deactivate_scanner: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'deactivate_scanner',
+        });
+    },
+    set_scanner_mode_radar: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'set_scanner_mode_radar',
+        });
+    },
+    set_scanner_mode_ir: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'set_scanner_mode_ir',
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {
