@@ -278,12 +278,29 @@ export class GamedisplayComponent implements OnInit {
     for(let i in drawableObjects.ships) {
       const drawableShip: DrawableShip = drawableObjects.ships[i]
       if(drawableShip.canvasCoordP0) {
+        // Ship is within visual range
         this.ctx.beginPath()
         this.ctx.fillStyle = drawableShip.fillColor
         this.ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
         this.ctx.lineTo(drawableShip.canvasCoordP1.x, drawableShip.canvasCoordP1.y)
         this.ctx.lineTo(drawableShip.canvasCoordP2.x, drawableShip.canvasCoordP2.y)
         this.ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+        this.ctx.closePath()
+        this.ctx.fill()
+
+
+        // fin 0
+        this.ctx.beginPath()
+        this.ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
+        this.ctx.lineTo(drawableShip.canvasCoordFin0P0.x, drawableShip.canvasCoordFin0P0.y)
+        this.ctx.lineTo(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y)
+        this.ctx.closePath()
+        this.ctx.fill()
+        // fin 1
+        this.ctx.beginPath()
+        this.ctx.moveTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+        this.ctx.lineTo(drawableShip.canvasCoordFin1P0.x, drawableShip.canvasCoordFin1P0.y)
+        this.ctx.lineTo(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y)
         this.ctx.closePath()
         this.ctx.fill()
 
@@ -314,7 +331,7 @@ export class GamedisplayComponent implements OnInit {
           )
           this.ctx.arc(
             engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
-            engineFlameY+ randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+            engineFlameY + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
             engineInnerFlameRadius,
             0,
             2 * Math.PI,
@@ -322,6 +339,31 @@ export class GamedisplayComponent implements OnInit {
           this.ctx.fill()
         }
       }
+
+      if(drawableShip.canvasBoundingBox) {
+        this.ctx.beginPath()
+        this.ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+        this.ctx.lineWidth = 2
+        this.ctx.rect(
+          drawableShip.canvasBoundingBox.x1,
+          drawableShip.canvasBoundingBox.y1,
+          drawableShip.canvasBoundingBox.x2 - drawableShip.canvasBoundingBox.x1,
+          drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1,
+        )
+        this.ctx.stroke()
+
+        const bbXOffset = drawableShip.canvasBoundingBox.x1
+        let bbYOffset = drawableShip.canvasBoundingBox.y2 + 20
+        const bbYInterval = 20
+        this.ctx.beginPath()
+        this.ctx.font = 'bold 18px Courier New'
+        this.ctx.fillStyle = 'rgb(255, 0, 0, 0.85)'
+        this.ctx.textAlign = 'left'
+        this.ctx.fillText(drawableShip.designator, bbXOffset, bbYOffset)
+        bbYOffset += bbYInterval
+      }
+
+
     }
 
     // Reaction Wheel overlay
@@ -357,14 +399,14 @@ export class GamedisplayComponent implements OnInit {
     const engineOverlay: DrawableEngineOverlay | undefined = drawableObjects.engineOverlay
     if(typeof engineOverlay !== "undefined") {
       this.ctx.beginPath()
-      this.ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
+      this.ctx.strokeStyle = "rgb(255, 181, 43, 0.7)"
       this.ctx.lineWidth = 2
       this.ctx.moveTo(engineOverlay.vectorPoint0.x, engineOverlay.vectorPoint0.y)
       this.ctx.lineTo(engineOverlay.vectorPoint1.x, engineOverlay.vectorPoint1.y)
       this.ctx.stroke();
       this.ctx.beginPath()
       this.ctx.font = 'bold 18px Courier New'
-      this.ctx.fillStyle = 'rgb(255, 0, 0,  0.8)'
+      this.ctx.fillStyle = 'rgb(255, 181, 43,  0.9)'
       this.ctx.textAlign = 'center'
       this.ctx.fillText(
         engineOverlay.metersPerSecond + " M/S",

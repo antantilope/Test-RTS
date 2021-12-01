@@ -325,7 +325,7 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_p2': self.game._ships[self.player_2_ship_id].map_p2,
             'visual_p3': self.game._ships[self.player_2_ship_id].map_p3,
             'visual_engine_lit': True,
-            'visual_fill_color': '#ffc7c7',
+            'visual_fill_color': '#ffffff',
         }
         assert self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id] == {
             'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
@@ -338,7 +338,7 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
             'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
             'visual_engine_lit': False,
-            'visual_fill_color': '#ffc7c7',
+            'visual_fill_color': '#ffffff',
         }
 
     def test_ship2_can_see_ship1_if_ship2_has_enough_visual_range_and_ship1_does_not(self):
@@ -371,5 +371,5 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
             'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
             'visual_engine_lit': False,
-            'visual_fill_color': '#ffc7c7',
+            'visual_fill_color': '#ffffff',
         })

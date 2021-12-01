@@ -110,6 +110,11 @@ class Ship(BaseModel):
         self.rel_rot_coord_1 = (None, None,)
         self.rel_rot_coord_2 = (None, None,)
         self.rel_rot_coord_3 = (None, None,)
+        self.fin_0_rel_rot_coord_0 = (None, None,)
+        self.fin_0_rel_rot_coord_1 = (None, None,)
+        self.fin_1_rel_rot_coord_0 = (None, None,)
+        self.fin_1_rel_rot_coord_1 = (None, None,)
+
 
         # relative coordinate boundaries of the ship with heading fixed to zero.
         # These coords will NOT change unless the ship size changes
@@ -117,6 +122,10 @@ class Ship(BaseModel):
         self.heading_0_rel_coord_1 = (None, None,)
         self.heading_0_rel_coord_2 = (None, None,)
         self.heading_0_rel_coord_3 = (None, None,)
+        self.heading_0_fin_0_rel_coord_0 = (None, None,)
+        self.heading_0_fin_0_rel_coord_1 = (None, None,)
+        self.heading_0_fin_1_rel_coord_0 = (None, None,)
+        self.heading_0_fin_1_rel_coord_1 = (None, None,)
 
         # </END OF RELATIVE COORDINATES>
 
@@ -224,6 +233,34 @@ class Ship(BaseModel):
         )
 
     @property
+    def map_fin_0_coord_0(self) -> Tuple:
+        return (
+            self.coord_x + self.fin_0_rel_rot_coord_0[0],
+            self.coord_y + self.fin_0_rel_rot_coord_0[1],
+        )
+
+    @property
+    def map_fin_0_coord_1(self) -> Tuple:
+        return (
+            self.coord_x + self.fin_0_rel_rot_coord_1[0],
+            self.coord_y + self.fin_0_rel_rot_coord_1[1],
+        )
+
+    @property
+    def map_fin_1_coord_0(self) -> Tuple:
+        return (
+            self.coord_x + self.fin_1_rel_rot_coord_0[0],
+            self.coord_y + self.fin_1_rel_rot_coord_0[1],
+        )
+
+    @property
+    def map_fin_1_coord_1(self) -> Tuple:
+        return (
+            self.coord_x + self.fin_1_rel_rot_coord_1[0],
+            self.coord_y + self.fin_1_rel_rot_coord_1[1],
+        )
+
+    @property
     def mass(self) -> int:
         return self._state.get(ShipStateKey.MASS, (
             self.battery_mass
@@ -256,10 +293,10 @@ class Ship(BaseModel):
             'rel_rot_coord_1': self.rel_rot_coord_1,
             'rel_rot_coord_2': self.rel_rot_coord_2,
             'rel_rot_coord_3': self.rel_rot_coord_3,
-            'heading_0_rel_coord_0': self.heading_0_rel_coord_0,
-            'heading_0_rel_coord_1': self.heading_0_rel_coord_1,
-            'heading_0_rel_coord_2': self.heading_0_rel_coord_2,
-            'heading_0_rel_coord_3': self.heading_0_rel_coord_3,
+            "fin_0_rel_rot_coord_0":  self.fin_0_rel_rot_coord_0,
+            "fin_0_rel_rot_coord_1":  self.fin_0_rel_rot_coord_1,
+            "fin_1_rel_rot_coord_0":  self.fin_1_rel_rot_coord_0,
+            "fin_1_rel_rot_coord_1":  self.fin_1_rel_rot_coord_1,
             'velocity_x_meters_per_second': self.velocity_x_meters_per_second,
             'velocity_y_meters_per_second': self.velocity_y_meters_per_second,
             'battery_power': self.battery_power,
@@ -301,10 +338,10 @@ class Ship(BaseModel):
         x_len = constants.SHIP_X_LEN * map_units_per_meter
         y_len = constants.SHIP_Y_LEN * map_units_per_meter
 
-        x1 = (x_len / 2) * -1
-        x2 = (x_len / 2)
-        y1 = (y_len / 2) * -1
-        y2 = (y_len / 2)
+        x1 = round((x_len / 2) * -1)
+        x2 = round(x_len / 2)
+        y1 = round((y_len / 2) * -1)
+        y2 = round(y_len / 2)
 
         instance.heading_0_rel_coord_0 = (x1, y1,)
         instance.heading_0_rel_coord_1 = (x1, y2,)
@@ -315,6 +352,23 @@ class Ship(BaseModel):
         instance.rel_rot_coord_1 = (x1, y2,)
         instance.rel_rot_coord_2 = (x2, y2,)
         instance.rel_rot_coord_3 = (x2, y1,)
+
+        # Tail Fin coords
+        fin_top_y = y1 + round(y_len / 4)
+        fin_bot_y  = y1
+        fin_0_bot_x = round(x1 - (x_len / 1.45))
+        fin_1_bot_x = round(x2 + (x_len / 1.45))
+
+        instance.heading_0_fin_0_rel_coord_0 = (x1, fin_top_y,)
+        instance.heading_0_fin_0_rel_coord_1 = (fin_0_bot_x, fin_bot_y,)
+        instance.heading_0_fin_1_rel_coord_0 = (x2, fin_top_y,)
+        instance.heading_0_fin_1_rel_coord_1 = (fin_1_bot_x, fin_bot_y,)
+
+        instance.fin_0_rel_rot_coord_0 = (x1, fin_top_y,)
+        instance.fin_0_rel_rot_coord_1 = (fin_0_bot_x, fin_bot_y,)
+        instance.fin_1_rel_rot_coord_0 = (x2, fin_top_y,)
+        instance.fin_1_rel_rot_coord_1 = (fin_1_bot_x, fin_bot_y,)
+
 
         instance.battery_power = constants.BATTERY_STARTING_POWER
         instance.battery_capacity = constants.BATTERY_POWER_CAPACITY
@@ -640,6 +694,29 @@ class Ship(BaseModel):
             self.heading_0_rel_coord_3,
             delta_radians
         )
+
+        self.fin_0_rel_rot_coord_0 = utils2d.rotate(
+            constants.ORGIN_COORD,
+            self.heading_0_fin_0_rel_coord_0,
+            delta_radians
+        )
+        self.fin_0_rel_rot_coord_1 = utils2d.rotate(
+            constants.ORGIN_COORD,
+            self.heading_0_fin_0_rel_coord_1,
+            delta_radians
+        )
+        self.fin_1_rel_rot_coord_0 = utils2d.rotate(
+            constants.ORGIN_COORD,
+            self.heading_0_fin_1_rel_coord_0,
+            delta_radians
+        )
+        self.fin_1_rel_rot_coord_1 = utils2d.rotate(
+            constants.ORGIN_COORD,
+            self.heading_0_fin_1_rel_coord_1,
+            delta_radians
+        )
+
+
 
     # Engine Commands
     def cmd_activate_engine(self) -> None:

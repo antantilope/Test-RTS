@@ -38,6 +38,7 @@ const { get_user_details } = require("./lib/db/get_user_details");
 const {
     validateSessionHTTPMiddleware,
     requestLoggingMiddleware,
+    setJSONContentType,
 } = require("./middleware");
 const { PHASE_0_LOBBY } = require("./constants");
 const { logger } = require("./lib/logger");
@@ -111,6 +112,7 @@ io.on('connection', (socket) => handleSocketConnection(io, socket));
 expressApp.get('/', async (req, res) => {
     /* Landing Page
     */
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
 
     if(req.session.player_id){
         // Player is logged in, Sync Session with SSOT
@@ -172,7 +174,6 @@ expressApp.get('/', async (req, res) => {
 
     }
 
-    res.send("<h1>Hello " + req.session.player_id + "</h1>")
 });
 
 /* Log In, Log Out
@@ -187,7 +188,7 @@ expressApp.get('/logout', (req, res) => {
 
 /* Game Rooms
 */
-expressApp.get('/api/rooms/list', async (req, res) => {
+expressApp.get('/api/rooms/list', setJSONContentType, async (req, res) => {
     const rooms = await get_rooms();
     for (let i in rooms) {
         delete rooms[i].port;
@@ -195,14 +196,14 @@ expressApp.get('/api/rooms/list', async (req, res) => {
     return res.status(200).json(rooms);
 });
 
-expressApp.get('/api/users/details', userDetailsController);
-expressApp.get('/api/rooms/ping', pingServerController);
-expressApp.post('/api/rooms/join', joinRoomController);
-expressApp.post('/api/rooms/leave', leaveRoomController);
-expressApp.get('/api/rooms/details', roomDetailsController);
-expressApp.post('/api/rooms/configure', configureMapController);
-expressApp.post('/api/rooms/start', startGameController);
-expressApp.post('/api/rooms/command', RunCommandController);
+expressApp.get('/api/users/details', setJSONContentType, userDetailsController);
+expressApp.get('/api/rooms/ping', setJSONContentType, pingServerController);
+expressApp.post('/api/rooms/join', setJSONContentType, joinRoomController);
+expressApp.post('/api/rooms/leave', setJSONContentType, leaveRoomController);
+expressApp.get('/api/rooms/details', setJSONContentType, roomDetailsController);
+expressApp.post('/api/rooms/configure', setJSONContentType, configureMapController);
+expressApp.post('/api/rooms/start', setJSONContentType, startGameController);
+expressApp.post('/api/rooms/command', setJSONContentType, RunCommandController);
 
 // Launch the HTTP Server
 httpServer.listen(locals.port, () => {

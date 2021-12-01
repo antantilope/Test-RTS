@@ -38,5 +38,12 @@ const requestLoggingMiddleware = (req, res, next) => {
 }
 
 
+const setJSONContentType = (req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
+    next();
+}
+
+
 exports.validateSessionHTTPMiddleware = validateSessionHTTPMiddleware;
 exports.requestLoggingMiddleware = requestLoggingMiddleware
+exports.setJSONContentType = setJSONContentType
