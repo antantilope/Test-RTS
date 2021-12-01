@@ -25,6 +25,26 @@
         </div>
         <div *ngIf="_api.frameData.ship.scanner_online">
             <h3>MODE: {{ _api.frameData.ship.scanner_mode.toUpperCase() }}</h3>
+
+            <ng-container *ngIf="getTargets().length === 0">
+                <h4>No Targets</h4>
+            </ng-container>
+
+            <ng-container *ngIf="getTargets().length > 0">
+                <h4>Targets</h4>
+                <table>
+                    <tr>
+                        <th>DESIGNATOR</th>
+                        <th>BEARING</th>
+                        <th>DISTANCE</th>
+                    </tr>
+                    <tr *ngFor="let targ of getTargets()">
+                        <td>{{ targ.designator }}</td>
+                        <td>{{ targ.relative_heading }}°</td>
+                        <td>{{ targ.distance }} M</td>
+                    </tr>
+                </table>
+            </ng-container>
         </div>
     </div>
 </div>

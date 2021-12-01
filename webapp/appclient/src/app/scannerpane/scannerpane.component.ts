@@ -1,8 +1,10 @@
 
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { ApiService } from '../api.service';
 
+import { ApiService } from '../api.service';
+import { ScannerDataElement } from '../models/drawable-objects.model';
 import { PaneService } from '../pane.service';
+
 
 @Component({
   selector: 'app-scannerpane',
@@ -34,6 +36,10 @@ export class ScannerpaneComponent implements OnInit {
     this.paneElem.nativeElement.addEventListener('mouseleave', ()=>{
       this._pane.mouseInPane = false
     })
+  }
+
+  public getTargets(): ScannerDataElement[] {
+    return Object.values(this._api.frameData.ship.scanner_data)
   }
 
 }

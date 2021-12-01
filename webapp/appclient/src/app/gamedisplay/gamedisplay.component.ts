@@ -162,7 +162,6 @@ export class GamedisplayComponent implements OnInit {
     window.addEventListener('mousemove', event => {
       this.mouseMovedWhileDown = true
       if(!this._camera.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
-        console.log(this.mouseClickDownInCanvas)
         return
       }
       else if(this.mousePanLastX === null || this.mousePanLastY === null) {
