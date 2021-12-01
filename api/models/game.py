@@ -351,13 +351,22 @@ class Game(BaseModel):
                 is_visual = visual_range >= distance_meters
                 is_scannable = scan_range is not None and scan_range >= distance_meters
 
+                scan_only = is_scannable and not is_visual
                 if (
-                    is_scannable
-                    and not is_visual
+                    scan_only
                     and self._ships[ship_id].scanner_mode == ShipScannerMode.IR
                     and not (
                         self._ships[other_id].scanner_thermal_signature
                         >= self._ships[ship_id].scanner_ir_minimum_thermal_signature)
+                ):
+                    is_scannable = False
+
+                if(
+                    scan_only
+                    and self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR
+                    and (
+                        self._ships[other_id].anti_radar_coating_level
+                        > self._ships[ship_id].scanner_radar_sensitivity)
                 ):
                     is_scannable = False
 
