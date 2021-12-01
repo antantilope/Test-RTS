@@ -563,7 +563,7 @@ export class GamedisplayComponent implements OnInit {
 
   private clearCanvas(): void {
     this.ctx.beginPath()
-    this.ctx.clearRect(0, 0, this._camera.canvasWidth, this._camera.canvasHeight)
+    this.ctx.clearRect(0, 0, this._camera.canvasWidth * 2, this._camera.canvasHeight * 2) // *2 because of bug where corner is not cleared
   }
 
   private paintDebugData(): void {
