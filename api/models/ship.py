@@ -36,6 +36,7 @@ class ShipCommands:
     DEACTIVATE_SCANNER = 'deactivate_scanner'
     SET_SCANNER_MODE_RADAR = 'set_scanner_mode_radar'
     SET_SCANNER_MODE_IR = 'set_scanner_mode_ir'
+    SET_SCANNER_LOCK_TARGET = 'set_scanner_lock_target'
 
     ACTIVATE_AUTO_PILOT = 'activate_autopilot'
     DEACTIVATE_AUTO_PILOT = 'deactivate_autopilot'
@@ -58,6 +59,7 @@ class ScannedElementType:
     SCRAP = 'scrap'
 
 class ScannedElement(TypedDict):
+    id: str
     designator: str
     element_type: str
     thermal_signature: Optional[int]
@@ -81,6 +83,11 @@ class ScannedElement(TypedDict):
 class TimerItem(TypedDict):
     name: str
     percent: int
+
+
+class AutoPilotPrograms:
+    HEADING_LOCKED_TARGET = 'heading_locked_target'
+    POSITION_HOLD = 'position_hold'
 
 
 class Ship(BaseModel):
@@ -171,6 +178,12 @@ class Ship(BaseModel):
         self.scanner_activation_power_required_total = None
         self.scanner_activation_power_required_per_second = None
         self.scanner_startup_power_used = None
+        self.scanner_locked = False
+        self.scanner_locking = False
+        self.scanner_locking_power_used = None
+        self.scanner_lock_target = None
+        self.scanner_get_lock_power_requirement_total = None
+        self.scanner_get_lock_power_requirement_per_second = None
         self.scanner_data: Dict[str, ScannedElement] = {}
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
@@ -181,7 +194,7 @@ class Ship(BaseModel):
         self.reaction_wheel_power_required_per_second = None
         self.reaction_wheel_online = False
 
-        self.autopilot_online = False
+        self.autopilot_program = None
 
         # Arbitrary ship state data
         self._state = {}
@@ -313,17 +326,20 @@ class Ship(BaseModel):
             'engine_starting': self.engine_starting,
 
             'scanner_online': self.scanner_online,
+            'scanner_locking': self.scanner_locking,
+            'scanner_locked': self.scanner_locked,
+            'scanner_lock_target': self.scanner_lock_target,
             'scanner_starting': self.scanner_starting,
             'scanner_mode': self.scanner_mode,
             'scanner_radar_range': self.scanner_radar_range,
             'scanner_ir_range': self.scanner_ir_range,
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
-            'scanner_data': self.scanner_data,
+            'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
 
             'visual_range': self.visual_range,
 
-            'autopilot_online': self.autopilot_online,
+            'autopilot_program': self.autopilot_program,
 
             'timers': list(self.get_timer_items()),
         }
@@ -402,6 +418,8 @@ class Ship(BaseModel):
         instance.scanner_seconds_to_activate = constants.SCANNER_SECONDS_TO_START
         instance.scanner_activation_power_required_total = constants.ACTIVATE_SCANNER_POWER_REQUIREMENT_TOTAL
         instance.scanner_activation_power_required_per_second = constants.ACTIVATE_SCANNER_POWER_REQUIREMENT_PER_SECOND
+        instance.scanner_get_lock_power_requirement_total = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_TOTAL
+        instance.scanner_get_lock_power_requirement_per_second = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_PER_SECOND
         instance.scanner_thermal_signature = 0
         instance.anti_radar_coating_level = 0
 
@@ -421,6 +439,13 @@ class Ship(BaseModel):
                 'name': 'Scanner Startup',
                 'percent': round(
                     self.scanner_startup_power_used / self.scanner_activation_power_required_total * 100
+                ),
+            }
+        if self.scanner_locking:
+            yield {
+                'name': 'Scanner Locking',
+                'percent': round(
+                    self.scanner_locking_power_used / self.scanner_get_lock_power_requirement_total * 100
                 ),
             }
 
@@ -470,6 +495,35 @@ class Ship(BaseModel):
                 )
             except InsufficientPowerError:
                 self.scanner_online = False
+                self.scanner_locking = False
+                self.scanner_lock_target = None
+                self.scanner_locked = False
+
+            else:
+                if self.scanner_locking:
+                    lock_complete = self.scanner_locking_power_used >= self.scanner_get_lock_power_requirement_total
+                    if lock_complete:
+                        self.scanner_locked = True
+                        self.scanner_locking = False
+                        self.scanner_locking_power_used = None
+
+                    else:
+                        adj = min(
+                            max(
+                                round(self.scanner_get_lock_power_requirement_per_second / fps),
+                                1,
+                            ),
+                            self.scanner_get_lock_power_requirement_total - self.scanner_locking_power_used
+                        )
+                        try:
+                            self.use_battery_power(adj)
+                        except InsufficientPowerError:
+                            self.scanner_locking = False
+                            self.scanner_lock_target = None
+                            self.scanner_locking_power_used = None
+                        else:
+                            self.scanner_locking_power_used += adj
+
 
         elif self.scanner_starting:
             ''' Scanner POWER DRAW (STARTING) '''
@@ -667,6 +721,8 @@ class Ship(BaseModel):
             self.cmd_set_scanner_mode_radar()
         elif command == ShipCommands.SET_SCANNER_MODE_IR:
             self.cmd_set_scanner_mode_ir()
+        elif command == ShipCommands.SET_SCANNER_LOCK_TARGET:
+            self.cmd_set_scanner_lock_target(args[0])
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -781,6 +837,10 @@ class Ship(BaseModel):
         if not self.scanner_online or self.scanner_starting:
             return
         self.scanner_online = False
+        self.scanner_locked = False
+        self.scanner_locking = False
+        self.scanner_locking_power_used = None
+        self.scanner_lock_target = None
         self.scanner_data.clear()
 
     def cmd_set_scanner_mode_radar(self) -> None:
@@ -788,3 +848,14 @@ class Ship(BaseModel):
 
     def cmd_set_scanner_mode_ir(self) -> None:
         self.scanner_mode = ShipScannerMode.IR
+
+    def cmd_set_scanner_lock_target(self, target_id: str) -> None:
+        if not self.scanner_online or self.scanner_locking:
+            return
+        if target_id not in self.scanner_data:
+            return
+        self.scanner_locking = True
+        self.scanner_locking_power_used = 0
+        self.scanner_lock_target = target_id
+
+

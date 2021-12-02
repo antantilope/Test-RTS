@@ -17,6 +17,16 @@ from .utils import (
 
 
 
+class TestShipBasicMethods(TestCase):
+    def setUp(self):
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+
+    def test_to_dict_method_returns_a_dict(self):
+        assert isinstance(self.ship.to_dict(), dict)
+
+
+
 '''
  █████  ██████       ██ ██    ██ ███████ ████████
 ██   ██ ██   ██      ██ ██    ██ ██         ██
@@ -395,6 +405,134 @@ class TestShipAdjustResources(TestCase):
         assert not self.ship.scanner_starting
         assert not self.ship.scanner_online
         assert self.ship.battery_power == 0
+
+
+    def test_ship_channeling_scanner_lock_uses_power(self):
+        ''' SCANNER LOCKING '''
+        self.ship.scanner_online = True
+        self.ship.battery_power = 100_000
+        self.ship.scanner_idle_power_requirement_per_second = 1000
+        self.ship.scanner_get_lock_power_requirement_total = 1800
+        self.ship.scanner_get_lock_power_requirement_per_second = 1000
+        self.ship.scanner_locking = True
+        self.ship.scanner_locking_power_used = 0
+        self.ship.scanner_lock_target = "foobar"
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 99_000
+        assert self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used == 500
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 98_000
+        assert self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used == 1000
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 97_000
+        assert self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used == 1500
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 96_200
+        assert self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used == 1800
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 95_700
+        assert self.ship.scanner_locked
+        assert not self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used is None
+        assert self.ship.scanner_lock_target == "foobar"
+
+
+    def test_ship_channeling_scanner_lock_is_interrupted_if_not_enough_power(self):
+        ''' SCANNER LOCKING '''
+        self.ship.scanner_online = True
+        self.ship.battery_power = 2500
+        self.ship.scanner_idle_power_requirement_per_second = 1000
+        self.ship.scanner_get_lock_power_requirement_total = 2000
+        self.ship.scanner_get_lock_power_requirement_per_second = 1000
+        self.ship.scanner_locking = True
+        self.ship.scanner_locking_power_used = 0
+        self.ship.scanner_lock_target = "foobar"
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 1500
+        assert self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used == 500
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 500
+        assert self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used == 1000
+
+        # Enough power to idle scanner (first draw) but lock channeling is cancelled
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 0
+        assert not self.ship.scanner_locking
+        assert self.ship.scanner_locking_power_used is None
+        assert self.ship.scanner_lock_target is None
+
+        self.ship.adjust_resources(fps=fps)
+        assert not self.ship.scanner_online
+
+
+    def test_ship_lock_is_lost_if_not_enough_power(self):
+        ''' SCANNER LOCK '''
+        self.ship.scanner_online = True
+        self.ship.battery_power = 1500
+        self.ship.scanner_idle_power_requirement_per_second = 1000
+        self.ship.scanner_get_lock_power_requirement_total = 2000
+        self.ship.scanner_get_lock_power_requirement_per_second = 1000
+        self.ship.scanner_locking = False
+        self.ship.scanner_locked = True
+        self.ship.scanner_locking_power_used = None
+        self.ship.scanner_lock_target = "foobar"
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 1000
+        assert not self.ship.scanner_locking
+        assert self.ship.scanner_locked
+        assert self.ship.scanner_locking_power_used is None
+        assert self.ship.scanner_lock_target == "foobar"
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 500
+        assert not self.ship.scanner_locking
+        assert self.ship.scanner_locked
+        assert self.ship.scanner_locking_power_used is None
+        assert self.ship.scanner_lock_target == "foobar"
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.scanner_online
+        assert self.ship.battery_power == 0
+        assert not self.ship.scanner_locking
+        assert self.ship.scanner_locked
+        assert self.ship.scanner_locking_power_used is None
+        assert self.ship.scanner_lock_target == "foobar"
+
+        self.ship.adjust_resources(fps=fps)
+        assert not self.ship.scanner_online
+        assert self.ship.battery_power == 0
+        assert not self.ship.scanner_locking
+        assert not self.ship.scanner_locked
+        assert self.ship.scanner_locking_power_used is None
+        assert self.ship.scanner_lock_target is None
+
 
 
 '''

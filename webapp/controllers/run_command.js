@@ -5,7 +5,10 @@ const { getQueueName } = require("../lib/command_queue");
 const { PHASE_2_LIVE } = require("../constants")
 const { logger } = require("../lib/logger");
 const { CommandValidationError } = require("../lib/command_validators/validation_error");
-const { validateSetHeadingCommand } = require("../lib/command_validators/set_heading");
+const {
+    validateSetHeadingCommand,
+    validateSetScannerLockTargetCommand,
+} = require("../lib/command_validators/validators");
 
 
 const commandHandlers = {
@@ -75,6 +78,14 @@ const commandHandlers = {
         req.app.get(queueName).push({
             player_id: req.session.player_id,
             ship_command: 'set_scanner_mode_ir',
+        });
+    },
+    set_scanner_lock_target: (req, queueName) => {
+        const validatedData = validateSetScannerLockTargetCommand(req.body);
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'set_scanner_lock_target',
+            args: [validatedData.target],
         });
     },
 };

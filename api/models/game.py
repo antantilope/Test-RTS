@@ -372,6 +372,7 @@ class Game(BaseModel):
 
                 if is_visual or is_scannable:
                     scanner_data: ScannedElement = {
+                        'id': other_id,
                         'designator': self._ships[other_id].scanner_designator,
                         'coord_x': other_coords[0],
                         'coord_y': other_coords[1],
@@ -402,6 +403,16 @@ class Game(BaseModel):
                             scanner_data['thermal_signature'] = self._ships[other_id].scanner_thermal_signature
 
                     self._ships[ship_id].scanner_data[other_id] = scanner_data
+
+
+            if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
+                if self._ships[ship_id].scanner_locking:
+                    self._ships[ship_id].scanner_lock_target = None
+                    self._ships[ship_id].scanner_locking = False
+                    self._ships[ship_id].scanner_locking_power_used = None
+                elif self._ships[ship_id].scanner_locked:
+                    self._ships[ship_id].scanner_lock_target = None
+                    self._ships[ship_id].scanner_locked = False
 
 
     def _process_ship_command(self, command: FrameCommand):

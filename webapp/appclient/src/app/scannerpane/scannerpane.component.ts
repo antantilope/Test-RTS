@@ -15,10 +15,12 @@ export class ScannerpaneComponent implements OnInit {
 
   @ViewChild("paneElem") paneElem: ElementRef;
 
+  public selectionCursor: string | null = null
+
+
   constructor(
     public _pane: PaneService,
     public _api: ApiService,
-
   ) { }
 
   ngOnInit(): void {
@@ -38,8 +40,61 @@ export class ScannerpaneComponent implements OnInit {
     })
   }
 
-  public getTargets(): ScannerDataElement[] {
-    return Object.values(this._api.frameData.ship.scanner_data)
+
+  lockSelectUpClick() {
+    if (!this._api.frameData.ship.scanner_data.length) {
+      this.selectionCursor = null
+      return
+    }
+    const lastIx = this._api.frameData.ship.scanner_data.length - 1
+    if(this.selectionCursor === null) {
+      this.selectionCursor = this._api.frameData.ship.scanner_data[lastIx].id
+      return
+    }
+    const currTargIndex = this._api.frameData.ship.scanner_data.map(se => se.id).indexOf(this.selectionCursor)
+    if(currTargIndex === -1) {
+      this.selectionCursor = this._api.frameData.ship.scanner_data[0].id
+      return
+    }
+    const targetIndex = currTargIndex > 0 ? currTargIndex - 1 : lastIx
+    this.selectionCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+  }
+
+  lockSelectDownClick() {
+    if (!this._api.frameData.ship.scanner_data.length) {
+      this.selectionCursor = null
+      return
+    }
+    if(this.selectionCursor === null) {
+      this.selectionCursor = this._api.frameData.ship.scanner_data[0].id
+      return
+    }
+    const lastIx = this._api.frameData.ship.scanner_data.length - 1
+    const currTargIndex = this._api.frameData.ship.scanner_data.map(se => se.id).indexOf(this.selectionCursor)
+    if(currTargIndex === -1) {
+      this.selectionCursor = this._api.frameData.ship.scanner_data[lastIx].id
+      return
+    }
+    const targetIndex = currTargIndex < lastIx ? currTargIndex + 1 : 0
+    this.selectionCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+  }
+
+  async lockSelectClick() {
+    if(this.selectionCursor === null) {
+      return
+    }
+    const currTargIndex = this._api.frameData.ship.scanner_data.map(se => se.id).indexOf(this.selectionCursor)
+    if(currTargIndex === -1) {
+      return
+    }
+    await this._api.post(
+      "/api/rooms/command",
+      {command: 'set_scanner_lock_target', target: this.selectionCursor},
+    )
+  }
+
+  lockClearSelectClick() {
+    this.selectionCursor = null
   }
 
 }

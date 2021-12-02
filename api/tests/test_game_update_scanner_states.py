@@ -316,6 +316,7 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         self.assertEqual(self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id],
             {
+                'id': self.player_2_ship_id,
                 'designator': self.game._ships[self.player_2_ship_id].scanner_designator,
                 'coord_x': 1000 * self.upm,
                 'coord_y': 1000 * self.upm,
@@ -335,6 +336,7 @@ class TestGameUpdateScannerStates(TestCase):
         )
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id],
             {
+                'id': self.player_1_ship_id,
                 'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
                 'coord_x': 500 * self.upm,
                 'coord_y': 500 * self.upm,
@@ -373,6 +375,7 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id], {
+            'id': self.player_1_ship_id,
             'element_type': ScannedElementType.SHIP,
             'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
             'coord_x': 500 * self.upm,
@@ -490,3 +493,87 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
         assert 'relative_heading' in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
+
+
+    def test_ship_channeling_scanner_lock_is_interrupted_if_target_goes_outside_of_scanner_range(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_2_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_2_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_2_ship_id].scanner_mode = ShipScannerMode.RADAR
+
+        # Ship 1 locking onto ship 2
+        self.game._ships[self.player_1_ship_id].scanner_locking = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_locking_power_used = 0
+        self.game._ships[self.player_1_ship_id].scanner_get_lock_power_requirement_per_second = 1000
+        self.game._ships[self.player_1_ship_id].scanner_get_lock_power_requirement_total = 2000
+
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
+        assert not self.game._ships[self.player_1_ship_id].scanner_locked
+        assert self.game._ships[self.player_1_ship_id].scanner_locking
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_target == self.player_2_ship_id
+        assert self.game._ships[self.player_1_ship_id].scanner_locking_power_used == 0
+
+        # Move ship 2 outside radar range and assert locking is cancelled
+        # Ship 2 at 2500, 2500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 2500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 2500 * self.upm
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
+        assert not self.game._ships[self.player_1_ship_id].scanner_locked
+        assert not self.game._ships[self.player_1_ship_id].scanner_locking
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_target is None
+        assert self.game._ships[self.player_1_ship_id].scanner_locking_power_used is None
+
+
+    def test_ship_scanner_lock_is_lost_if_target_goes_outside_of_scanner_range(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_2_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_2_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_2_ship_id].scanner_mode = ShipScannerMode.RADAR
+
+        # Ship 1 locked onto ship 2
+        self.game._ships[self.player_1_ship_id].scanner_locking = False
+        self.game._ships[self.player_1_ship_id].scanner_locked = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_locking_power_used = None
+
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+
+        # Ship 1 is locked onto ship 2
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
+        assert self.game._ships[self.player_1_ship_id].scanner_locked
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_target == self.player_2_ship_id
+
+        # Move ship 2 outside radar range and assert lock is lost
+        # Ship 2 at 2500, 2500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 2500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 2500 * self.upm
+        self.game.update_scanner_states()
+        assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
+        assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
+        assert not self.game._ships[self.player_1_ship_id].scanner_locked
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_target is None
