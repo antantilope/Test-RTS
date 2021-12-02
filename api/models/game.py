@@ -404,6 +404,16 @@ class Game(BaseModel):
                     self._ships[ship_id].scanner_data[other_id] = scanner_data
 
 
+            if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
+                if self._ships[ship_id].scanner_locking:
+                    self._ships[ship_id].scanner_lock_target = None
+                    self._ships[ship_id].scanner_locking = False
+                    self._ships[ship_id].scanner_locking_power_used = None
+                elif self._ships[ship_id].scanner_locked:
+                    self._ships[ship_id].scanner_lock_target = None
+                    self._ships[ship_id].scanner_locked = False
+
+
     def _process_ship_command(self, command: FrameCommand):
         ship_command = command['ship_command']
         player_id = command['player_id']

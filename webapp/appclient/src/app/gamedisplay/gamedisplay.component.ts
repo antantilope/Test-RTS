@@ -192,7 +192,7 @@ export class GamedisplayComponent implements OnInit {
     const mouseCanvasY = event.clientY - this.canvas.nativeElement.offsetTop
     if(
       this._api.frameData.ship.reaction_wheel_online
-      && !this._api.frameData.ship.autopilot_online
+      && !this._api.frameData.ship.autopilot_program
       && this.drawableObjects !== null
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
