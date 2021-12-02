@@ -17,6 +17,16 @@ from .utils import (
 
 
 
+class TestShipBasicMethods(TestCase):
+    def setUp(self):
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+
+    def test_to_dict_method_returns_a_dict(self):
+        assert isinstance(self.ship.to_dict(), dict)
+
+
+
 '''
  █████  ██████       ██ ██    ██ ███████ ████████
 ██   ██ ██   ██      ██ ██    ██ ██         ██

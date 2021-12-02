@@ -59,6 +59,7 @@ class ScannedElementType:
     SCRAP = 'scrap'
 
 class ScannedElement(TypedDict):
+    id: str
     designator: str
     element_type: str
     thermal_signature: Optional[int]
@@ -325,12 +326,15 @@ class Ship(BaseModel):
             'engine_starting': self.engine_starting,
 
             'scanner_online': self.scanner_online,
+            'scanner_locking': self.scanner_locking,
+            'scanner_locked': self.scanner_locked,
+            'scanner_lock_target': self.scanner_lock_target,
             'scanner_starting': self.scanner_starting,
             'scanner_mode': self.scanner_mode,
             'scanner_radar_range': self.scanner_radar_range,
             'scanner_ir_range': self.scanner_ir_range,
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
-            'scanner_data': self.scanner_data,
+            'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
 
             'visual_range': self.visual_range,

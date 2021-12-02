@@ -9,6 +9,7 @@ export class ScannerDataElement {
     element_type: string
     coord_x: number
     coord_y: number
+    id: string
     designator: string
     visual_shape?: string
     visual_p0?: number[]

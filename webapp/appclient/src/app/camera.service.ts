@@ -296,11 +296,9 @@ export class CameraService {
     }
 
     // Draw other scanner elements
-    const scannerObjKeys: string[] = Object.keys(ship.scanner_data)
     const boundingBoxBuffer = 10
-    for(let i in scannerObjKeys) {
-      const scannerKey: string = scannerObjKeys[i]
-      const scannerData: ScannerDataElement = ship.scanner_data[scannerKey]
+    for(let i in ship.scanner_data) {
+      const scannerData: ScannerDataElement = ship.scanner_data[i]
       if (scannerData.element_type === 'ship') {
         let drawableShip: DrawableShip = {
           isSelf: false,

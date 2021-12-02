@@ -372,6 +372,7 @@ class Game(BaseModel):
 
                 if is_visual or is_scannable:
                     scanner_data: ScannedElement = {
+                        'id': other_id,
                         'designator': self._ships[other_id].scanner_designator,
                         'coord_x': other_coords[0],
                         'coord_y': other_coords[1],
