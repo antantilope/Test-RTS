@@ -26,10 +26,18 @@
         <div *ngIf="_api.frameData.ship.scanner_online">
             <h3>MODE: {{ _api.frameData.ship.scanner_mode.toUpperCase() }}</h3>
 
-            <button (click)="lockSelectUpClick()" class="lock-btn">⬆️</button>
-            <button (click)="lockSelectDownClick()" class="lock-btn">⬇️</button>
-            <button (click)="lockSelectClick()" class="lock-btn">LOCK</button>
-            <button (click)="lockClearSelectClick()" class="lock-btn">CLEAR</button>
+            <ng-container *ngIf="!this._api.frameData.ship.scanner_locking">
+                <button (click)="lockSelectUpClick()" class="lock-btn">⬆️</button>
+                <button (click)="lockSelectDownClick()" class="lock-btn">⬇️</button>
+                <button (click)="lockSelectClick()" class="lock-btn">LOCK</button>
+                <button (click)="lockClearSelectClick()" class="lock-btn">CLEAR</button>
+            </ng-container>
+            <ng-container *ngIf="this._api.frameData.ship.scanner_locking">
+                <button class="lock-btn" disabled>⬆️</button>
+                <button class="lock-btn" disabled>⬇️</button>
+                <button class="lock-btn" disabled>LOCK</button>
+                <button class="lock-btn" disabled>CLEAR</button>
+            </ng-container>
 
             <h4>Targets</h4>
             <table>

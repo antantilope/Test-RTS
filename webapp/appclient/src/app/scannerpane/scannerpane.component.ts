@@ -79,11 +79,20 @@ export class ScannerpaneComponent implements OnInit {
     this.selectionCursor = this._api.frameData.ship.scanner_data[targetIndex].id
   }
 
-  lockSelectClick() {
+  async lockSelectClick() {
     if(this.selectionCursor === null) {
       return
     }
+    const currTargIndex = this._api.frameData.ship.scanner_data.map(se => se.id).indexOf(this.selectionCursor)
+    if(currTargIndex === -1) {
+      return
+    }
+    await this._api.post(
+      "/api/rooms/command",
+      {command: 'set_scanner_lock_target', target: this.selectionCursor},
+    )
   }
+
   lockClearSelectClick() {
     this.selectionCursor = null
   }
