@@ -440,7 +440,7 @@ export class GamedisplayComponent implements OnInit {
 
     // lower right corner
     let lrcYOffset = this._camera.canvasHeight - 30
-    const lrcYInterval = 40
+    let lrcYInterval = 40
     const lrcXOffset = 15
     // Scale Bar
     const barLengthMeters = (
@@ -482,6 +482,37 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.font = '20px Courier New'
     this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
     lrcYOffset -= lrcYInterval
+    // Green alerts
+    lrcYInterval = 25
+    this.ctx.font = 'bold 20px courier new'
+    this.ctx.fillStyle = 'rgb(21, 222, 2, 0.8)'
+    if(this._api.frameData.ship.engine_online) {
+      this.ctx.beginPath()
+      this.ctx.fillText("ENGINE", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
+    if(this._api.frameData.ship.scanner_online) {
+      this.ctx.beginPath()
+      this.ctx.fillText("SCANNER (" + this._api.frameData.ship.scanner_mode + ")", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
+    if(this._api.frameData.ship.reaction_wheel_online) {
+      this.ctx.beginPath()
+      this.ctx.fillText("REACTION WHEEL", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
+    // Red alerts
+    this.ctx.fillStyle = 'rgb(222, 2, 2, 0.8)'
+    if(this._api.frameData.ship.fuel_level < 1200) {
+      this.ctx.beginPath()
+      this.ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
+    if(this._api.frameData.ship.battery_power < 45000) {
+      this.ctx.beginPath()
+      this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
 
     // Resources (TOP LEFT)
     const tlcYInterval = 34
