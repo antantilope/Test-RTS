@@ -36,6 +36,7 @@ class ShipCommands:
     DEACTIVATE_SCANNER = 'deactivate_scanner'
     SET_SCANNER_MODE_RADAR = 'set_scanner_mode_radar'
     SET_SCANNER_MODE_IR = 'set_scanner_mode_ir'
+    SET_SCANNER_LOCK_TARGET = 'set_scanner_lock_target'
 
     ACTIVATE_AUTO_PILOT = 'activate_autopilot'
     DEACTIVATE_AUTO_PILOT = 'deactivate_autopilot'
@@ -716,6 +717,8 @@ class Ship(BaseModel):
             self.cmd_set_scanner_mode_radar()
         elif command == ShipCommands.SET_SCANNER_MODE_IR:
             self.cmd_set_scanner_mode_ir()
+        elif command == ShipCommands.SET_SCANNER_LOCK_TARGET:
+            self.cmd_set_scanner_lock_target(args[0])
         else:
             raise ShipCommandError("NotImplementedError")
 
