@@ -402,19 +402,19 @@ export class GamedisplayComponent implements OnInit {
           const dy = drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1
           const chLen = 6
           this.ctx.beginPath()
-          this.ctx.moveTo(midX, midY - dy / 2)
+          this.ctx.moveTo(midX, midY - dy / 2 + chLen)
           this.ctx.lineTo(midX,  midY - dy / 2 - chLen)
           this.ctx.stroke()
           this.ctx.beginPath()
-          this.ctx.moveTo(midX - dx / 2, midY)
+          this.ctx.moveTo(midX - dx / 2 + chLen, midY)
           this.ctx.lineTo(midX - dx / 2 - chLen, midY)
           this.ctx.stroke()
           this.ctx.beginPath()
-          this.ctx.moveTo(midX + dx / 2, midY)
+          this.ctx.moveTo(midX + dx / 2 - chLen, midY)
           this.ctx.lineTo(midX + dx / 2 + chLen, midY)
           this.ctx.stroke()
           this.ctx.beginPath()
-          this.ctx.moveTo(midX, midY + dy / 2)
+          this.ctx.moveTo(midX, midY + dy / 2 - chLen)
           this.ctx.lineTo(midX,  midY + dy / 2 + chLen)
           this.ctx.stroke()
         }
