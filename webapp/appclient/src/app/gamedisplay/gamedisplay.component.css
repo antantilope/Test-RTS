@@ -76,3 +76,12 @@
 .btn-gap-bottom {
     margin-bottom: 8px;
 }
+
+
+.scanner-ctrl-btn {
+    width: 100%;
+    font-size:115%;
+    color: #1b003f;
+    font-weight: bold;
+    border-radius: 4px;
+}

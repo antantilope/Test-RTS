@@ -26,16 +26,6 @@
                     💠🎥
                 </button>
             </div>
-            <div class="btn-gap">
-                <button class="sidebar-btn yellow-btn" (click)="_pane.openScannerPane()" title="Scanner">
-                    🪟📡
-                </button>
-            </div>
-            <div>
-                <button class="sidebar-btn yellow-btn" title="Technology">
-                    🪟🛠️
-                </button>
-            </div>
         </div>
         <div #graphicsCanvasContainer id="canvas-container" class="game-display-container">
             <canvas #graphicsCanvas id="graphics-2d-canvas">
@@ -173,7 +163,7 @@
 
         <div class=command-bar-column>
             <div class="command-bar-column-header">
-                <span class="fake-link" (click)="_pane.openScannerPane()">SCANNER</span>
+                SCANNER
             </div>
             <div style="display:flex;">
                 <div>
@@ -254,6 +244,23 @@
                         </button>
                     </div>
                 </div>
+                <div style="margin-left:5px;">
+                    <!-- Scanner Sub Column 3 -->
+                    <div>
+                        <button class="scanner-ctrl-btn" (click)="btnClickScannerCursorUp()" [disabled]="_api.frameData.ship.scanner_locking">
+                            ⬆️
+                        </button>
+                    </div>
+                    <div>
+                        <button class="scanner-ctrl-btn" (click)="btnClickScannerCursorDown()" [disabled]="_api.frameData.ship.scanner_locking">
+                            ⬇️
+                        </button>
+                    </div>
+                    <div>
+                        <button class="scanner-ctrl-btn" (click)="btnClickScannerCursorLock()" [disabled]="_api.frameData.ship.scanner_locking">
+                            lock
+                        </button>
+                    </div>
             </div>
         </div>
 

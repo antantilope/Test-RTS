@@ -855,6 +855,7 @@ class Ship(BaseModel):
         if target_id not in self.scanner_data:
             return
         self.scanner_locking = True
+        self.scanner_locked = False
         self.scanner_locking_power_used = 0
         self.scanner_lock_target = target_id
 
