@@ -26,6 +26,8 @@ import {
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
 import { PointCoord } from '../models/point-coord.model'
+import { stderr } from 'process'
+import { NullVisitor } from '@angular/compiler/src/render3/r3_ast'
 
 
 
@@ -58,6 +60,9 @@ export class GamedisplayComponent implements OnInit {
   public enableScannerModeRadarBtn = false
   public enableScannerModeIRBtn = false
 
+  public scannerTargetIDCursor: string | null = null
+
+
   private ctx: any | null = null
 
   /* Props to track the user's mouse */
@@ -76,7 +81,7 @@ export class GamedisplayComponent implements OnInit {
   private drawableObjects: DrawableCanvasItems | null = null
 
   constructor(
-    private _api: ApiService,
+    public _api: ApiService,
     public _camera: CameraService,
     private _formatting: FormattingService,
     public _user: UserService,
@@ -260,6 +265,9 @@ export class GamedisplayComponent implements OnInit {
         this._api.frameData.ship.coord_y,
       )
     }
+    else if (camMode === CAMERA_MODE_SCANNER) {
+      this._camera.setCameraPositionAndZoomForScannerMode()
+    }
 
 
     const visibleRangeCanvasPXRadius = Math.round(
@@ -353,9 +361,11 @@ export class GamedisplayComponent implements OnInit {
       }
 
       if(drawableShip.canvasBoundingBox) {
+        const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
+        const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
-        this.ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
-        this.ctx.lineWidth = 2
+        this.ctx.strokeStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
+        this.ctx.lineWidth = cursorOnShip ? 5 : 2
         this.ctx.rect(
           drawableShip.canvasBoundingBox.x1,
           drawableShip.canvasBoundingBox.y1,
@@ -369,11 +379,11 @@ export class GamedisplayComponent implements OnInit {
         const bbYInterval = 20
         this.ctx.beginPath()
         this.ctx.font = 'bold 18px Courier New'
-        this.ctx.fillStyle = 'rgb(255, 0, 0, 0.85)'
+        this.ctx.fillStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
         this.ctx.textAlign = 'left'
-        this.ctx.fillText(drawableShip.designator, bbXOffset, bbYOffset)
+        let desigPrefix = cursorOnShip ? "👉" : ""
+        this.ctx.fillText(desigPrefix + drawableShip.designator, bbXOffset, bbYOffset)
         bbYOffset += bbYInterval
-
         if(drawableShip.distance) {
           this.ctx.beginPath()
           this.ctx.fillText("DIST: " + drawableShip.distance + " M", bbXOffset, bbYOffset)
@@ -384,6 +394,30 @@ export class GamedisplayComponent implements OnInit {
           this.ctx.fillText("BEAR: " + drawableShip.relativeHeading + "°", bbXOffset, bbYOffset)
           bbYOffset += bbYInterval
         }
+        if(shipIsLocked) {
+          this.ctx.beginPath()
+          const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
+          const midY  = (drawableShip.canvasBoundingBox.y2 + drawableShip.canvasBoundingBox.y1) / 2
+          const dx = drawableShip.canvasBoundingBox.x2 - drawableShip.canvasBoundingBox.x1
+          const dy = drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1
+          const chLen = 6
+          this.ctx.beginPath()
+          this.ctx.moveTo(midX, midY - dy / 2 + chLen)
+          this.ctx.lineTo(midX,  midY - dy / 2 - chLen)
+          this.ctx.stroke()
+          this.ctx.beginPath()
+          this.ctx.moveTo(midX - dx / 2 + chLen, midY)
+          this.ctx.lineTo(midX - dx / 2 - chLen, midY)
+          this.ctx.stroke()
+          this.ctx.beginPath()
+          this.ctx.moveTo(midX + dx / 2 - chLen, midY)
+          this.ctx.lineTo(midX + dx / 2 + chLen, midY)
+          this.ctx.stroke()
+          this.ctx.beginPath()
+          this.ctx.moveTo(midX, midY + dy / 2 - chLen)
+          this.ctx.lineTo(midX,  midY + dy / 2 + chLen)
+          this.ctx.stroke()
+        }
       }
 
 
@@ -392,16 +426,16 @@ export class GamedisplayComponent implements OnInit {
     // Reaction Wheel overlay
     const reactionWheelOverlay: DrawableReactionWheelOverlay | undefined = drawableObjects.reactionWheelOverlay
     if(typeof reactionWheelOverlay !== "undefined") {
-      this.ctx.beginPath()
       this.ctx.strokeStyle = "rgb(43, 255, 0, 0.6)"
       this.ctx.lineWidth = 1
-      this.ctx.arc(
-        reactionWheelOverlay.centerCanvasCoord.x,
-        reactionWheelOverlay.centerCanvasCoord.y,
-        reactionWheelOverlay.radiusPx,
-        0,
-        2 * Math.PI);
-      this.ctx.stroke();
+      // this.ctx.beginPath()
+      // this.ctx.arc(
+      //   reactionWheelOverlay.centerCanvasCoord.x,
+      //   reactionWheelOverlay.centerCanvasCoord.y,
+      //   reactionWheelOverlay.radiusPx,
+      //   0,
+      //   2 * Math.PI);
+      // this.ctx.stroke();
 
       this.ctx.beginPath()
       this.ctx.moveTo(reactionWheelOverlay.compassPoint0.x, reactionWheelOverlay.compassPoint0.y)
@@ -493,7 +527,7 @@ export class GamedisplayComponent implements OnInit {
     }
     if(this._api.frameData.ship.scanner_online) {
       this.ctx.beginPath()
-      this.ctx.fillText("SCANNER (" + this._api.frameData.ship.scanner_mode + ")", lrcXOffset, lrcYOffset)
+      this.ctx.fillText("SCANNER" + (this._api.frameData.ship.scanner_locked ? " LOCK" : "") + " (" + this._api.frameData.ship.scanner_mode + ")", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
     if(this._api.frameData.ship.reaction_wheel_online) {
@@ -761,6 +795,80 @@ export class GamedisplayComponent implements OnInit {
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_scanner'},
+    )
+  }
+
+
+  btnClickScannerCursorUp() {
+    if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
+      this.scannerTargetIDCursor = null
+      return
+    }
+    if(!this._api.frameData.ship.scanner_data.length) {
+      this.scannerTargetIDCursor = null
+      return
+    }
+    if(this.scannerTargetIDCursor === null) {
+      this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
+    }
+    else {
+      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this.scannerTargetIDCursor)
+      if(currentIndex === -1) {
+        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
+      }
+      else {
+        const targetIndex = currentIndex === 0 ? this._api.frameData.ship.scanner_data.length - 1 : currentIndex - 1
+        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+      }
+    }
+  }
+
+  btnClickScannerCursorDown() {
+    if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
+      this.scannerTargetIDCursor = null
+      return
+    }
+    if(!this._api.frameData.ship.scanner_data.length) {
+      this.scannerTargetIDCursor = null
+      return
+    }
+    if(this.scannerTargetIDCursor === null) {
+      this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+    }
+    else {
+      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this.scannerTargetIDCursor)
+      if(currentIndex === -1) {
+        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+      }
+      else {
+        const targetIndex = currentIndex === this._api.frameData.ship.scanner_data.length - 1 ? 0 : currentIndex + 1
+        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+      }
+    }
+  }
+
+  async btnClickScannerCursorLock () {
+    if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
+      this.scannerTargetIDCursor = null
+      return
+    }
+    const targetIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this.scannerTargetIDCursor)
+    if(targetIndex === -1) {
+      this.scannerTargetIDCursor = null
+      return
+    }
+    if(this.scannerTargetIDCursor === null) {
+      return
+    }
+    if(this._api.frameData.ship.scanner_locking) {
+      return
+    }
+    if(this._api.frameData.ship.scanner_locked && this.scannerTargetIDCursor === this._api.frameData.ship.scanner_lock_target) {
+      return
+    }
+    await this._api.post(
+      "/api/rooms/command",
+      {command: 'set_scanner_lock_target', target: this.scannerTargetIDCursor},
     )
   }
 

@@ -31,6 +31,7 @@ export class ScannerDataElement {
 
 export class DrawableShip {
     isSelf: boolean
+    shipId: string
     canvasCoordCenter: PointCoord
     designator: string
     canvasCoordP0?: PointCoord

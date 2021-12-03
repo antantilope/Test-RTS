@@ -105,16 +105,29 @@ export class CameraService {
   }
 
   public getMode(): string {
-    return this.mode;
+    return this.mode
   }
   public setModeShip(): void {
     this.mode = CAMERA_MODE_SHIP
+    this.setZoomToNearestLevel()
   }
   public setModeScanner(): void {
     this.mode = CAMERA_MODE_SCANNER
   }
   public setModeFree(): void {
     this.mode = CAMERA_MODE_FREE
+    this.setZoomToNearestLevel()
+  }
+  public setZoomToNearestLevel(): void {
+    for(let i in this.zoomLevels) {
+      if(this.zoom <= this.zoomLevels[i]) {
+        this.zoom = this.zoomLevels[i]
+        this.zoomIndex = parseInt(i)
+        return
+      }
+    }
+    this.zoom = this.zoomLevels[this.finalZoomIndex]
+    this.zoomIndex = this.finalZoomIndex
   }
 
   private getCameraMapBoxCoords(): BoxCoords {
@@ -198,6 +211,10 @@ export class CameraService {
     }
   }
 
+  public setCameraPositionAndZoomForScannerMode() {
+
+  }
+
   public getDrawableCanvasObjects(): DrawableCanvasItems {
     /* Get objects to draw on the canvas.
         All coordinate points returned by the function are CANVAS coordinates.
@@ -255,6 +272,7 @@ export class CameraService {
         canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
         engineLit: ship.engine_lit,
         fillColor: "#919191",
+        shipId: ship.id,
       })
 
       if(ship.reaction_wheel_online) {
@@ -302,6 +320,7 @@ export class CameraService {
       if (scannerData.element_type === 'ship') {
         let drawableShip: DrawableShip = {
           isSelf: false,
+          shipId: scannerData.id,
           canvasCoordCenter: this.mapCoordToCanvasCoord({
             x: scannerData.coord_x,
             y: scannerData.coord_y,
@@ -438,7 +457,6 @@ export class CameraService {
     else {
       throw new Error("Not Implemented")
     }
-
 
   }
 
