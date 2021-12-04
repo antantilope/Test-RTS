@@ -207,6 +207,8 @@ class Ship(BaseModel):
         self.ebeam_charging = False
         self.ebeam_firing = False
         self.ebeam_charge_power_draw_multiple = None
+        self.ebeam_discharge_rate_per_second = None
+        self.ebeam_charge_fire_minimum = None
 
         self.autopilot_program = None
 
@@ -443,6 +445,8 @@ class Ship(BaseModel):
         instance.ebeam_charge = 0
         instance.ebeam_charge_capacity = constants.EBEAM_CHARGE_CAPACITY
         instance.ebeam_charge_power_draw_multiple = constants.EBEAM_CHARGE_BATTERY_POWER_DRAW_MULTIPLE
+        instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
+        instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
 
         return instance
 
@@ -486,10 +490,6 @@ class Ship(BaseModel):
         if quantity > self.fuel_level:
             raise InsufficientFuelError
         self.fuel_level -= quantity
-
-
-    def calculate_damage(self):
-        pass
 
 
     def adjust_resources(self, fps: int):
@@ -697,10 +697,6 @@ class Ship(BaseModel):
             heading,
             distance_map_units,
         )
-
-
-    def calculate_side_effects(self):
-        pass
 
 
     def get_available_commands(self) -> Generator[str, None, None]:
