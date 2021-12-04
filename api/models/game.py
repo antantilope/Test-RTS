@@ -316,7 +316,7 @@ class Game(BaseModel):
             # Phase 3
             ship.calculate_side_effects()
 
-            delta_thermal = ship.scanner_thermal_signature_delta or (-5 / self._fps)
+            delta_thermal = ship.scanner_thermal_signature_delta - (5 / self._fps)
             ship.scanner_thermal_signature = max(
                 ship.scanner_thermal_signature + delta_thermal,
                 0,
