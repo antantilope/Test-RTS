@@ -534,6 +534,76 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.scanner_lock_target is None
 
 
+    def test_ship_charging_ebeam_uses_resources(self):
+        ''' EBEAM Charge '''
+        self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge = 0
+        self.ship.ebeam_charge_capacity = 10000
+        self.ship.ebeam_firing = False
+        self.ship.ebeam_charging = True
+        self.ship.ebeam_charge_power_draw_multiple = 4
+        self.ship.battery_power = 10000
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 8000
+        assert self.ship.ebeam_charging
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 1000
+        assert self.ship.battery_power == 6000
+        assert self.ship.ebeam_charging
+
+
+    def test_ship_charging_ebeam_is_interrupted_if_not_enogh_battery_power(self):
+        ''' EBEAM Charge '''
+        self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge = 0
+        self.ship.ebeam_charge_capacity = 10000
+        self.ship.ebeam_firing = False
+        self.ship.ebeam_charging = True
+        self.ship.ebeam_charge_power_draw_multiple = 4
+        self.ship.battery_power = 3000
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 1000
+        assert self.ship.ebeam_charging
+
+        self.ship.adjust_resources(fps=fps) # Charging disabled, not enough power
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 1000
+        assert not self.ship.ebeam_charging
+
+
+    def test_ship_charging_ebeam_is_interrupted_if_at_ebeam_charge_capacity(self):
+        ''' EBEAM Charge '''
+        self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge = 0
+        self.ship.ebeam_charge_capacity = 750
+        self.ship.ebeam_firing = False
+        self.ship.ebeam_charging = True
+        self.ship.ebeam_charge_power_draw_multiple = 4
+        self.ship.battery_power = 10000
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 8000
+        assert self.ship.ebeam_charging
+
+        self.ship.adjust_resources(fps=fps) # Charging disabled, at capacity
+        assert self.ship.ebeam_charge == 750
+        assert self.ship.battery_power == 6000
+        assert not self.ship.ebeam_charging
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 750
+        assert self.ship.battery_power == 6000
+        assert not self.ship.ebeam_charging
+
+
 
 '''
  ██████  █████  ██       ██████ ██    ██ ██       █████  ████████ ███████

@@ -305,6 +305,8 @@ class Game(BaseModel):
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
 
+            ship.scanner_thermal_signature_delta = 0
+
             # Phase 0
             ship.calculate_damage()
             # Phase 1
@@ -313,6 +315,12 @@ class Game(BaseModel):
             ship.calculate_physics(self._fps)
             # Phase 3
             ship.calculate_side_effects()
+
+            delta_thermal = ship.scanner_thermal_signature_delta or (-5 / self._fps)
+            ship.scanner_thermal_signature = max(
+                ship.scanner_thermal_signature + delta_thermal,
+                0,
+            )
 
 
         # Phase 3 (again): Top Level side effects

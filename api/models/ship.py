@@ -41,6 +41,10 @@ class ShipCommands:
     ACTIVATE_AUTO_PILOT = 'activate_autopilot'
     DEACTIVATE_AUTO_PILOT = 'deactivate_autopilot'
 
+    CHARGE_EBEAM = 'charge_ebeam'
+    PAUSE_CHARGE_EBEAM = 'pause_charge_ebeam'
+    FIRE_EBEAM = 'fire_ebeam'
+
 class ShipStateKey:
     MASS = 'mass'
 
@@ -187,12 +191,22 @@ class Ship(BaseModel):
         self.scanner_data: Dict[str, ScannedElement] = {}
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
+        self.scanner_thermal_signature_delta = None
         self.anti_radar_coating_level = None
 
         # Ship reaction wheel
         self.activate_reaction_wheel_power_requirement = None
         self.reaction_wheel_power_required_per_second = None
         self.reaction_wheel_online = False
+
+        # Ship Energy Beam
+        self.ebeam_charge_rate_per_second = None
+        self.ebeam_charge_thermal_rate_per_second = None
+        self.ebeam_charge = None
+        self.ebeam_charge_capacity = None
+        self.ebeam_charging = False
+        self.ebeam_firing = False
+        self.ebeam_charge_power_draw_multiple = None
 
         self.autopilot_program = None
 
@@ -421,7 +435,14 @@ class Ship(BaseModel):
         instance.scanner_get_lock_power_requirement_total = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_TOTAL
         instance.scanner_get_lock_power_requirement_per_second = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_PER_SECOND
         instance.scanner_thermal_signature = 0
+        instance.scanner_thermal_signature_delta = 0
         instance.anti_radar_coating_level = 0
+
+        instance.ebeam_charge_rate_per_second = constants.EBEAM_CHARGE_RATE_PER_SECOND
+        instance.ebeam_charge_thermal_rate_per_second = constants.EBEAM_CHARGE_THERMAL_RATE_PER_SECOND
+        instance.ebeam_charge = 0
+        instance.ebeam_charge_capacity = constants.EBEAM_CHARGE_CAPACITY
+        instance.ebeam_charge_power_draw_multiple = constants.EBEAM_CHARGE_BATTERY_POWER_DRAW_MULTIPLE
 
         return instance
 
@@ -472,6 +493,24 @@ class Ship(BaseModel):
 
 
     def adjust_resources(self, fps: int):
+
+        ''' ENERGY BEAM '''
+        if self.ebeam_charging:
+            adj = max(1, round(self.ebeam_charge_rate_per_second / fps))
+            try:
+                self.use_battery_power(round(adj * self.ebeam_charge_power_draw_multiple))
+            except InsufficientPowerError:
+                self.ebeam_charging = False
+            else:
+                self.ebeam_charge = min(
+                    self.ebeam_charge + adj,
+                    self.ebeam_charge_capacity,
+                )
+                self.scanner_thermal_signature_delta += (self.ebeam_charge_thermal_rate_per_second / fps)
+            if self.ebeam_charge >= self.ebeam_charge_capacity:
+                self.ebeam_charging = False
+
+
         ''' REACTION WHEEL '''
         if self.reaction_wheel_online:
             try:
@@ -713,6 +752,7 @@ class Ship(BaseModel):
             self.cmd_light_engine()
         elif command == ShipCommands.UNLIGHT_ENGINE:
             self.cmd_unlight_engine()
+
         elif command == ShipCommands.ACTIVATE_SCANNER:
             self.cmd_activate_scanner()
         elif command == ShipCommands.DEACTIVATE_SCANNER:
@@ -723,6 +763,14 @@ class Ship(BaseModel):
             self.cmd_set_scanner_mode_ir()
         elif command == ShipCommands.SET_SCANNER_LOCK_TARGET:
             self.cmd_set_scanner_lock_target(args[0])
+
+        elif command == ShipCommands.CHARGE_EBEAM:
+            self.cmd_charge_ebeam()
+        elif command == ShipCommands.PAUSE_CHARGE_EBEAM:
+            self.cmd_pause_charge_ebeam()
+        elif command == ShipCommands.FIRE_EBEAM:
+            self.cmd_fire_ebeam()
+
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -859,4 +907,18 @@ class Ship(BaseModel):
         self.scanner_locking_power_used = 0
         self.scanner_lock_target = target_id
 
+    def cmd_charge_ebeam(self):
+        if not self.ebeam_charging:
+            self.ebeam_charging = True
 
+    def cmd_pause_charge_ebeam(self):
+        if self.ebeam_charging:
+            self.ebeam_charging = False
+
+    def cmd_fire_ebeam(self):
+        if self.ebeam_charging:
+            self.ebeam_charging = False
+        if self.ebeam_firing:
+            return
+        if self.ebeam_charge > 0:
+            self.ebeam_firing = True
