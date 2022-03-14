@@ -709,7 +709,7 @@ class Ship(BaseModel):
             distance_map_units,
         )
 
-    def use_ebeam_charge(self, fps: int) -> None:
+    def use_ebeam_charge(self, fps: int) -> bool:
         if not self.ebeam_firing:
             return
         delta_ebeam_charge = self.ebeam_discharge_rate_per_second / fps
@@ -717,6 +717,10 @@ class Ship(BaseModel):
             0,
             round(self.ebeam_charge - delta_ebeam_charge),
         )
+        success = self.ebeam_charge >= self.ebeam_charge_fire_minimum
+        if not success:
+            self.ebeam_firing = False
+        return success
 
 
     def get_available_commands(self) -> Generator[str, None, None]:

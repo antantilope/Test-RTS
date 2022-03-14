@@ -70,22 +70,26 @@ def degrees_to_general_direction(degree: int) -> str:
 
 
 def heading_to_rise_over_run_slope(degrees: int) -> float:
-    try:
-        return round(1 / math.tan(degrees_to_radians(degrees)), 5)
-    except ZeroDivisionError:
-        return 0.0
+    # This does not handle cardinal headings: N/S/E/W AKA 0, 90, 180, 270, 360 etc..
+    # It will raise a zero divizion error if you do.
+    return round(1 / math.tan(degrees_to_radians(degrees)), 5)
+
 
 def hitboxes_intercept_ray_factory(
-    point: Tuple,
+    point: Tuple[int],
     heading: int,
-    map_dims: Optional[Tuple] = None,
-) -> Callable:
+    map_dims: Tuple[int],
+) -> Tuple:
     """ params
             point: a location on a grid
             heading: a direction (as degrees)
-        return
-            a function that when called will check if an array of hitbox lines falls on the ray.
+        returna tuple with
+            0) function that when called will check if an array of hitbox lines falls on the ray.
+            1) the point where the ray intercepts with the map's boundary
     """
+    # point where the ray intercepts with the map's boundary.
+    ray_point_b: Tuple[int]
+
     # Cardinal heading factory
     heading_is_cardinal = degree_is_cardinal(heading)
     if heading_is_cardinal:
@@ -133,15 +137,24 @@ def hitboxes_intercept_ray_factory(
             else:
                 raise NotImplementedError
 
-        return inner_is_cardinal
+        if heading == DEGREES_NORTH:
+            ray_point_b = (point[0], map_dims[1])
+        elif heading == DEGREES_EAST:
+            ray_point_b = (map_dims[0], point[1])
+        elif heading == DEGREES_SOUTH:
+            ray_point_b = (point[0], 0)
+        elif heading == DEGREES_WEST:
+            ray_point_b = (0, point[1])
+        else:
+            raise NotImplementedError
+
+        return inner_is_cardinal, ray_point_b
 
     # Non-Cardinal heading factory
-    if not map_dims:
-        raise Exception("Map dimentions required")
-    # Upfront calculations.
     ror_slope = heading_to_rise_over_run_slope(heading)
     general_direction = degrees_to_general_direction(heading)
-    ray_point_b: Tuple[int]
+    minmax_x = lambda v: max(0, min(v, map_dims[0]))
+    minmax_y = lambda v: max(0, min(v, map_dims[1]))
     if general_direction == GENERAL_DIRECTION.north_east_ish:
         ray_point_b = (
             # X
@@ -215,7 +228,7 @@ def hitboxes_intercept_ray_factory(
                     for hbl in hitbox_lines
                 )
 
-    return inner_is_not_cardinal
+    return inner_is_not_cardinal, ray_point_b
 
 
 def translate_point(point: Tuple, degrees: int, distance_map_units: int) -> Tuple:

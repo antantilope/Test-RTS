@@ -324,11 +324,12 @@ class Game(BaseModel):
         for command in request['commands']:
             self._process_ship_command(command)
 
-        # Weapons
+        # Weapons and Damage
         for ship_id, ship in self._ships.items():
             if ship.ebeam_firing:
-                ship.use_ebeam_charge()
-                line, hit = self.get_ebeam_line_and_hit(ship)
+                success = ship.use_ebeam_charge()
+                if success:
+                    line, hits = self.get_ebeam_line_and_hit(ship)
 
 
         self.incr_game_frame(self._fps)
@@ -340,7 +341,17 @@ class Game(BaseModel):
         p1_x, p1_y = ship.map_p1
         pm_x = round(p0_x + p1_x) / 2
         pm_y = round(p0_y + p1_y) / 2
-        intercept_calculator = utils2d.hitboxes_intercept_ray_factory((pm_x, pm_y), ship.heading)
+        intercept_calculator, ray_point_b = utils2d.hitboxes_intercept_ray_factory(
+            (pm_x, pm_y),
+            ship.heading,
+        )
+        hits = []
+        for other_id, other_ship in self._ships.items():
+            if other_id == ship.id:
+                continue
+            if intercept_calculator(other_ship.hitbox_lines):
+                hits.append(other_id)
+
 
 
 
