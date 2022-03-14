@@ -2076,3 +2076,64 @@ class TestShipCMDActivateDeactivateLightEngine(TestCase):
         self.ship.cmd_unlight_engine()
         assert self.ship.engine_online
         assert not self.ship.engine_lit
+
+
+""" ADVANCE DAMAGE PROPERTIES
+"""
+
+class TestShipAdvanceDamageProperties(TestCase):
+    def setUp(self) -> None:
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship._seconds_to_explode = 2
+        self.ship._seconds_to_aflame = 2
+
+    def test_an_undead_ship_does_not_change(self):
+        self.ship.died_on_frame = None
+        for i in range(10):
+            self.ship.advance_damage_properties(i+1, 1)
+        assert self.ship.died_on_frame is None
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+
+    def test_an_dead_ship_catches_fire_and_explodes(self):
+        self.ship.died_on_frame = 1
+        fps = 1
+        self.ship.advance_damage_properties(1, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(2, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(3, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+
+        self.ship.advance_damage_properties(4, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame == 4 # Catch fire
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(5, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame == 4
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(6, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame == 4
+        assert self.ship.explosion_frame is None
+
+        self.ship.advance_damage_properties(7, fps) # Boom
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame == 1
+        self.ship.advance_damage_properties(8, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame == 2
+        self.ship.advance_damage_properties(9, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame == 3

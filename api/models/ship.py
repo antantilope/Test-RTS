@@ -723,16 +723,13 @@ class Ship(BaseModel):
 
     def use_ebeam_charge(self, fps: int) -> bool:
         if not self.ebeam_firing:
-            return
+            return False
         delta_ebeam_charge = self.ebeam_discharge_rate_per_second / fps
-        self.ebeam_charge = max(
-            0,
-            round(self.ebeam_charge - delta_ebeam_charge),
-        )
-        success = self.ebeam_charge >= self.ebeam_charge_fire_minimum
-        if not success:
+        if delta_ebeam_charge > self.ebeam_charge:
             self.ebeam_firing = False
-        return success
+            return False
+        self.ebeam_charge = round(self.ebeam_charge - delta_ebeam_charge)
+        return True
 
     def advance_damage_properties(self, game_frame: int, fps: int) -> None:
         if self.died_on_frame is None:
@@ -758,7 +755,13 @@ class Ship(BaseModel):
                 self.explosion_point = self.coords
                 self.aflame_since_frame = None
 
-
+    def advance_thermal_signature(self, fps: int) -> None:
+        self.scanner_thermal_signature_delta = 0
+        delta_thermal = self.scanner_thermal_signature_delta - (5 / fps)
+        self.scanner_thermal_signature = max(
+            self.scanner_thermal_signature + delta_thermal,
+            0,
+        )
 
     def get_available_commands(self) -> Generator[str, None, None]:
         # Reaction Wheel
