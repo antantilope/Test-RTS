@@ -69,6 +69,11 @@ class RunFrameDetails(TypedDict):
     commands: List[FrameCommand]
 
 
+class EBeamRayDetails(TypedDict):
+    start_point: Tuple[int]
+    end_point: Tuple[int]
+    color: str
+
 class Game(BaseModel):
 
     BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players', 'map_config',)
@@ -80,6 +85,7 @@ class Game(BaseModel):
 
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
+        self._ebeam_rays: List[EBeamRayDetails] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
 
@@ -301,6 +307,7 @@ class Game(BaseModel):
             self.logger.warn("FPS set to 0, artificially adjusting to 1")
             self._fps = 1
 
+        # Adjust physics, resources, and resource side effects
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
 
@@ -324,12 +331,7 @@ class Game(BaseModel):
         for command in request['commands']:
             self._process_ship_command(command)
 
-        # Weapons and Damage
-        for ship_id, ship in self._ships.items():
-            if ship.ebeam_firing:
-                success = ship.use_ebeam_charge()
-                if success:
-                    line, hits = self.get_ebeam_line_and_hit(ship)
+        self.calculate_weapons_and_damage()
 
 
         self.incr_game_frame(self._fps)
@@ -345,15 +347,18 @@ class Game(BaseModel):
             (pm_x, pm_y),
             ship.heading,
         )
+        line = (
+            (pm_x, pm_y),
+            ray_point_b,
+        )
         hits = []
         for other_id, other_ship in self._ships.items():
-            if other_id == ship.id:
+            if other_id == ship.id or other_ship.died_on_frame:
                 continue
             if intercept_calculator(other_ship.hitbox_lines):
                 hits.append(other_id)
 
-
-
+        return line, hits
 
 
     def update_scanner_states(self):
@@ -448,6 +453,29 @@ class Game(BaseModel):
                 elif self._ships[ship_id].scanner_locked:
                     self._ships[ship_id].scanner_lock_target = None
                     self._ships[ship_id].scanner_locked = False
+
+
+    def calculate_weapons_and_damage(self):
+        # Weapons and Damage
+        self._ebeam_rays.clear()
+        for ship_id, ship in self._ships.items():
+            self._ships[ship_id].advance_damage_properties(
+                self._game_frame,
+                MAX_SERVER_FPS,
+            )
+            if ship.ebeam_firing:
+                success = ship.use_ebeam_charge()
+                if success:
+                    line, hits = self.get_ebeam_line_and_hit(ship)
+                    self._ebeam_rays.append({
+                        "start_point": line[0],
+                        "end_point": line[1],
+                        "color": ship.ebeam_color,
+                    })
+                    for hit_ship_id in hits:
+                        self._ships[hit_ship_id].died_on_frame = self._game_frame
+
+
 
 
     def _process_ship_command(self, command: FrameCommand):

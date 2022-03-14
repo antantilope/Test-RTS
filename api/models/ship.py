@@ -1,4 +1,5 @@
 
+import random
 import datetime as dt
 from decimal import Decimal
 from typing import Tuple, Dict, TypedDict, Optional, Generator, List
@@ -211,8 +212,18 @@ class Ship(BaseModel):
         self.ebeam_charge_power_draw_multiple = None
         self.ebeam_discharge_rate_per_second = None
         self.ebeam_charge_fire_minimum = None
+        self.ebeam_color = None
 
         self.autopilot_program = None
+
+        # Damage
+        self.died_on_frame = None
+        self.aflame_since_frame = None
+        self._seconds_to_aflame = random.randint(0, 4)
+        self.explosion_frame = None
+        self.explosion_point = None
+        self._seconds_to_explode = random.randint(2, 7)
+
 
         # Arbitrary ship state data
         self._state = {}
@@ -458,6 +469,7 @@ class Ship(BaseModel):
         instance.ebeam_charge_power_draw_multiple = constants.EBEAM_CHARGE_BATTERY_POWER_DRAW_MULTIPLE
         instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
+        instance.ebeam_color = constants.EBEAM_COLOR_STARTING
 
         return instance
 
@@ -722,6 +734,31 @@ class Ship(BaseModel):
             self.ebeam_firing = False
         return success
 
+    def advance_damage_properties(self, game_frame: int, fps: int) -> None:
+        if self.died_on_frame is None:
+            return
+
+        if self.explosion_frame:
+            # Ship is exploding, advance explosion frame
+            self.explosion_frame += 1
+            if self.explosion_frame > 800 * fps:
+                self.explosion_frame = None
+
+        elif self.aflame_since_frame is None:
+            # Ship not aflame yet
+            seconds_since =  (game_frame - self.died_on_frame) / fps
+            if seconds_since > self._seconds_to_aflame:
+                self.aflame_since_frame = game_frame
+
+        elif self.aflame_since_frame:
+            # ship is onfire and it's going to explode
+            seconds_aflame = (game_frame - self.aflame_since_frame) / fps
+            if seconds_aflame > self._seconds_to_explode:
+                self.explosion_frame = 1
+                self.explosion_point = self.coords
+                self.aflame_since_frame = None
+
+
 
     def get_available_commands(self) -> Generator[str, None, None]:
         # Reaction Wheel
@@ -756,6 +793,9 @@ class Ship(BaseModel):
 
 
     def process_command(self, command: str, *args, **kwargs):
+        if self.died_on_frame:
+            return
+
         if command == ShipCommands.SET_HEADING:
             return self.cmd_set_heading(args[0])
 
