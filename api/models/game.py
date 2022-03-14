@@ -340,7 +340,7 @@ class Game(BaseModel):
         p1_x, p1_y = ship.map_p1
         pm_x = round(p0_x + p1_x) / 2
         pm_y = round(p0_y + p1_y) / 2
-        ship_on_line = utils2d.hitboxes_intercept_ray_factory((pm_x, pm_y), ship.heading)
+        intercept_calculator = utils2d.hitboxes_intercept_ray_factory((pm_x, pm_y), ship.heading)
 
 
 
