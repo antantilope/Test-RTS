@@ -71,6 +71,11 @@ DEGREES_SOUTH_EAST = DEGREES_EAST + 45
 DEGREES_SOUTH_WEST = DEGREES_SOUTH + 45
 DEGREES_NORTH_WEST = DEGREES_WEST + 45
 
+class GENERAL_DIRECTION:
+    north_east_ish = "ne-ish"
+    south_east_ish = "se-ish"
+    south_west_ish = "sw-ish"
+    north_west_ish = "nw-ish"
 
 PIXEL_BLACK = 0
 PIXEL_WHITE = 255

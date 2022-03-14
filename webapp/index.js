@@ -103,7 +103,7 @@ expressApp.use(helmet({
 
 /* Socket.IO connection handler.
 */
-io.on('connection', (socket) => handleSocketConnection(io, socket));
+io.on('connection', async (socket) => handleSocketConnection(io, socket));
 
 
 /*

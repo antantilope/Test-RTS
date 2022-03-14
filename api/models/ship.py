@@ -82,6 +82,8 @@ class ScannedElement(TypedDict):
     visual_p3: Optional[Tuple[int]]  #
     visual_polygon_points: Optional[List[Tuple]]
     visual_engine_lit: Optional[bool] #
+    visual_ebeam_charging: Optional[bool] #
+    visual_ebeam_firing: Optional[bool] #
 
 
 class TimerItem(TypedDict):
@@ -261,6 +263,15 @@ class Ship(BaseModel):
         return (
             self.coord_x + self.rel_rot_coord_3[0],
             self.coord_y + self.rel_rot_coord_3[1],
+        )
+
+    @property
+    def hitbox_lines(self) -> Tuple[Tuple[Tuple]]:
+        return (
+            (self.map_p0, self.map_p1,),
+            (self.map_p1, self.map_p2,),
+            (self.map_p2, self.map_p3,),
+            (self.map_p3, self.map_p0,),
         )
 
     @property
@@ -698,6 +709,15 @@ class Ship(BaseModel):
             distance_map_units,
         )
 
+    def use_ebeam_charge(self, fps: int) -> None:
+        if not self.ebeam_firing:
+            return
+        delta_ebeam_charge = self.ebeam_discharge_rate_per_second / fps
+        self.ebeam_charge = max(
+            0,
+            round(self.ebeam_charge - delta_ebeam_charge),
+        )
+
 
     def get_available_commands(self) -> Generator[str, None, None]:
         # Reaction Wheel
@@ -916,5 +936,5 @@ class Ship(BaseModel):
             self.ebeam_charging = False
         if self.ebeam_firing:
             return
-        if self.ebeam_charge > 0:
+        if self.ebeam_charge >= self.ebeam_charge_fire_minimum:
             self.ebeam_firing = True

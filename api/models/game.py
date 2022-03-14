@@ -1,7 +1,7 @@
 
 import datetime as dt
 import random
-from typing import TypedDict, Optional, List, Dict, Set
+from typing import Tuple, TypedDict, Optional, List, Dict, Set
 from time import sleep
 import uuid
 import re
@@ -304,11 +304,13 @@ class Game(BaseModel):
         for ship_id, ship in self._ships.items():
             self._ships[ship_id].game_frame = self._game_frame
 
-            ship.scanner_thermal_signature_delta = 0
+            # Reset thermal sig delta for this frame
+            self._ships[ship_id].scanner_thermal_signature_delta = 0
 
             ship.adjust_resources(self._fps)
             ship.calculate_physics(self._fps)
 
+            # calculate ship therm signature by subtracting
             delta_thermal = ship.scanner_thermal_signature_delta - (5 / self._fps)
             ship.scanner_thermal_signature = max(
                 ship.scanner_thermal_signature + delta_thermal,
@@ -322,10 +324,25 @@ class Game(BaseModel):
         for command in request['commands']:
             self._process_ship_command(command)
 
-        # Apply Damage
+        # Weapons
+        for ship_id, ship in self._ships.items():
+            if ship.ebeam_firing:
+                ship.use_ebeam_charge()
+                line, hit = self.get_ebeam_line_and_hit(ship)
 
 
-        self.incr_game_frame()
+        self.incr_game_frame(self._fps)
+
+
+    def get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
+        # gets starting point of EBeam ray
+        p0_x, p0_y = ship.map_p0
+        p1_x, p1_y = ship.map_p1
+        pm_x = round(p0_x + p1_x) / 2
+        pm_y = round(p0_y + p1_y) / 2
+        ship_on_line = utils2d.hitboxes_intercept_ray_factory((pm_x, pm_y), ship.heading)
+
+
 
 
     def update_scanner_states(self):
@@ -353,6 +370,8 @@ class Game(BaseModel):
 
                 is_visual = visual_range >= distance_meters
                 is_scannable = scan_range is not None and scan_range >= distance_meters
+                if not is_scannable and not is_visual:
+                    continue
 
                 scan_only = is_scannable and not is_visual
                 if (
@@ -393,6 +412,8 @@ class Game(BaseModel):
                             'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
                             'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
                             'visual_engine_lit': self._ships[other_id].engine_lit,
+                            'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
+                            'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
                             'visual_fill_color': '#ffffff',
                         })
                     if is_scannable:
