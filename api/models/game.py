@@ -76,7 +76,7 @@ class EBeamRayDetails(TypedDict):
 
 class Game(BaseModel):
 
-    BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players', 'map_config',)
+    BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players',)
 
     def __init__(self):
         super().__init__()
@@ -325,7 +325,7 @@ class Game(BaseModel):
             self.update_scanner_states(ship_id)
             self.calculate_weapons_and_damage(ship_id)
 
-        self.incr_game_frame(self._fps)
+        self.incr_game_frame()
 
 
     def update_scanner_states(self, ship_id: str):
