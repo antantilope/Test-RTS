@@ -7,6 +7,7 @@ from api import constants
 class TestUtils(TestCase):
 
     origin = constants.ORGIN_COORD
+    map_dims = (100, 100,)
 
     def test_heading_to_delta_heading_from_zero(self):
         assert utils2d.heading_to_delta_heading_from_zero(45) == 45
@@ -812,33 +813,33 @@ class TestUtils(TestCase):
 
         # direct hit
         heading = 18
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         # traverse up
         heading = 17
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 16
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 15
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 14
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
         # traverse down
         heading = 20
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 22
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 24
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 26
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
 
     def test_hitboxes_intercept_ray_factory_north_east_ish_ene(self):
@@ -852,27 +853,27 @@ class TestUtils(TestCase):
 
         # direct hit
         heading = 77
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         # traverse up
         heading = 76
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 75
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
         # traverse down
         heading = 78
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 79
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 80
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 81
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
 
     def test_hitboxes_intercept_ray_factory_south_east_ish_ese(self):
@@ -885,24 +886,24 @@ class TestUtils(TestCase):
         start_point = (-25, 32)
         # direct hit
         heading = 105
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         # traverse up
         heading = 104
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 103
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
         # traverse down
         heading = 106
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 107
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 108
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
 
     def test_hitboxes_intercept_ray_factory_south_east_ish_sse(self):
@@ -913,6 +914,99 @@ class TestUtils(TestCase):
             ((8, 23), (10, 21))
         )
         start_point = (5, 50)
+
+        # direct hit
+        heading = 169
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        # traverse up
+        heading = 168
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 166
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 165
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
+        # traverse down
+        heading = 170
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 173
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 174
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
+
+    def test_hitboxes_intercept_ray_factory_south_east_ish_ssw(self):
+        hbls = (
+            ((10, 21), (12, 22),),
+            ((12, 22), (9, 24),),
+            ((9, 24), (8, 23),),
+            ((8, 23), (10, 21))
+        )
+        start_point = (22, 50)
+
+        # direct hit
+        heading = 203
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        # traverse up
+        heading = 201
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 200
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 199
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
+        # traverse down
+        heading = 204
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 207
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 208
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
+
+    def test_hitboxes_intercept_ray_factory_south_east_ish_wsw(self):
+        hbls = (
+            ((10, 21), (12, 22),),
+            ((12, 22), (9, 24),),
+            ((9, 24), (8, 23),),
+            ((8, 23), (10, 21))
+        )
+        start_point = (50, 32)
+
+        # direct hit
+        heading = 257
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        # traverse up
+        heading = 256
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 255
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 254
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
+        # traverse down
+        heading = 256
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 255
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 254
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
 
     def test_hitboxes_intercept_ray_factory_north_west_ish_wnw(self):
         hbls = (
@@ -925,22 +1019,56 @@ class TestUtils(TestCase):
 
         # direct hit
         heading = 288
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         # traverse up
         heading = 290
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 292
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 294
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
         # traverse down
         heading = 286
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is True
         heading = 284
-        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, (100, 100))
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
+
+    def test_hitboxes_intercept_ray_factory_north_west_ish_nnw(self):
+        hbls = (
+            ((10, 21), (12, 22),),
+            ((12, 22), (9, 24),),
+            ((9, 24), (8, 23),),
+            ((8, 23), (10, 21))
+        )
+        start_point = (18, -20)
+
+        # direct hit
+        heading = 349
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        # traverse up
+        heading = 348
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 347
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 346
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is False
+        # traverse down
+        heading = 350
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 351
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
+        assert calculator(hbls) is True
+        heading = 352
+        calculator = utils2d.hitboxes_intercept_ray_factory(start_point, heading, self.map_dims)
         assert calculator(hbls) is False
