@@ -419,9 +419,8 @@ export class GamedisplayComponent implements OnInit {
           )
           this.ctx.fill()
         } else {
-          let smokePuffSize = maxFireBallRadius;
-          let alpha = 1 - (drawableShip.explosionFrame - 76) / 76
-          console.log({alpha})
+          let smokePuffSize = Math.floor(maxFireBallRadius / 1.25);
+          let alpha = (1 - ((drawableShip.explosionFrame - 76) / 75)) / 2
           this.ctx.beginPath()
           this.ctx.fillStyle = `rgb(191, 191, 191, ${alpha})`
           this.ctx.arc(
@@ -435,7 +434,7 @@ export class GamedisplayComponent implements OnInit {
         }
       }
 
-      if(drawableShip.canvasBoundingBox) {
+      if(drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
         const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
         const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
@@ -587,7 +586,7 @@ export class GamedisplayComponent implements OnInit {
     // Scale meters and user handle
     this.ctx.beginPath()
     this.ctx.font = '24px serif'
-    this.ctx.fillStyle = '#ffffff'
+    this.ctx.fillStyle = this._api.frameData.ship.alive ? '#ffffff' : "#ff0000";
     this.ctx.textAlign = 'left'
     this.ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
     lrcYOffset -= lrcYInterval
@@ -636,27 +635,35 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
+    if(!this._api.frameData.ship.alive) {
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 28px courier new'
+      this.ctx.fillText("🪦 YOU DIED IN SPACE", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
 
     // Resources (TOP LEFT)
-    const tlcYInterval = 34
-    let tlcYOffset = 25
-    const tlcXOffset = 15
-    this.ctx.beginPath()
-    this.ctx.font = '24px Courier New'
-    this.ctx.fillStyle = '#fcb8b8'
-    this.ctx.textAlign = 'left'
-    this.ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
-    tlcYOffset += tlcYInterval
+    if(this._api.frameData.ship.alive){
+      const tlcYInterval = 34
+      let tlcYOffset = 25
+      const tlcXOffset = 15
+      this.ctx.beginPath()
+      this.ctx.font = '24px Courier New'
+      this.ctx.fillStyle = '#fcb8b8'
+      this.ctx.textAlign = 'left'
+      this.ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcYInterval
 
-    this.ctx.beginPath()
-    this.ctx.fillStyle = '#fcf9b8'
-    this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
-    tlcYOffset += tlcYInterval
+      this.ctx.beginPath()
+      this.ctx.fillStyle = '#fcf9b8'
+      this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcYInterval
 
-    this.ctx.beginPath()
-    this.ctx.fillStyle = '#ffffff'
-    this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
-    tlcYOffset += tlcYInterval
+      this.ctx.beginPath()
+      this.ctx.fillStyle = '#ffffff'
+      this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcYInterval
+    }
 
     // Timers (BOTTOM RIGHT)
     const brcYInterval = 45

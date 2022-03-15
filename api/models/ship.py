@@ -800,6 +800,9 @@ class Ship(BaseModel):
         )
 
     def get_available_commands(self) -> Generator[str, None, None]:
+        if self.died_on_frame:
+            return # Exist generator
+
         # Reaction Wheel
         if not self.reaction_wheel_online:
             yield ShipCommands.ACTIVATE_REACTION_WHEEL
