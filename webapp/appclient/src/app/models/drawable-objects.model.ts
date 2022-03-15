@@ -38,6 +38,7 @@ export class DrawableShip {
     alive: boolean
     canvasCoordCenter: PointCoord
     designator: string
+    isVisual: boolean
     canvasCoordP0?: PointCoord
     canvasCoordP1?: PointCoord
     canvasCoordP2?: PointCoord

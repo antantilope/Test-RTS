@@ -385,14 +385,14 @@ class Game(BaseModel):
                     'alive': self._ships[other_id].died_on_frame is None,
                     'aflame': self._ships[other_id].aflame_since_frame is not None,
                     'explosion_frame': self._ships[other_id].explosion_frame,
+                    'visual_p0': self._ships[other_id].map_p0,
+                    'visual_p1': self._ships[other_id].map_p1,
+                    'visual_p2': self._ships[other_id].map_p2,
+                    'visual_p3': self._ships[other_id].map_p3,
                 }
                 if is_visual:
                     scanner_data.update({
                         'visual_shape': VisibleElementShapeType.RECT,
-                        'visual_p0': self._ships[other_id].map_p0,
-                        'visual_p1': self._ships[other_id].map_p1,
-                        'visual_p2': self._ships[other_id].map_p2,
-                        'visual_p3': self._ships[other_id].map_p3,
                         'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
                         'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
                         'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,

@@ -73,14 +73,15 @@ class ScannedElement(TypedDict):
     relative_heading: int
     distance: int
 
+    visual_p0: Tuple[int]
+    visual_p1: Tuple[int]
+    visual_p2: Tuple[int]
+    visual_p3: Tuple[int]
+
     visual_fill_color: Optional[str]
     visual_stroke_color: Optional[str]
     visual_shape: Optional[str]     # 'arc' or 'rect'
     visual_radius: Optional[int]    # arc
-    visual_p0: Optional[Tuple[int]] # rect
-    visual_p1: Optional[Tuple[int]] #
-    visual_p2: Optional[Tuple[int]] #
-    visual_p3: Optional[Tuple[int]]  #
     visual_polygon_points: Optional[List[Tuple]]
     visual_engine_lit: Optional[bool] #
     visual_ebeam_charging: Optional[bool] #
@@ -218,8 +219,8 @@ class Ship(BaseModel):
         # Damage
         self.died_on_frame = None
         self.aflame_since_frame = None
-        self._seconds_to_aflame = 4 # random.randint(0, 4)
-        self.explode_immediately = False # random.randint(0, 3) == 1
+        self._seconds_to_aflame = random.randint(0, 4)
+        self.explode_immediately = random.randint(0, 3) == 1
         self.explosion_frame = None
         self.explosion_point = None
         self._seconds_to_explode = random.randint(2, 7)

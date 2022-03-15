@@ -298,7 +298,7 @@ export class GamedisplayComponent implements OnInit {
     for(let i in drawableObjects.ships) {
       const drawableShip: DrawableShip = drawableObjects.ships[i]
 
-      if(drawableShip.canvasCoordP0 && !drawableShip.explosionFrame) {
+      if(drawableShip.isVisual && !drawableShip.explosionFrame) {
         // Ship is within visual range
         this.ctx.beginPath()
         this.ctx.fillStyle = drawableShip.fillColor
@@ -407,6 +407,7 @@ export class GamedisplayComponent implements OnInit {
           )
           this.ctx.fill()
         } else if (drawableShip.explosionFrame < 76) {
+          // Main fireball
           let fbSize = maxFireBallRadius * (randomInt(5, 8) / 7)
           this.ctx.beginPath()
           this.ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(5, 9)})`
@@ -418,11 +419,31 @@ export class GamedisplayComponent implements OnInit {
             2 * Math.PI,
           )
           this.ctx.fill()
+          // Inner sub fireballs
+          const subFireBallsCount = randomInt(2, 4)
+          for(let i=0; i<subFireBallsCount; i++) {
+            let subFBSize = Math.floor(fbSize / randomInt(2, 4))
+            this.ctx.beginPath()
+            this.ctx.fillStyle = `rgb(255, ${randomInt(20, 65)}, 0, 0.${randomInt(7, 9)})`
+            this.ctx.arc(
+              drawableShip.canvasCoordCenter.x + randomInt(-8, 8),
+              drawableShip.canvasCoordCenter.y + randomInt(-8, 8),
+              subFBSize,
+              0,
+              2 * Math.PI,
+            )
+            this.ctx.fill()
+          }
+          // Deris Lines
+          const debrisLineCount = randomInt(0, 6)
+          for(let i=0; i<debrisLineCount; i++) {
+            let angle = randomInt(0, 259)
+          }
         } else {
-          let smokePuffSize = Math.floor(maxFireBallRadius / 1.25);
-          let alpha = (1 - ((drawableShip.explosionFrame - 76) / 75)) / 2
+          let smokePuffSize = Math.floor(maxFireBallRadius / 1.1);
+          let alpha = (1 - ((drawableShip.explosionFrame - 76) / 75)) / 3
           this.ctx.beginPath()
-          this.ctx.fillStyle = `rgb(191, 191, 191, ${alpha})`
+          this.ctx.fillStyle = `rgb(255, 130, 130, ${alpha})`
           this.ctx.arc(
             drawableShip.canvasCoordCenter.x,
             drawableShip.canvasCoordCenter.y,
@@ -637,7 +658,7 @@ export class GamedisplayComponent implements OnInit {
     }
     if(!this._api.frameData.ship.alive) {
       this.ctx.beginPath()
-      this.ctx.font = 'bold 28px courier new'
+      this.ctx.font = 'bold 32px courier new'
       this.ctx.fillText("🪦 YOU DIED IN SPACE", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }

@@ -261,6 +261,7 @@ export class CameraService {
       const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
       drawableItems.ships.push({
         isSelf: true,
+        isVisual: true,
         alive: ship.alive,
         designator: "you",
         canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
@@ -322,6 +323,24 @@ export class CameraService {
     for(let i in ship.scanner_data) {
       const scannerData: ScannerDataElement = ship.scanner_data[i]
       if (scannerData.element_type === 'ship') {
+
+        const canvasCoordP0 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p0[0],
+          y: scannerData.visual_p0[1],
+        }, cameraPosition)
+        const canvasCoordP1 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p1[0],
+          y: scannerData.visual_p1[1],
+        }, cameraPosition)
+        const canvasCoordP2 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p2[0],
+          y: scannerData.visual_p2[1],
+        }, cameraPosition)
+        const canvasCoordP3 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p3[0],
+          y: scannerData.visual_p3[1],
+        }, cameraPosition)
+
         let drawableShip: DrawableShip = {
           isSelf: false,
           alive: scannerData.alive,
@@ -333,26 +352,16 @@ export class CameraService {
             y: scannerData.coord_y,
           }, cameraPosition),
           designator: scannerData.designator,
+          isVisual: false,
+          canvasCoordP0,
+          canvasCoordP1,
+          canvasCoordP2,
+          canvasCoordP3,
         }
         if(scannerData.visual_shape) {
           // Ship is within visual range
 
-          const canvasCoordP0 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p0[0],
-            y: scannerData.visual_p0[1],
-          }, cameraPosition)
-          const canvasCoordP1 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p1[0],
-            y: scannerData.visual_p1[1],
-          }, cameraPosition)
-          const canvasCoordP2 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p2[0],
-            y: scannerData.visual_p2[1],
-          }, cameraPosition)
-          const canvasCoordP3 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p3[0],
-            y: scannerData.visual_p3[1],
-          }, cameraPosition)
+          drawableShip.isVisual = true
 
           const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
             x: scannerData.visual_fin_0_rel_rot_coord_0[0],
@@ -372,10 +381,6 @@ export class CameraService {
           }, cameraPosition)
 
           drawableShip = {
-            canvasCoordP0,
-            canvasCoordP1,
-            canvasCoordP2,
-            canvasCoordP3,
             canvasCoordFin0P0,
             canvasCoordFin0P1,
             canvasCoordFin1P0,
