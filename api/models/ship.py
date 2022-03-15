@@ -223,7 +223,7 @@ class Ship(BaseModel):
         self.explode_immediately = random.randint(0, 3) == 1
         self.explosion_frame = None
         self.explosion_point = None
-        self._seconds_to_explode = random.randint(2, 7)
+        self._seconds_to_explode = random.randint(3, 5)
 
 
         # Arbitrary ship state data

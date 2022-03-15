@@ -22,6 +22,10 @@ export const CAMERA_MODE_FREE = 'free'
 
 const MAX_ZOOM_MANUAL = 10000
 
+const randomInt = function (min: number, max: number): number  {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -482,6 +486,38 @@ export class CameraService {
     }
     else {
       throw new Error("Not Implemented")
+    }
+
+  }
+
+  public getCanvasPointAtLocation(startCanvasCoord: PointCoord, angle: number, canvasDistance: number): PointCoord {
+    // Cardinal directions (edge cases)
+    if(angle == 0) {
+      return {x: startCanvasCoord.x, y: startCanvasCoord.y - canvasDistance}
+    } else if (angle == 90) {
+      return {x: startCanvasCoord.x + canvasDistance, y: startCanvasCoord.y}
+    } else if (angle == 180) {
+      return {x: startCanvasCoord.x, y: startCanvasCoord.y + canvasDistance}
+    } else if (angle == 270) {
+      return {x: startCanvasCoord.x - canvasDistance, y: startCanvasCoord.y}
+    }
+
+    // Non cardinal direction
+    // Position point canvasDistance above origin, then perform point rotation around origin.
+    const ox = startCanvasCoord.x
+    const oy = startCanvasCoord.y
+    const px = startCanvasCoord.x
+    const py = startCanvasCoord.y - canvasDistance
+    const ia = angle * -1
+    const sia = Math.sin(ia)
+    const cia = Math.cos(ia)
+    const dx = px - ox
+    const dy = py - oy
+    const qx = ox + cia * dx - sia * dy
+    const qy = oy + sia * dx + cia * dy
+    return {
+      x: Math.floor(qx),
+      y: Math.floor(qy),
     }
 
   }

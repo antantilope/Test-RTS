@@ -362,20 +362,41 @@ export class GamedisplayComponent implements OnInit {
       }
 
       if(drawableShip.aflame) {
+        const flameRadius = Math.max(4, Math.round(
+          Math.sqrt(
+            (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
+            + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
+          ) / 4
+        ))
         for(let i=0; i<2; i++) {
-          let flameRadius = Math.max(4, Math.round(
-            Math.sqrt(
-              (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
-              + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
-            ) / 4
-          ))
-          flameRadius += randomInt(flameRadius / 4, flameRadius * 3)
+          let tFlameRadius = flameRadius + randomInt(flameRadius / 4, flameRadius * 4)
           this.ctx.beginPath()
           this.ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(2, 7)})`
           this.ctx.arc(
             drawableShip.canvasCoordCenter.x + randomInt(-5, 5),
             drawableShip.canvasCoordCenter.y + randomInt(-5, 5),
-            flameRadius,
+            tFlameRadius,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+        }
+        const sparkCount = randomInt(0, 4)
+        const sparkSize = Math.max(5, flameRadius)
+        for(let i=0; i<sparkCount; i++) {
+          let sparkAngle = randomInt(0, 359)
+          let sparkDistance = flameRadius * randomInt(1, 3)
+          let sparkPoint = this._camera.getCanvasPointAtLocation(
+            drawableShip.canvasCoordCenter,
+            sparkAngle,
+            sparkDistance
+          )
+          this.ctx.beginPath()
+          this.ctx.fillStyle = 'rgb(255, 0, 0, 1)'
+          this.ctx.arc(
+            sparkPoint.x,
+            sparkPoint.y,
+            sparkSize,
             0,
             2 * Math.PI,
           )
@@ -435,9 +456,25 @@ export class GamedisplayComponent implements OnInit {
             this.ctx.fill()
           }
           // Deris Lines
-          const debrisLineCount = randomInt(0, 6)
+          const debrisLineCount = randomInt(-6, 3)
           for(let i=0; i<debrisLineCount; i++) {
-            let angle = randomInt(0, 259)
+            let lineLength = maxFireBallRadius * randomInt(2, 4)
+            let angle = randomInt(0, 359)
+            let linep1 = this._camera.getCanvasPointAtLocation(
+              drawableShip.canvasCoordCenter,
+              angle,
+              randomInt(0, 50),
+            )
+            let linep2 = this._camera.getCanvasPointAtLocation(
+              drawableShip.canvasCoordCenter,
+              angle,
+              lineLength,
+            )
+            this.ctx.beginPath()
+            this.ctx.strokeStyle = "rgb(255, 170, 170, 0.65)"
+            this.ctx.moveTo(linep1.x, linep1.y)
+            this.ctx.lineTo(linep2.x, linep2.y)
+            this.ctx.stroke()
           }
         } else {
           let smokePuffSize = Math.floor(maxFireBallRadius / 1.1);
