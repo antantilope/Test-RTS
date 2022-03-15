@@ -14,6 +14,7 @@ from api.constants import (
     MAX_SERVER_FPS,
     MIN_ELAPSED_TIME_PER_FRAME,
     GAME_START_COUNTDOWN_FROM,
+    FINAL_EXPLOSION_FRAME,
 )
 from api.coord_cache import (
     CoordDistanceCache,
@@ -338,6 +339,9 @@ class Game(BaseModel):
 
         for other_id in (v for v in self._ships if v != ship_id):
 
+            if self._ships[other_id].explosion_frame and self._ships[other_id].explosion_frame > FINAL_EXPLOSION_FRAME:
+                continue
+
             other_coords = self._ships[other_id].coords
             ship_coords = self._ships[ship_id].coords
 
@@ -378,14 +382,17 @@ class Game(BaseModel):
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
                     'element_type': ScannedElementType.SHIP,
+                    'alive': self._ships[other_id].died_on_frame is None,
+                    'aflame': self._ships[other_id].aflame_since_frame is not None,
+                    'explosion_frame': self._ships[other_id].explosion_frame,
+                    'visual_p0': self._ships[other_id].map_p0,
+                    'visual_p1': self._ships[other_id].map_p1,
+                    'visual_p2': self._ships[other_id].map_p2,
+                    'visual_p3': self._ships[other_id].map_p3,
                 }
                 if is_visual:
                     scanner_data.update({
                         'visual_shape': VisibleElementShapeType.RECT,
-                        'visual_p0': self._ships[other_id].map_p0,
-                        'visual_p1': self._ships[other_id].map_p1,
-                        'visual_p2': self._ships[other_id].map_p2,
-                        'visual_p3': self._ships[other_id].map_p3,
                         'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
                         'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
                         'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
@@ -435,7 +442,7 @@ class Game(BaseModel):
                     "color": self._ships[ship_id].ebeam_color,
                 })
                 for hit_ship_id in hits:
-                    self._ships[hit_ship_id].died_on_frame = self._game_frame
+                    self._ships[hit_ship_id].die(self._game_frame)
 
 
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:

@@ -2087,6 +2087,9 @@ class TestShipAdvanceDamageProperties(TestCase):
         self.ship = Ship.spawn(team_id, map_units_per_meter=10)
         self.ship._seconds_to_explode = 2
         self.ship._seconds_to_aflame = 2
+        self.ship.explode_immediately = False
+        self.ship.coord_x = 25
+        self.ship.coord_y = 30
 
     def test_an_undead_ship_does_not_change(self):
         self.ship.died_on_frame = None
@@ -2095,6 +2098,7 @@ class TestShipAdvanceDamageProperties(TestCase):
         assert self.ship.died_on_frame is None
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
+        assert self.ship.explosion_point is None
 
     def test_an_dead_ship_catches_fire_and_explodes(self):
         self.ship.died_on_frame = 1
@@ -2124,11 +2128,13 @@ class TestShipAdvanceDamageProperties(TestCase):
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4
         assert self.ship.explosion_frame is None
+        assert self.ship.explosion_point is None
 
         self.ship.advance_damage_properties(7, fps) # Boom
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 1
+        assert self.ship.explosion_point == (25, 30,)
         self.ship.advance_damage_properties(8, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
@@ -2137,3 +2143,14 @@ class TestShipAdvanceDamageProperties(TestCase):
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 3
+
+    def test_dead_ship_can_explode_immediatly(self):
+        self.ship.explode_immediately = True
+        self.ship.died_on_frame = 1
+        fps = 1
+        assert self.ship.explosion_frame is None
+        assert self.ship.explosion_point is None
+        self.ship.advance_damage_properties(1, fps)
+        assert self.ship.explosion_frame == 1 # Boom
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_point == (25, 30,)

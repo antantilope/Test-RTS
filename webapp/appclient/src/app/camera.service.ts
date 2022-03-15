@@ -22,6 +22,10 @@ export const CAMERA_MODE_FREE = 'free'
 
 const MAX_ZOOM_MANUAL = 10000
 
+const randomInt = function (min: number, max: number): number  {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -261,6 +265,8 @@ export class CameraService {
       const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
       drawableItems.ships.push({
         isSelf: true,
+        isVisual: true,
+        alive: ship.alive,
         designator: "you",
         canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
         canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
@@ -274,6 +280,8 @@ export class CameraService {
         engineLit: ship.engine_lit,
         fillColor: "#919191",
         shipId: ship.id,
+        aflame: ship.aflame,
+        explosionFrame: ship.explosion_frame,
       })
 
       if(ship.reaction_wheel_online) {
@@ -319,34 +327,45 @@ export class CameraService {
     for(let i in ship.scanner_data) {
       const scannerData: ScannerDataElement = ship.scanner_data[i]
       if (scannerData.element_type === 'ship') {
+
+        const canvasCoordP0 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p0[0],
+          y: scannerData.visual_p0[1],
+        }, cameraPosition)
+        const canvasCoordP1 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p1[0],
+          y: scannerData.visual_p1[1],
+        }, cameraPosition)
+        const canvasCoordP2 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p2[0],
+          y: scannerData.visual_p2[1],
+        }, cameraPosition)
+        const canvasCoordP3 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_p3[0],
+          y: scannerData.visual_p3[1],
+        }, cameraPosition)
+
         let drawableShip: DrawableShip = {
           isSelf: false,
+          alive: scannerData.alive,
+          aflame: scannerData.aflame,
+          explosionFrame: scannerData.explosion_frame,
           shipId: scannerData.id,
           canvasCoordCenter: this.mapCoordToCanvasCoord({
             x: scannerData.coord_x,
             y: scannerData.coord_y,
           }, cameraPosition),
           designator: scannerData.designator,
+          isVisual: false,
+          canvasCoordP0,
+          canvasCoordP1,
+          canvasCoordP2,
+          canvasCoordP3,
         }
         if(scannerData.visual_shape) {
           // Ship is within visual range
 
-          const canvasCoordP0 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p0[0],
-            y: scannerData.visual_p0[1],
-          }, cameraPosition)
-          const canvasCoordP1 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p1[0],
-            y: scannerData.visual_p1[1],
-          }, cameraPosition)
-          const canvasCoordP2 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p2[0],
-            y: scannerData.visual_p2[1],
-          }, cameraPosition)
-          const canvasCoordP3 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_p3[0],
-            y: scannerData.visual_p3[1],
-          }, cameraPosition)
+          drawableShip.isVisual = true
 
           const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
             x: scannerData.visual_fin_0_rel_rot_coord_0[0],
@@ -366,10 +385,6 @@ export class CameraService {
           }, cameraPosition)
 
           drawableShip = {
-            canvasCoordP0,
-            canvasCoordP1,
-            canvasCoordP2,
-            canvasCoordP3,
             canvasCoordFin0P0,
             canvasCoordFin0P1,
             canvasCoordFin1P0,
@@ -471,6 +486,38 @@ export class CameraService {
     }
     else {
       throw new Error("Not Implemented")
+    }
+
+  }
+
+  public getCanvasPointAtLocation(startCanvasCoord: PointCoord, angle: number, canvasDistance: number): PointCoord {
+    // Cardinal directions (edge cases)
+    if(angle == 0) {
+      return {x: startCanvasCoord.x, y: startCanvasCoord.y - canvasDistance}
+    } else if (angle == 90) {
+      return {x: startCanvasCoord.x + canvasDistance, y: startCanvasCoord.y}
+    } else if (angle == 180) {
+      return {x: startCanvasCoord.x, y: startCanvasCoord.y + canvasDistance}
+    } else if (angle == 270) {
+      return {x: startCanvasCoord.x - canvasDistance, y: startCanvasCoord.y}
+    }
+
+    // Non cardinal direction
+    // Position point canvasDistance above origin, then perform point rotation around origin.
+    const ox = startCanvasCoord.x
+    const oy = startCanvasCoord.y
+    const px = startCanvasCoord.x
+    const py = startCanvasCoord.y - canvasDistance
+    const ia = angle * -1
+    const sia = Math.sin(ia)
+    const cia = Math.cos(ia)
+    const dx = px - ox
+    const dy = py - oy
+    const qx = ox + cia * dx - sia * dy
+    const qy = oy + sia * dx + cia * dy
+    return {
+      x: Math.floor(qx),
+      y: Math.floor(qy),
     }
 
   }

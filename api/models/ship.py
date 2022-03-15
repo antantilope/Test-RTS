@@ -73,14 +73,15 @@ class ScannedElement(TypedDict):
     relative_heading: int
     distance: int
 
+    visual_p0: Tuple[int]
+    visual_p1: Tuple[int]
+    visual_p2: Tuple[int]
+    visual_p3: Tuple[int]
+
     visual_fill_color: Optional[str]
     visual_stroke_color: Optional[str]
     visual_shape: Optional[str]     # 'arc' or 'rect'
     visual_radius: Optional[int]    # arc
-    visual_p0: Optional[Tuple[int]] # rect
-    visual_p1: Optional[Tuple[int]] #
-    visual_p2: Optional[Tuple[int]] #
-    visual_p3: Optional[Tuple[int]]  #
     visual_polygon_points: Optional[List[Tuple]]
     visual_engine_lit: Optional[bool] #
     visual_ebeam_charging: Optional[bool] #
@@ -183,6 +184,7 @@ class Ship(BaseModel):
         self.scanner_activation_power_required_total = None
         self.scanner_activation_power_required_per_second = None
         self.scanner_startup_power_used = None
+        self.scanner_seconds_to_activate = None
         self.scanner_locked = False
         self.scanner_locking = False
         self.scanner_locking_power_used = None
@@ -218,9 +220,10 @@ class Ship(BaseModel):
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 4)
+        self.explode_immediately = random.randint(0, 3) == 1
         self.explosion_frame = None
         self.explosion_point = None
-        self._seconds_to_explode = random.randint(2, 7)
+        self._seconds_to_explode = random.randint(3, 5)
 
 
         # Arbitrary ship state data
@@ -379,6 +382,10 @@ class Ship(BaseModel):
             'ebeam_color': self.ebeam_color,
             'ebeam_charge': self.ebeam_charge,
             'ebeam_can_fire': self.ebeam_charge >= self.ebeam_charge_fire_minimum and not self.ebeam_firing,
+
+            'alive': self.died_on_frame is None,
+            'aflame': self.aflame_since_frame is not None,
+            'explosion_frame': self.explosion_frame,
 
             'visual_range': self.visual_range,
 
@@ -750,8 +757,9 @@ class Ship(BaseModel):
         if self.explosion_frame:
             # Ship is exploding, advance explosion frame
             self.explosion_frame += 1
-            if self.explosion_frame > 800 * fps:
-                self.explosion_frame = None
+
+        elif self.explode_immediately:
+            self.explode()
 
         elif self.aflame_since_frame is None:
             # Ship not aflame yet
@@ -763,9 +771,26 @@ class Ship(BaseModel):
             # ship is onfire and it's going to explode
             seconds_aflame = (game_frame - self.aflame_since_frame) / fps
             if seconds_aflame > self._seconds_to_explode:
-                self.explosion_frame = 1
-                self.explosion_point = self.coords
-                self.aflame_since_frame = None
+                self.explode()
+
+    def explode(self):
+        self.explosion_frame = 1
+        self.explosion_point = self.coords
+        self.aflame_since_frame = None
+        self.velocity_x_meters_per_second = 0
+        self.velocity_y_meters_per_second = 0
+
+    def die(self, game_frame: int):
+        self.died_on_frame = game_frame
+        self.engine_lit = False
+        self.engine_starting = False
+        self.engine_online = False
+        self.scanner_online = False
+        self.scanner_starting = False
+        self.ebeam_firing = False
+        self.ebeam_charging = False
+        self.reaction_wheel_online = False
+        self.autopilot_program = None
 
     def advance_thermal_signature(self, fps: int) -> None:
         self.scanner_thermal_signature_delta = 0
@@ -776,6 +801,9 @@ class Ship(BaseModel):
         )
 
     def get_available_commands(self) -> Generator[str, None, None]:
+        if self.died_on_frame:
+            return # Exist generator
+
         # Reaction Wheel
         if not self.reaction_wheel_online:
             yield ShipCommands.ACTIVATE_REACTION_WHEEL
@@ -921,7 +949,6 @@ class Ship(BaseModel):
             self.heading_0_fin_1_rel_coord_1,
             delta_radians
         )
-
 
 
     # Engine Commands

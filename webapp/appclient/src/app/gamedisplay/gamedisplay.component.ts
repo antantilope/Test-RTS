@@ -297,7 +297,8 @@ export class GamedisplayComponent implements OnInit {
     // draw visual ships and scanned ships
     for(let i in drawableObjects.ships) {
       const drawableShip: DrawableShip = drawableObjects.ships[i]
-      if(drawableShip.canvasCoordP0) {
+
+      if(drawableShip.isVisual && !drawableShip.explosionFrame) {
         // Ship is within visual range
         this.ctx.beginPath()
         this.ctx.fillStyle = drawableShip.fillColor
@@ -360,7 +361,138 @@ export class GamedisplayComponent implements OnInit {
         }
       }
 
-      if(drawableShip.canvasBoundingBox) {
+      if(drawableShip.aflame) {
+        const flameRadius = Math.max(4, Math.round(
+          Math.sqrt(
+            (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
+            + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
+          ) / 4
+        ))
+        for(let i=0; i<2; i++) {
+          let tFlameRadius = flameRadius + randomInt(flameRadius / 4, flameRadius * 4)
+          this.ctx.beginPath()
+          this.ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(2, 7)})`
+          this.ctx.arc(
+            drawableShip.canvasCoordCenter.x + randomInt(-5, 5),
+            drawableShip.canvasCoordCenter.y + randomInt(-5, 5),
+            tFlameRadius,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+        }
+        const sparkCount = randomInt(0, 4)
+        const sparkSize = Math.max(5, flameRadius)
+        for(let i=0; i<sparkCount; i++) {
+          let sparkAngle = randomInt(0, 359)
+          let sparkDistance = flameRadius * randomInt(1, 3)
+          let sparkPoint = this._camera.getCanvasPointAtLocation(
+            drawableShip.canvasCoordCenter,
+            sparkAngle,
+            sparkDistance
+          )
+          this.ctx.beginPath()
+          this.ctx.fillStyle = 'rgb(255, 0, 0, 1)'
+          this.ctx.arc(
+            sparkPoint.x,
+            sparkPoint.y,
+            sparkSize,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+        }
+      }
+      if(drawableShip.explosionFrame && drawableShip.explosionFrame < 150) {
+        /* Explosion schedule
+          frame 1-6 fireball growth
+          frame 7-75 pulsating fireball
+          frame 76-150 fading smoke puff
+        */
+        let maxFireBallRadius = Math.round(
+          Math.sqrt(
+            (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
+            + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
+          ) * 10
+        )
+        if(drawableShip.explosionFrame < 8) {
+          let fbSize = (drawableShip.explosionFrame / 7) * maxFireBallRadius
+          this.ctx.beginPath()
+          this.ctx.fillStyle = 'rgb(255, 0, 0, 1)'
+          this.ctx.arc(
+            drawableShip.canvasCoordCenter.x + randomInt(-3, 3),
+            drawableShip.canvasCoordCenter.y + randomInt(-3, 3),
+            fbSize,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+        } else if (drawableShip.explosionFrame < 76) {
+          // Main fireball
+          let fbSize = maxFireBallRadius * (randomInt(5, 8) / 7)
+          this.ctx.beginPath()
+          this.ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(5, 9)})`
+          this.ctx.arc(
+            drawableShip.canvasCoordCenter.x + randomInt(-3, 3),
+            drawableShip.canvasCoordCenter.y + randomInt(-3, 3),
+            fbSize,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+          // Inner sub fireballs
+          const subFireBallsCount = randomInt(2, 4)
+          for(let i=0; i<subFireBallsCount; i++) {
+            let subFBSize = Math.floor(fbSize / randomInt(2, 4))
+            this.ctx.beginPath()
+            this.ctx.fillStyle = `rgb(255, ${randomInt(20, 65)}, 0, 0.${randomInt(7, 9)})`
+            this.ctx.arc(
+              drawableShip.canvasCoordCenter.x + randomInt(-8, 8),
+              drawableShip.canvasCoordCenter.y + randomInt(-8, 8),
+              subFBSize,
+              0,
+              2 * Math.PI,
+            )
+            this.ctx.fill()
+          }
+          // Deris Lines
+          const debrisLineCount = randomInt(-6, 3)
+          for(let i=0; i<debrisLineCount; i++) {
+            let lineLength = maxFireBallRadius * randomInt(2, 4)
+            let angle = randomInt(0, 359)
+            let linep1 = this._camera.getCanvasPointAtLocation(
+              drawableShip.canvasCoordCenter,
+              angle,
+              randomInt(0, 50),
+            )
+            let linep2 = this._camera.getCanvasPointAtLocation(
+              drawableShip.canvasCoordCenter,
+              angle,
+              lineLength,
+            )
+            this.ctx.beginPath()
+            this.ctx.strokeStyle = "rgb(255, 170, 170, 0.65)"
+            this.ctx.moveTo(linep1.x, linep1.y)
+            this.ctx.lineTo(linep2.x, linep2.y)
+            this.ctx.stroke()
+          }
+        } else {
+          let smokePuffSize = Math.floor(maxFireBallRadius / 1.1);
+          let alpha = (1 - ((drawableShip.explosionFrame - 76) / 75)) / 3
+          this.ctx.beginPath()
+          this.ctx.fillStyle = `rgb(255, 130, 130, ${alpha})`
+          this.ctx.arc(
+            drawableShip.canvasCoordCenter.x,
+            drawableShip.canvasCoordCenter.y,
+            smokePuffSize,
+            0,
+            2 * Math.PI,
+          )
+          this.ctx.fill()
+        }
+      }
+
+      if(drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
         const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
         const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
@@ -382,6 +514,9 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.fillStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
         this.ctx.textAlign = 'left'
         let desigPrefix = cursorOnShip ? "👉" : ""
+        if(!drawableShip.alive) {
+          desigPrefix = desigPrefix + "💀"
+        }
         this.ctx.fillText(desigPrefix + drawableShip.designator, bbXOffset, bbYOffset)
         bbYOffset += bbYInterval
         if(drawableShip.distance) {
@@ -509,7 +644,7 @@ export class GamedisplayComponent implements OnInit {
     // Scale meters and user handle
     this.ctx.beginPath()
     this.ctx.font = '24px serif'
-    this.ctx.fillStyle = '#ffffff'
+    this.ctx.fillStyle = this._api.frameData.ship.alive ? '#ffffff' : "#ff0000";
     this.ctx.textAlign = 'left'
     this.ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
     lrcYOffset -= lrcYInterval
@@ -558,27 +693,35 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
+    if(!this._api.frameData.ship.alive) {
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 32px courier new'
+      this.ctx.fillText("🪦 YOU DIED IN SPACE", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
 
     // Resources (TOP LEFT)
-    const tlcYInterval = 34
-    let tlcYOffset = 25
-    const tlcXOffset = 15
-    this.ctx.beginPath()
-    this.ctx.font = '24px Courier New'
-    this.ctx.fillStyle = '#fcb8b8'
-    this.ctx.textAlign = 'left'
-    this.ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
-    tlcYOffset += tlcYInterval
+    if(this._api.frameData.ship.alive){
+      const tlcYInterval = 34
+      let tlcYOffset = 25
+      const tlcXOffset = 15
+      this.ctx.beginPath()
+      this.ctx.font = '24px Courier New'
+      this.ctx.fillStyle = '#fcb8b8'
+      this.ctx.textAlign = 'left'
+      this.ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcYInterval
 
-    this.ctx.beginPath()
-    this.ctx.fillStyle = '#fcf9b8'
-    this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
-    tlcYOffset += tlcYInterval
+      this.ctx.beginPath()
+      this.ctx.fillStyle = '#fcf9b8'
+      this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcYInterval
 
-    this.ctx.beginPath()
-    this.ctx.fillStyle = '#ffffff'
-    this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
-    tlcYOffset += tlcYInterval
+      this.ctx.beginPath()
+      this.ctx.fillStyle = '#ffffff'
+      this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcYInterval
+    }
 
     // Timers (BOTTOM RIGHT)
     const brcYInterval = 45

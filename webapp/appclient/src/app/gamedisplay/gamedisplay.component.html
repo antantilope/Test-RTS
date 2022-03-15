@@ -39,7 +39,7 @@
             </div>
             <div>
                 <button
-                    *ngIf="enableActivateReactionWheelBtn"
+                    *ngIf="enableActivateReactionWheelBtn && _api.frameData.ship.alive"
                     (click)="btnActivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw.jpg'); background-size:100% 100%;"
@@ -47,7 +47,7 @@
                 >
                 </button>
                 <button
-                    *ngIf="!enableActivateReactionWheelBtn"
+                    *ngIf="!enableActivateReactionWheelBtn || !_api.frameData.ship.alive"
                     class="command-btn"
                     style="background: url('/static/img/activate-rw-gs.jpg'); background-size:100% 100%;"
                     title="Activate Reaction Wheel"
@@ -57,7 +57,7 @@
             </div>
             <div>
                 <button
-                    *ngIf="!enableActivateReactionWheelBtn"
+                    *ngIf="!enableActivateReactionWheelBtn && _api.frameData.ship.alive"
                     (click)="btnDeactivateReactionWheel()"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw.jpg'); background-size:100% 100%;"
@@ -65,7 +65,7 @@
                 >
                 </button>
                 <button
-                    *ngIf="enableActivateReactionWheelBtn"
+                    *ngIf="enableActivateReactionWheelBtn || !_api.frameData.ship.alive"
                     class="command-btn"
                     style="background: url('/static/img/deactivate-rw-gs.jpg'); background-size:100% 100%;"
                     title="Deactivate Reaction Wheel"
@@ -247,17 +247,29 @@
                 <div style="margin-left:5px;">
                     <!-- Scanner Sub Column 3 -->
                     <div>
-                        <button class="scanner-ctrl-btn" (click)="btnClickScannerCursorUp()" [disabled]="_api.frameData.ship.scanner_locking">
+                        <button
+                            class="scanner-ctrl-btn"
+                            (click)="btnClickScannerCursorUp()"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
+                        >
                             ⬆️
                         </button>
                     </div>
                     <div>
-                        <button class="scanner-ctrl-btn" (click)="btnClickScannerCursorDown()" [disabled]="_api.frameData.ship.scanner_locking">
+                        <button
+                            class="scanner-ctrl-btn"
+                            (click)="btnClickScannerCursorDown()"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
+                        >
                             ⬇️
                         </button>
                     </div>
                     <div>
-                        <button class="scanner-ctrl-btn" (click)="btnClickScannerCursorLock()" [disabled]="_api.frameData.ship.scanner_locking">
+                        <button
+                            class="scanner-ctrl-btn"
+                            (click)="btnClickScannerCursorLock()"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
+                        >
                             lock
                         </button>
                     </div>
@@ -275,7 +287,7 @@
                         <button
                             class="scanner-ctrl-btn"
                             style="min-width:80px;"
-                            [disabled]="_api.frameData.ship.ebeam_charging || _api.frameData.ship.ebeam_firing"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.ebeam_charging || _api.frameData.ship.ebeam_firing"
                             (click)="btnClickChargeEBeam()"
                         >
                             (c)harge ⚡
@@ -285,7 +297,7 @@
                         <button
                             class="scanner-ctrl-btn"
                             style="min-width:80px;"
-                            [disabled]="!_api.frameData.ship.ebeam_charging"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.ebeam_charging"
                             (click)="btnClickPauseChargeEBeam()"
                         >
                             p(a)use 🔌
@@ -295,7 +307,7 @@
                         <button
                             class="scanner-ctrl-btn"
                             style="min-width:80px;"
-                            [disabled]="!_api.frameData.ship.ebeam_can_fire"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.ebeam_can_fire"
                             (click)="btnClickFireEBeam()"
                         >
                             (f)ire 🔥

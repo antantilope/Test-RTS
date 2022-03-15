@@ -10,6 +10,7 @@ export class ScannerDataElement {
     coord_x: number
     coord_y: number
     id: string
+    alive: boolean
     designator: string
     visual_shape?: string
     visual_p0?: number[]
@@ -24,6 +25,8 @@ export class ScannerDataElement {
     visual_fill_color?: string
     visual_stroke_color?: string
     visual_line_width?: string
+    aflame?: boolean
+    explosion_frame?: number
     distance?: number
     relative_heading?: number
     thermal_signature?: number
@@ -32,8 +35,10 @@ export class ScannerDataElement {
 export class DrawableShip {
     isSelf: boolean
     shipId: string
+    alive: boolean
     canvasCoordCenter: PointCoord
     designator: string
+    isVisual: boolean
     canvasCoordP0?: PointCoord
     canvasCoordP1?: PointCoord
     canvasCoordP2?: PointCoord
@@ -50,7 +55,8 @@ export class DrawableShip {
     distance?: number
     relativeHeading?: number
     thermalSignature?: number
-
+    aflame?: boolean
+    explosionFrame?: number
 }
 
 export class DrawableReactionWheelOverlay {
