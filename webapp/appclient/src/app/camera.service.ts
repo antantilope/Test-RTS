@@ -325,6 +325,8 @@ export class CameraService {
         let drawableShip: DrawableShip = {
           isSelf: false,
           alive: scannerData.alive,
+          aflame: scannerData.aflame,
+          explosionFrame: scannerData.explosion_frame,
           shipId: scannerData.id,
           canvasCoordCenter: this.mapCoordToCanvasCoord({
             x: scannerData.coord_x,
@@ -381,8 +383,6 @@ export class CameraService {
             canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
             engineLit: scannerData.visual_engine_lit,
             fillColor: scannerData.visual_fill_color,
-            aflame: scannerData.visual_aflame,
-            explosionFrame: scannerData.visual_explosion_frame,
             ...drawableShip
           }
         }

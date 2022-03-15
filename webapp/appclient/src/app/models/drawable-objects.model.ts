@@ -25,8 +25,8 @@ export class ScannerDataElement {
     visual_fill_color?: string
     visual_stroke_color?: string
     visual_line_width?: string
-    visual_aflame?: boolean
-    visual_explosion_frame?: number
+    aflame?: boolean
+    explosion_frame?: number
     distance?: number
     relative_heading?: number
     thermal_signature?: number
