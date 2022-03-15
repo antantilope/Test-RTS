@@ -148,6 +148,7 @@ class Game(BaseModel):
         return {
             'elapsed_time': LEADING_ZEROS_TIME.sub("", str(dt.datetime.now() - self._game_start_time)).split(".")[0],
             'ships': [ship.to_dict() for ship in self._ships.values()],
+            'ebeam_rays': self._ebeam_rays,
         }
 
 
@@ -314,8 +315,6 @@ class Game(BaseModel):
         self._ebeam_rays.clear()
 
         for ship_id, ship in self._ships.items():
-            self._ships[ship_id].game_frame = self._game_frame
-
             # Ship level side effects
             ship.adjust_resources(self._fps)
             ship.calculate_physics(self._fps)
@@ -394,6 +393,7 @@ class Game(BaseModel):
                         'visual_engine_lit': self._ships[other_id].engine_lit,
                         'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
                         'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
+                        'visual_ebeam_color': self._ships[other_id].ebeam_color,
                         'visual_fill_color': '#ffffff',
                     })
                 if is_scannable:

@@ -101,8 +101,6 @@ class Ship(BaseModel):
     def __init__(self):
         super().__init__()
 
-        self.game_frame = None
-
         self.map_units_per_meter = None
 
         self.team_id = None
@@ -374,6 +372,11 @@ class Ship(BaseModel):
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
             'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
+
+            'ebeam_firing': self.ebeam_firing,
+            'ebeam_charging': self.ebeam_charging,
+            'ebeam_charge_capacity': self.ebeam_charge_capacity,
+            'ebeam_color': self.ebeam_color,
 
             'visual_range': self.visual_range,
 
