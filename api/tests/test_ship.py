@@ -534,6 +534,76 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.scanner_lock_target is None
 
 
+    def test_ship_charging_ebeam_uses_resources(self):
+        ''' EBEAM Charge '''
+        self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge = 0
+        self.ship.ebeam_charge_capacity = 10000
+        self.ship.ebeam_firing = False
+        self.ship.ebeam_charging = True
+        self.ship.ebeam_charge_power_draw_multiple = 4
+        self.ship.battery_power = 10000
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 8000
+        assert self.ship.ebeam_charging
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 1000
+        assert self.ship.battery_power == 6000
+        assert self.ship.ebeam_charging
+
+
+    def test_ship_charging_ebeam_is_interrupted_if_not_enogh_battery_power(self):
+        ''' EBEAM Charge '''
+        self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge = 0
+        self.ship.ebeam_charge_capacity = 10000
+        self.ship.ebeam_firing = False
+        self.ship.ebeam_charging = True
+        self.ship.ebeam_charge_power_draw_multiple = 4
+        self.ship.battery_power = 3000
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 1000
+        assert self.ship.ebeam_charging
+
+        self.ship.adjust_resources(fps=fps) # Charging disabled, not enough power
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 1000
+        assert not self.ship.ebeam_charging
+
+
+    def test_ship_charging_ebeam_is_interrupted_if_at_ebeam_charge_capacity(self):
+        ''' EBEAM Charge '''
+        self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge = 0
+        self.ship.ebeam_charge_capacity = 750
+        self.ship.ebeam_firing = False
+        self.ship.ebeam_charging = True
+        self.ship.ebeam_charge_power_draw_multiple = 4
+        self.ship.battery_power = 10000
+        fps = 2
+
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 500
+        assert self.ship.battery_power == 8000
+        assert self.ship.ebeam_charging
+
+        self.ship.adjust_resources(fps=fps) # Charging disabled, at capacity
+        assert self.ship.ebeam_charge == 750
+        assert self.ship.battery_power == 6000
+        assert not self.ship.ebeam_charging
+        self.ship.adjust_resources(fps=fps)
+        assert self.ship.ebeam_charge == 750
+        assert self.ship.battery_power == 6000
+        assert not self.ship.ebeam_charging
+
+
 
 '''
  ██████  █████  ██       ██████ ██    ██ ██       █████  ████████ ███████
@@ -2006,3 +2076,64 @@ class TestShipCMDActivateDeactivateLightEngine(TestCase):
         self.ship.cmd_unlight_engine()
         assert self.ship.engine_online
         assert not self.ship.engine_lit
+
+
+""" ADVANCE DAMAGE PROPERTIES
+"""
+
+class TestShipAdvanceDamageProperties(TestCase):
+    def setUp(self) -> None:
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship._seconds_to_explode = 2
+        self.ship._seconds_to_aflame = 2
+
+    def test_an_undead_ship_does_not_change(self):
+        self.ship.died_on_frame = None
+        for i in range(10):
+            self.ship.advance_damage_properties(i+1, 1)
+        assert self.ship.died_on_frame is None
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+
+    def test_an_dead_ship_catches_fire_and_explodes(self):
+        self.ship.died_on_frame = 1
+        fps = 1
+        self.ship.advance_damage_properties(1, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(2, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(3, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame is None
+
+        self.ship.advance_damage_properties(4, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame == 4 # Catch fire
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(5, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame == 4
+        assert self.ship.explosion_frame is None
+        self.ship.advance_damage_properties(6, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame == 4
+        assert self.ship.explosion_frame is None
+
+        self.ship.advance_damage_properties(7, fps) # Boom
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame == 1
+        self.ship.advance_damage_properties(8, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame == 2
+        self.ship.advance_damage_properties(9, fps)
+        assert self.ship.died_on_frame == 1
+        assert self.ship.aflame_since_frame is None
+        assert self.ship.explosion_frame == 3

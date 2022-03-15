@@ -250,6 +250,7 @@ export class CameraService {
 
     const drawableItems: DrawableCanvasItems = {
       ships: [],
+      ebeamRays: [],
     }
     const cameraPosition: PointCoord = this.getPosition()
 
@@ -396,7 +397,21 @@ export class CameraService {
       }
     }
 
+    // Add Energy Beam Rays
+    for (let i in this._api.frameData.ebeam_rays) {
+      let ray = this._api.frameData.ebeam_rays[i]
+      drawableItems.ebeamRays.push({
+        startPoint: this.mapCoordToCanvasCoord({x:ray.start_point[0], y:ray.start_point[1]}, cameraPosition),
+        endPoint: this.mapCoordToCanvasCoord({x:ray.end_point[0], y:ray.end_point[1]}, cameraPosition),
+        color: ray.color
+      })
+    }
+
     return drawableItems
+  }
+
+  public getEBeamLineThickness(): number {
+    return 4
   }
 
 

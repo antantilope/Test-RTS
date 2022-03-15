@@ -1,7 +1,7 @@
 
 import datetime as dt
 import random
-from typing import TypedDict, Optional, List, Dict, Set
+from typing import Tuple, TypedDict, Optional, List, Dict, Set
 from time import sleep
 import uuid
 import re
@@ -69,9 +69,14 @@ class RunFrameDetails(TypedDict):
     commands: List[FrameCommand]
 
 
+class EBeamRayDetails(TypedDict):
+    start_point: Tuple[int]
+    end_point: Tuple[int]
+    color: str
+
 class Game(BaseModel):
 
-    BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players', 'map_config',)
+    BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players',)
 
     def __init__(self):
         super().__init__()
@@ -80,6 +85,7 @@ class Game(BaseModel):
 
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
+        self._ebeam_rays: List[EBeamRayDetails] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
 
@@ -142,6 +148,7 @@ class Game(BaseModel):
         return {
             'elapsed_time': LEADING_ZEROS_TIME.sub("", str(dt.datetime.now() - self._game_start_time)).split(".")[0],
             'ships': [ship.to_dict() for ship in self._ships.values()],
+            'ebeam_rays': self._ebeam_rays,
         }
 
 
@@ -301,118 +308,159 @@ class Game(BaseModel):
             self.logger.warn("FPS set to 0, artificially adjusting to 1")
             self._fps = 1
 
-        # Run Frame Phases
-        for ship_id, ship in self._ships.items():
-            self._ships[ship_id].game_frame = self._game_frame
-
-            # Phase 0
-            ship.calculate_damage()
-            # Phase 1
-            ship.adjust_resources(self._fps)
-            # Phase 2
-            ship.calculate_physics(self._fps)
-            # Phase 3
-            ship.calculate_side_effects()
-
-
-        # Phase 3 (again): Top Level side effects
-        self.update_scanner_states()
-
-        # Phase 4
+        # Process user commands.
         for command in request['commands']:
             self._process_ship_command(command)
+
+        self._ebeam_rays.clear()
+
+        for ship_id, ship in self._ships.items():
+            # Ship level side effects
+            ship.adjust_resources(self._fps)
+            ship.calculate_physics(self._fps)
+            ship.advance_thermal_signature(self._fps)
+
+            # Game level side effects
+            self.update_scanner_states(ship_id)
+            self.calculate_weapons_and_damage(ship_id)
 
         self.incr_game_frame()
 
 
-    def update_scanner_states(self):
+    def update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
         heading_cache = CoordHeadingCache()
 
-        for ship_id in self._ships:
-            self._ships[ship_id].scanner_data.clear()
+        self._ships[ship_id].scanner_data.clear()
 
-            scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
-            visual_range = self._ships[ship_id].visual_range
+        scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
+        visual_range = self._ships[ship_id].visual_range
 
-            for other_id in self._ships:
-                if other_id == ship_id:
-                    continue
+        for other_id in (v for v in self._ships if v != ship_id):
 
-                other_coords = self._ships[other_id].coords
-                ship_coords = self._ships[ship_id].coords
+            other_coords = self._ships[other_id].coords
+            ship_coords = self._ships[ship_id].coords
 
-                distance = distance_cache.get_val(ship_coords, other_coords)
-                if distance is None:
-                    distance = utils2d.calculate_point_distance(ship_coords, other_coords)
-                    distance_cache.set_val(ship_coords, other_coords, distance)
-                distance_meters = round(distance / self._map_units_per_meter)
+            distance = distance_cache.get_val(ship_coords, other_coords)
+            if distance is None:
+                distance = utils2d.calculate_point_distance(ship_coords, other_coords)
+                distance_cache.set_val(ship_coords, other_coords, distance)
+            distance_meters = round(distance / self._map_units_per_meter)
 
-                is_visual = visual_range >= distance_meters
-                is_scannable = scan_range is not None and scan_range >= distance_meters
+            is_visual = visual_range >= distance_meters
+            is_scannable = scan_range is not None and scan_range >= distance_meters
+            if not is_scannable and not is_visual:
+                continue
 
-                scan_only = is_scannable and not is_visual
-                if (
-                    scan_only
-                    and self._ships[ship_id].scanner_mode == ShipScannerMode.IR
-                    and not (
-                        self._ships[other_id].scanner_thermal_signature
-                        >= self._ships[ship_id].scanner_ir_minimum_thermal_signature)
-                ):
-                    is_scannable = False
+            scan_only = is_scannable and not is_visual
+            if (
+                scan_only
+                and self._ships[ship_id].scanner_mode == ShipScannerMode.IR
+                and not (
+                    self._ships[other_id].scanner_thermal_signature
+                    >= self._ships[ship_id].scanner_ir_minimum_thermal_signature)
+            ):
+                is_scannable = False
 
-                if(
-                    scan_only
-                    and self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR
-                    and (
-                        self._ships[other_id].anti_radar_coating_level
-                        > self._ships[ship_id].scanner_radar_sensitivity)
-                ):
-                    is_scannable = False
+            if(
+                scan_only
+                and self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR
+                and (
+                    self._ships[other_id].anti_radar_coating_level
+                    > self._ships[ship_id].scanner_radar_sensitivity)
+            ):
+                is_scannable = False
 
-                if is_visual or is_scannable:
-                    scanner_data: ScannedElement = {
-                        'id': other_id,
-                        'designator': self._ships[other_id].scanner_designator,
-                        'coord_x': other_coords[0],
-                        'coord_y': other_coords[1],
-                        'element_type': ScannedElementType.SHIP,
-                    }
-                    if is_visual:
-                        scanner_data.update({
-                            'visual_shape': VisibleElementShapeType.RECT,
-                            'visual_p0': self._ships[other_id].map_p0,
-                            'visual_p1': self._ships[other_id].map_p1,
-                            'visual_p2': self._ships[other_id].map_p2,
-                            'visual_p3': self._ships[other_id].map_p3,
-                            'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
-                            'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
-                            'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
-                            'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
-                            'visual_engine_lit': self._ships[other_id].engine_lit,
-                            'visual_fill_color': '#ffffff',
-                        })
-                    if is_scannable:
-                        heading = heading_cache.get_val(ship_coords, other_coords)
-                        if heading is None:
-                            heading = round(utils2d.calculate_heading_to_point(ship_coords, other_coords))
-                            heading_cache.set_val(ship_coords, other_coords, heading)
-                        scanner_data['distance'] = round(distance_meters)
-                        scanner_data['relative_heading'] = heading
-                        if self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
-                            scanner_data['thermal_signature'] = self._ships[other_id].scanner_thermal_signature
+            if is_visual or is_scannable:
+                scanner_data: ScannedElement = {
+                    'id': other_id,
+                    'designator': self._ships[other_id].scanner_designator,
+                    'coord_x': other_coords[0],
+                    'coord_y': other_coords[1],
+                    'element_type': ScannedElementType.SHIP,
+                }
+                if is_visual:
+                    scanner_data.update({
+                        'visual_shape': VisibleElementShapeType.RECT,
+                        'visual_p0': self._ships[other_id].map_p0,
+                        'visual_p1': self._ships[other_id].map_p1,
+                        'visual_p2': self._ships[other_id].map_p2,
+                        'visual_p3': self._ships[other_id].map_p3,
+                        'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
+                        'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
+                        'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
+                        'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
+                        'visual_engine_lit': self._ships[other_id].engine_lit,
+                        'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
+                        'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
+                        'visual_ebeam_color': self._ships[other_id].ebeam_color,
+                        'visual_fill_color': '#ffffff',
+                    })
+                if is_scannable:
+                    heading = heading_cache.get_val(ship_coords, other_coords)
+                    if heading is None:
+                        heading = round(utils2d.calculate_heading_to_point(ship_coords, other_coords))
+                        heading_cache.set_val(ship_coords, other_coords, heading)
+                    scanner_data['distance'] = round(distance_meters)
+                    scanner_data['relative_heading'] = heading
+                    if self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
+                        scanner_data['thermal_signature'] = self._ships[other_id].scanner_thermal_signature
 
-                    self._ships[ship_id].scanner_data[other_id] = scanner_data
+                self._ships[ship_id].scanner_data[other_id] = scanner_data
 
 
-            if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
-                if self._ships[ship_id].scanner_locking:
-                    self._ships[ship_id].scanner_lock_target = None
-                    self._ships[ship_id].scanner_locking = False
-                    self._ships[ship_id].scanner_locking_power_used = None
-                elif self._ships[ship_id].scanner_locked:
-                    self._ships[ship_id].scanner_lock_target = None
-                    self._ships[ship_id].scanner_locked = False
+        if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
+            if self._ships[ship_id].scanner_locking:
+                self._ships[ship_id].scanner_lock_target = None
+                self._ships[ship_id].scanner_locking = False
+                self._ships[ship_id].scanner_locking_power_used = None
+            elif self._ships[ship_id].scanner_locked:
+                self._ships[ship_id].scanner_lock_target = None
+                self._ships[ship_id].scanner_locked = False
+
+
+    def calculate_weapons_and_damage(self, ship_id: str):
+        # Weapons and Damage
+        self._ships[ship_id].advance_damage_properties(
+            self._game_frame,
+            MAX_SERVER_FPS,
+        )
+        if self._ships[ship_id].ebeam_firing:
+            success = self._ships[ship_id].use_ebeam_charge(self._fps)
+            if success:
+                line, hits = self._get_ebeam_line_and_hit(self._ships[ship_id])
+                self._ebeam_rays.append({
+                    "start_point": line[0],
+                    "end_point": line[1],
+                    "color": self._ships[ship_id].ebeam_color,
+                })
+                for hit_ship_id in hits:
+                    self._ships[hit_ship_id].died_on_frame = self._game_frame
+
+
+    def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
+        # gets starting point of EBeam ray
+        p1_x, p1_y = ship.map_p1
+        p2_x, p2_y = ship.map_p2
+        pm_x = round(p1_x + p2_x) / 2
+        pm_y = round(p1_y + p2_y) / 2
+        intercept_calculator, ray_point_b = utils2d.hitboxes_intercept_ray_factory(
+            (pm_x, pm_y),
+            ship.heading,
+            (self._map_x_unit_length, self._map_y_unit_length,),
+        )
+        line = (
+            (pm_x, pm_y),
+            ray_point_b,
+        )
+        hits = []
+        for other_id, other_ship in self._ships.items():
+            if other_id == ship.id or other_ship.died_on_frame:
+                continue
+            if intercept_calculator(other_ship.hitbox_lines):
+                hits.append(other_id)
+
+        return line, hits
 
 
     def _process_ship_command(self, command: FrameCommand):
@@ -427,4 +475,3 @@ class Game(BaseModel):
             *args,
             **kwargs,
         )
-

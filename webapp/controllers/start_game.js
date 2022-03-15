@@ -98,6 +98,7 @@ const runGameLoop = (room_id, port, app, io) => {
                         server_fps: respData.server_fps,
                         server_fps_throttle_seconds: respData.server_fps_throttle_seconds,
                         map_config: respData.map_config,
+                        ebeam_rays: respData.ebeam_rays,
                     },
                 );
             }

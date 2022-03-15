@@ -88,6 +88,24 @@ const commandHandlers = {
             args: [validatedData.target],
         });
     },
+    charge_ebeam: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'charge_ebeam',
+        });
+    },
+    pause_charge_ebeam: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'pause_charge_ebeam',
+        });
+    },
+    fire_ebeam: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'fire_ebeam',
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {
