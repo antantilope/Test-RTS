@@ -377,6 +377,8 @@ class Ship(BaseModel):
             'ebeam_charging': self.ebeam_charging,
             'ebeam_charge_capacity': self.ebeam_charge_capacity,
             'ebeam_color': self.ebeam_color,
+            'ebeam_charge': self.ebeam_charge,
+            'ebeam_can_fire': self.ebeam_charge >= self.ebeam_charge_fire_minimum and not self.ebeam_firing,
 
             'visual_range': self.visual_range,
 
@@ -497,6 +499,13 @@ class Ship(BaseModel):
                 'name': 'Scanner Locking',
                 'percent': round(
                     self.scanner_locking_power_used / self.scanner_get_lock_power_requirement_total * 100
+                ),
+            }
+        if self.ebeam_charge > 0:
+            yield {
+                'name': 'E-Beam Charge',
+                'percent': round(
+                    self.ebeam_charge / self.ebeam_charge_capacity * 100
                 ),
             }
 

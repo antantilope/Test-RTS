@@ -272,17 +272,32 @@
                 <div>
                     <!-- Energy Beam Sub Column 1 -->
                     <div>
-                        <button class="scanner-ctrl-btn" style="min-width:80px;" [disabled]="true">
+                        <button
+                            class="scanner-ctrl-btn"
+                            style="min-width:80px;"
+                            [disabled]="_api.frameData.ship.ebeam_charging || _api.frameData.ship.ebeam_firing"
+                            (click)="btnClickChargeEBeam()"
+                        >
                             (c)harge ⚡
                         </button>
                     </div>
                     <div>
-                        <button class="scanner-ctrl-btn" style="min-width:80px;">
+                        <button
+                            class="scanner-ctrl-btn"
+                            style="min-width:80px;"
+                            [disabled]="!_api.frameData.ship.ebeam_charging"
+                            (click)="btnClickPauseChargeEBeam()"
+                        >
                             p(a)use 🔌
                         </button>
                     </div>
                     <div>
-                        <button class="scanner-ctrl-btn" style="min-width:80px;">
+                        <button
+                            class="scanner-ctrl-btn"
+                            style="min-width:80px;"
+                            [disabled]="!_api.frameData.ship.ebeam_can_fire"
+                            (click)="btnClickFireEBeam()"
+                        >
                             (f)ire 🔥
                         </button>
                     </div>

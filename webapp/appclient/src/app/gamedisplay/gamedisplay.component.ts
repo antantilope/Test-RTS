@@ -419,8 +419,18 @@ export class GamedisplayComponent implements OnInit {
           this.ctx.stroke()
         }
       }
+    }
 
-
+    // E-Beams
+    const ebeamThickness = this._camera.getEBeamLineThickness()
+    for(let i in drawableObjects.ebeamRays) {
+      let ray = drawableObjects.ebeamRays[i]
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = ray.color
+      this.ctx.lineWidth = ebeamThickness
+      this.ctx.moveTo(ray.startPoint.x, ray.startPoint.y)
+      this.ctx.lineTo(ray.endPoint.x, ray.endPoint.y)
+      this.ctx.stroke()
     }
 
     // Reaction Wheel overlay
@@ -428,15 +438,6 @@ export class GamedisplayComponent implements OnInit {
     if(typeof reactionWheelOverlay !== "undefined") {
       this.ctx.strokeStyle = "rgb(43, 255, 0, 0.6)"
       this.ctx.lineWidth = 1
-      // this.ctx.beginPath()
-      // this.ctx.arc(
-      //   reactionWheelOverlay.centerCanvasCoord.x,
-      //   reactionWheelOverlay.centerCanvasCoord.y,
-      //   reactionWheelOverlay.radiusPx,
-      //   0,
-      //   2 * Math.PI);
-      // this.ctx.stroke();
-
       this.ctx.beginPath()
       this.ctx.moveTo(reactionWheelOverlay.compassPoint0.x, reactionWheelOverlay.compassPoint0.y)
       this.ctx.lineTo(reactionWheelOverlay.compassPoint1.x, reactionWheelOverlay.compassPoint1.y)
@@ -533,6 +534,16 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData.ship.reaction_wheel_online) {
       this.ctx.beginPath()
       this.ctx.fillText("REACTION WHEEL", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
+    if(this._api.frameData.ship.ebeam_can_fire) {
+      this.ctx.beginPath()
+      this.ctx.fillText("E-BEAM READY", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
+    if(this._api.frameData.ship.ebeam_charging) {
+      this.ctx.beginPath()
+      this.ctx.fillText("E-BEAM CHARGING", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
     // Red alerts
@@ -870,6 +881,33 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command: 'set_scanner_lock_target', target: this.scannerTargetIDCursor},
     )
+  }
+
+  async btnClickChargeEBeam() {
+    if(!this._api.frameData.ship.ebeam_charging && !this._api.frameData.ship.ebeam_firing) {
+      await this._api.post(
+        "/api/rooms/command",
+        {command:'charge_ebeam'},
+      )
+    }
+  }
+
+  async btnClickPauseChargeEBeam() {
+    if(this._api.frameData.ship.ebeam_charging) {
+      await this._api.post(
+        "/api/rooms/command",
+        {command:'pause_charge_ebeam'},
+      )
+    }
+  }
+
+  async btnClickFireEBeam() {
+    if(this._api.frameData.ship.ebeam_can_fire) {
+      await this._api.post(
+        "/api/rooms/command",
+        {command:'fire_ebeam'},
+      )
+    }
   }
 
 }

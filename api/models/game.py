@@ -440,10 +440,10 @@ class Game(BaseModel):
 
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
         # gets starting point of EBeam ray
-        p0_x, p0_y = ship.map_p0
         p1_x, p1_y = ship.map_p1
-        pm_x = round(p0_x + p1_x) / 2
-        pm_y = round(p0_y + p1_y) / 2
+        p2_x, p2_y = ship.map_p2
+        pm_x = round(p1_x + p2_x) / 2
+        pm_y = round(p1_y + p2_y) / 2
         intercept_calculator, ray_point_b = utils2d.hitboxes_intercept_ray_factory(
             (pm_x, pm_y),
             ship.heading,

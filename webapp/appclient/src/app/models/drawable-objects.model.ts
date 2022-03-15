@@ -66,9 +66,16 @@ export class DrawableEngineOverlay {
     metersPerSecond: number | string
 }
 
+export class EBeamRayDetails {
+    startPoint: PointCoord
+    endPoint: PointCoord
+    color: string
+}
+
 
 export class DrawableCanvasItems {
     ships: DrawableShip[]
+    ebeamRays: EBeamRayDetails[]
     reactionWheelOverlay?: DrawableReactionWheelOverlay
     engineOverlay?: DrawableEngineOverlay
 }
