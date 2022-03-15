@@ -261,6 +261,7 @@ export class CameraService {
       const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
       drawableItems.ships.push({
         isSelf: true,
+        alive: ship.alive,
         designator: "you",
         canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
         canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
@@ -274,6 +275,8 @@ export class CameraService {
         engineLit: ship.engine_lit,
         fillColor: "#919191",
         shipId: ship.id,
+        aflame: ship.aflame,
+        explosionFrame: ship.explosion_frame,
       })
 
       if(ship.reaction_wheel_online) {
@@ -321,6 +324,7 @@ export class CameraService {
       if (scannerData.element_type === 'ship') {
         let drawableShip: DrawableShip = {
           isSelf: false,
+          alive: scannerData.alive,
           shipId: scannerData.id,
           canvasCoordCenter: this.mapCoordToCanvasCoord({
             x: scannerData.coord_x,
@@ -377,6 +381,8 @@ export class CameraService {
             canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
             engineLit: scannerData.visual_engine_lit,
             fillColor: scannerData.visual_fill_color,
+            aflame: scannerData.visual_aflame,
+            explosionFrame: scannerData.visual_explosion_frame,
             ...drawableShip
           }
         }

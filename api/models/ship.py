@@ -382,6 +382,10 @@ class Ship(BaseModel):
             'ebeam_charge': self.ebeam_charge,
             'ebeam_can_fire': self.ebeam_charge >= self.ebeam_charge_fire_minimum and not self.ebeam_firing,
 
+            'alive': self.died_on_frame is None,
+            'aflame': self.aflame_since_frame is not None,
+            'explosion_frame': self.explosion_frame,
+
             'visual_range': self.visual_range,
 
             'autopilot_program': self.autopilot_program,
@@ -756,9 +760,7 @@ class Ship(BaseModel):
                 self.explosion_frame = None
 
         elif self.explode_immediately:
-            self.explosion_frame = 1
-            self.explosion_point = self.coords
-            self.aflame_since_frame = None
+            self.explode()
 
         elif self.aflame_since_frame is None:
             # Ship not aflame yet
@@ -770,9 +772,14 @@ class Ship(BaseModel):
             # ship is onfire and it's going to explode
             seconds_aflame = (game_frame - self.aflame_since_frame) / fps
             if seconds_aflame > self._seconds_to_explode:
-                self.explosion_frame = 1
-                self.explosion_point = self.coords
-                self.aflame_since_frame = None
+                self.explode()
+
+    def explode(self):
+        self.explosion_frame = 1
+        self.explosion_point = self.coords
+        self.aflame_since_frame = None
+        self.velocity_x_meters_per_second = 0
+        self.velocity_y_meters_per_second = 0
 
     def advance_thermal_signature(self, fps: int) -> None:
         self.scanner_thermal_signature_delta = 0
@@ -928,7 +935,6 @@ class Ship(BaseModel):
             self.heading_0_fin_1_rel_coord_1,
             delta_radians
         )
-
 
 
     # Engine Commands

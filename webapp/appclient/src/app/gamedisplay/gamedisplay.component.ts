@@ -382,6 +382,7 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.fillStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
         this.ctx.textAlign = 'left'
         let desigPrefix = cursorOnShip ? "👉" : ""
+        // if(drawableShip)
         this.ctx.fillText(desigPrefix + drawableShip.designator, bbXOffset, bbYOffset)
         bbYOffset += bbYInterval
         if(drawableShip.distance) {

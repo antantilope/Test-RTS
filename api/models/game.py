@@ -378,6 +378,7 @@ class Game(BaseModel):
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
                     'element_type': ScannedElementType.SHIP,
+                    'alive': self._ships[other_id].died_on_frame is None
                 }
                 if is_visual:
                     scanner_data.update({
@@ -395,6 +396,8 @@ class Game(BaseModel):
                         'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
                         'visual_ebeam_color': self._ships[other_id].ebeam_color,
                         'visual_fill_color': '#ffffff',
+                        'visual_aflame': self._ships[other_id].aflame_since_frame is not None,
+                        'visual_explosion_frame': self._ships[other_id].explosion_frame,
                     })
                 if is_scannable:
                     heading = heading_cache.get_val(ship_coords, other_coords)
