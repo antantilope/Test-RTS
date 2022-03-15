@@ -218,8 +218,8 @@ class Ship(BaseModel):
         # Damage
         self.died_on_frame = None
         self.aflame_since_frame = None
-        self._seconds_to_aflame = random.randint(0, 4)
-        self.explode_immediately = random.randint(0, 3) == 1
+        self._seconds_to_aflame = 4 # random.randint(0, 4)
+        self.explode_immediately = False # random.randint(0, 3) == 1
         self.explosion_frame = None
         self.explosion_point = None
         self._seconds_to_explode = random.randint(2, 7)
@@ -756,8 +756,6 @@ class Ship(BaseModel):
         if self.explosion_frame:
             # Ship is exploding, advance explosion frame
             self.explosion_frame += 1
-            if self.explosion_frame > 800 * fps:
-                self.explosion_frame = None
 
         elif self.explode_immediately:
             self.explode()
@@ -780,6 +778,18 @@ class Ship(BaseModel):
         self.aflame_since_frame = None
         self.velocity_x_meters_per_second = 0
         self.velocity_y_meters_per_second = 0
+
+    def die(self, game_frame: int):
+        self.died_on_frame = game_frame
+        self.engine_lit = False
+        self.engine_starting = False
+        self.engine_online = False
+        self.scanner_online = False
+        self.scanner_starting = False
+        self.ebeam_firing = False
+        self.ebeam_charging = False
+        self.reaction_wheel_online = False
+        self.autopilot_program = None
 
     def advance_thermal_signature(self, fps: int) -> None:
         self.scanner_thermal_signature_delta = 0
