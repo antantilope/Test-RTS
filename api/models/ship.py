@@ -183,6 +183,7 @@ class Ship(BaseModel):
         self.scanner_activation_power_required_total = None
         self.scanner_activation_power_required_per_second = None
         self.scanner_startup_power_used = None
+        self.scanner_seconds_to_activate = None
         self.scanner_locked = False
         self.scanner_locking = False
         self.scanner_locking_power_used = None
@@ -218,6 +219,7 @@ class Ship(BaseModel):
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 4)
+        self.explode_immediately = random.randint(0, 3) == 1
         self.explosion_frame = None
         self.explosion_point = None
         self._seconds_to_explode = random.randint(2, 7)
@@ -752,6 +754,11 @@ class Ship(BaseModel):
             self.explosion_frame += 1
             if self.explosion_frame > 800 * fps:
                 self.explosion_frame = None
+
+        elif self.explode_immediately:
+            self.explosion_frame = 1
+            self.explosion_point = self.coords
+            self.aflame_since_frame = None
 
         elif self.aflame_since_frame is None:
             # Ship not aflame yet
