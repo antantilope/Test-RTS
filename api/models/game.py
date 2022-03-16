@@ -95,6 +95,7 @@ class Game(BaseModel):
         self._game_frame = 0
         self._max_players = 8
         self._game_start_countdown = GAME_START_COUNTDOWN_FROM
+        self._winning_team = None
 
         self._map_units_per_meter = None
         self._map_x_unit_length = None
@@ -148,6 +149,7 @@ class Game(BaseModel):
             'elapsed_time': LEADING_ZEROS_TIME.sub("", str(dt.datetime.now() - self._game_start_time)).split(".")[0],
             'ships': [ship.to_dict() for ship in self._ships.values()],
             'ebeam_rays': self._ebeam_rays,
+            "winning_team": self._winning_team,
         }
 
 
@@ -323,6 +325,11 @@ class Game(BaseModel):
             ship.run_autopilot()
             self.calculate_weapons_and_damage(ship_id)
 
+        # Post frame checks
+        if self._game_frame % 30 == 0 and not self._winning_team:
+            self.check_for_winning_team()
+
+        # Increment the game frame for the next frame.
         self.incr_game_frame()
 
 
@@ -465,6 +472,12 @@ class Game(BaseModel):
                 hits.append(other_id)
 
         return line, hits
+
+
+    def check_for_winning_team(self):
+        alive_teams = set(s.team_id for s in self._ships.values() if s.died_on_frame is None)
+        if len(alive_teams) == 1:
+            self._winning_team = alive_teams.pop()
 
 
     def _process_ship_command(self, command: FrameCommand):

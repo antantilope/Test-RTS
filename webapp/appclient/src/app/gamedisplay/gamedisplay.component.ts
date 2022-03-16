@@ -659,6 +659,13 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("🪦 YOU DIED IN SPACE", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
+    else if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 40px courier new'
+      this.ctx.fillStyle = '#ffffff'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
+    }
 
     // Resources (TOP LEFT)
     if(this._api.frameData.ship.alive){
