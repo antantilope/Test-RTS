@@ -33,47 +33,6 @@
         </div>
     </div>
     <div id="command-bar-container" class="game-display-container">
-        <div class=command-bar-column>
-            <div class="command-bar-column-header">
-                REACTION WHEEL
-            </div>
-            <div>
-                <button
-                    *ngIf="enableActivateReactionWheelBtn && _api.frameData.ship.alive"
-                    (click)="btnActivateReactionWheel()"
-                    class="command-btn"
-                    style="background: url('/static/img/activate-rw.jpg'); background-size:100% 100%;"
-                    title="Activate Reaction Wheel"
-                >
-                </button>
-                <button
-                    *ngIf="!enableActivateReactionWheelBtn || !_api.frameData.ship.alive"
-                    class="command-btn"
-                    style="background: url('/static/img/activate-rw-gs.jpg'); background-size:100% 100%;"
-                    title="Activate Reaction Wheel"
-                    disabled
-                >
-                </button>
-            </div>
-            <div>
-                <button
-                    *ngIf="!enableActivateReactionWheelBtn && _api.frameData.ship.alive"
-                    (click)="btnDeactivateReactionWheel()"
-                    class="command-btn"
-                    style="background: url('/static/img/deactivate-rw.jpg'); background-size:100% 100%;"
-                    title="Deactivate Reaction Wheel"
-                >
-                </button>
-                <button
-                    *ngIf="enableActivateReactionWheelBtn || !_api.frameData.ship.alive"
-                    class="command-btn"
-                    style="background: url('/static/img/deactivate-rw-gs.jpg'); background-size:100% 100%;"
-                    title="Deactivate Reaction Wheel"
-                    disabled
-                >
-                </button>
-            </div>
-        </div>
 
         <div class=command-bar-column>
             <div class="command-bar-column-header">
@@ -248,7 +207,7 @@
                     <!-- Scanner Sub Column 3 -->
                     <div>
                         <button
-                            class="scanner-ctrl-btn"
+                            class="gd-ctrl-btn"
                             (click)="btnClickScannerCursorUp()"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
                         >
@@ -257,7 +216,7 @@
                     </div>
                     <div>
                         <button
-                            class="scanner-ctrl-btn"
+                            class="gd-ctrl-btn"
                             (click)="btnClickScannerCursorDown()"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
                         >
@@ -266,7 +225,7 @@
                     </div>
                     <div>
                         <button
-                            class="scanner-ctrl-btn"
+                            class="gd-ctrl-btn"
                             (click)="btnClickScannerCursorLock()"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
                         >
@@ -285,7 +244,7 @@
                     <!-- Energy Beam Sub Column 1 -->
                     <div>
                         <button
-                            class="scanner-ctrl-btn"
+                            class="gd-ctrl-btn"
                             style="min-width:80px;"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.ebeam_charging || _api.frameData.ship.ebeam_firing"
                             (click)="btnClickChargeEBeam()"
@@ -295,7 +254,7 @@
                     </div>
                     <div>
                         <button
-                            class="scanner-ctrl-btn"
+                            class="gd-ctrl-btn"
                             style="min-width:80px;"
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.ebeam_charging"
                             (click)="btnClickPauseChargeEBeam()"
@@ -305,12 +264,71 @@
                     </div>
                     <div>
                         <button
-                            class="scanner-ctrl-btn"
+                            class="gd-ctrl-btn"
                             style="min-width:80px;"
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.ebeam_can_fire"
                             (click)="btnClickFireEBeam()"
                         >
                             (f)ire 🔥
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class=command-bar-column>
+            <div class="command-bar-column-header">
+                AUTO PILOT
+            </div>
+            <div style="display:flex;">
+                <div>
+                    <div>
+                        <button
+                            class="gd-ctrl-btn-red"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.autopilot_program"
+                            (click)="btnDisableAutoPilot()"
+                        >
+                            OFF
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'position_hold'"
+                            (click)="btnAutoPilotHaltPosition()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'position_hold') ? '#00ff00' : '#000000'}"
+                        >
+                            HALT
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_target' || !_api.frameData.ship.scanner_lock_target || !_api.frameData.ship.scanner_locked"
+                            (click)="btnAutoPilotHeadingLockTarget()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_target') ? '#00ff00' : '#000000'}"
+                        >
+                            T-TARGET
+                        </button>
+                    </div>
+
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_prograde'"
+                            (click)="btnAutoPilotHeadingLockPrograde()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_prograde') ? '#00ff00' : '#000000'}"
+                        >
+                            T-PRO
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_retrograde'"
+                            (click)="btnAutoPilotHeadingLockRetrograde()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_retrograde') ? '#00ff00' : '#000000'}"
+                        >
+                            T-RETRO
                         </button>
                     </div>
                 </div>

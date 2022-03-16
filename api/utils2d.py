@@ -1,6 +1,6 @@
 
 import math
-from typing import Tuple, Union, Callable, Optional
+from typing import Tuple, Union, Optional
 
 from api.constants import (
     ORGIN_COORD,
@@ -77,7 +77,7 @@ def heading_to_rise_over_run_slope(degrees: int) -> float:
 
 def hitboxes_intercept_ray_factory(
     point: Tuple[int],
-    heading: int,
+    heading: Union[int, float],
     map_dims: Tuple[int],
 ) -> Tuple:
     """ params
@@ -153,8 +153,6 @@ def hitboxes_intercept_ray_factory(
     # Non-Cardinal heading factory
     ror_slope = heading_to_rise_over_run_slope(heading)
     general_direction = degrees_to_general_direction(heading)
-    minmax_x = lambda v: max(0, min(v, map_dims[0]))
-    minmax_y = lambda v: max(0, min(v, map_dims[1]))
     if general_direction == GENERAL_DIRECTION.north_east_ish:
         ray_point_b = (
             # X
@@ -331,12 +329,12 @@ def calculate_heading_to_point(point_a: Tuple, point_b: Tuple) -> float:
         return 0 # dx and dy are both 0
 
     if both_positive:
-        return round(angle)
+        return angle
     elif both_negative:
-        return invert_heading(round(angle))
+        return invert_heading(angle)
     elif y_negative:
-        return invert_heading(signed_angle_to_unsigned_angle(round(angle)))
+        return invert_heading(signed_angle_to_unsigned_angle(angle))
     elif x_negative:
-        return signed_angle_to_unsigned_angle(round(angle))
+        return signed_angle_to_unsigned_angle(angle)
     else:
         raise NotImplementedError

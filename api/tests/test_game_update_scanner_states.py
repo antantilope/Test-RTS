@@ -616,3 +616,32 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
         assert not self.game._ships[self.player_1_ship_id].scanner_locked
         assert self.game._ships[self.player_1_ship_id].scanner_lock_target is None
+
+
+    def test_scanner_data_includes_exact_heading_when_scanner_is_online(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_2_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_2_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_2_ship_id].scanner_mode = ShipScannerMode.RADAR
+
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+
+        self.game.update_scanner_states(self.player_1_ship_id)
+        self.game.update_scanner_states(self.player_2_ship_id)
+
+        assert "relative_heading" in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
+        assert "target_heading" in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
+        assert "relative_heading" in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
+        assert "target_heading" in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
+
+        assert isinstance(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['target_heading'], float)
+        assert isinstance(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['relative_heading'], int)
+

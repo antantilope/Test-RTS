@@ -11,7 +11,6 @@ import { Subscription } from 'rxjs'
 import {
   DrawableCanvasItems,
   DrawableShip,
-  DrawableReactionWheelOverlay,
   DrawableEngineOverlay,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
@@ -26,9 +25,6 @@ import {
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
 import { PointCoord } from '../models/point-coord.model'
-import { stderr } from 'process'
-import { NullVisitor } from '@angular/compiler/src/render3/r3_ast'
-
 
 
 const randomInt = function (min: number, max: number): number  {
@@ -50,7 +46,6 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  public enableActivateReactionWheelBtn = false
   public enableEngineOnlineBtn = false
   public enableEngineOfflineBtn = false
   public enableEngineLightBtn = false
@@ -71,6 +66,11 @@ export class GamedisplayComponent implements OnInit {
   private mousePanLastX: number | null = null
   private mousePanLastY: number | null = null
   private mouseMovedWhileDown = false
+
+  /* Props to track click to change heading feedback */
+  private clickAnimationFrame: number | null = null
+  private clickAnimationCanvasX: number | null = null
+  private clickAnimationCanvasY: number | null = null
 
   /* Props used to hold debug data */
   private isDebug: boolean = false
@@ -196,12 +196,15 @@ export class GamedisplayComponent implements OnInit {
     const mouseCanvasX = event.clientX - this.canvas.nativeElement.offsetLeft
     const mouseCanvasY = event.clientY - this.canvas.nativeElement.offsetTop
     if(
-      this._api.frameData.ship.reaction_wheel_online
-      && !this._api.frameData.ship.autopilot_program
+      !this._api.frameData.ship.autopilot_program
       && this.drawableObjects !== null
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
     ) {
+      this.clickAnimationFrame = 1
+      this.clickAnimationCanvasX = mouseCanvasX
+      this.clickAnimationCanvasY = mouseCanvasY
+
       this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
     }
   }
@@ -471,7 +474,7 @@ export class GamedisplayComponent implements OnInit {
               lineLength,
             )
             this.ctx.beginPath()
-            this.ctx.strokeStyle = "rgb(255, 170, 170, 0.65)"
+            this.ctx.strokeStyle = "rgb(255, 220, 220, 0.90)"
             this.ctx.moveTo(linep1.x, linep1.y)
             this.ctx.lineTo(linep2.x, linep2.y)
             this.ctx.stroke()
@@ -568,26 +571,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.stroke()
     }
 
-    // Reaction Wheel overlay
-    const reactionWheelOverlay: DrawableReactionWheelOverlay | undefined = drawableObjects.reactionWheelOverlay
-    if(typeof reactionWheelOverlay !== "undefined") {
-      this.ctx.strokeStyle = "rgb(43, 255, 0, 0.6)"
-      this.ctx.lineWidth = 1
-      this.ctx.beginPath()
-      this.ctx.moveTo(reactionWheelOverlay.compassPoint0.x, reactionWheelOverlay.compassPoint0.y)
-      this.ctx.lineTo(reactionWheelOverlay.compassPoint1.x, reactionWheelOverlay.compassPoint1.y)
-      this.ctx.stroke();
-      this.ctx.beginPath()
-      this.ctx.font = 'bold 18px Courier New'
-      this.ctx.fillStyle = 'rgb(43, 255, 0,  0.8)'
-      this.ctx.textAlign = 'center'
-      this.ctx.fillText(
-        this._api.frameData.ship.heading,
-        reactionWheelOverlay.compassPoint1.x,
-        reactionWheelOverlay.compassPoint1.y,
-      )
-    }
-
     // Engine overlay
     const engineOverlay: DrawableEngineOverlay | undefined = drawableObjects.engineOverlay
     if(typeof engineOverlay !== "undefined") {
@@ -666,11 +649,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("SCANNER" + (this._api.frameData.ship.scanner_locked ? " LOCK" : "") + " (" + this._api.frameData.ship.scanner_mode + ")", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
-    if(this._api.frameData.ship.reaction_wheel_online) {
-      this.ctx.beginPath()
-      this.ctx.fillText("REACTION WHEEL", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
     if(this._api.frameData.ship.ebeam_can_fire) {
       this.ctx.beginPath()
       this.ctx.fillText("E-BEAM READY", lrcXOffset, lrcYOffset)
@@ -679,6 +657,11 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData.ship.ebeam_charging) {
       this.ctx.beginPath()
       this.ctx.fillText("E-BEAM CHARGING", lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
+    if(this._api.frameData.ship.autopilot_program) {
+      this.ctx.beginPath()
+      this.ctx.fillText("AUTOPILOT " + this._api.frameData.ship.autopilot_program, lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
     // Red alerts
@@ -776,6 +759,25 @@ export class GamedisplayComponent implements OnInit {
 
     }
 
+    // Click feedback
+    if(this.clickAnimationFrame) {
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = "#00ff00"
+      this.ctx.lineWidth = 3
+      this.ctx.arc(
+        this.clickAnimationCanvasX,
+        this.clickAnimationCanvasY,
+        this.clickAnimationFrame * 2.5,
+        0,
+        2 * Math.PI,
+      )
+      this.ctx.stroke()
+      this.clickAnimationFrame++
+      if (this.clickAnimationFrame > 10) {
+        this.clickAnimationFrame = null
+      }
+    }
+
     window.requestAnimationFrame(this.paintDisplay.bind(this))
 
   }
@@ -851,13 +853,6 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData === null) {
       return
     }
-    // Reaction wheel
-    if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
-      this.enableActivateReactionWheelBtn = true
-    }
-    else {
-      this.enableActivateReactionWheelBtn = false
-    }
 
     // Engine
     this.enableEngineOnlineBtn = this._api.frameData.ship.available_commands.includes('activate_engine')
@@ -873,28 +868,6 @@ export class GamedisplayComponent implements OnInit {
 
   }
 
-
-  public async btnActivateReactionWheel() {
-    if(!this.enableActivateReactionWheelBtn) {
-      return
-    }
-    console.log("btnActivateReactionWheel()")
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'activate_reaction_wheel'},
-    )
-  }
-
-  public async btnDeactivateReactionWheel() {
-    if(this.enableActivateReactionWheelBtn) {
-      return
-    }
-    console.log("btnDeactivateReactionWheel()")
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'deactivate_reaction_wheel'},
-    )
-  }
 
   public async btnActivateEngine() {
     await this._api.post(
@@ -952,6 +925,37 @@ export class GamedisplayComponent implements OnInit {
     )
   }
 
+  // Autopilot button handlers.
+  public async btnDisableAutoPilot() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'disable_autopilot'},
+    )
+  }
+  public async btnAutoPilotHaltPosition() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'position_hold'},
+    )
+  }
+  public async btnAutoPilotHeadingLockTarget() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'lock_target'},
+    )
+  }
+  public async btnAutoPilotHeadingLockPrograde() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'lock_prograde'},
+    )
+  }
+  public async btnAutoPilotHeadingLockRetrograde() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'lock_retrograde'},
+    )
+  }
 
   btnClickScannerCursorUp() {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {

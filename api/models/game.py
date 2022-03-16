@@ -3,7 +3,6 @@ import datetime as dt
 import random
 from typing import Tuple, TypedDict, Optional, List, Dict, Set
 from time import sleep
-import uuid
 import re
 
 from .base import BaseModel
@@ -18,7 +17,6 @@ from api.constants import (
 )
 from api.coord_cache import (
     CoordDistanceCache,
-    CoordHeadingCache,
 )
 from api.logger import get_logger
 
@@ -316,13 +314,13 @@ class Game(BaseModel):
         self._ebeam_rays.clear()
 
         for ship_id, ship in self._ships.items():
-            # Ship level side effects
             ship.adjust_resources(self._fps)
             ship.calculate_physics(self._fps)
             ship.advance_thermal_signature(self._fps)
-
-            # Game level side effects
             self.update_scanner_states(ship_id)
+
+            # Autopilot/weapons updates must run after scanner/physics updates
+            ship.run_autopilot()
             self.calculate_weapons_and_damage(ship_id)
 
         self.incr_game_frame()
@@ -330,7 +328,6 @@ class Game(BaseModel):
 
     def update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
-        heading_cache = CoordHeadingCache()
 
         self._ships[ship_id].scanner_data.clear()
 
@@ -404,12 +401,12 @@ class Game(BaseModel):
                         'visual_fill_color': '#ffffff',
                     })
                 if is_scannable:
-                    heading = heading_cache.get_val(ship_coords, other_coords)
-                    if heading is None:
-                        heading = round(utils2d.calculate_heading_to_point(ship_coords, other_coords))
-                        heading_cache.set_val(ship_coords, other_coords, heading)
-                    scanner_data['distance'] = round(distance_meters)
-                    scanner_data['relative_heading'] = heading
+                    exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
+                    scanner_data.update({
+                        "distance": round(distance_meters),
+                        "relative_heading": round(exact_heading),
+                        "target_heading": exact_heading,
+                    })
                     if self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
                         scanner_data['thermal_signature'] = self._ships[other_id].scanner_thermal_signature
 
@@ -453,7 +450,7 @@ class Game(BaseModel):
         pm_y = round(p1_y + p2_y) / 2
         intercept_calculator, ray_point_b = utils2d.hitboxes_intercept_ray_factory(
             (pm_x, pm_y),
-            ship.heading,
+            ship.ebeam_heading,
             (self._map_x_unit_length, self._map_y_unit_length,),
         )
         line = (

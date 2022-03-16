@@ -8,6 +8,7 @@ const { CommandValidationError } = require("../lib/command_validators/validation
 const {
     validateSetHeadingCommand,
     validateSetScannerLockTargetCommand,
+    validateRunAutoPilotProgram,
 } = require("../lib/command_validators/validators");
 
 
@@ -18,18 +19,6 @@ const commandHandlers = {
             player_id: req.session.player_id,
             ship_command: 'set_heading',
             args: [validatedData.heading],
-        });
-    },
-    activate_reaction_wheel: (req, queueName) => {
-        req.app.get(queueName).push({
-            player_id: req.session.player_id,
-            ship_command: 'activate_reaction_wheel',
-        });
-    },
-    deactivate_reaction_wheel: (req, queueName) => {
-        req.app.get(queueName).push({
-            player_id: req.session.player_id,
-            ship_command: 'deactivate_reaction_wheel',
         });
     },
     activate_engine: (req, queueName) => {
@@ -104,6 +93,20 @@ const commandHandlers = {
         req.app.get(queueName).push({
             player_id: req.session.player_id,
             ship_command: 'fire_ebeam',
+        });
+    },
+    run_autopilot: (req, queueName) => {
+        data = validateRunAutoPilotProgram(req.body);
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'run_autopilot',
+            args:[data.autopilot_program],
+        });
+    },
+    disable_autopilot: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'disable_autopilot',
         });
     },
 };

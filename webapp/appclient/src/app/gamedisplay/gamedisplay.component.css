@@ -78,10 +78,24 @@
 }
 
 
-.scanner-ctrl-btn {
+.gd-ctrl-btn {
     width: 100%;
     font-size:115%;
     color: #1b003f;
     font-weight: bold;
     border-radius: 4px;
+}
+
+.gd-ctrl-btn-red {
+    width: 100%;
+    font-size:115%;
+    background-color: #810000;
+    color:rgb(218, 218, 218);
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.gd-ctrl-btn-red:disabled {
+    background-color: #380000;
+    color:rgb(73, 73, 73);
 }
