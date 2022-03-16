@@ -67,6 +67,11 @@ export class GamedisplayComponent implements OnInit {
   private mousePanLastY: number | null = null
   private mouseMovedWhileDown = false
 
+  /* Props to track click to change heading feedback */
+  private clickAnimationFrame: number | null = null
+  private clickAnimationCanvasX: number | null = null
+  private clickAnimationCanvasY: number | null = null
+
   /* Props used to hold debug data */
   private isDebug: boolean = false
   private lastFrameTime:any = null
@@ -196,6 +201,10 @@ export class GamedisplayComponent implements OnInit {
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
     ) {
+      this.clickAnimationFrame = 1
+      this.clickAnimationCanvasX = mouseCanvasX
+      this.clickAnimationCanvasY = mouseCanvasY
+
       this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
     }
   }
@@ -465,7 +474,7 @@ export class GamedisplayComponent implements OnInit {
               lineLength,
             )
             this.ctx.beginPath()
-            this.ctx.strokeStyle = "rgb(255, 170, 170, 0.65)"
+            this.ctx.strokeStyle = "rgb(255, 220, 220, 0.90)"
             this.ctx.moveTo(linep1.x, linep1.y)
             this.ctx.lineTo(linep2.x, linep2.y)
             this.ctx.stroke()
@@ -743,6 +752,25 @@ export class GamedisplayComponent implements OnInit {
 
       brcYOffset += brcYInterval
 
+    }
+
+    // Click feedback
+    if(this.clickAnimationFrame) {
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = "#00ff00"
+      this.ctx.lineWidth = 3
+      this.ctx.arc(
+        this.clickAnimationCanvasX,
+        this.clickAnimationCanvasY,
+        this.clickAnimationFrame * 2.5,
+        0,
+        2 * Math.PI,
+      )
+      this.ctx.stroke()
+      this.clickAnimationFrame++
+      if (this.clickAnimationFrame > 10) {
+        this.clickAnimationFrame = null
+      }
     }
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
