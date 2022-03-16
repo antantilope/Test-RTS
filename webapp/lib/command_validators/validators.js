@@ -24,5 +24,20 @@ const validateSetScannerLockTargetCommand = (data) => {
     return {target: uuid}
 }
 
+const validateRunAutoPilotProgram = (data) => {
+    const programs = [
+        "position_hold", "lock_target", "lock_prograde", "lock_retrograde"
+    ]
+    const autopilot_program = data.autopilot_program;
+    if (!autopilot_program) {
+        throw new CommandValidationError("invalid program");
+    }
+    if(programs.indexOf(autopilot_program) == -1) {
+        throw new CommandValidationError("invalid program");
+    }
+    return { autopilot_program };
+}
+
 exports.validateSetHeadingCommand = validateSetHeadingCommand;
-exports.validateSetScannerLockTargetCommand = validateSetScannerLockTargetCommand
+exports.validateSetScannerLockTargetCommand = validateSetScannerLockTargetCommand;
+exports.validateRunAutoPilotProgram = validateRunAutoPilotProgram;

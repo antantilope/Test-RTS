@@ -35,7 +35,7 @@ class ShipCommands:
     SET_SCANNER_MODE_IR = 'set_scanner_mode_ir'
     SET_SCANNER_LOCK_TARGET = 'set_scanner_lock_target'
 
-    RUN_AUTOPILOT_PROGRAM = 'run_autopilot_program'
+    RUN_AUTOPILOT_PROGRAM = 'run_autopilot'
     DISABLE_AUTO_PILOT = 'disable_autopilot'
 
     CHARGE_EBEAM = 'charge_ebeam'
@@ -792,7 +792,47 @@ class Ship(BaseModel):
             if not self.scanner_locked or not self.scanner_lock_target:
                 self.autopilot_program = None
                 return
-            self.heading = self.scanner_data[self.scanner_lock_target]["relative_heading"]
+            self._set_heading(self.scanner_data[self.scanner_lock_target]["relative_heading"])
+
+        elif self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_PROGRADE:
+            _, angle = utils2d.calculate_resultant_vector(
+                self.velocity_x_meters_per_second,
+                self.velocity_y_meters_per_second)
+            self._set_heading(angle)
+
+        elif self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_RETROGRADE:
+            _, angle = utils2d.calculate_resultant_vector(
+                self.velocity_x_meters_per_second,
+                self.velocity_y_meters_per_second)
+            self._set_heading(utils2d.invert_heading(angle))
+
+        elif self.autopilot_program == AutoPilotPrograms.POSITION_HOLD:
+            self._autopilot_hold_position()
+
+
+    def _autopilot_hold_position(self):
+        if self.velocity_x_meters_per_second < 1.5 and self.velocity_y_meters_per_second < 1.5:
+            # Force the ship to stop moving and end Autopilot program
+            # If ship velocity is slow enough.
+            self.velocity_x_meters_per_second = 0
+            self.velocity_y_meters_per_second = 0
+            self.engine_lit = False
+            self.autopilot_program = None
+            return
+
+        if not self.engine_online:
+            self.autopilot_program = None
+            return
+
+        _, angle = utils2d.calculate_resultant_vector(
+            self.velocity_x_meters_per_second,
+            self.velocity_y_meters_per_second)
+        new_heading = utils2d.invert_heading(angle)
+        if new_heading != self.heading:
+            self._set_heading(new_heading)
+
+        if not self.engine_lit:
+            self.engine_lit = True
 
 
     def get_available_commands(self) -> Generator[str, None, None]:
@@ -858,6 +898,12 @@ class Ship(BaseModel):
         elif command == ShipCommands.FIRE_EBEAM:
             self.cmd_fire_ebeam()
 
+        elif command == ShipCommands.RUN_AUTOPILOT_PROGRAM:
+            self.cmd_run_autopilot_program(args[0])
+
+        elif command == ShipCommands.DISABLE_AUTO_PILOT:
+            self.cmd_disable_autopilot()
+
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -870,8 +916,12 @@ class Ship(BaseModel):
         if not (359 >= heading >= 0):
             raise ShipCommandError("invalid heading")
 
+        self._set_heading(heading)
+
+    def _set_heading(self, heading: int):
         self.heading = heading
         self._set_relative_coords()
+
 
     def _set_relative_coords(self) -> None:
         delta_degrees = utils2d.heading_to_delta_heading_from_zero(self.heading)
@@ -995,9 +1045,7 @@ class Ship(BaseModel):
             self.ebeam_firing = True
 
     def cmd_run_autopilot_program(self, program_name: str):
-        if self.autopilot_program:
-            return
-        elif program_name == AutoPilotPrograms.POSITION_HOLD:
+        if program_name == AutoPilotPrograms.POSITION_HOLD:
             if self.engine_online:
                 self.autopilot_program = program_name
         elif (
@@ -1011,4 +1059,6 @@ class Ship(BaseModel):
 
     def cmd_disable_autopilot(self):
         if self.autopilot_program:
+            if self.autopilot_program == AutoPilotPrograms.POSITION_HOLD:
+                self.engine_lit = False
             self.autopilot_program = None

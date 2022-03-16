@@ -286,6 +286,7 @@
                         <button
                             class="gd-ctrl-btn-red"
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.autopilot_program"
+                            (click)="btnDisableAutoPilot()"
                         >
                             OFF
                         </button>
@@ -294,6 +295,8 @@
                         <button
                             class="gd-ctrl-btn"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'position_hold'"
+                            (click)="btnAutoPilotHaltPosition()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'position_hold') ? '#00ff00' : '#000000'}"
                         >
                             HALT
                         </button>
@@ -301,7 +304,9 @@
                     <div>
                         <button
                             class="gd-ctrl-btn"
-                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_target'"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_target' || !_api.frameData.ship.scanner_lock_target || !_api.frameData.ship.scanner_locked"
+                            (click)="btnAutoPilotHeadingLockTarget()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_target') ? '#00ff00' : '#000000'}"
                         >
                             T-TARGET
                         </button>
@@ -311,6 +316,8 @@
                         <button
                             class="gd-ctrl-btn"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_prograde'"
+                            (click)="btnAutoPilotHeadingLockPrograde()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_prograde') ? '#00ff00' : '#000000'}"
                         >
                             T-PRO
                         </button>
@@ -319,6 +326,8 @@
                         <button
                             class="gd-ctrl-btn"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_retrograde'"
+                            (click)="btnAutoPilotHeadingLockRetrograde()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_retrograde') ? '#00ff00' : '#000000'}"
                         >
                             T-RETRO
                         </button>

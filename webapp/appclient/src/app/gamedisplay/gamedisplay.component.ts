@@ -659,6 +659,11 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("E-BEAM CHARGING", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
+    if(this._api.frameData.ship.autopilot_program) {
+      this.ctx.beginPath()
+      this.ctx.fillText("AUTOPILOT " + this._api.frameData.ship.autopilot_program, lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+    }
     // Red alerts
     this.ctx.fillStyle = 'rgb(222, 2, 2, 0.8)'
     if(this._api.frameData.ship.fuel_level < 1200) {
@@ -920,6 +925,37 @@ export class GamedisplayComponent implements OnInit {
     )
   }
 
+  // Autopilot button handlers.
+  public async btnDisableAutoPilot() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'disable_autopilot'},
+    )
+  }
+  public async btnAutoPilotHaltPosition() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'position_hold'},
+    )
+  }
+  public async btnAutoPilotHeadingLockTarget() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'lock_target'},
+    )
+  }
+  public async btnAutoPilotHeadingLockPrograde() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'lock_prograde'},
+    )
+  }
+  public async btnAutoPilotHeadingLockRetrograde() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'run_autopilot', autopilot_program:'lock_retrograde'},
+    )
+  }
 
   btnClickScannerCursorUp() {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
