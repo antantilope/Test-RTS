@@ -479,3 +479,4 @@ class Game(BaseModel):
             *args,
             **kwargs,
         )
+

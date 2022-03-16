@@ -215,8 +215,64 @@ export class CameraService {
     }
   }
 
-  public setCameraPositionAndZoomForScannerMode() {
+  public setCameraPositionAndZoomForScannerMode(scannerTargetIDCursor: string | null) {
+    const ship = this._api.frameData.ship
+    if(!scannerTargetIDCursor && ship.scanner_locked && ship.scanner_lock_target) {
+      // No scanner cursor and scanner is locked on a target
+      this.setCameraPositionAndZoomShowShipAndTarget(ship.scanner_lock_target)
+    }
+    else if (scannerTargetIDCursor) {
+      // Scanner cursor is pointed at locked on target
+      this.setCameraPositionAndZoomShowShipAndTarget(scannerTargetIDCursor)
+    }
+    else {
+      // Scanner may be locked but the cursor is set on another ship.
+      this.setCameraPositionAndZoomShowShipVision()
+    }
+  }
 
+  private setCameraPositionAndZoomShowShipVision() {
+    const ship = this._api.frameData.ship
+    this.setPosition(
+      ship.coord_x,
+      ship.coord_y,
+    )
+    // Map units.
+    const maxVisionRadius = Math.max(
+      ship.visual_range,
+      ship.scanner_online && ship.scanner_mode == 'ir' ? ship.scanner_ir_range : 0,
+      ship.scanner_online && ship.scanner_mode == 'radar' ? ship.scanner_radar_range : 0,
+    )
+    // Canvas pixels.
+    const canvasRadius = Math.min(
+      this.canvasHalfHeight,
+      this.canvasHalfWidth,
+    )
+    this.zoom = Math.ceil(maxVisionRadius / canvasRadius * this._api.frameData.map_config.units_per_meter)
+
+  }
+  private setCameraPositionAndZoomShowShipAndTarget(scannerTargetIDCursor: string){
+    const ship = this._api.frameData.ship
+    // Point camera between ship and target
+    const scannerData = ship.scanner_data.find(sd => sd.id == scannerTargetIDCursor)
+    const tx = scannerData.coord_x
+    const ty = scannerData.coord_y
+    const sx = ship.coord_x
+    const sy = ship.coord_y
+    const cx = Math.floor((tx + sx) / 2)
+    const cy = Math.floor((ty + sy) / 2)
+    this.setPosition(cx, cy)
+
+    // Set zoom level to show both ship and target
+    // Canvas pixels.
+    const canvasRadius = Math.floor(Math.min(
+      this.canvasHalfHeight,
+      this.canvasHalfWidth,
+    ) * 0.85)
+    // Map units.
+    let halfDistance = Math.sqrt(Math.pow(sx - tx, 2) + Math.pow(sy - ty, 2)) / 2
+    halfDistance = halfDistance - this._api.frameData.map_config.units_per_meter
+    this.zoom = halfDistance / canvasRadius
   }
 
   public getDrawableCanvasObjects(): DrawableCanvasItems {
@@ -283,30 +339,6 @@ export class CameraService {
         aflame: ship.aflame,
         explosionFrame: ship.explosion_frame,
       })
-
-      const velocityRadians = this.getCanvasAngleBetween(
-        {x:0, y:0},
-        {
-          x: Math.round(ship.velocity_x_meters_per_second * 1000),
-          y: Math.round(ship.velocity_y_meters_per_second * 1000),
-        }
-      )  * (Math.PI / 180)
-
-      if(ship.engine_online && (ship.velocity_x_meters_per_second || ship.velocity_y_meters_per_second)) {
-
-        drawableItems.engineOverlay = {
-          vectorPoint0: overlayCenter,
-          vectorPoint1: {
-            x: overlayCenter.x + Math.round((this.canvasHeight / 4) * Math.sin(velocityRadians)),
-            y: overlayCenter.y + Math.round((this.canvasHeight / 4) * Math.cos(velocityRadians)), // TODO: Why is this + and not -
-          },
-          metersPerSecond: Math.sqrt(
-            Math.pow(ship.velocity_x_meters_per_second, 2)
-            + Math.pow(ship.velocity_y_meters_per_second, 2)
-          ).toFixed(2),
-        }
-      }
-
     }
 
     // Draw other scanner elements
@@ -495,8 +527,8 @@ export class CameraService {
     const oy = startCanvasCoord.y
     const px = startCanvasCoord.x
     const py = startCanvasCoord.y - canvasDistance
-    const ia = angle * -1
-    const sia = Math.sin(ia)
+    const ia = angle * -1 * (Math.PI / 180)
+    const sia = Math.sin(ia )
     const cia = Math.cos(ia)
     const dx = px - ox
     const dy = py - oy

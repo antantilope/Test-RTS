@@ -59,12 +59,6 @@ export class DrawableShip {
     explosionFrame?: number
 }
 
-export class DrawableEngineOverlay {
-    vectorPoint0: PointCoord
-    vectorPoint1: PointCoord
-    metersPerSecond: number | string
-}
-
 export class EBeamRayDetails {
     startPoint: PointCoord
     endPoint: PointCoord
@@ -75,5 +69,4 @@ export class EBeamRayDetails {
 export class DrawableCanvasItems {
     ships: DrawableShip[]
     ebeamRays: EBeamRayDetails[]
-    engineOverlay?: DrawableEngineOverlay
 }

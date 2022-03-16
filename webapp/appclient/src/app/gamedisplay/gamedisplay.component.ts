@@ -11,7 +11,6 @@ import { Subscription } from 'rxjs'
 import {
   DrawableCanvasItems,
   DrawableShip,
-  DrawableEngineOverlay,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
@@ -30,7 +29,6 @@ import { PointCoord } from '../models/point-coord.model'
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
 }
-
 
 
 @Component({
@@ -269,10 +267,12 @@ export class GamedisplayComponent implements OnInit {
       )
     }
     else if (camMode === CAMERA_MODE_SCANNER) {
-      this._camera.setCameraPositionAndZoomForScannerMode()
+      this._camera.setCameraPositionAndZoomForScannerMode(
+        this.scannerTargetIDCursor,
+      )
     }
 
-
+    // Visual Range Circle
     const visibleRangeCanvasPXRadius = Math.round(
       (this._api.frameData.map_config.units_per_meter
       * this._api.frameData.ship.visual_range) / this._camera.getZoom()
@@ -293,6 +293,7 @@ export class GamedisplayComponent implements OnInit {
     )
     this.ctx.stroke()
 
+    // Scanner Range Cirlce
 
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
@@ -499,8 +500,8 @@ export class GamedisplayComponent implements OnInit {
         const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
         const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
-        this.ctx.strokeStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
-        this.ctx.lineWidth = cursorOnShip ? 5 : 2
+        this.ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+        this.ctx.lineWidth = shipIsLocked ? 5 : 2
         this.ctx.rect(
           drawableShip.canvasBoundingBox.x1,
           drawableShip.canvasBoundingBox.y1,
@@ -514,7 +515,7 @@ export class GamedisplayComponent implements OnInit {
         const bbYInterval = 20
         this.ctx.beginPath()
         this.ctx.font = 'bold 18px Courier New'
-        this.ctx.fillStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
+        this.ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
         this.ctx.textAlign = 'left'
         let desigPrefix = cursorOnShip ? "👉" : ""
         if(!drawableShip.alive) {
@@ -524,12 +525,7 @@ export class GamedisplayComponent implements OnInit {
         bbYOffset += bbYInterval
         if(drawableShip.distance) {
           this.ctx.beginPath()
-          this.ctx.fillText("DIST: " + drawableShip.distance + " M", bbXOffset, bbYOffset)
-          bbYOffset += bbYInterval
-        }
-        if(drawableShip.relativeHeading) {
-          this.ctx.beginPath()
-          this.ctx.fillText("BEAR: " + drawableShip.relativeHeading + "°", bbXOffset, bbYOffset)
+          this.ctx.fillText(drawableShip.distance + " M", bbXOffset, bbYOffset)
           bbYOffset += bbYInterval
         }
         if(shipIsLocked) {
@@ -569,26 +565,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.moveTo(ray.startPoint.x, ray.startPoint.y)
       this.ctx.lineTo(ray.endPoint.x, ray.endPoint.y)
       this.ctx.stroke()
-    }
-
-    // Engine overlay
-    const engineOverlay: DrawableEngineOverlay | undefined = drawableObjects.engineOverlay
-    if(typeof engineOverlay !== "undefined") {
-      this.ctx.beginPath()
-      this.ctx.strokeStyle = "rgb(255, 181, 43, 0.7)"
-      this.ctx.lineWidth = 2
-      this.ctx.moveTo(engineOverlay.vectorPoint0.x, engineOverlay.vectorPoint0.y)
-      this.ctx.lineTo(engineOverlay.vectorPoint1.x, engineOverlay.vectorPoint1.y)
-      this.ctx.stroke();
-      this.ctx.beginPath()
-      this.ctx.font = 'bold 18px Courier New'
-      this.ctx.fillStyle = 'rgb(255, 181, 43,  0.9)'
-      this.ctx.textAlign = 'center'
-      this.ctx.fillText(
-        engineOverlay.metersPerSecond + " M/S",
-        engineOverlay.vectorPoint1.x,
-        engineOverlay.vectorPoint1.y,
-      )
     }
 
     // lower right corner
@@ -759,6 +735,62 @@ export class GamedisplayComponent implements OnInit {
 
     }
 
+    // Gyroscope
+    if(!this.isDebug) {
+      // Circle
+      const buffer = 3;
+      const gryroscopeRadius = Math.floor(this._camera.canvasHalfHeight / 8)
+      const gryroscopeX = this._camera.canvasWidth - (gryroscopeRadius + buffer)
+      const gryroscopeY = gryroscopeRadius + buffer
+      this.ctx.beginPath()
+      this.ctx.fillStyle = "rgb(255, 255, 255, 0.65)"
+      this.ctx.arc(
+        gryroscopeX,
+        gryroscopeY,
+        gryroscopeRadius,
+        0,
+        2 * Math.PI,
+      )
+      this.ctx.fill()
+      // Line
+      if(
+        this._api.frameData.ship.velocity_x_meters_per_second
+        || this._api.frameData.ship.velocity_y_meters_per_second
+      ) {
+        const angleRads = this._camera.getCanvasAngleBetween(
+          {x:0, y:0},
+          {
+            x: gryroscopeX + this._api.frameData.ship.velocity_x_meters_per_second * 1000,
+            y: gryroscopeY + this._api.frameData.ship.velocity_y_meters_per_second * 1000,
+          }
+        ) * (Math.PI / 180)
+        const gyroLinePointB = {
+          x: gryroscopeX + Math.round(gryroscopeRadius * Math.sin(angleRads)),
+          y: gryroscopeY + Math.round(gryroscopeRadius * Math.cos(angleRads)),
+        }
+        this.ctx.beginPath()
+        this.ctx.strokeStyle = '#000000'
+        this.ctx.lineWidth = 4
+        this.ctx.moveTo(gryroscopeX, gryroscopeY)
+        this.ctx.lineTo(gyroLinePointB.x, gyroLinePointB.y)
+        this.ctx.stroke()
+      }
+      // Velocity Text
+      const velocity = Math.sqrt(
+        Math.pow(this._api.frameData.ship.velocity_x_meters_per_second, 2)
+        + Math.pow(this._api.frameData.ship.velocity_y_meters_per_second, 2)
+      ).toFixed(1)
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 22px Courier New'
+      this.ctx.fillStyle = 'rgb(255, 181, 43,  0.95)'
+      this.ctx.textAlign = 'right'
+      this.ctx.fillText(
+        velocity + " M/S",
+        this._camera.canvasWidth - 3,
+        gryroscopeY + gryroscopeRadius + 18,
+      )
+    }
+
     // Click feedback
     if(this.clickAnimationFrame) {
       this.ctx.beginPath()
@@ -919,6 +951,7 @@ export class GamedisplayComponent implements OnInit {
   }
 
   public async btnDeactivateScanner() {
+    this.scannerTargetIDCursor = null
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_scanner'},

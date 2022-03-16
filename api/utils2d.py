@@ -15,7 +15,7 @@ from api.constants import (
 def rotate(origin: Tuple, point: Tuple, _angle: float) -> Tuple[int]:
     """ https://stackoverflow.com/questions/34372480/rotate-point-about-another-point-in-degrees-python
     """
-    angle = _angle * -1
+    angle = _angle * -1 # Angle must be passed as radians
     ox, oy = origin
     px, py = point
 
