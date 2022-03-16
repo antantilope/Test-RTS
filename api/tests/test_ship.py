@@ -2,7 +2,7 @@
 from unittest import TestCase
 from uuid import uuid4
 
-from api.models.ship import ShipStateKey
+from api.models.ship import AutoPilotPrograms, ShipStateKey
 from api import constants
 from .utils import (
     DebugShip as Ship,
@@ -2043,3 +2043,98 @@ class TestShipAdvanceDamageProperties(TestCase):
         assert self.ship.explosion_frame == 1 # Boom
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_point == (25, 30,)
+
+""" ADVANCE DAMAGE PROPERTIES
+"""
+
+class TestShipAutopilot(TestCase):
+    def setUp(self):
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship.coord_x = 25
+        self.ship.coord_y = 30
+
+    def test_autopilot_can_lock_onto_scanner_target(self):
+        target_id = str(uuid4())
+        self.ship.scanner_data[target_id] = {'relative_heading': 177}
+        self.ship.scanner_lock_target = target_id
+        self.ship.scanner_locking = False
+        self.ship.scanner_locked = True
+        self.ship.autopilot_program = AutoPilotPrograms.HEADING_LOCK_ON_TARGET
+        self.ship.heading = 0
+        self.ship.run_autopilot()
+        assert self.ship.heading == 177
+
+    def test_autopilot_can_lock_heading_prograde(self):
+        self.ship.velocity_x_meters_per_second = 10 # Moving ENE
+        self.ship.velocity_y_meters_per_second = 5  #
+        self.ship.autopilot_program = AutoPilotPrograms.HEADING_LOCK_PROGRADE
+        self.ship.heading = 0
+        self.ship.run_autopilot()
+        assert 90 > self.ship.heading > 45 # heading is ENE (prograde)
+
+    def test_autopilot_can_lock_heading_retrograde(self):
+        self.ship.velocity_x_meters_per_second = 10 # Moving ENE
+        self.ship.velocity_y_meters_per_second = 5  #
+        self.ship.autopilot_program = AutoPilotPrograms.HEADING_LOCK_RETROGRADE
+        self.ship.heading = 0
+        self.ship.run_autopilot()
+        assert 270 > self.ship.heading > 225 # heading is WSW (retrograde)
+
+    def test_autopilot_can_halt_the_ship(self):
+        self.ship.velocity_x_meters_per_second = 2.5 # Moving NE
+        self.ship.velocity_y_meters_per_second = 2.5 #
+        self.ship.heading = 0
+        self.ship.engine_lit = False
+        self.ship.engine_online = True
+        self.ship.engine_newtons = 1000
+        self.ship._state[ShipStateKey.MASS] = 600
+        self.ship.autopilot_program = AutoPilotPrograms.POSITION_HOLD
+
+        self.ship.run_autopilot()
+        assert self.ship.engine_lit is True
+        assert self.ship.heading == 225 # Retrograde heading (SE)
+        self.ship.calculate_physics(fps=6)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 2.30358)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 2.30358)
+
+        self.ship.run_autopilot()
+        assert self.ship.engine_lit is True
+        assert self.ship.heading == 225 # Retrograde heading (SE)
+        self.ship.calculate_physics(fps=6)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 2.10716)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 2.10716)
+
+        self.ship.run_autopilot()
+        assert self.ship.engine_lit is True
+        assert self.ship.heading == 225 # Retrograde heading (SE)
+        self.ship.calculate_physics(fps=6)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.91074)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.91074)
+
+        self.ship.run_autopilot()
+        assert self.ship.engine_lit is True
+        assert self.ship.heading == 225 # Retrograde heading (SE)
+        self.ship.calculate_physics(fps=6)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.71432)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.71432)
+
+        self.ship.run_autopilot()
+        assert self.ship.engine_lit is True
+        assert self.ship.heading == 225 # Retrograde heading (SE)
+        self.ship.calculate_physics(fps=6)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.51790)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.51790)
+
+        self.ship.run_autopilot()
+        assert self.ship.engine_lit is True
+        assert self.ship.heading == 225 # Retrograde heading (SE)
+        self.ship.calculate_physics(fps=6)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.32148) # Below stoping threshold
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.32148)
+
+        self.ship.run_autopilot()
+        assert self.ship.velocity_x_meters_per_second == 0
+        assert self.ship.velocity_y_meters_per_second == 0
+        assert self.ship.engine_lit is False
+        assert self.ship.autopilot_program is None
