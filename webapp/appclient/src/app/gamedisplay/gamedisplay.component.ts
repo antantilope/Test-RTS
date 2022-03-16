@@ -269,10 +269,12 @@ export class GamedisplayComponent implements OnInit {
       )
     }
     else if (camMode === CAMERA_MODE_SCANNER) {
-      this._camera.setCameraPositionAndZoomForScannerMode()
+      this._camera.setCameraPositionAndZoomForScannerMode(
+        this.scannerTargetIDCursor,
+      )
     }
 
-
+    // Visual Range Circle
     const visibleRangeCanvasPXRadius = Math.round(
       (this._api.frameData.map_config.units_per_meter
       * this._api.frameData.ship.visual_range) / this._camera.getZoom()
@@ -293,6 +295,7 @@ export class GamedisplayComponent implements OnInit {
     )
     this.ctx.stroke()
 
+    // Scanner Range Cirlce
 
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
@@ -758,6 +761,63 @@ export class GamedisplayComponent implements OnInit {
       brcYOffset += brcYInterval
 
     }
+
+    // Gyroscope
+    if(!this.isDebug) {
+      // Circle
+      const buffer = 3;
+      const gryroscopeRadius = Math.floor(this._camera.canvasHalfHeight / 8)
+      const gryroscopeX = this._camera.canvasWidth - (gryroscopeRadius + buffer)
+      const gryroscopeY = gryroscopeRadius + buffer
+      this.ctx.beginPath()
+      this.ctx.fillStyle = "rgb(255, 255, 255, 0.65)"
+      this.ctx.arc(
+        gryroscopeX,
+        gryroscopeY,
+        gryroscopeRadius,
+        0,
+        2 * Math.PI,
+      )
+      this.ctx.fill()
+      // Line
+      if(
+        this._api.frameData.ship.velocity_x_meters_per_second
+        || this._api.frameData.ship.velocity_y_meters_per_second
+      ) {
+        const angleRads = this._camera.getCanvasAngleBetween(
+          {x:0, y:0},
+          {
+            x: gryroscopeX + this._api.frameData.ship.velocity_x_meters_per_second * 1000,
+            y: gryroscopeY + this._api.frameData.ship.velocity_y_meters_per_second * 1000,
+          }
+        ) * (Math.PI / 180)
+        const gyroLinePointB = {
+          x: gryroscopeX + Math.round(gryroscopeRadius * Math.sin(angleRads)),
+          y: gryroscopeY + Math.round(gryroscopeRadius * Math.cos(angleRads)),
+        }
+        this.ctx.beginPath()
+        this.ctx.strokeStyle = '#000000'
+        this.ctx.lineWidth = 4
+        this.ctx.moveTo(gryroscopeX, gryroscopeY)
+        this.ctx.lineTo(gyroLinePointB.x, gyroLinePointB.y)
+        this.ctx.stroke()
+      }
+      // Velocity Text
+      const velocity = Math.sqrt(
+        Math.pow(this._api.frameData.ship.velocity_x_meters_per_second, 2)
+        + Math.pow(this._api.frameData.ship.velocity_y_meters_per_second, 2)
+      ).toFixed(1)
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 22px Courier New'
+      this.ctx.fillStyle = 'rgb(255, 181, 43,  0.95)'
+      this.ctx.textAlign = 'right'
+      this.ctx.fillText(
+        velocity + " M/S",
+        this._camera.canvasWidth - 3,
+        gryroscopeY + gryroscopeRadius + 18,
+      )
+    }
+
 
     // Click feedback
     if(this.clickAnimationFrame) {

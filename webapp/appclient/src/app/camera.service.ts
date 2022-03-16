@@ -215,8 +215,56 @@ export class CameraService {
     }
   }
 
-  public setCameraPositionAndZoomForScannerMode() {
+  public setCameraPositionAndZoomForScannerMode(scannerTargetIDCursor: string | null) {
+    if(!scannerTargetIDCursor || scannerTargetIDCursor != this._api.frameData.ship.scanner_lock_target) {
+      this.setCameraPositionAndZoomShowShipVision()
+    }
+    else if (scannerTargetIDCursor && scannerTargetIDCursor == this._api.frameData.ship.scanner_lock_target) {
+      this.setCameraPositionAndZoomShowShipAndTarget(scannerTargetIDCursor)
+    }
+  }
+  private setCameraPositionAndZoomShowShipVision() {
+    const ship = this._api.frameData.ship
+    this.setPosition(
+      ship.coord_x,
+      ship.coord_y,
+    )
+    // Map units.
+    const maxVisionRadius = Math.max(
+      ship.visual_range,
+      ship.scanner_online && ship.scanner_mode == 'ir' ? ship.scanner_ir_range : 0,
+      ship.scanner_online && ship.scanner_mode == 'radar' ? ship.scanner_radar_range : 0,
+    )
+    // Canvas pixels.
+    const canvasRadius = Math.min(
+      this.canvasHalfHeight,
+      this.canvasHalfWidth,
+    )
+    this.zoom = Math.ceil(maxVisionRadius / canvasRadius * this._api.frameData.map_config.units_per_meter)
 
+  }
+  private setCameraPositionAndZoomShowShipAndTarget(scannerTargetIDCursor: string){
+    const ship = this._api.frameData.ship
+    // Point camera between ship and target
+    const scannerData = ship.scanner_data.find(sd => sd.id == scannerTargetIDCursor)
+    const tx = scannerData.coord_x
+    const ty = scannerData.coord_y
+    const sx = ship.coord_x
+    const sy = ship.coord_y
+    const cx = Math.floor((tx + sx) / 2)
+    const cy = Math.floor((ty + sy) / 2)
+    this.setPosition(cx, cy)
+
+    // Set zoom level to show both ship and target
+    // Canvas pixels.
+    const canvasRadius = Math.min(
+      this.canvasHalfHeight,
+      this.canvasHalfWidth,
+    )
+    // Map units.
+    let halfDistance = Math.sqrt(Math.pow(sx - tx, 2) + Math.pow(sy - ty, 2)) / 2
+    halfDistance = halfDistance - this._api.frameData.map_config.units_per_meter
+    this.zoom = halfDistance / canvasRadius
   }
 
   public getDrawableCanvasObjects(): DrawableCanvasItems {
@@ -495,8 +543,8 @@ export class CameraService {
     const oy = startCanvasCoord.y
     const px = startCanvasCoord.x
     const py = startCanvasCoord.y - canvasDistance
-    const ia = angle * -1
-    const sia = Math.sin(ia)
+    const ia = angle * -1 * (Math.PI / 180)
+    const sia = Math.sin(ia )
     const cia = Math.cos(ia)
     const dx = px - ox
     const dy = py - oy
