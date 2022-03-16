@@ -294,6 +294,34 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.stroke()
 
     // Scanner Range Cirlce
+    if(this._api.frameData.ship.scanner_online) {
+      let scannerRange;
+      let color;
+      if(this._api.frameData.ship.scanner_mode == 'radar') {
+        scannerRange = this._api.frameData.ship.scanner_radar_range
+        color = "rgb(130, 255, 134, 0.5)" // Light green
+      } else if (this._api.frameData.ship.scanner_mode == 'ir') {
+        scannerRange = this._api.frameData.ship.scanner_ir_range
+        color = "rgb(255, 130, 253, 0.5)" // Light purple
+      } else {
+        throw new Error("unknown scanner mode")
+      }
+      const scannerRangeCanvasPXRadius = Math.round(
+        (this._api.frameData.map_config.units_per_meter
+        * scannerRange) / this._camera.getZoom()
+      )
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = color
+      this.ctx.lineWidth = 1
+      this.ctx.arc(
+        shipCanvasCoords.x,
+        shipCanvasCoords.y,
+        scannerRangeCanvasPXRadius,
+        0,
+        2 * Math.PI,
+      )
+      this.ctx.stroke()
+    }
 
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
