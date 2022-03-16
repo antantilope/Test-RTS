@@ -35,7 +35,10 @@
     <div id="command-bar-container" class="game-display-container">
 
         <div class=command-bar-column>
-            <div class="command-bar-column-header">
+            <div
+                class="command-bar-column-header"
+                [ngStyle]="{'color': (_api.frameData.ship.engine_online) ? '#00ff00' : '#ffffff'}"
+            >
                 ENGINE
             </div>
             <div style="display:flex;">
@@ -121,8 +124,11 @@
         </div>
 
         <div class=command-bar-column>
-            <div class="command-bar-column-header">
-                SCANNER
+            <div
+                class="command-bar-column-header"
+                [ngStyle]="{'color': (_api.frameData.ship.scanner_online) ? '#00ff00' : '#ffffff'}"
+            >
+                SCANNER | {{ _api.frameData.ship.scanner_mode }}
             </div>
             <div style="display:flex;">
                 <div>
@@ -236,7 +242,10 @@
             </div>
         </div>
         <div class=command-bar-column>
-            <div class="command-bar-column-header">
+            <div
+                class="command-bar-column-header"
+                [ngStyle]="{'color': (_api.frameData.ship.ebeam_can_fire) ? '#00ff00' : '#ffffff'}"
+            >
                 ENERGY BEAM
             </div>
             <div style="display:flex;">

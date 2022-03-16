@@ -611,36 +611,9 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.font = '20px Courier New'
     this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
     lrcYOffset -= lrcYInterval
-    // Green alerts
-    lrcYInterval = 25
-    this.ctx.font = 'bold 20px courier new'
-    this.ctx.fillStyle = 'rgb(21, 222, 2, 0.8)'
-    if(this._api.frameData.ship.engine_online) {
-      this.ctx.beginPath()
-      this.ctx.fillText("ENGINE", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.scanner_online) {
-      this.ctx.beginPath()
-      this.ctx.fillText("SCANNER" + (this._api.frameData.ship.scanner_locked ? " LOCK" : "") + " (" + this._api.frameData.ship.scanner_mode + ")", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.ebeam_can_fire) {
-      this.ctx.beginPath()
-      this.ctx.fillText("E-BEAM READY", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.ebeam_charging) {
-      this.ctx.beginPath()
-      this.ctx.fillText("E-BEAM CHARGING", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.autopilot_program) {
-      this.ctx.beginPath()
-      this.ctx.fillText("AUTOPILOT " + this._api.frameData.ship.autopilot_program, lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
     // Red alerts
+    lrcYInterval = 30
+    this.ctx.font = 'bold 24px courier new'
     this.ctx.fillStyle = 'rgb(222, 2, 2, 0.8)'
     if(this._api.frameData.ship.fuel_level < 1200) {
       this.ctx.beginPath()
