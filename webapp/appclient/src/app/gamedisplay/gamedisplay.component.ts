@@ -11,7 +11,6 @@ import { Subscription } from 'rxjs'
 import {
   DrawableCanvasItems,
   DrawableShip,
-  DrawableEngineOverlay,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
@@ -30,7 +29,6 @@ import { PointCoord } from '../models/point-coord.model'
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
 }
-
 
 
 @Component({
@@ -502,8 +500,8 @@ export class GamedisplayComponent implements OnInit {
         const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
         const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
-        this.ctx.strokeStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
-        this.ctx.lineWidth = cursorOnShip ? 5 : 2
+        this.ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+        this.ctx.lineWidth = shipIsLocked ? 5 : 2
         this.ctx.rect(
           drawableShip.canvasBoundingBox.x1,
           drawableShip.canvasBoundingBox.y1,
@@ -517,7 +515,7 @@ export class GamedisplayComponent implements OnInit {
         const bbYInterval = 20
         this.ctx.beginPath()
         this.ctx.font = 'bold 18px Courier New'
-        this.ctx.fillStyle = shipIsLocked ? "rgb(255, 0, 0, 0.85)" : 'rgb(21, 222, 2, 0.85)'
+        this.ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
         this.ctx.textAlign = 'left'
         let desigPrefix = cursorOnShip ? "👉" : ""
         if(!drawableShip.alive) {
@@ -527,12 +525,7 @@ export class GamedisplayComponent implements OnInit {
         bbYOffset += bbYInterval
         if(drawableShip.distance) {
           this.ctx.beginPath()
-          this.ctx.fillText("DIST: " + drawableShip.distance + " M", bbXOffset, bbYOffset)
-          bbYOffset += bbYInterval
-        }
-        if(drawableShip.relativeHeading) {
-          this.ctx.beginPath()
-          this.ctx.fillText("BEAR: " + drawableShip.relativeHeading + "°", bbXOffset, bbYOffset)
+          this.ctx.fillText(drawableShip.distance + " M", bbXOffset, bbYOffset)
           bbYOffset += bbYInterval
         }
         if(shipIsLocked) {
@@ -572,26 +565,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.moveTo(ray.startPoint.x, ray.startPoint.y)
       this.ctx.lineTo(ray.endPoint.x, ray.endPoint.y)
       this.ctx.stroke()
-    }
-
-    // Engine overlay
-    const engineOverlay: DrawableEngineOverlay | undefined = drawableObjects.engineOverlay
-    if(typeof engineOverlay !== "undefined") {
-      this.ctx.beginPath()
-      this.ctx.strokeStyle = "rgb(255, 181, 43, 0.7)"
-      this.ctx.lineWidth = 2
-      this.ctx.moveTo(engineOverlay.vectorPoint0.x, engineOverlay.vectorPoint0.y)
-      this.ctx.lineTo(engineOverlay.vectorPoint1.x, engineOverlay.vectorPoint1.y)
-      this.ctx.stroke();
-      this.ctx.beginPath()
-      this.ctx.font = 'bold 18px Courier New'
-      this.ctx.fillStyle = 'rgb(255, 181, 43,  0.9)'
-      this.ctx.textAlign = 'center'
-      this.ctx.fillText(
-        engineOverlay.metersPerSecond + " M/S",
-        engineOverlay.vectorPoint1.x,
-        engineOverlay.vectorPoint1.y,
-      )
     }
 
     // lower right corner
@@ -818,7 +791,6 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
-
     // Click feedback
     if(this.clickAnimationFrame) {
       this.ctx.beginPath()
@@ -979,6 +951,7 @@ export class GamedisplayComponent implements OnInit {
   }
 
   public async btnDeactivateScanner() {
+    this.scannerTargetIDCursor = null
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_scanner'},

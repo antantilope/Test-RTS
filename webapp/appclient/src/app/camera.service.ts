@@ -216,13 +216,21 @@ export class CameraService {
   }
 
   public setCameraPositionAndZoomForScannerMode(scannerTargetIDCursor: string | null) {
-    if(!scannerTargetIDCursor || scannerTargetIDCursor != this._api.frameData.ship.scanner_lock_target) {
-      this.setCameraPositionAndZoomShowShipVision()
+    const ship = this._api.frameData.ship
+    if(!scannerTargetIDCursor && ship.scanner_locked && ship.scanner_lock_target) {
+      // No scanner cursor and scanner is locked on a target
+      this.setCameraPositionAndZoomShowShipAndTarget(ship.scanner_lock_target)
     }
-    else if (scannerTargetIDCursor && scannerTargetIDCursor == this._api.frameData.ship.scanner_lock_target) {
+    else if (scannerTargetIDCursor) {
+      // Scanner cursor is pointed at locked on target
       this.setCameraPositionAndZoomShowShipAndTarget(scannerTargetIDCursor)
     }
+    else {
+      // Scanner may be locked but the cursor is set on another ship.
+      this.setCameraPositionAndZoomShowShipVision()
+    }
   }
+
   private setCameraPositionAndZoomShowShipVision() {
     const ship = this._api.frameData.ship
     this.setPosition(
@@ -257,10 +265,10 @@ export class CameraService {
 
     // Set zoom level to show both ship and target
     // Canvas pixels.
-    const canvasRadius = Math.min(
+    const canvasRadius = Math.floor(Math.min(
       this.canvasHalfHeight,
       this.canvasHalfWidth,
-    )
+    ) * 0.85)
     // Map units.
     let halfDistance = Math.sqrt(Math.pow(sx - tx, 2) + Math.pow(sy - ty, 2)) / 2
     halfDistance = halfDistance - this._api.frameData.map_config.units_per_meter
@@ -331,30 +339,6 @@ export class CameraService {
         aflame: ship.aflame,
         explosionFrame: ship.explosion_frame,
       })
-
-      const velocityRadians = this.getCanvasAngleBetween(
-        {x:0, y:0},
-        {
-          x: Math.round(ship.velocity_x_meters_per_second * 1000),
-          y: Math.round(ship.velocity_y_meters_per_second * 1000),
-        }
-      )  * (Math.PI / 180)
-
-      if(ship.engine_online && (ship.velocity_x_meters_per_second || ship.velocity_y_meters_per_second)) {
-
-        drawableItems.engineOverlay = {
-          vectorPoint0: overlayCenter,
-          vectorPoint1: {
-            x: overlayCenter.x + Math.round((this.canvasHeight / 4) * Math.sin(velocityRadians)),
-            y: overlayCenter.y + Math.round((this.canvasHeight / 4) * Math.cos(velocityRadians)), // TODO: Why is this + and not -
-          },
-          metersPerSecond: Math.sqrt(
-            Math.pow(ship.velocity_x_meters_per_second, 2)
-            + Math.pow(ship.velocity_y_meters_per_second, 2)
-          ).toFixed(2),
-        }
-      }
-
     }
 
     // Draw other scanner elements
