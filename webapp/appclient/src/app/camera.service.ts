@@ -284,19 +284,6 @@ export class CameraService {
         explosionFrame: ship.explosion_frame,
       })
 
-      if(ship.reaction_wheel_online) {
-        const headingRads = ship.heading * (Math.PI / 180)
-        drawableItems.reactionWheelOverlay = {
-          centerCanvasCoord: overlayCenter,
-          radiusPx: Math.round(this.canvasHeight / 6),
-          compassPoint0: overlayCenter,
-          compassPoint1: {
-            x: overlayCenter.x + Math.round((this.canvasHeight / 5) * Math.sin(headingRads)),
-            y: overlayCenter.y - Math.round((this.canvasHeight / 5) * Math.cos(headingRads)),
-          }
-        }
-      }
-
       const velocityRadians = this.getCanvasAngleBetween(
         {x:0, y:0},
         {

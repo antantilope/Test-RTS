@@ -59,13 +59,6 @@ export class DrawableShip {
     explosionFrame?: number
 }
 
-export class DrawableReactionWheelOverlay {
-    centerCanvasCoord: PointCoord
-    radiusPx: number
-    compassPoint0: PointCoord
-    compassPoint1: PointCoord
-}
-
 export class DrawableEngineOverlay {
     vectorPoint0: PointCoord
     vectorPoint1: PointCoord
@@ -82,6 +75,5 @@ export class EBeamRayDetails {
 export class DrawableCanvasItems {
     ships: DrawableShip[]
     ebeamRays: EBeamRayDetails[]
-    reactionWheelOverlay?: DrawableReactionWheelOverlay
     engineOverlay?: DrawableEngineOverlay
 }

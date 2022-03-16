@@ -46,60 +46,6 @@ class TestShipAdjustResources(TestCase):
     def setUp(self):
         team_id = str(uuid4())
         self.ship = Ship.spawn(team_id, map_units_per_meter=10)
-        self.ship.reaction_wheel_online = False
-
-    def test_battery_power_reduced_if_reaction_wheel_online(self):
-        ''' REACTION WHEEL '''
-        self.ship.reaction_wheel_online = True
-        self.ship.battery_power = 1000
-        start_power = self.ship.battery_power
-        self.ship.reaction_wheel_power_required_per_second = 100
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == start_power - 50
-        assert self.ship.reaction_wheel_online
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == start_power - 100
-        assert self.ship.reaction_wheel_online
-
-    def test_battery_power_not_reduced_if_reaction_wheel_offline(self):
-        ''' REACTION WHEEL '''
-        self.ship.reaction_wheel_online = False
-        start_power = self.ship.battery_power
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == start_power
-        assert not self.ship.reaction_wheel_online
-
-    def test_reaction_wheel_disabled_if_battery_runs_out_of_power(self):
-        ''' REACTION WHEEL '''
-        self.ship.reaction_wheel_online = True
-
-        # Enough power to run the reaction wheel for 3 frames
-        self.ship.battery_power = 1000
-        self.ship.reaction_wheel_power_required_per_second = 500
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == 750
-        assert self.ship.reaction_wheel_online
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == 500
-        assert self.ship.reaction_wheel_online
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == 250
-        assert self.ship.reaction_wheel_online
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == 0
-        assert self.ship.reaction_wheel_online
-
-        self.ship.adjust_resources(fps=2)
-        assert self.ship.battery_power == 0
-        assert not self.ship.reaction_wheel_online
-
 
     def test_engine_start_process_uses_power(self):
         ''' ENGINE ACTIVATE '''
@@ -1879,7 +1825,6 @@ class TestShipCMDSetHeading(TestCase):
     def setUp(self):
         team_id = str(uuid4())
         self.ship = Ship.spawn(team_id, map_units_per_meter=10)
-        self.ship.reaction_wheel_online = True
 
     def _assert_ship_heading_0(self):
         assert self.ship.heading == constants.DEGREES_NORTH
@@ -1901,12 +1846,6 @@ class TestShipCMDSetHeading(TestCase):
         # assert self.ship.heading_0_fin_0_rel_coord_1 == (-51, -40,)
         # assert self.ship.heading_0_fin_1_rel_coord_0 == (20, -20,)
         # assert self.ship.heading_0_fin_0_rel_coord_1 == (32, -40,)
-
-    def test_ship_cannot_rotate_if_reaction_wheel_is_offline(self):
-        self._assert_ship_heading_0()
-        self.ship.reaction_wheel_online = False
-        self.ship.cmd_set_heading(30)
-        self._assert_ship_heading_0()
 
     def test_rotate_ship_to_0_heading(self):
         self._assert_ship_heading_0()
@@ -1983,56 +1922,6 @@ class TestShipCMDSetHeading(TestCase):
         assert self.ship.rel_rot_coord_2 == (-38, 51,)
         assert self.ship.rel_rot_coord_3 == (61, -18,)
         self._assert_heading_0_cords_fixed()
-
-
-'''
-██████  ███████  █████   ██████ ████████ ██  ██████  ███    ██
-██   ██ ██      ██   ██ ██         ██    ██ ██    ██ ████   ██
-██████  █████   ███████ ██         ██    ██ ██    ██ ██ ██  ██
-██   ██ ██      ██   ██ ██         ██    ██ ██    ██ ██  ██ ██
-██   ██ ███████ ██   ██  ██████    ██    ██  ██████  ██   ████
-
-██     ██ ██   ██ ███████ ███████ ██
-██     ██ ██   ██ ██      ██      ██
-██  █  ██ ███████ █████   █████   ██
-██ ███ ██ ██   ██ ██      ██      ██
- ███ ███  ██   ██ ███████ ███████ ███████
-'''
-
-
-class TestShipCMDActivateAndDeactivateReactionWheel(TestCase):
-
-    def setUp(self):
-        team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
-        self.ship.reaction_wheel_online = False
-
-    def test_reaction_wheel_can_be_activated(self):
-        self.ship.activate_reaction_wheel_power_requirement = 500
-        self.ship.battery_power = 1700
-        assert not self.ship.reaction_wheel_online
-        start_power = self.ship.battery_power
-
-        self.ship.cmd_set_reaction_wheel_status(True)
-        assert self.ship.reaction_wheel_online
-        assert self.ship.battery_power == 1700 - 500
-
-    def test_reaction_wheel_cant_be_activated_if_not_enough_power(self):
-        self.ship.activate_reaction_wheel_power_requirement = 500
-        self.ship.battery_power = 400
-        assert not self.ship.reaction_wheel_online
-        start_power = self.ship.battery_power
-
-        self.ship.cmd_set_reaction_wheel_status(True)
-        assert not self.ship.reaction_wheel_online
-        assert self.ship.battery_power == 400
-
-    def test_reaction_wheel_can_be_shut_off(self):
-        self.ship.battery_power = 400
-        self.ship.reaction_wheel_online = True
-        self.ship.cmd_set_reaction_wheel_status(False)
-        assert not self.ship.reaction_wheel_online
-        assert self.ship.battery_power == 400
 
 
 '''

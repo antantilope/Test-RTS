@@ -20,18 +20,6 @@ const commandHandlers = {
             args: [validatedData.heading],
         });
     },
-    activate_reaction_wheel: (req, queueName) => {
-        req.app.get(queueName).push({
-            player_id: req.session.player_id,
-            ship_command: 'activate_reaction_wheel',
-        });
-    },
-    deactivate_reaction_wheel: (req, queueName) => {
-        req.app.get(queueName).push({
-            player_id: req.session.player_id,
-            ship_command: 'deactivate_reaction_wheel',
-        });
-    },
     activate_engine: (req, queueName) => {
         req.app.get(queueName).push({
             player_id: req.session.player_id,

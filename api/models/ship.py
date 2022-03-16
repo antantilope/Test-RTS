@@ -1,8 +1,7 @@
 
 import random
 import datetime as dt
-from decimal import Decimal
-from typing import Tuple, Dict, TypedDict, Optional, Generator, List
+from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 
 from api.models.base import BaseModel
 from api import utils2d
@@ -25,9 +24,6 @@ class ShipCoatType:
 class ShipCommands:
     SET_HEADING = 'set_heading'
 
-    ACTIVATE_REACTION_WHEEL = 'activate_reaction_wheel'
-    DEACTIVATE_REACTION_WHEEL = 'deactivate_reaction_wheel'
-
     ACTIVATE_ENGINE = 'activate_engine'
     DEACTIVATE_ENGINE = 'deactivate_engine'
     LIGHT_ENGINE = 'light_engine'
@@ -39,8 +35,8 @@ class ShipCommands:
     SET_SCANNER_MODE_IR = 'set_scanner_mode_ir'
     SET_SCANNER_LOCK_TARGET = 'set_scanner_lock_target'
 
-    ACTIVATE_AUTO_PILOT = 'activate_autopilot'
-    DEACTIVATE_AUTO_PILOT = 'deactivate_autopilot'
+    RUN_AUTOPILOT_PROGRAM = 'run_autopilot_program'
+    DISABLE_AUTO_PILOT = 'disable_autopilot'
 
     CHARGE_EBEAM = 'charge_ebeam'
     PAUSE_CHARGE_EBEAM = 'pause_charge_ebeam'
@@ -70,8 +66,9 @@ class ScannedElement(TypedDict):
     thermal_signature: Optional[int]
     coord_x: int
     coord_y: int
-    relative_heading: int
-    distance: int
+    relative_heading: Optional[int] # Rounded int describing bearing to element
+    target_heading: Optional[float] # Float describing beaing to element
+    distance: Optional[int]
 
     visual_p0: Tuple[int]
     visual_p1: Tuple[int]
@@ -94,8 +91,10 @@ class TimerItem(TypedDict):
 
 
 class AutoPilotPrograms:
-    HEADING_LOCKED_TARGET = 'heading_locked_target'
     POSITION_HOLD = 'position_hold'
+    HEADING_LOCK_ON_TARGET = 'lock_target'
+    HEADING_LOCK_PROGRADE = 'lock_prograde'
+    HEADING_LOCK_RETROGRADE = 'lock_retrograde'
 
 
 class Ship(BaseModel):
@@ -197,11 +196,6 @@ class Ship(BaseModel):
         self.scanner_thermal_signature_delta = None
         self.anti_radar_coating_level = None
 
-        # Ship reaction wheel
-        self.activate_reaction_wheel_power_requirement = None
-        self.reaction_wheel_power_required_per_second = None
-        self.reaction_wheel_online = False
-
         # Ship Energy Beam
         self.ebeam_charge_rate_per_second = None
         self.ebeam_charge_thermal_rate_per_second = None
@@ -276,6 +270,13 @@ class Ship(BaseModel):
             self.coord_x + self.rel_rot_coord_3[0],
             self.coord_y + self.rel_rot_coord_3[1],
         )
+
+    @property
+    def ebeam_heading(self) -> Union[float, int]:
+        if self.scanner_lock_target and self.scanner_locked and self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_ON_TARGET:
+            return self.scanner_data[self.scanner_lock_target]['target_heading']
+        return self.heading
+
 
     @property
     def hitbox_lines(self) -> Tuple[Tuple[Tuple]]:
@@ -357,7 +358,6 @@ class Ship(BaseModel):
             'battery_capacity': self.battery_capacity,
             'fuel_level': self.fuel_level,
             'fuel_capacity': self.fuel_capacity,
-            'reaction_wheel_online': self.reaction_wheel_online,
 
             'engine_newtons': self.engine_newtons,
             'engine_online': self.engine_online,
@@ -446,9 +446,6 @@ class Ship(BaseModel):
         instance.fuel_capacity = constants.FUEL_CAPACITY
 
         instance.visual_range = constants.MAX_VISUAL_RANGE_M
-
-        instance.reaction_wheel_power_required_per_second = constants.REACTION_WHEEL_POWER_REQUIREMENT_PER_SECOND
-        instance.activate_reaction_wheel_power_requirement = constants.ACTIVATE_REACTION_WHEEL_POWER_REQUIREMENT
 
         instance.engine_mass = constants.ENGINE_MASS
         instance.engine_newtons = constants.ENGINE_BASE_FORCE_N
@@ -552,18 +549,6 @@ class Ship(BaseModel):
             if self.ebeam_charge >= self.ebeam_charge_capacity:
                 self.ebeam_charging = False
 
-
-        ''' REACTION WHEEL '''
-        if self.reaction_wheel_online:
-            try:
-                self.use_battery_power(
-                    max(
-                        round(self.reaction_wheel_power_required_per_second / fps),
-                        1,
-                    )
-                )
-            except InsufficientPowerError:
-                self.reaction_wheel_online = False
 
         ''' Scanner POWER DRAW (RUNNING) '''
         if self.scanner_online:
@@ -789,7 +774,6 @@ class Ship(BaseModel):
         self.scanner_starting = False
         self.ebeam_firing = False
         self.ebeam_charging = False
-        self.reaction_wheel_online = False
         self.autopilot_program = None
 
     def advance_thermal_signature(self, fps: int) -> None:
@@ -800,15 +784,20 @@ class Ship(BaseModel):
             0,
         )
 
+    def run_autopilot(self) -> None:
+        if not self.autopilot_program:
+            return
+
+        if self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_ON_TARGET:
+            if not self.scanner_locked or not self.scanner_lock_target:
+                self.autopilot_program = None
+                return
+            self.heading = self.scanner_data[self.scanner_lock_target]["relative_heading"]
+
+
     def get_available_commands(self) -> Generator[str, None, None]:
         if self.died_on_frame:
             return # Exist generator
-
-        # Reaction Wheel
-        if not self.reaction_wheel_online:
-            yield ShipCommands.ACTIVATE_REACTION_WHEEL
-        else:
-            yield ShipCommands.DEACTIVATE_REACTION_WHEEL
 
         # Engine
         if not self.engine_starting:
@@ -842,11 +831,6 @@ class Ship(BaseModel):
         if command == ShipCommands.SET_HEADING:
             return self.cmd_set_heading(args[0])
 
-        elif command == ShipCommands.ACTIVATE_REACTION_WHEEL:
-            self.cmd_set_reaction_wheel_status(True)
-        elif command == ShipCommands.DEACTIVATE_REACTION_WHEEL:
-            self.cmd_set_reaction_wheel_status(False)
-
         elif command == ShipCommands.ACTIVATE_ENGINE:
             self.cmd_activate_engine()
         elif command == ShipCommands.DEACTIVATE_ENGINE:
@@ -877,26 +861,11 @@ class Ship(BaseModel):
         else:
             raise ShipCommandError("NotImplementedError")
 
-    # Reaction Wheel Commands.
-    def cmd_set_reaction_wheel_status(self, set_online: bool):
-        if set_online:
-            if self.reaction_wheel_online:
-                return
-            try:
-                self.use_battery_power(
-                    self.activate_reaction_wheel_power_requirement
-                )
-            except InsufficientPowerError:
-                return
-            else:
-                self.reaction_wheel_online = True
-        else:
-            self.reaction_wheel_online = False
-
+    # Heading command
     def cmd_set_heading(self, heading: int):
-        if heading == self.heading:
+        if self.autopilot_program:
             return
-        if not self.reaction_wheel_online:
+        if heading == self.heading:
             return
         if not (359 >= heading >= 0):
             raise ShipCommandError("invalid heading")
@@ -1024,3 +993,22 @@ class Ship(BaseModel):
             return
         if self.ebeam_charge >= self.ebeam_charge_fire_minimum:
             self.ebeam_firing = True
+
+    def cmd_run_autopilot_program(self, program_name: str):
+        if self.autopilot_program:
+            return
+        elif program_name == AutoPilotPrograms.POSITION_HOLD:
+            if self.engine_online:
+                self.autopilot_program = program_name
+        elif (
+            program_name == AutoPilotPrograms.HEADING_LOCK_PROGRADE
+            or program_name == AutoPilotPrograms.HEADING_LOCK_RETROGRADE
+        ):
+            self.autopilot_program = program_name
+        elif program_name == AutoPilotPrograms.HEADING_LOCK_ON_TARGET:
+            if self.scanner_locked:
+                self.autopilot_program = program_name
+
+    def cmd_disable_autopilot(self):
+        if self.autopilot_program:
+            self.autopilot_program = None

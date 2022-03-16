@@ -11,7 +11,6 @@ import { Subscription } from 'rxjs'
 import {
   DrawableCanvasItems,
   DrawableShip,
-  DrawableReactionWheelOverlay,
   DrawableEngineOverlay,
 } from '../models/drawable-objects.model'
 import { TimerItem } from '../models/timer-item.model'
@@ -26,9 +25,6 @@ import {
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
 import { PointCoord } from '../models/point-coord.model'
-import { stderr } from 'process'
-import { NullVisitor } from '@angular/compiler/src/render3/r3_ast'
-
 
 
 const randomInt = function (min: number, max: number): number  {
@@ -50,7 +46,6 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  public enableActivateReactionWheelBtn = false
   public enableEngineOnlineBtn = false
   public enableEngineOfflineBtn = false
   public enableEngineLightBtn = false
@@ -196,8 +191,7 @@ export class GamedisplayComponent implements OnInit {
     const mouseCanvasX = event.clientX - this.canvas.nativeElement.offsetLeft
     const mouseCanvasY = event.clientY - this.canvas.nativeElement.offsetTop
     if(
-      this._api.frameData.ship.reaction_wheel_online
-      && !this._api.frameData.ship.autopilot_program
+      !this._api.frameData.ship.autopilot_program
       && this.drawableObjects !== null
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
@@ -568,26 +562,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.stroke()
     }
 
-    // Reaction Wheel overlay
-    const reactionWheelOverlay: DrawableReactionWheelOverlay | undefined = drawableObjects.reactionWheelOverlay
-    if(typeof reactionWheelOverlay !== "undefined") {
-      this.ctx.strokeStyle = "rgb(43, 255, 0, 0.6)"
-      this.ctx.lineWidth = 1
-      this.ctx.beginPath()
-      this.ctx.moveTo(reactionWheelOverlay.compassPoint0.x, reactionWheelOverlay.compassPoint0.y)
-      this.ctx.lineTo(reactionWheelOverlay.compassPoint1.x, reactionWheelOverlay.compassPoint1.y)
-      this.ctx.stroke();
-      this.ctx.beginPath()
-      this.ctx.font = 'bold 18px Courier New'
-      this.ctx.fillStyle = 'rgb(43, 255, 0,  0.8)'
-      this.ctx.textAlign = 'center'
-      this.ctx.fillText(
-        this._api.frameData.ship.heading,
-        reactionWheelOverlay.compassPoint1.x,
-        reactionWheelOverlay.compassPoint1.y,
-      )
-    }
-
     // Engine overlay
     const engineOverlay: DrawableEngineOverlay | undefined = drawableObjects.engineOverlay
     if(typeof engineOverlay !== "undefined") {
@@ -664,11 +638,6 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData.ship.scanner_online) {
       this.ctx.beginPath()
       this.ctx.fillText("SCANNER" + (this._api.frameData.ship.scanner_locked ? " LOCK" : "") + " (" + this._api.frameData.ship.scanner_mode + ")", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.reaction_wheel_online) {
-      this.ctx.beginPath()
-      this.ctx.fillText("REACTION WHEEL", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
     if(this._api.frameData.ship.ebeam_can_fire) {
@@ -851,13 +820,6 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData === null) {
       return
     }
-    // Reaction wheel
-    if(this._api.frameData.ship.available_commands.includes('activate_reaction_wheel')) {
-      this.enableActivateReactionWheelBtn = true
-    }
-    else {
-      this.enableActivateReactionWheelBtn = false
-    }
 
     // Engine
     this.enableEngineOnlineBtn = this._api.frameData.ship.available_commands.includes('activate_engine')
@@ -873,28 +835,6 @@ export class GamedisplayComponent implements OnInit {
 
   }
 
-
-  public async btnActivateReactionWheel() {
-    if(!this.enableActivateReactionWheelBtn) {
-      return
-    }
-    console.log("btnActivateReactionWheel()")
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'activate_reaction_wheel'},
-    )
-  }
-
-  public async btnDeactivateReactionWheel() {
-    if(this.enableActivateReactionWheelBtn) {
-      return
-    }
-    console.log("btnDeactivateReactionWheel()")
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'deactivate_reaction_wheel'},
-    )
-  }
 
   public async btnActivateEngine() {
     await this._api.post(
