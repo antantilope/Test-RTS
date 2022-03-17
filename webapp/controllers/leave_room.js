@@ -38,6 +38,8 @@ const removePlayerFromRoom = async (db, player_uuid, team_uuid, deleteTeam) => {
     return Promise.all(dbPromises);
 }
 
+exports.removePlayerFromRoom = removePlayerFromRoom;
+
 
 exports.leaveRoomController = async (req, res) => {
     const sess_player_id = req.session.player_id;
@@ -63,6 +65,9 @@ exports.leaveRoomController = async (req, res) => {
     let playerDetails;
     try {
         roomDetails = await get_room(db, sess_room_id);
+        if(roomDetails.phase != PHASE_0_LOBBY){
+            return res.status(400).send("Cannot leave room in phase " + roomDetails.phase)
+        }
         const teamDetails = await get_team_details(db, sess_team_id);
         const deleteTeam = teamDetails.player_count === 1;
         await removePlayerFromRoom(db, sess_player_id, sess_team_id, deleteTeam);

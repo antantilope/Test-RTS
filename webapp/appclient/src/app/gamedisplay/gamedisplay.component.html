@@ -6,10 +6,22 @@
 
     <div id="sidebar-canvas-container" class="game-display-container">
         <div id="sidebar-container" class="game-display-container">
-            <div class="btn-gap-bottom">
-                <button class="sidebar-btn purple-btn" style="padding-top:3px" title="Menu">
-                    ⚙️
+            <div *ngIf="!showConfirmExit">
+                <button [disabled]="waitingToExit" (click)="showConfirmExit=true" class="sidebar-btn purple-btn" style="padding-top:3px" title="Menu">
+                    QUIT
                 </button>
+            </div>
+            <div *ngIf="showConfirmExit">
+                <button [disabled]="waitingToExit" (click)="showConfirmExit=false" class="sidebar-btn purple-btn" style="padding-top:3px">
+                    ❌
+                </button>
+            </div>
+            <div *ngIf="showConfirmExit">
+                <button [disabled]="waitingToExit" (click)="btnClickLeaveMatch()" class="sidebar-btn purple-btn" style="padding-top:3px">
+                    ✅
+                </button>
+            </div>
+            <div class="btn-gap">
             </div>
             <div *ngIf="_camera.getMode() !== 'ship'">
                 <button class="sidebar-btn" (click)="_camera.setModeShip()" title="Camera: Ship">

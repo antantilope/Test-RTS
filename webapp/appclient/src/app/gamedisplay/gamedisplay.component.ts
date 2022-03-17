@@ -44,6 +44,9 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
+  public showConfirmExit = false
+  public waitingToExit = false
+
   public enableEngineOnlineBtn = false
   public enableEngineOfflineBtn = false
   public enableEngineLightBtn = false
@@ -1096,6 +1099,17 @@ export class GamedisplayComponent implements OnInit {
         {command:'fire_ebeam'},
       )
     }
+  }
+
+  async btnClickLeaveMatch() {
+    this.waitingToExit = true
+    const resp = await this._api.post(
+      "/api/rooms/command",
+      {command:'leave_game'},
+    )
+    setTimeout(()=>{
+      location.reload()
+    }, 1000)
   }
 
 }

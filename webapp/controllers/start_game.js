@@ -13,12 +13,14 @@ const { get_user_details } = require("../lib/db/get_user_details");
 const {
     PHASE_1_STARTING,
     PHASE_2_LIVE,
+    PHASE_3_COMPLETE,
 } = require("../constants");
 const {
     EVENT_STARTGAME,
     EVENT_ROOM_LIST_UPDATE,
     EVENT_FRAMEDATA
 } = require("../lib/event_names");
+const { killProcess } = require("../lib/pyprocess");
 const { logger } = require("../lib/logger");
 
 
@@ -52,6 +54,32 @@ const updateDBSetGameToLive = async (roomUUID) => {
     }
 }
 
+const updateDBSetGameToComplete = async (db, roomUUID) => {
+    await db.run(
+        "UPDATE api_room SET phase = ? WHERE uuid = ?",
+        [PHASE_3_COMPLETE, roomUUID]
+    );
+}
+
+const updateDBDeleteRoom = async (db, roomUUID) => {
+    teamUUIDs = await db.all("SELECT uuid from api_team WHERE room_id = ?", [roomUUID])
+    const queries = []
+    for(let i in teamUUIDs) {
+        queries.push(
+            db.run("UPDATE api_player SET team_id = NULL WHERE team_id = ?", [teamUUIDs[i].uuid])
+        )
+    }
+    queries.push(
+        db.run("DELETE FROM api_team WHERE uuid = ?", [roomUUID])
+    )
+    return Promise.all(queries);
+}
+
+const getRoomPyProcessPID = async (db, roomUUID) => {
+    const resp = await db.all("SELECT pid FROM api_room WHERE uuid = ?", [roomUUID]);
+    return resp[0].pid
+}
+
 const runGameLoop = (room_id, port, app, io) => {
     // TODO: query command queue
     // TODO: research KeepAlive for TCP sockets.
@@ -67,7 +95,7 @@ const runGameLoop = (room_id, port, app, io) => {
         logger.info("writing data to GameAPI: " + payload);
         client.write((payload + "\n"));
     });
-    client.on("data", data => {
+    client.on("data", async (data) => {
         logger.info("received response from GameAPI, disconnecting...");
         client.destroy();
         let respData;
@@ -86,6 +114,11 @@ const runGameLoop = (room_id, port, app, io) => {
             for(let i in range)
             {
                 const ship = respData.ships[i];
+                if(!ship.team_id) {
+                    // Ship is orphaned (dead),
+                    // No one to send ship data to. Other ships can see this ship through scanner data.
+                    continue
+                }
                 const roomName = get_team_room_name(room_id, ship.team_id);
                 logger.info("emmiting ship state to room " + roomName);
                 io.to(roomName).emit(
@@ -108,8 +141,20 @@ const runGameLoop = (room_id, port, app, io) => {
             setTimeout(() => {
                 runGameLoop(room_id, port, app, io);
             });
-        } else {
-            logger.info("game phase is " + respData.phase);
+
+        } else if (respData.phase == PHASE_3_COMPLETE) {
+            let pid;
+            const db = await get_db_connection();
+            try {
+                pid = await getRoomPyProcessPID(db, room_id)
+                await updateDBSetGameToComplete(db, room_id)
+                await updateDBDeleteRoom(db, room_id)
+            } catch(err) {
+                throw err
+            } finally {
+                db.close()
+            }
+            killProcess(pid)
         }
     });
 }
