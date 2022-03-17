@@ -73,6 +73,10 @@ class EBeamRayDetails(TypedDict):
     end_point: Tuple[int]
     color: str
 
+class KillFeedElement(TypedDict):
+    victim_name: str
+    created_at_frame: int
+
 class Game(BaseModel):
 
     BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players',)
@@ -85,6 +89,7 @@ class Game(BaseModel):
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
         self._ebeam_rays: List[EBeamRayDetails] = []
+        self._killfeed: List[KillFeedElement] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
 
@@ -150,6 +155,7 @@ class Game(BaseModel):
             'ships': [ship.to_dict() for ship in self._ships.values()],
             'ebeam_rays': self._ebeam_rays,
             "winning_team": self._winning_team,
+            "killfeed": self._killfeed,
         }
 
 
@@ -330,6 +336,7 @@ class Game(BaseModel):
             if not self._winning_team:
                 self.check_for_winning_team()
             self.check_for_empty_game()
+            self.purge_killfeed()
 
 
         # Increment the game frame for the next frame.
@@ -450,6 +457,10 @@ class Game(BaseModel):
                 })
                 for hit_ship_id in hits:
                     self._ships[hit_ship_id].die(self._game_frame)
+                    self._killfeed.append({
+                        "created_at_frame": self._game_frame,
+                        "victim_name": self._ships[hit_ship_id].scanner_designator,
+                    })
 
 
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
@@ -489,6 +500,13 @@ class Game(BaseModel):
     def check_for_empty_game(self):
         if len(self._players) == 0:
             self._phase = GamePhase.COMPLETE
+
+    def purge_killfeed(self):
+        oldest_frame = self._game_frame - MAX_SERVER_FPS * 8
+        self._killfeed = [
+            k for k in self._killfeed
+            if k['created_at_frame'] >= oldest_frame
+        ]
 
     def _process_ship_command(self, command: FrameCommand):
         ship_command = command['ship_command']

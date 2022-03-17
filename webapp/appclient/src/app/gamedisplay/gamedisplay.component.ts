@@ -675,10 +675,11 @@ export class GamedisplayComponent implements OnInit {
     }
 
     // Resources (TOP LEFT)
+    const tlcYInterval = 34
+    const tlcKFYInterval = 28
+    let tlcYOffset = 25
+    const tlcXOffset = 15
     if(this._api.frameData.ship.alive){
-      const tlcYInterval = 34
-      let tlcYOffset = 25
-      const tlcXOffset = 15
       this.ctx.beginPath()
       this.ctx.font = '24px Courier New'
       this.ctx.fillStyle = '#fcb8b8'
@@ -695,6 +696,17 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = '#ffffff'
       this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
       tlcYOffset += tlcYInterval
+    }
+    // Killfeed (TOP LEFT)
+    tlcYOffset += tlcYInterval
+    this.ctx.font = '20px Courier New'
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.textAlign = 'left'
+    for(let i in this._api.frameData.killfeed) {
+      const kfe = this._api.frameData.killfeed[i]
+      this.ctx.beginPath()
+      this.ctx.fillText("💀 " + kfe.victim_name, tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcKFYInterval
     }
 
     // Timers (BOTTOM RIGHT)

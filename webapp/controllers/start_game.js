@@ -132,7 +132,8 @@ const runGameLoop = (room_id, port, app, io) => {
                         server_fps_throttle_seconds: respData.server_fps_throttle_seconds,
                         map_config: respData.map_config,
                         ebeam_rays: respData.ebeam_rays,
-                        winning_team: respData.winning_team
+                        winning_team: respData.winning_team,
+                        killfeed: respData.killfeed,
                     },
                 );
             }
