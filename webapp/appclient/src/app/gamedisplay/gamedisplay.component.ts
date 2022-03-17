@@ -656,11 +656,15 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
+
+    // Front and alerts
     if(!this._api.frameData.ship.alive) {
       this.ctx.beginPath()
-      this.ctx.font = 'bold 32px courier new'
-      this.ctx.fillText("🪦 YOU DIED IN SPACE", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
+      this.ctx.font = 'bold 40px courier new'
+      this.ctx.fillStyle = '#ff0000'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText("GAME OVER", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 3)
+      this.ctx.fillText("You died in space 🪦", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
     else if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       this.ctx.beginPath()
@@ -716,38 +720,37 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.strokeStyle = '#00ff00'
     this.ctx.fillStyle = '#00ff00'
     brcYOffset += brcYInterval
-    for(let i in this._api.frameData.ship.timers) {
-      const timer: TimerItem = this._api.frameData.ship.timers[i]
-      const fillLength = Math.round((timer.percent / 100) * timerBarLength)
-      this.ctx.beginPath()
-      this.ctx.fillText(
-        timer.name,
-        this._camera.canvasWidth - textRAlignXOffset,
-        this._camera.canvasHeight - brcYOffset,
-      )
-      this.ctx.beginPath()
-      this.ctx.rect(
-        this._camera.canvasWidth - barRAlignXOffset, //    top left x
-        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
-        timerBarLength, // width
-        30,             // height
-      )
-      this.ctx.stroke()
-      this.ctx.beginPath()
-      this.ctx.rect(
-        this._camera.canvasWidth - barRAlignXOffset, //    top left x
-        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
-        fillLength, // width
-        30,         // height
-      )
-      this.ctx.fill()
-
-      brcYOffset += brcYInterval
-
+    if(this._api.frameData.ship.alive){
+      for(let i in this._api.frameData.ship.timers) {
+        const timer: TimerItem = this._api.frameData.ship.timers[i]
+        const fillLength = Math.round((timer.percent / 100) * timerBarLength)
+        this.ctx.beginPath()
+        this.ctx.fillText(
+          timer.name,
+          this._camera.canvasWidth - textRAlignXOffset,
+          this._camera.canvasHeight - brcYOffset,
+        )
+        this.ctx.beginPath()
+        this.ctx.rect(
+          this._camera.canvasWidth - barRAlignXOffset, //    top left x
+          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+          timerBarLength, // width
+          30,             // height
+        )
+        this.ctx.stroke()
+        this.ctx.beginPath()
+        this.ctx.rect(
+          this._camera.canvasWidth - barRAlignXOffset, //    top left x
+          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+          fillLength, // width
+          30,         // height
+        )
+        this.ctx.fill()
+        brcYOffset += brcYInterval
+      }
     }
-
     // Gyroscope
-    if(!this.isDebug) {
+    if(!this.isDebug && this._api.frameData.ship.alive) {
       // Circle
       const buffer = 3;
       const gryroscopeRadius = Math.floor(this._camera.canvasHalfHeight / 8)
