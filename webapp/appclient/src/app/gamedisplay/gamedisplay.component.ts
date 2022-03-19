@@ -1117,6 +1117,9 @@ export class GamedisplayComponent implements OnInit {
   }
 
   async btnClickLeaveMatch() {
+    if(this.waitingToExit) {
+      return
+    }
     this.waitingToExit = true
     const resp = await this._api.post(
       "/api/rooms/command",
