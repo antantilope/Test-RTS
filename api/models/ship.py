@@ -813,7 +813,7 @@ class Ship(BaseModel):
 
 
     def _autopilot_hold_position(self):
-        if abs(self.velocity_x_meters_per_second) < 1.5 and abs(self.velocity_y_meters_per_second) < 1.5:
+        if round(abs(self.velocity_x_meters_per_second)) <= 3 and round(abs(self.velocity_y_meters_per_second)) <= 3:
             # Force the ship to stop moving and end Autopilot program
             # If ship velocity is slow enough.
             self.velocity_x_meters_per_second = 0
