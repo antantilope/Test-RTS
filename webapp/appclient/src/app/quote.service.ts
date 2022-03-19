@@ -28,20 +28,9 @@ export class QuoteService {
     },
     {
       lines:[
-        "Space i."
-      ],
-      author: ""
-    },
-    {
-      lines:[
         "Failure is the condiment that gives success its flavor."
       ],
       author: "Truman Capote",
-    },
-    {
-      lines:[
-        "Some die and return to mother Earth."
-      ],
     },
     {
       lines:[
@@ -82,7 +71,7 @@ export class QuoteService {
       lines: [
         "All space warfare is based on space deception.",
       ],
-      author:"Lord Space Generalbot The V3.773.22",
+      author:"Sir Space Bot The V3.773.22",
     },
     {
       lines: [
@@ -93,10 +82,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "You may find youself in a decisively good or bad position",
-        "if you fire first in a space duel. It depends."
+        "Space fuel is terribly flammible. Be carful when operating a fueled spacecraft."
       ],
-      author: "CUSIM 4-10.32",
+      author: "CUSIM 1-232.1",
     },
     {
       lines: [

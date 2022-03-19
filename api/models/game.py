@@ -336,7 +336,7 @@ class Game(BaseModel):
             if not self._winning_team:
                 self.check_for_winning_team()
             self.check_for_empty_game()
-            self.purge_killfeed()
+            self.purge_killfeed(MAX_SERVER_FPS)
 
 
         # Increment the game frame for the next frame.
@@ -501,8 +501,8 @@ class Game(BaseModel):
         if len(self._players) == 0:
             self._phase = GamePhase.COMPLETE
 
-    def purge_killfeed(self):
-        oldest_frame = self._game_frame - MAX_SERVER_FPS * 8
+    def purge_killfeed(self, fps: int):
+        oldest_frame = self._game_frame - fps * 8
         self._killfeed = [
             k for k in self._killfeed
             if k['created_at_frame'] >= oldest_frame
