@@ -44,6 +44,9 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
+  public showConfirmExit = false
+  public waitingToExit = false
+
   public enableEngineOnlineBtn = false
   public enableEngineOfflineBtn = false
   public enableEngineLightBtn = false
@@ -294,6 +297,34 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.stroke()
 
     // Scanner Range Cirlce
+    if(this._api.frameData.ship.scanner_online) {
+      let scannerRange;
+      let color;
+      if(this._api.frameData.ship.scanner_mode == 'radar') {
+        scannerRange = this._api.frameData.ship.scanner_radar_range
+        color = "rgb(130, 255, 134, 0.5)" // Light green
+      } else if (this._api.frameData.ship.scanner_mode == 'ir') {
+        scannerRange = this._api.frameData.ship.scanner_ir_range
+        color = "rgb(255, 130, 253, 0.5)" // Light purple
+      } else {
+        throw new Error("unknown scanner mode")
+      }
+      const scannerRangeCanvasPXRadius = Math.round(
+        (this._api.frameData.map_config.units_per_meter
+        * scannerRange) / this._camera.getZoom()
+      )
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = color
+      this.ctx.lineWidth = 1
+      this.ctx.arc(
+        shipCanvasCoords.x,
+        shipCanvasCoords.y,
+        scannerRangeCanvasPXRadius,
+        0,
+        2 * Math.PI,
+      )
+      this.ctx.stroke()
+    }
 
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
@@ -611,36 +642,9 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.font = '20px Courier New'
     this.ctx.fillText("Ensign " + this._user.handle, lrcXOffset, lrcYOffset)
     lrcYOffset -= lrcYInterval
-    // Green alerts
-    lrcYInterval = 25
-    this.ctx.font = 'bold 20px courier new'
-    this.ctx.fillStyle = 'rgb(21, 222, 2, 0.8)'
-    if(this._api.frameData.ship.engine_online) {
-      this.ctx.beginPath()
-      this.ctx.fillText("ENGINE", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.scanner_online) {
-      this.ctx.beginPath()
-      this.ctx.fillText("SCANNER" + (this._api.frameData.ship.scanner_locked ? " LOCK" : "") + " (" + this._api.frameData.ship.scanner_mode + ")", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.ebeam_can_fire) {
-      this.ctx.beginPath()
-      this.ctx.fillText("E-BEAM READY", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.ebeam_charging) {
-      this.ctx.beginPath()
-      this.ctx.fillText("E-BEAM CHARGING", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
-    if(this._api.frameData.ship.autopilot_program) {
-      this.ctx.beginPath()
-      this.ctx.fillText("AUTOPILOT " + this._api.frameData.ship.autopilot_program, lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
-    }
     // Red alerts
+    lrcYInterval = 30
+    this.ctx.font = 'bold 24px courier new'
     this.ctx.fillStyle = 'rgb(222, 2, 2, 0.8)'
     if(this._api.frameData.ship.fuel_level < 1200) {
       this.ctx.beginPath()
@@ -652,18 +656,30 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
+
+    // Front and alerts
     if(!this._api.frameData.ship.alive) {
       this.ctx.beginPath()
-      this.ctx.font = 'bold 32px courier new'
-      this.ctx.fillText("🪦 YOU DIED IN SPACE", lrcXOffset, lrcYOffset)
-      lrcYOffset -= lrcYInterval
+      this.ctx.font = 'bold 40px courier new'
+      this.ctx.fillStyle = '#ff0000'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText("GAME OVER", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 3)
+      this.ctx.fillText("You died in space 🪦", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
+    }
+    else if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 40px courier new'
+      this.ctx.fillStyle = '#ffffff'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
 
     // Resources (TOP LEFT)
+    const tlcYInterval = 34
+    const tlcKFYInterval = 28
+    let tlcYOffset = 25
+    const tlcXOffset = 15
     if(this._api.frameData.ship.alive){
-      const tlcYInterval = 34
-      let tlcYOffset = 25
-      const tlcXOffset = 15
       this.ctx.beginPath()
       this.ctx.font = '24px Courier New'
       this.ctx.fillStyle = '#fcb8b8'
@@ -680,6 +696,17 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = '#ffffff'
       this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
       tlcYOffset += tlcYInterval
+    }
+    // Killfeed (TOP LEFT)
+    tlcYOffset += tlcYInterval
+    this.ctx.font = '20px Courier New'
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.textAlign = 'left'
+    for(let i in this._api.frameData.killfeed) {
+      const kfe = this._api.frameData.killfeed[i]
+      this.ctx.beginPath()
+      this.ctx.fillText("💀 " + kfe.victim_name, tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcKFYInterval
     }
 
     // Timers (BOTTOM RIGHT)
@@ -705,38 +732,37 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.strokeStyle = '#00ff00'
     this.ctx.fillStyle = '#00ff00'
     brcYOffset += brcYInterval
-    for(let i in this._api.frameData.ship.timers) {
-      const timer: TimerItem = this._api.frameData.ship.timers[i]
-      const fillLength = Math.round((timer.percent / 100) * timerBarLength)
-      this.ctx.beginPath()
-      this.ctx.fillText(
-        timer.name,
-        this._camera.canvasWidth - textRAlignXOffset,
-        this._camera.canvasHeight - brcYOffset,
-      )
-      this.ctx.beginPath()
-      this.ctx.rect(
-        this._camera.canvasWidth - barRAlignXOffset, //    top left x
-        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
-        timerBarLength, // width
-        30,             // height
-      )
-      this.ctx.stroke()
-      this.ctx.beginPath()
-      this.ctx.rect(
-        this._camera.canvasWidth - barRAlignXOffset, //    top left x
-        this._camera.canvasHeight - (brcYOffset + 20),  // top left y
-        fillLength, // width
-        30,         // height
-      )
-      this.ctx.fill()
-
-      brcYOffset += brcYInterval
-
+    if(this._api.frameData.ship.alive){
+      for(let i in this._api.frameData.ship.timers) {
+        const timer: TimerItem = this._api.frameData.ship.timers[i]
+        const fillLength = Math.round((timer.percent / 100) * timerBarLength)
+        this.ctx.beginPath()
+        this.ctx.fillText(
+          timer.name,
+          this._camera.canvasWidth - textRAlignXOffset,
+          this._camera.canvasHeight - brcYOffset,
+        )
+        this.ctx.beginPath()
+        this.ctx.rect(
+          this._camera.canvasWidth - barRAlignXOffset, //    top left x
+          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+          timerBarLength, // width
+          30,             // height
+        )
+        this.ctx.stroke()
+        this.ctx.beginPath()
+        this.ctx.rect(
+          this._camera.canvasWidth - barRAlignXOffset, //    top left x
+          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+          fillLength, // width
+          30,         // height
+        )
+        this.ctx.fill()
+        brcYOffset += brcYInterval
+      }
     }
-
     // Gyroscope
-    if(!this.isDebug) {
+    if(!this.isDebug && this._api.frameData.ship.alive) {
       // Circle
       const buffer = 3;
       const gryroscopeRadius = Math.floor(this._camera.canvasHalfHeight / 8)
@@ -1088,6 +1114,20 @@ export class GamedisplayComponent implements OnInit {
         {command:'fire_ebeam'},
       )
     }
+  }
+
+  async btnClickLeaveMatch() {
+    if(this.waitingToExit) {
+      return
+    }
+    this.waitingToExit = true
+    const resp = await this._api.post(
+      "/api/rooms/command",
+      {command:'leave_game'},
+    )
+    setTimeout(()=>{
+      location.reload()
+    }, 1000)
   }
 
 }

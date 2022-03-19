@@ -63,6 +63,43 @@ class TestEBeamAndDamage(TestCase):
         # Assert
         assert self.game._ships[self.player_2_ship_id].died_on_frame == self.game._game_frame
 
+    def test_killing_a_target_adds_a_row_to_the_kill_feed(self):
+        # Arrange
+        self.game._ships[self.player_1_ship_id].ebeam_charge = 8000
+        self.game._ships[self.player_1_ship_id].coord_x = 1000
+        self.game._ships[self.player_1_ship_id].coord_y = 1000
+        self.game._ships[self.player_1_ship_id].heading = constants.DEGREES_NORTH
+        self.game._ships[self.player_1_ship_id].ebeam_firing = True
+        self.game._ships[self.player_2_ship_id].coord_x = 1000
+        self.game._ships[self.player_2_ship_id].coord_y = 6000
+        assert self.game._ships[self.player_2_ship_id].died_on_frame is None
+        assert len(self.game._killfeed) == 0
+        # Act
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        # Assert
+        assert len(self.game._killfeed) == 1
+
+    def test_killfeed_row_is_purged_after_8_seconds(self):
+        self.game._game_frame = 1
+        self.game._killfeed = [
+            {
+                "created_at_frame": 1,
+                "victim_name": "foobar",
+            }
+        ]
+        self.game._game_frame = 4
+        self.game.purge_killfeed(fps=1)
+        assert len(self.game._killfeed) == 1
+        self.game._game_frame = 6
+        self.game.purge_killfeed(fps=1)
+        assert len(self.game._killfeed) == 1
+        self.game._game_frame = 8
+        self.game.purge_killfeed(fps=1)
+        assert len(self.game._killfeed) == 1
+        self.game._game_frame = 10
+        self.game.purge_killfeed(fps=1)
+        assert len(self.game._killfeed) == 0
+
     def test_ebeam_fire_misses_a_target(self):
         # Arrange
         self.game._ships[self.player_1_ship_id].ebeam_charge = 8000

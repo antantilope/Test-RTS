@@ -22,6 +22,8 @@ class ShipCoatType:
     RADAR_DEFEATING = "radar_defeating"
 
 class ShipCommands:
+    LEAVE_GAME = 'leave_game'
+
     SET_HEADING = 'set_heading'
 
     ACTIVATE_ENGINE = 'activate_engine'

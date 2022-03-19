@@ -1,6 +1,8 @@
 
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_room } = require("../lib/db/get_rooms");
+const { get_team_details } = require("../lib/db/get_team_details")
+const { removePlayerFromRoom } = require("../controllers/leave_room")
 const { getQueueName } = require("../lib/command_queue");
 const { PHASE_2_LIVE } = require("../constants")
 const { logger } = require("../lib/logger");
@@ -13,6 +15,29 @@ const {
 
 
 const commandHandlers = {
+    leave_game: async (req, queueName) => {
+        const sess_player_id = req.session.player_id;
+        const sess_room_id = req.session.room_id;
+        const sess_team_id = req.session.team_id;
+        const db = await get_db_connection();
+        try {
+            roomDetails = await get_room(db, sess_room_id);
+            if(roomDetails.phase != PHASE_2_LIVE){
+                return
+            }
+            const teamDetails = await get_team_details(db, sess_team_id);
+            const deleteTeam = teamDetails.player_count === 1;
+            await removePlayerFromRoom(db, sess_player_id, sess_team_id, deleteTeam);
+        } catch (err) {
+            throw err
+        } finally {
+            db.close()
+        }
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'leave_game',
+        });
+    },
     set_heading: (req, queueName) => {
         const validatedData = validateSetHeadingCommand(req.body);
         req.app.get(queueName).push({

@@ -6,7 +6,7 @@ from time import sleep
 import re
 
 from .base import BaseModel
-from .ship import Ship, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType
+from .ship import Ship, ShipCommands, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType
 from .ship_designator import get_designations
 from api import utils2d
 from api.constants import (
@@ -73,6 +73,10 @@ class EBeamRayDetails(TypedDict):
     end_point: Tuple[int]
     color: str
 
+class KillFeedElement(TypedDict):
+    victim_name: str
+    created_at_frame: int
+
 class Game(BaseModel):
 
     BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players',)
@@ -85,6 +89,7 @@ class Game(BaseModel):
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
         self._ebeam_rays: List[EBeamRayDetails] = []
+        self._killfeed: List[KillFeedElement] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
 
@@ -95,6 +100,7 @@ class Game(BaseModel):
         self._game_frame = 0
         self._max_players = 8
         self._game_start_countdown = GAME_START_COUNTDOWN_FROM
+        self._winning_team = None
 
         self._map_units_per_meter = None
         self._map_x_unit_length = None
@@ -138,7 +144,7 @@ class Game(BaseModel):
             }
 
         elif self._phase == GamePhase.COMPLETE:
-            pass
+            return base_state
 
         raise NotImplementedError
 
@@ -148,6 +154,8 @@ class Game(BaseModel):
             'elapsed_time': LEADING_ZEROS_TIME.sub("", str(dt.datetime.now() - self._game_start_time)).split(".")[0],
             'ships': [ship.to_dict() for ship in self._ships.values()],
             'ebeam_rays': self._ebeam_rays,
+            "winning_team": self._winning_team,
+            "killfeed": self._killfeed,
         }
 
 
@@ -323,6 +331,15 @@ class Game(BaseModel):
             ship.run_autopilot()
             self.calculate_weapons_and_damage(ship_id)
 
+        # Post frame checks
+        if self._game_frame % 30 == 0:
+            if not self._winning_team:
+                self.check_for_winning_team()
+            self.check_for_empty_game()
+            self.purge_killfeed(MAX_SERVER_FPS)
+
+
+        # Increment the game frame for the next frame.
         self.incr_game_frame()
 
 
@@ -440,6 +457,10 @@ class Game(BaseModel):
                 })
                 for hit_ship_id in hits:
                     self._ships[hit_ship_id].die(self._game_frame)
+                    self._killfeed.append({
+                        "created_at_frame": self._game_frame,
+                        "victim_name": self._ships[hit_ship_id].scanner_designator,
+                    })
 
 
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
@@ -467,6 +488,26 @@ class Game(BaseModel):
         return line, hits
 
 
+    def check_for_winning_team(self):
+        alive_teams = set(
+            s.team_id for s in self._ships.values()
+            if s.died_on_frame is None
+            and s.team_id is not None
+        )
+        if len(alive_teams) == 1:
+            self._winning_team = alive_teams.pop()
+
+    def check_for_empty_game(self):
+        if len(self._players) == 0:
+            self._phase = GamePhase.COMPLETE
+
+    def purge_killfeed(self, fps: int):
+        oldest_frame = self._game_frame - fps * 8
+        self._killfeed = [
+            k for k in self._killfeed
+            if k['created_at_frame'] >= oldest_frame
+        ]
+
     def _process_ship_command(self, command: FrameCommand):
         ship_command = command['ship_command']
         player_id = command['player_id']
@@ -474,9 +515,29 @@ class Game(BaseModel):
         kwargs = command.get('kwargs', {})
         ship_id = self._player_id_to_ship_id_map[player_id]
 
-        self._ships[ship_id].process_command(
-            ship_command,
-            *args,
-            **kwargs,
+        # Handle game level commands.
+        if ship_command == ShipCommands.LEAVE_GAME:
+            self.cmd_handle_player_leaving(player_id)
+
+        else:
+            # Handle ship level commands.
+            self._ships[ship_id].process_command(
+                ship_command,
+                *args,
+                **kwargs,
+            )
+
+    def cmd_handle_player_leaving(self, player_id: str):
+        team_id = self._players[player_id]['team_id']
+        ship_id = self._player_id_to_ship_id_map[player_id]
+        players_on_team_count = len(
+            [p for p in self._players.values() if p['team_id'] == team_id]
         )
 
+        if players_on_team_count < 2:
+            # If there are no more teammates to control the ship,
+            # kill it and remove it from the dissolved team.
+            self._ships[ship_id].died_on_frame = self._game_frame
+            self._ships[ship_id].team_id = None
+
+        del self._players[player_id]

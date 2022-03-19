@@ -1,10 +1,7 @@
 
-import json
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
 
 from api.models.game import Game, GamePhase, GameError
-from api.tests import factories
 
 
 class TestGame(TestCase):
@@ -302,56 +299,88 @@ class TestGame(TestCase):
                 assert game._map_y_unit_length > ship.coord_y > 0
 
     def test_can_decr_phase_1_starting_countdown(self):
-            game = Game()
-            game._phase = GamePhase.LOBBY
+        game = Game()
+        game._phase = GamePhase.LOBBY
 
-            game._players['666777888'] = {
-                'player_name': 'foobar1',
-                'player_id': '666777888',
-                'team_id':'7698554',
-            }
-            game._players['1112223333'] = {
-                'player_name': 'foobar2',
-                'player_id': '1112223333',
-                'team_id':'78654564',
-            }
-            game.configure_map({
-                'units_per_meter': 10,
-                'x_unit_length': 10_000,
-                'y_unit_length': 12_000,
-            })
-            game.advance_to_phase_1_starting()
+        game._players['666777888'] = {
+            'player_name': 'foobar1',
+            'player_id': '666777888',
+            'team_id':'7698554',
+        }
+        game._players['1112223333'] = {
+            'player_name': 'foobar2',
+            'player_id': '1112223333',
+            'team_id':'78654564',
+        }
+        game.configure_map({
+            'units_per_meter': 10,
+            'x_unit_length': 10_000,
+            'y_unit_length': 12_000,
+        })
+        game.advance_to_phase_1_starting()
 
-            assert game._game_start_countdown == 6
-            game.decr_phase_1_starting_countdown()
-            assert game._game_start_countdown == 5
+        assert game._game_start_countdown == 6
+        game.decr_phase_1_starting_countdown()
+        assert game._game_start_countdown == 5
 
     def test_can_decr_phase_1_starting_countdown_to_zero_which_advances_to_phase_2_live(self):
-            game = Game()
-            game._phase = GamePhase.LOBBY
+        game = Game()
+        game._phase = GamePhase.LOBBY
 
-            game._players['666777888'] = {
-                'player_name': 'foobar1',
-                'player_id': '666777888',
-                'team_id':'778456982',
-            }
-            game._players['1112223333'] = {
-                'player_name': 'foobar2',
-                'player_id': '1112223333',
-                'team_id':'0643255',
-            }
-            game.configure_map({
-                'units_per_meter': 10,
-                'x_unit_length': 10_000,
-                'y_unit_length': 12_000,
-            })
-            game.advance_to_phase_1_starting()
-            game._game_start_countdown = 1
-            assert game._game_start_time is None
+        game._players['666777888'] = {
+            'player_name': 'foobar1',
+            'player_id': '666777888',
+            'team_id':'778456982',
+        }
+        game._players['1112223333'] = {
+            'player_name': 'foobar2',
+            'player_id': '1112223333',
+            'team_id':'0643255',
+        }
+        game.configure_map({
+            'units_per_meter': 10,
+            'x_unit_length': 10_000,
+            'y_unit_length': 12_000,
+        })
+        game.advance_to_phase_1_starting()
+        game._game_start_countdown = 1
+        assert game._game_start_time is None
 
-            game.decr_phase_1_starting_countdown()
-            assert game._game_start_countdown == 0
-            assert game._phase == GamePhase.LIVE
-            assert game._game_frame == 1
-            assert game._game_start_time is not None
+        game.decr_phase_1_starting_countdown()
+        assert game._game_start_countdown == 0
+        assert game._phase == GamePhase.LIVE
+        assert game._game_frame == 1
+        assert game._game_start_time is not None
 
+    def test_game_detects_winning_team(self):
+        game = Game()
+        game._phase = GamePhase.LOBBY
+
+        game._players['666777888'] = {
+            'player_name': 'foobar1',
+            'player_id': '666777888',
+            'team_id': '3546235',
+        }
+        game._players['1112223333'] = {
+            'player_name': 'foobar2',
+            'player_id': '1112223333',
+            'team_id': '06786785',
+        }
+        game.configure_map({
+            'units_per_meter': 10,
+            'x_unit_length': 10_000,
+            'y_unit_length': 12_000,
+        })
+        game.advance_to_phase_1_starting()
+        assert game._phase == GamePhase.STARTING
+        assert len(game._ships) == 2
+        game._phase = GamePhase.LIVE
+
+        game.check_for_winning_team()
+        assert game._winning_team is None
+
+        player_1_ship = game._player_id_to_ship_id_map['666777888']
+        game._ships[player_1_ship].died_on_frame = 1 # kill player1's ship
+
+        game.check_for_winning_team()
+        assert game._winning_team == '06786785' # Player2's team is the winner
