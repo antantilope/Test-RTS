@@ -737,8 +737,12 @@ class Ship(BaseModel):
         self.ebeam_charge = round(self.ebeam_charge - delta_ebeam_charge)
         return True
 
-    def advance_damage_properties(self, game_frame: int, fps: int) -> None:
+    def advance_damage_properties(self, game_frame: int, map_x: int, map_y: int, fps: int) -> bool:
         if self.died_on_frame is None:
+            if self.coord_x < 0 or self.coord_y < 0 or self.coord_x > map_x or self.coord_y > map_y:
+                self.die(game_frame)
+                self.explode()
+                return True
             return
 
         if self.explosion_frame:

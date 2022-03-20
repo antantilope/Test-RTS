@@ -520,11 +520,19 @@ class Game(BaseModel):
 
 
     def calculate_weapons_and_damage(self, ship_id: str):
-        # Weapons and Damage
-        self._ships[ship_id].advance_damage_properties(
+        died = self._ships[ship_id].advance_damage_properties(
             self._game_frame,
+            self._map_x_unit_length,
+            self._map_y_unit_length,
             MAX_SERVER_FPS,
         )
+        if died is True:
+            self._killfeed.append({
+                "created_at_frame": self._game_frame,
+                "victim_name": self._ships[ship_id].scanner_designator,
+            })
+            return
+
         if self._ships[ship_id].ebeam_firing:
             success = self._ships[ship_id].use_ebeam_charge(self._fps)
             if success:

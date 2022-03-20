@@ -1983,7 +1983,7 @@ class TestShipAdvanceDamageProperties(TestCase):
     def test_an_undead_ship_does_not_change(self):
         self.ship.died_on_frame = None
         for i in range(10):
-            self.ship.advance_damage_properties(i+1, 1)
+            self.ship.advance_damage_properties(i+1, 100, 100, 1)
         assert self.ship.died_on_frame is None
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
@@ -1992,43 +1992,43 @@ class TestShipAdvanceDamageProperties(TestCase):
     def test_an_dead_ship_catches_fire_and_explodes(self):
         self.ship.died_on_frame = 1
         fps = 1
-        self.ship.advance_damage_properties(1, fps)
+        self.ship.advance_damage_properties(1, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(2, fps)
+        self.ship.advance_damage_properties(2, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(3, fps)
+        self.ship.advance_damage_properties(3, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
 
-        self.ship.advance_damage_properties(4, fps)
+        self.ship.advance_damage_properties(4, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4 # Catch fire
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(5, fps)
+        self.ship.advance_damage_properties(5, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(6, fps)
+        self.ship.advance_damage_properties(6, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4
         assert self.ship.explosion_frame is None
         assert self.ship.explosion_point is None
 
-        self.ship.advance_damage_properties(7, fps) # Boom
+        self.ship.advance_damage_properties(7, 100, 100, fps) # Boom
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 1
         assert self.ship.explosion_point == (25, 30,)
-        self.ship.advance_damage_properties(8, fps)
+        self.ship.advance_damage_properties(8, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 2
-        self.ship.advance_damage_properties(9, fps)
+        self.ship.advance_damage_properties(9, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 3
@@ -2039,10 +2039,26 @@ class TestShipAdvanceDamageProperties(TestCase):
         fps = 1
         assert self.ship.explosion_frame is None
         assert self.ship.explosion_point is None
-        self.ship.advance_damage_properties(1, fps)
+        self.ship.advance_damage_properties(1, 100, 100, fps)
         assert self.ship.explosion_frame == 1 # Boom
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_point == (25, 30,)
+
+    def test_dead_ship_explodes_if_it_goes_outside_map(self):
+        self.ship.explode_immediately = False
+        self.ship.died_on_frame = None
+        fps = 1
+        assert self.ship.explosion_frame is None
+        assert self.ship.explosion_point is None
+        self.ship.advance_damage_properties(1, 100, 100, fps)
+        assert self.ship.died_on_frame is None
+        assert self.ship.explosion_frame is None
+        assert self.ship.explosion_point is None
+        self.ship.advance_damage_properties(1, 10, 10, fps) # shrink map
+        assert self.ship.died_on_frame is not None
+        assert self.ship.explosion_frame == 1
+
+
 
 """ ADVANCE DAMAGE PROPERTIES
 """
