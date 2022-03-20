@@ -812,7 +812,7 @@ export class GamedisplayComponent implements OnInit {
         2 * Math.PI,
       )
       this.ctx.fill()
-      // Line
+      // Velocity Line
       if(
         this._api.frameData.ship.velocity_x_meters_per_second
         || this._api.frameData.ship.velocity_y_meters_per_second
@@ -833,6 +833,31 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.lineWidth = 4
         this.ctx.moveTo(gryroscopeX, gryroscopeY)
         this.ctx.lineTo(gyroLinePointB.x, gyroLinePointB.y)
+        this.ctx.stroke()
+      }
+      // Scanner Traversal Crosshairs
+      if(this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
+        const crossOffset = gryroscopeRadius * this._api.frameData.ship.scanner_lock_traversal_slack
+        this.ctx.beginPath()
+        this.ctx.strokeStyle = 'rgb(255, 0, 0, 0.75)'
+        this.ctx.lineWidth = 4
+        // Verticle hairs
+        this.ctx.moveTo(gryroscopeX - crossOffset, gryroscopeY - gryroscopeRadius)
+        this.ctx.lineTo(gryroscopeX - crossOffset, gryroscopeY + gryroscopeRadius)
+        this.ctx.stroke()
+        this.ctx.beginPath()
+        this.ctx.moveTo(gryroscopeX + crossOffset, gryroscopeY - gryroscopeRadius)
+        this.ctx.lineTo(gryroscopeX + crossOffset, gryroscopeY + gryroscopeRadius)
+        this.ctx.stroke()
+
+        // Horizontal hairs
+        this.ctx.beginPath()
+        this.ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY - crossOffset)
+        this.ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY - crossOffset)
+        this.ctx.stroke()
+        this.ctx.beginPath()
+        this.ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY + crossOffset)
+        this.ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY + crossOffset)
         this.ctx.stroke()
       }
       // Velocity Text

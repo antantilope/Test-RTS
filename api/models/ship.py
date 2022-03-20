@@ -198,7 +198,12 @@ class Ship(BaseModel):
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
 
-        self.scanner_thermal_signature_dissipation_per_second = constants.THERMAL_DISSIPATION_PER_SECOND
+        self.scanner_thermal_signature_dissipation_per_second = None
+
+        self.scanner_locking_max_traversal_degrees = None
+        self.scanner_locked_max_traversal_degrees = None
+        self.scanner_lock_traversal_degrees_previous_frame = None
+        self.scanner_lock_traversal_slack = None
 
         # Ship Energy Beam
         self.ebeam_charge_rate_per_second = None
@@ -379,6 +384,7 @@ class Ship(BaseModel):
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
             'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
+            'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
 
             'ebeam_firing': self.ebeam_firing,
             'ebeam_charging': self.ebeam_charging,
@@ -475,6 +481,11 @@ class Ship(BaseModel):
         instance.scanner_thermal_signature = 0
         instance.anti_radar_coating_level = 0
 
+        instance.scanner_thermal_signature_dissipation_per_second = constants.THERMAL_DISSIPATION_PER_SECOND
+
+        instance.scanner_locking_max_traversal_degrees = constants.SCANNER_LOCKING_MAX_TRAVERSAL_DEGREES
+        instance.scanner_locked_max_traversal_degrees = constants.SCANNER_LOCKED_MAX_TRAVERSAL_DEGREES
+
         instance.ebeam_charge_rate_per_second = constants.EBEAM_CHARGE_RATE_PER_SECOND
         instance.ebeam_charge_thermal_signature_rate_per_second = constants.EBEAM_CHARGE_THERMAL_SIGNATURE_RATE_PER_SECOND
         instance.ebeam_charge = 0
@@ -567,6 +578,8 @@ class Ship(BaseModel):
                 self.scanner_locking = False
                 self.scanner_lock_target = None
                 self.scanner_locked = False
+                self.scanner_lock_traversal_degrees_previous_frame = None
+                self.scanner_lock_traversal_slack = None
 
             else:
                 if self.scanner_locking:
@@ -590,6 +603,8 @@ class Ship(BaseModel):
                             self.scanner_locking = False
                             self.scanner_lock_target = None
                             self.scanner_locking_power_used = None
+                            self.scanner_lock_traversal_degrees_previous_frame = None
+                            self.scanner_lock_traversal_slack = None
                         else:
                             self.scanner_locking_power_used += adj
 
@@ -1020,6 +1035,8 @@ class Ship(BaseModel):
         self.scanner_locking = False
         self.scanner_locking_power_used = None
         self.scanner_lock_target = None
+        self.scanner_lock_traversal_degrees_previous_frame = None
+        self.scanner_lock_traversal_slack = None
         self.scanner_data.clear()
 
     def cmd_set_scanner_mode_radar(self) -> None:
@@ -1037,6 +1054,7 @@ class Ship(BaseModel):
         self.scanner_locked = False
         self.scanner_locking_power_used = 0
         self.scanner_lock_target = target_id
+        self.scanner_lock_traversal_degrees_previous_frame = None
 
     def cmd_charge_ebeam(self):
         if not self.ebeam_charging:

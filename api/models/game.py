@@ -509,6 +509,7 @@ class Game(BaseModel):
                 self._ships[ship_id].scanner_data[other_id] = scanner_data
 
 
+        # Check if scanner target has gone out of range
         if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
             if self._ships[ship_id].scanner_locking:
                 self._ships[ship_id].scanner_lock_target = None
@@ -518,6 +519,36 @@ class Game(BaseModel):
                 self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].scanner_locked = False
 
+        # check if scanner target traversal is above maximum
+        if self._ships[ship_id].scanner_lock_target and (self._ships[ship_id].scanner_locking or self._ships[ship_id].scanner_locked):
+            if self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame is None:
+                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                    self._ships[ship_id].scanner_lock_target
+                ]['target_heading']
+            else:
+                target_heading = self._ships[ship_id].scanner_data[
+                    self._ships[ship_id].scanner_lock_target
+                ]['target_heading']
+                delta = abs(
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame
+                    - target_heading
+                )
+                if self._ships[ship_id].scanner_locking:
+                    max_traversal = self._ships[ship_id].scanner_locking_max_traversal_degrees / self._fps
+                elif self._ships[ship_id].scanner_locked:
+                    max_traversal = self._ships[ship_id].scanner_locked_max_traversal_degrees / self._fps
+                else:
+                    raise NotImplementedError
+                if delta > max_traversal:
+                    self._ships[ship_id].scanner_locked = False
+                    self._ships[ship_id].scanner_locking = False
+                    self._ships[ship_id].scanner_lock_target = None
+                    self._ships[ship_id].scanner_lock_traversal_slack = None
+                else:
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                        self._ships[ship_id].scanner_lock_target
+                    ]['target_heading']
+                    self._ships[ship_id].scanner_lock_traversal_slack = delta / max_traversal
 
     def calculate_weapons_and_damage(self, ship_id: str):
         died = self._ships[ship_id].advance_damage_properties(
