@@ -21,7 +21,8 @@ const {
 const { joinRoomController } = require("./controllers/join_room");
 const { leaveRoomController } = require("./controllers/leave_room");
 const { roomDetailsController } = require("./controllers/room_details");
-const { configureMapController } = require("./controllers/configure_map");
+const { getMapsController } = require("./controllers/get_maps");
+const { createRoomController } = require("./controllers/create_room");
 const {
     startGameController,
     relaunchGameLoops,
@@ -201,9 +202,10 @@ expressApp.get('/api/rooms/ping', setJSONContentType, pingServerController);
 expressApp.post('/api/rooms/join', setJSONContentType, joinRoomController);
 expressApp.post('/api/rooms/leave', setJSONContentType, leaveRoomController);
 expressApp.get('/api/rooms/details', setJSONContentType, roomDetailsController);
-expressApp.post('/api/rooms/configure', setJSONContentType, configureMapController);
 expressApp.post('/api/rooms/start', setJSONContentType, startGameController);
 expressApp.post('/api/rooms/command', setJSONContentType, RunCommandController);
+expressApp.get('/api/maps/list', setJSONContentType, getMapsController);
+expressApp.post('/api/rooms/create', setJSONContentType, createRoomController);
 
 // Launch the HTTP Server
 httpServer.listen(locals.port, () => {

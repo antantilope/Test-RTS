@@ -1,15 +1,20 @@
 
+import uuid
+
 from django.db import models
 
 
 class BaseModel(models.Model):
-    uuid = models.UUIDField(primary_key=True)
+    uuid = models.UUIDField(
+        primary_key=True, blank=True, default=uuid.uuid4, editable=False
+    )
 
     class Meta:
         abstract = True
 
 
 class BattleMap(BaseModel):
+    is_draft = models.BooleanField(blank=True, default=False)
     name = models.CharField(max_length=100)
     meters_x = models.PositiveBigIntegerField()
     meters_y = models.PositiveBigIntegerField()
@@ -23,6 +28,19 @@ class BattleMap(BaseModel):
         (SIZE_LARGE, "Large",),
     )
     size = models.CharField(max_length=10, choices=BATTLE_MAP_SIZES)
+
+    def __str__(self):
+        return self.name + " " + f"({self.size})"
+
+
+class BattleMapSpawnPoint(BaseModel):
+    battle_map = models.ForeignKey(BattleMap, on_delete=models.CASCADE)
+    position_meters_x = models.PositiveBigIntegerField()
+    position_meters_y = models.PositiveBigIntegerField()
+
+
+    def __str__(self):
+        return f"SPAWN {self.battle_map.name} ({self.position_meters_x}, {self.position_meters_y})"
 
 class BattleMapFeature(BaseModel):
     battle_map = models.ForeignKey(BattleMap, on_delete=models.CASCADE)
@@ -39,6 +57,9 @@ class BattleMapFeature(BaseModel):
         (TYPE_ORE_MINE, "Ore",),
     )
     type = models.CharField(max_length=12, choices=BATTLE_MAP_TYPES)
+
+    def __str__(self):
+        return f"{self.type} - {self.battle_map.name}"
 
 
 class Room(BaseModel):

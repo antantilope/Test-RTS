@@ -3,6 +3,7 @@
 <html>
     <head>
         <script src="/static/js/jquery.js"></script>
+        <script src="/static/js/drawMapPreview.js"></script>
         <script src="/socket.io/socket.io.js"></script>
         <style>
             html {
@@ -22,8 +23,12 @@
                 font-size: 120%;
                 border-radius: 4px;
             }
-            #admin-link-container {
+            #admin-link-container, #admin-create-room-container {
                 display: none;
+            }
+            #map-preview-canvas {
+                border: 2px solid purple;
+                border-radius: 2px;
             }
         </style>
     </head>
@@ -36,6 +41,40 @@
         </div>
         <div id="admin-link-container">
             <a href="/admin">Admin</a>
+        </div>
+        <div id="admin-create-room-container">
+            <hr>
+            <div>
+                <h3>Create a New Room</h3>
+            </div>
+            <div style="display:flex; justify-content: space-evenly;">
+                <div>
+                    <div>
+                        <strong>Map</strong>
+                        <select id="new-room-form-map-select">
+                        </select>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <strong>Room Name</strong>
+                        <input type="text" id="new-room-form-name-input">
+                    </div>
+                    <div style="margin-top:10px;">
+                        <strong>Join as observer</strong>
+                        <input type="checkbox" id="new-room-form-is-observer-input">
+                    </div>
+                    <div style="margin-top:25px;">
+                        <button id="create-new-room-btn">
+                            Create Room
+                        </button>
+                    </div>
+                </div>
+                <div style="margin-left:5px;">
+                    <!--Map Preview-->
+                    <canvas id="map-preview-canvas" width="400" height="400">
+                    </canvas>
+                </div>
+            </div>
+            <hr>
         </div>
         <div id="room-list">
 
@@ -119,6 +158,8 @@
                 }
             }
 
+
+
             $(document).ready(() => {
 
                 // Start of CSRF Setup //
@@ -166,9 +207,69 @@
                             $("#logged-in-as-span").text(data.handle);
                             if(data.is_superuser) {
                                 $("#admin-link-container").css("display", "block");
+                                $("#admin-create-room-container").css("display", "block");
                             }
                         }
                     }
+                });
+
+                $.get({
+                    url: "/api/maps/list",
+                    success: (data, status, xhr) => {
+                        if(xhr.status === 200) {
+                            const s = document.getElementById("new-room-form-map-select");
+                            const canvas = document.getElementById("map-preview-canvas");
+                            canvas.crea
+                            data.forEach((row, i) => {
+                                let o = document.createElement("option");
+                                $(o).attr("value", row.uuid);
+                                $(o).text(`${row.name} (${row.size})`);
+                                $("body").data('map-' + row.uuid, row)
+                                $(s).append(o);
+                                if(i == 0) {
+                                    $(s).val(row.uuid);
+                                    drawMapPreview(row, canvas)
+                                }
+                            });
+                            $(s).change(() => {
+                                const s = document.getElementById("new-room-form-map-select");
+                                const mapData = $("body").data("map-" + $(s).val());
+                                const canvas = document.getElementById("map-preview-canvas");
+                                drawMapPreview(mapData, canvas)
+                            })
+                        }
+                    }
+                })
+
+                $("#create-new-room-btn").click(() => {
+                    const map_id = $("#new-room-form-map-select").val();
+                    const room_name = $("#new-room-form-name-input").val();
+                    const owner_is_observer = $("#new-room-form-is-observer-input").is(':checked');
+                    if(!map_id || !room_name) {
+                        return alert("Room name and map is required.");
+                    }
+                    $("#create-new-room-btn").prop("disabled", true);
+                    const data = { map_id, room_name, owner_is_observer }
+                    $.post({
+                        url: "/api/rooms/create",
+                        contentType: "application/json",
+                        data: JSON.stringify(data),
+                        success: (data, status, xhr) => {
+                            if(xhr.status === 202) {
+                                location.reload();
+                            } else {
+                                $("#create-new-room-btn").prop("disabled", false);
+                                alert("Yikes! Received an unexpected response from the server");
+                                console.error({data, status, xhr});
+                            }
+                        },
+                        error: (xhr, status, error) => {
+                            $("#create-new-room-btn").prop("disabled", false);
+                            console.error({xhr, status, error});
+                            alert("An Error Occured.");
+                        }
+
+                    })
                 });
 
                 const socket = io("ws://localhost:8000");

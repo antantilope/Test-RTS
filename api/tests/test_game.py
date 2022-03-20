@@ -94,25 +94,27 @@ class TestGame(TestCase):
         game._phase = GamePhase.LOBBY
 
         assert not game.map_is_configured
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 200 * 1000, # 200KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         assert game.map_is_configured
         assert game._map_units_per_meter == 10
-        assert game._map_x_unit_length == 10_000
-        assert game._map_y_unit_length == 12_000
-
-        game.configure_map({
-            'units_per_meter': 11,
-            'x_unit_length': 11_000,
-            'y_unit_length': 13_000,
-        })
+        assert game._map_x_unit_length == 100 * 1000 * 10
+        assert game._map_y_unit_length == 200 * 1000 * 10
         assert game.map_is_configured
-        assert game._map_units_per_meter == 11
-        assert game._map_x_unit_length == 11_000
-        assert game._map_y_unit_length == 13_000
+
 
     def test_game_cannot_configure_map_if_not_in_lobby_phase(self):
         game = Game()
@@ -121,11 +123,21 @@ class TestGame(TestCase):
             game._phase = phase
             self.assertRaises(
                 GameError,
-                lambda: game.configure_map({
-                    'units_per_meter': 10,
-                    'x_unit_length': 10_000,
-                    'y_unit_length': 12_000,
-                })
+                lambda: game.set_map({
+                    'mapData':{
+                        "meters_x": 100 * 1000, # 100KM
+                        "meters_y": 200 * 1000, # 200KM
+                        "name": "TestMap",
+                    },
+                    'spawnPoints': [{
+                        'position_meters_x': 100,
+                        'position_meters_y': 100,
+                    },{
+                        'position_meters_x': 200,
+                        'position_meters_y': 200,
+                    }],
+                    'features': [],
+                }, map_units_per_meter=10)
             )
             assert not game.map_is_configured
 
@@ -143,12 +155,21 @@ class TestGame(TestCase):
             'player_id': '1112223333',
             'team_id': '06786785',
         }
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
-
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 200 * 1000, # 200KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         assert game._phase == GamePhase.STARTING
         assert len(game._ships) == 2
@@ -166,11 +187,21 @@ class TestGame(TestCase):
             'player_id': '1112223333',
             'team_id': '54783456',
         }
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 200 * 1000, # 200KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         for phase in GamePhase.NON_LOBBY_PHASES:
             game._phase = phase
             self.assertRaises(
@@ -188,11 +219,21 @@ class TestGame(TestCase):
             'player_id': '666777888',
             'team_id': '656566565',
         }
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 200 * 1000, # 200KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         game._phase = GamePhase.LOBBY
         self.assertRaises(
             GameError,
@@ -232,11 +273,21 @@ class TestGame(TestCase):
         )
         assert len(game._ships) == 0
 
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 200 * 1000, # 200KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         assert game._phase == GamePhase.STARTING
         assert len(game._ships) == 2
@@ -257,11 +308,21 @@ class TestGame(TestCase):
             'player_id': '1112223333',
             'team_id':'665544',
         }
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
 
         assert len(game._player_id_to_ship_id_map) == 2
@@ -271,7 +332,7 @@ class TestGame(TestCase):
         assert '123456' in game._team_id_to_ship_id_map
         assert '665544' in game._team_id_to_ship_id_map
 
-    def test_spawn_ships_places_ships_in_bounds(self):
+    def test_spawn_ships_places_ships_at_spawn_points(self):
         for _i in range(100):
 
             game = Game()
@@ -287,16 +348,28 @@ class TestGame(TestCase):
                 'player_id': '1112223333',
                 'team_id':'756854',
             }
-            game.configure_map({
-                'units_per_meter': 10,
-                'x_unit_length': 10_000,
-                'y_unit_length': 12_000,
-            })
+
+            game.set_map({
+                'mapData':{
+                    "meters_x": 100 * 1000, # 100KM
+                    "meters_y": 100 * 1000, # 100KM
+                    "name": "TestMap",
+                },
+                'spawnPoints': [{
+                    'position_meters_x': 100,
+                    'position_meters_y': 150,
+                },{
+                    'position_meters_x': 200,
+                    'position_meters_y': 300,
+                }],
+                'features': [],
+            }, map_units_per_meter=10)
             game.advance_to_phase_1_starting()
 
             for ship in game._ships.values():
-                assert game._map_x_unit_length > ship.coord_x > 0
-                assert game._map_y_unit_length > ship.coord_y > 0
+                assert ship.coord_x in {100*10, 200*10}
+                assert ship.coord_y in {150*10, 300*10}
+
 
     def test_can_decr_phase_1_starting_countdown(self):
         game = Game()
@@ -312,11 +385,21 @@ class TestGame(TestCase):
             'player_id': '1112223333',
             'team_id':'78654564',
         }
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 150,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 300,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
 
         assert game._game_start_countdown == 6
@@ -337,11 +420,21 @@ class TestGame(TestCase):
             'player_id': '1112223333',
             'team_id':'0643255',
         }
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 150,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 300,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         game._game_start_countdown = 1
         assert game._game_start_time is None
@@ -366,11 +459,21 @@ class TestGame(TestCase):
             'player_id': '1112223333',
             'team_id': '06786785',
         }
-        game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 10_000,
-            'y_unit_length': 12_000,
-        })
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 150,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 300,
+            }],
+            'features': [],
+        }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         assert game._phase == GamePhase.STARTING
         assert len(game._ships) == 2

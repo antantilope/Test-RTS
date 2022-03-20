@@ -46,7 +46,50 @@ class MapConfigDetails(TypedDict):
     units_per_meter: int
     x_unit_length: int
     y_unit_length: int
+    map_name: str
 
+
+class TopLevelMapDetails(TypedDict):
+    name: str
+    meters_x: int
+    meters_y: int
+
+
+class MapFeatureType:
+    ORE = "ore"
+    FUEL = "fuel"
+
+class MapFeature(TypedDict):
+    id: str
+    name: Optional[str]
+    position_meters_x: int
+    position_meters_y: int
+    width_meters_x: int
+    width_meters_y: int
+    type: str
+
+class EnrichedMapFeature(TypedDict):
+    id: str
+    name: Optional[str]
+    position_meters_x: int
+    position_meters_y: int
+    width_meters_x: int
+    width_meters_y: int
+    type: str
+    position_map_units_x: int # Perform map unit version up front
+    position_map_units_y: int #
+    width_map_units_x: int    #
+    width_map_units_y: int    #
+
+class MapSpawnPoint(TypedDict):
+    id: str
+    position_meters_x: int
+    position_meters_y: int
+
+class MapDetails(TypedDict):
+    mapData: TopLevelMapDetails
+    features: List[MapFeature]
+    spawnPoints: List[MapSpawnPoint]
 
 class GameState(TypedDict):
     phase: str
@@ -86,10 +129,15 @@ class Game(BaseModel):
 
         self.logger = get_logger("Game-Logger")
 
+        self._spawn_points: List[MapSpawnPoint] = []
+
         self._players: Dict[str, PlayerDetails] = {}
         self._ships: Dict[str, Ship] = {}
         self._ebeam_rays: List[EBeamRayDetails] = []
         self._killfeed: List[KillFeedElement] = []
+        self._fuel_depots: List[EnrichedMapFeature] = []
+        self._ore_mines: List[EnrichedMapFeature] = []
+
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
 
@@ -105,6 +153,7 @@ class Game(BaseModel):
         self._map_units_per_meter = None
         self._map_x_unit_length = None
         self._map_y_unit_length = None
+        self._map_name = None
 
         self._fps = MAX_SERVER_FPS
         self._last_frame_at = None
@@ -123,6 +172,7 @@ class Game(BaseModel):
             'server_fps_throttle_seconds': self._frame_sleep,
             'map_config': {
                 "units_per_meter": self._map_units_per_meter,
+                "map_name": self._map_name,
                 "x_unit_length": self._map_x_unit_length,
                 "y_unit_length": self._map_y_unit_length,
             }
@@ -180,17 +230,50 @@ class Game(BaseModel):
             raise GameError("Maximum players in game")
 
 
-    def configure_map(self, request: MapConfigDetails):
-        self._validate_can_configure_map(request)
-        self._map_units_per_meter = request['units_per_meter']
-        self._map_x_unit_length = request['x_unit_length']
-        self._map_y_unit_length = request['y_unit_length']
+    def set_map(self, request: MapDetails, map_units_per_meter = None):
+        self._validate_can_set_map()
 
+        self._map_units_per_meter = map_units_per_meter or 100
+        self._map_x_unit_length = request['mapData']['meters_x'] * self._map_units_per_meter
+        self._map_y_unit_length = request['mapData']['meters_y'] * self._map_units_per_meter
+        self._map_name = request['mapData']['name']
+        self._spawn_points = request['spawnPoints']
+        self._fuel_depots = [
+            {
+               "position_map_units_x": f['position_meters_x'] * self._map_units_per_meter,
+               "position_map_units_y": f['position_meters_y'] * self._map_units_per_meter,
+               "width_map_units_x": f['width_meters_x'] * self._map_units_per_meter,
+               "width_map_units_y": f['width_meters_y'] * self._map_units_per_meter,
+                **f,
+            }
+            for f in request['features'] if f['type'] == MapFeatureType.FUEL
+        ]
+        self._ore_mines = [
+            {
+               "position_map_units_x": f['position_meters_x'] * self._map_units_per_meter,
+               "position_map_units_y": f['position_meters_y'] * self._map_units_per_meter,
+               "width_map_units_x": f['width_meters_x'] * self._map_units_per_meter,
+               "width_map_units_y": f['width_meters_y'] * self._map_units_per_meter,
+                **f,
+            }
+            for f in request['features'] if f['type'] == MapFeatureType.ORE
+        ]
 
-    def _validate_can_configure_map(self, request: MapConfigDetails):
+    def _validate_can_set_map(self):
         if self._phase != GamePhase.LOBBY:
             raise GameError("Cannot configure map during this phase")
 
+        if self._map_units_per_meter:
+            raise GameError("map units per meter already set")
+
+        if self._spawn_points:
+            raise GameError("Spawn points already set")
+
+        if self._ore_mines:
+            raise GameError("Ore mines already set")
+
+        if self._fuel_depots:
+            raise GameError("Fuel depots already set")
 
     @property
     def map_is_configured(self) -> bool:
@@ -198,6 +281,7 @@ class Game(BaseModel):
             self._map_units_per_meter is not None
             and self._map_x_unit_length is not None
             and self._map_y_unit_length is not None
+            and len(self._spawn_points) > 0
         )
 
 
@@ -224,7 +308,7 @@ class Game(BaseModel):
         """ TODO: Check for even spacing, add min_spacing value.
         """
         placed_points = []
-        for player_id in self._players.keys():
+        for ix, player_id in enumerate(self._players.keys()):
             team_id = self._players[player_id]['team_id']
 
             ship = Ship.spawn(
@@ -232,13 +316,8 @@ class Game(BaseModel):
                 map_units_per_meter=self._map_units_per_meter
             )
 
-            placement_buffer = (self._map_units_per_meter * 100)
-            x_min = abs(ship.h0_x1) + placement_buffer
-            y_min = abs(ship.h0_y1) + placement_buffer
-            x_max = self._map_x_unit_length - abs(ship.h0_x1) - placement_buffer
-            y_max = self._map_y_unit_length - abs(ship.h0_y1) - placement_buffer
-            coord_x = random.randint(x_min, x_max)
-            coord_y = random.randint(y_min, y_max)
+            coord_x = self._spawn_points[ix]['position_meters_x'] * self._map_units_per_meter
+            coord_y = self._spawn_points[ix]['position_meters_y'] * self._map_units_per_meter
             ship.coord_x = coord_x
             ship.coord_y = coord_y
 
