@@ -2060,6 +2060,58 @@ class TestShipAdvanceDamageProperties(TestCase):
 
 
 
+""" Ship Thermal Signature
+"""
+
+class TestShipThermalSignature(TestCase):
+    def setUp(self):
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship.coord_x = 25
+        self.ship.coord_y = 30
+
+        self.ship.fuel_level = 30_000
+        self.ship.battery_power  = 500_000
+        self.ship.scanner_thermal_signature = 0
+        self.ship.scanner_thermal_signature_dissipation_per_second = 100
+        self.ship.engine_lit_thermal_signature_rate_per_second = 400
+        self.ship.ebeam_charge_thermal_signature_rate_per_second = 200
+
+    def test_thermal_signature_dissipates_to_zero(self):
+        self.ship.scanner_thermal_signature = 1000
+        self.ship.scanner_thermal_signature_dissipation_per_second = 400
+        self.ship.advance_thermal_signature(fps=1)
+        assert self.ship.scanner_thermal_signature == 600
+        self.ship.advance_thermal_signature(fps=1)
+        assert self.ship.scanner_thermal_signature == 200
+        self.ship.advance_thermal_signature(fps=1)
+        assert self.ship.scanner_thermal_signature == 0
+        self.ship.advance_thermal_signature(fps=1)
+        assert self.ship.scanner_thermal_signature == 0
+
+    def test_thermal_signature_increases_due_to_engine_being_lit(self):
+        self.ship.engine_lit = True
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 300
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 600
+
+    def test_thermal_signature_increases_due_to_ebeam_charging(self):
+        self.ship.ebeam_charging = True
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 100
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 200
+
+    def test_thermal_signature_increases_due_to_ebeam_charging_and_engine_being_lit(self):
+        self.ship.ebeam_charging = True
+        self.ship.engine_lit = True
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 400
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 800
+
+
 """ ADVANCE DAMAGE PROPERTIES
 """
 

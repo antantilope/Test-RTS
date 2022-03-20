@@ -171,6 +171,7 @@ class Ship(BaseModel):
         self.engine_activation_power_required_per_second = None
         self.engine_fuel_usage_per_second = None
         self.engine_battery_charge_per_second = None
+        self.engine_lit_thermal_signature_rate_per_second = None
 
         # Scanner
         self.scanner_designator = None # A unique "human readable" identifier used to identify this ship on other ships' scanners
@@ -195,12 +196,13 @@ class Ship(BaseModel):
         self.scanner_data: Dict[str, ScannedElement] = {}
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
-        self.scanner_thermal_signature_delta = None
         self.anti_radar_coating_level = None
+
+        self.scanner_thermal_signature_dissipation_per_second = constants.THERMAL_DISSIPATION_PER_SECOND
 
         # Ship Energy Beam
         self.ebeam_charge_rate_per_second = None
-        self.ebeam_charge_thermal_rate_per_second = None
+        self.ebeam_charge_thermal_signature_rate_per_second = None
         self.ebeam_charge = None
         self.ebeam_charge_capacity = None
         self.ebeam_charging = False
@@ -457,6 +459,7 @@ class Ship(BaseModel):
         instance.engine_idle_power_requirement_per_second = constants.ENGINE_IDLE_POWER_REQUIREMENT_PER_SECOND
         instance.engine_fuel_usage_per_second = constants.ENGINE_FUEL_USAGE_PER_SECOND
         instance.engine_battery_charge_per_second = constants.ENGINE_BATTERY_CHARGE_PER_SECOND
+        instance.engine_lit_thermal_signature_rate_per_second = constants.ENGINE_LIT_THERMAL_SIGNATURE_RATE_PER_SECOND
 
         instance.scanner_mode = ShipScannerMode.RADAR
         instance.scanner_radar_range = constants.SCANNER_MODE_RADAR_RANGE_M
@@ -470,11 +473,10 @@ class Ship(BaseModel):
         instance.scanner_get_lock_power_requirement_total = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_TOTAL
         instance.scanner_get_lock_power_requirement_per_second = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_PER_SECOND
         instance.scanner_thermal_signature = 0
-        instance.scanner_thermal_signature_delta = 0
         instance.anti_radar_coating_level = 0
 
         instance.ebeam_charge_rate_per_second = constants.EBEAM_CHARGE_RATE_PER_SECOND
-        instance.ebeam_charge_thermal_rate_per_second = constants.EBEAM_CHARGE_THERMAL_RATE_PER_SECOND
+        instance.ebeam_charge_thermal_signature_rate_per_second = constants.EBEAM_CHARGE_THERMAL_SIGNATURE_RATE_PER_SECOND
         instance.ebeam_charge = 0
         instance.ebeam_charge_capacity = constants.EBEAM_CHARGE_CAPACITY
         instance.ebeam_charge_power_draw_multiple = constants.EBEAM_CHARGE_BATTERY_POWER_DRAW_MULTIPLE
@@ -547,7 +549,6 @@ class Ship(BaseModel):
                     self.ebeam_charge + adj,
                     self.ebeam_charge_capacity,
                 )
-                self.scanner_thermal_signature_delta += (self.ebeam_charge_thermal_rate_per_second / fps)
             if self.ebeam_charge >= self.ebeam_charge_capacity:
                 self.ebeam_charging = False
 
@@ -783,11 +784,14 @@ class Ship(BaseModel):
         self.autopilot_program = None
 
     def advance_thermal_signature(self, fps: int) -> None:
-        self.scanner_thermal_signature_delta = 0
-        delta_thermal = self.scanner_thermal_signature_delta - (5 / fps)
+        delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps
+        if self.engine_lit:
+            delta += self.engine_lit_thermal_signature_rate_per_second / fps
+        if self.ebeam_charging:
+            delta += self.ebeam_charge_thermal_signature_rate_per_second / fps
         self.scanner_thermal_signature = max(
-            self.scanner_thermal_signature + delta_thermal,
             0,
+            round(self.scanner_thermal_signature + delta)
         )
 
     def run_autopilot(self) -> None:
