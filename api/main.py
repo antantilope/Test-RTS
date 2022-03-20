@@ -43,7 +43,7 @@ class TCPHandler(socketserver.StreamRequestHandler):
     # Phase 0
     CMD_ROOT_ADD_PLAYER = 'add_player'
     CMD_ROOT_REMOVE_PLAYER = 'remove_player'
-    CMD_ROOT_CONFIGURE_MAP = 'configure_map'
+    CMD_ROOT_SET_MAP = "set_map"
     CMD_ROOT_ADVANCE_TO_PHASE_1_STARTING = 'advance_to_phase_1_starting'
 
     # Phase 1
@@ -86,8 +86,8 @@ class TCPHandler(socketserver.StreamRequestHandler):
             player_id = request
             self.game.remove_player(player_id)
 
-        elif command_root == self.CMD_ROOT_CONFIGURE_MAP:
-            self.game.configure_map(request)
+        elif command_root == self.CMD_ROOT_SET_MAP:
+            self.game.set_map(request)
 
         elif command_root == self.CMD_ROOT_ADVANCE_TO_PHASE_1_STARTING:
             self.game.advance_to_phase_1_starting()

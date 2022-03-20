@@ -34,6 +34,7 @@ export class ScannerDataElement {
 
 export class DrawableShip {
     isSelf: boolean
+    isDot?: boolean
     shipId: string
     alive: boolean
     canvasCoordCenter: PointCoord
@@ -69,4 +70,5 @@ export class EBeamRayDetails {
 export class DrawableCanvasItems {
     ships: DrawableShip[]
     ebeamRays: EBeamRayDetails[]
+    mapWall?: BoxCoords
 }

@@ -51,6 +51,8 @@ export class CameraService {
   private yPosition: number = null;
   private mode = CAMERA_MODE_FREE;
 
+  public minSizeForDotPx = 6;
+
   constructor(
     private _api: ApiService,
   ) {
@@ -255,6 +257,9 @@ export class CameraService {
     const ship = this._api.frameData.ship
     // Point camera between ship and target
     const scannerData = ship.scanner_data.find(sd => sd.id == scannerTargetIDCursor)
+    if(!scannerData) {
+      return this.setCameraPositionAndZoomShowShipVision()
+    }
     const tx = scannerData.coord_x
     const ty = scannerData.coord_y
     const sx = ship.coord_x
@@ -284,6 +289,12 @@ export class CameraService {
 
     // Ship
     const ship: any = this._api.frameData.ship
+    const mapConfig:{
+      units_per_meter:number,
+      map_name:string,
+      x_unit_length:number,
+      y_unit_length:number
+    } = this._api.frameData.map_config
     const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
     const shipMapCoordP0: PointCoord = this.relativeCoordToAbsoluteCoord(
       this.arrayToCoords(ship.rel_rot_coord_0),
@@ -339,6 +350,21 @@ export class CameraService {
         aflame: ship.aflame,
         explosionFrame: ship.explosion_frame,
       })
+      drawableItems.ships[0].canvasBoundingBox = this.rectCoordsToBoxCoords(
+        drawableItems.ships[0].canvasCoordP0,
+        drawableItems.ships[0].canvasCoordP1,
+        drawableItems.ships[0].canvasCoordP2,
+        drawableItems.ships[0].canvasCoordP3,
+        15,
+      )
+      if (
+        Math.abs(
+          drawableItems.ships[0].canvasCoordP0.x
+          - drawableItems.ships[0].canvasCoordP1.x
+        ) <= this.minSizeForDotPx
+      ) {
+        drawableItems.ships[0].isDot = true
+      }
     }
 
     // Draw other scanner elements
@@ -366,6 +392,7 @@ export class CameraService {
 
         let drawableShip: DrawableShip = {
           isSelf: false,
+          isDot: Math.abs(canvasCoordP1.x - canvasCoordP0.x) <= this.minSizeForDotPx,
           alive: scannerData.alive,
           aflame: scannerData.aflame,
           explosionFrame: scannerData.explosion_frame,
@@ -416,6 +443,7 @@ export class CameraService {
         }
         else {
           // Ship is not within visual range
+          drawableShip.isDot = true
           drawableShip.canvasBoundingBox = this.coordToBoxCoord(drawableShip.canvasCoordCenter, 25)
         }
 
@@ -439,6 +467,16 @@ export class CameraService {
         endPoint: this.mapCoordToCanvasCoord({x:ray.end_point[0], y:ray.end_point[1]}, cameraPosition),
         color: ray.color
       })
+    }
+
+    // Add map wall\
+    const corner2 = this.mapCoordToCanvasCoord({x:mapConfig.x_unit_length, y:mapConfig.y_unit_length}, cameraPosition)
+    const corner1 = this.mapCoordToCanvasCoord({x:0, y:0}, cameraPosition)
+    drawableItems.mapWall = {
+      x1: corner1.x,
+      x2: corner2.x,
+      y1: corner1.y,
+      y2: corner2.y,
     }
 
     return drawableItems

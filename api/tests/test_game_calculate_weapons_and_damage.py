@@ -33,11 +33,21 @@ class TestEBeamAndDamage(TestCase):
             'player_name': self.player_2_handle,
             'team_id': self.player_2_team_id,
         })
-        self.game.configure_map({
-            'units_per_meter': 10,
-            'x_unit_length': 100 * 1000 * self.upm, # 100 KM
-            'y_unit_length': 100 * 1000 * self.upm, # 100 KM
-        })
+        self.game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'features': [],
+        }, map_units_per_meter=self.upm)
         assert self.game.map_is_configured
         self.game.advance_to_phase_1_starting()
         self.player_1_ship_id = self.game._player_id_to_ship_id_map[self.player_1_id]

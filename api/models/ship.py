@@ -737,8 +737,12 @@ class Ship(BaseModel):
         self.ebeam_charge = round(self.ebeam_charge - delta_ebeam_charge)
         return True
 
-    def advance_damage_properties(self, game_frame: int, fps: int) -> None:
+    def advance_damage_properties(self, game_frame: int, map_x: int, map_y: int, fps: int) -> bool:
         if self.died_on_frame is None:
+            if self.coord_x < 0 or self.coord_y < 0 or self.coord_x > map_x or self.coord_y > map_y:
+                self.die(game_frame)
+                self.explode()
+                return True
             return
 
         if self.explosion_frame:
@@ -813,7 +817,7 @@ class Ship(BaseModel):
 
 
     def _autopilot_hold_position(self):
-        if abs(self.velocity_x_meters_per_second) < 1.5 and abs(self.velocity_y_meters_per_second) < 1.5:
+        if round(abs(self.velocity_x_meters_per_second)) <= 3 and round(abs(self.velocity_y_meters_per_second)) <= 3:
             # Force the ship to stop moving and end Autopilot program
             # If ship velocity is slow enough.
             self.velocity_x_meters_per_second = 0

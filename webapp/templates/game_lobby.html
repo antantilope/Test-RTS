@@ -5,6 +5,7 @@
     <head>
         <script src="/static/js/jquery.js"></script>
         <script src="/socket.io/socket.io.js"></script>
+        <script src="/static/js/drawMapPreview.js"></script>
         <style>
             html {
                 font-family: arial;
@@ -91,24 +92,14 @@
             <a href="/admin">Admin</a>
         </div>
         <hr>
+        <div style="text-align: center;">
+            <canvas width="450" height="450" id="map-preview-canvas">
+            </canvas>
+        </div>
         <div style="display:flex; justify-content:space-evenly; ">
             <div class="room-info-container section-container gray-border">
                 <div><h2 id="room-name-heading"></h2></div>
                 <div id="game-owner-form">
-                    <div style="padding:3px; border:1px solid #000000; display:inline-block">
-                        <h3>Map Size</h3>
-                        <div>
-                            <input type="number" placeholder="X Axis KM Length" id="x-axis-input">
-                        </div>
-                        <div>
-                            <input type="number" placeholder="Y Axis KM Length" id="y-axis-input">
-                        </div>
-                        <div style="margin-top: 4px;">
-                            <button id="save-config-btn" style="background-color: #520055; color:#ffffff; padding:0.2rem; font-weight:bold; border-radius:3px;">
-                                Apply Configuration
-                            </button>
-                        </div>
-                    </div>
                     <div style="margin-top: 2rem;">
                         <button id="start-game-btn">
                             Start Game
@@ -159,28 +150,6 @@
                 if(userIsOwner) {
                     console.log("adding");
                     $("#game-owner-form").css("display", "block");
-
-                    $("#save-config-btn").click(()=>{
-                        const x = Math.floor(parseInt($("#x-axis-input").val()) * 100000); // 100 units per M * 1000M = 10000 units per KM
-                        const y = Math.floor(parseInt($("#y-axis-input").val()) * 100000); //
-                        if (x < 10000 || y < 10000 || isNaN(x) || isNaN(y)) {
-                            return alert("x and y must be positive");
-                        }
-                        $.post({
-                            url: "/api/rooms/configure",
-                            contentType: "application/json",
-                            data: JSON.stringify({x_unit_length:x, y_unit_length: y}),
-                            success: (data, status, xhr) => {
-                                if(xhr.status === 202) {
-                                    addToChat("Map resize being processed");
-                                    $("#x-axis-input").val('');
-                                    $("#y-axis-input").val('');
-                                } else {
-                                    addToChat("unexpected response from server " + status);
-                                }
-                            }
-                        });
-                    });
 
                     $("#start-game-btn").click(() => {
                         $.get({
@@ -299,15 +268,32 @@
                 // Draw initial lobby data
                 $.get({
                     url: "/api/rooms/details",
-                    success: (data, status, xhr) => {
-                        if(data.roomDetails.phase !== "0-lobby") {
+                    success: (roomDetails, status, xhr) => {
+                        if(roomDetails.roomDetails.phase !== "0-lobby") {
                             return location.reload();
                         }
                         drawLobby(
-                            data.roomDetails,
-                            data.players,
-                            data.userIsOwner,
+                            roomDetails.roomDetails,
+                            roomDetails.players,
+                            roomDetails.userIsOwner,
                         );
+
+                        $.get({
+                            url: "/api/maps/list",
+                            success: (mapList, status, xhr) => {
+                                if(xhr.status === 200) {
+                                    const canvas = document.getElementById("map-preview-canvas");
+                                    for(let i in mapList){
+                                        if(mapList[i].uuid == roomDetails.roomDetails.battle_map_id){
+                                            const canvas = document.getElementById("map-preview-canvas");
+                                            drawMapPreview(mapList[i], canvas);
+                                            break;
+                                        }
+                                    }
+
+                                }
+                            }
+                        });
                     },
                 });
 

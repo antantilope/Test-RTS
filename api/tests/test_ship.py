@@ -1983,7 +1983,7 @@ class TestShipAdvanceDamageProperties(TestCase):
     def test_an_undead_ship_does_not_change(self):
         self.ship.died_on_frame = None
         for i in range(10):
-            self.ship.advance_damage_properties(i+1, 1)
+            self.ship.advance_damage_properties(i+1, 100, 100, 1)
         assert self.ship.died_on_frame is None
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
@@ -1992,43 +1992,43 @@ class TestShipAdvanceDamageProperties(TestCase):
     def test_an_dead_ship_catches_fire_and_explodes(self):
         self.ship.died_on_frame = 1
         fps = 1
-        self.ship.advance_damage_properties(1, fps)
+        self.ship.advance_damage_properties(1, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(2, fps)
+        self.ship.advance_damage_properties(2, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(3, fps)
+        self.ship.advance_damage_properties(3, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame is None
 
-        self.ship.advance_damage_properties(4, fps)
+        self.ship.advance_damage_properties(4, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4 # Catch fire
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(5, fps)
+        self.ship.advance_damage_properties(5, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4
         assert self.ship.explosion_frame is None
-        self.ship.advance_damage_properties(6, fps)
+        self.ship.advance_damage_properties(6, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4
         assert self.ship.explosion_frame is None
         assert self.ship.explosion_point is None
 
-        self.ship.advance_damage_properties(7, fps) # Boom
+        self.ship.advance_damage_properties(7, 100, 100, fps) # Boom
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 1
         assert self.ship.explosion_point == (25, 30,)
-        self.ship.advance_damage_properties(8, fps)
+        self.ship.advance_damage_properties(8, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 2
-        self.ship.advance_damage_properties(9, fps)
+        self.ship.advance_damage_properties(9, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_frame == 3
@@ -2039,10 +2039,26 @@ class TestShipAdvanceDamageProperties(TestCase):
         fps = 1
         assert self.ship.explosion_frame is None
         assert self.ship.explosion_point is None
-        self.ship.advance_damage_properties(1, fps)
+        self.ship.advance_damage_properties(1, 100, 100, fps)
         assert self.ship.explosion_frame == 1 # Boom
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_point == (25, 30,)
+
+    def test_dead_ship_explodes_if_it_goes_outside_map(self):
+        self.ship.explode_immediately = False
+        self.ship.died_on_frame = None
+        fps = 1
+        assert self.ship.explosion_frame is None
+        assert self.ship.explosion_point is None
+        self.ship.advance_damage_properties(1, 100, 100, fps)
+        assert self.ship.died_on_frame is None
+        assert self.ship.explosion_frame is None
+        assert self.ship.explosion_point is None
+        self.ship.advance_damage_properties(1, 10, 10, fps) # shrink map
+        assert self.ship.died_on_frame is not None
+        assert self.ship.explosion_frame == 1
+
+
 
 """ ADVANCE DAMAGE PROPERTIES
 """
@@ -2082,8 +2098,8 @@ class TestShipAutopilot(TestCase):
         assert 270 > self.ship.heading > 225 # heading is WSW (retrograde)
 
     def test_autopilot_can_halt_the_ship(self):
-        self.ship.velocity_x_meters_per_second = 2.5 # Moving NE
-        self.ship.velocity_y_meters_per_second = 2.5 #
+        self.ship.velocity_x_meters_per_second = 4.0 # Moving NE
+        self.ship.velocity_y_meters_per_second = 4.0 #
         self.ship.heading = 0
         self.ship.engine_lit = False
         self.ship.engine_online = True
@@ -2095,46 +2111,26 @@ class TestShipAutopilot(TestCase):
         assert self.ship.engine_lit is True
         assert self.ship.heading == 225 # Retrograde heading (SE)
         self.ship.calculate_physics(fps=6)
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 2.30358)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 2.30358)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 3.80358)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 3.80358)
 
         self.ship.run_autopilot()
         assert self.ship.engine_lit is True
         assert self.ship.heading == 225 # Retrograde heading (SE)
         self.ship.calculate_physics(fps=6)
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 2.10716)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 2.10716)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 3.60716)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 3.60716)
 
         self.ship.run_autopilot()
         assert self.ship.engine_lit is True
         assert self.ship.heading == 225 # Retrograde heading (SE)
         self.ship.calculate_physics(fps=6)
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.91074)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.91074)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 3.41074)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 3.41074)
 
         self.ship.run_autopilot()
-        assert self.ship.engine_lit is True
-        assert self.ship.heading == 225 # Retrograde heading (SE)
-        self.ship.calculate_physics(fps=6)
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.71432)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.71432)
-
-        self.ship.run_autopilot()
-        assert self.ship.engine_lit is True
-        assert self.ship.heading == 225 # Retrograde heading (SE)
-        self.ship.calculate_physics(fps=6)
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.51790)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.51790)
-
-        self.ship.run_autopilot()
-        assert self.ship.engine_lit is True
-        assert self.ship.heading == 225 # Retrograde heading (SE)
-        self.ship.calculate_physics(fps=6)
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 1.32148) # Below stoping threshold
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 1.32148)
-
-        self.ship.run_autopilot()
-        assert self.ship.velocity_x_meters_per_second == 0
-        assert self.ship.velocity_y_meters_per_second == 0
         assert self.ship.engine_lit is False
-        assert self.ship.autopilot_program is None
+        assert self.ship.heading == 225
+        self.ship.calculate_physics(fps=6)
+        assert_floats_equal(self.ship.velocity_x_meters_per_second, 0)
+        assert_floats_equal(self.ship.velocity_y_meters_per_second, 0)
