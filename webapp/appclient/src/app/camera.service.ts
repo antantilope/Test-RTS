@@ -359,8 +359,8 @@ export class CameraService {
       )
       if (
         Math.abs(
-          drawableItems.ships[0].canvasCoordP0.x
-          - drawableItems.ships[0].canvasCoordP1.x
+          drawableItems.ships[0].canvasCoordP1.x
+          - drawableItems.ships[0].canvasCoordP2.x
         ) <= this.minSizeForDotPx
       ) {
         drawableItems.ships[0].isDot = true
@@ -392,7 +392,7 @@ export class CameraService {
 
         let drawableShip: DrawableShip = {
           isSelf: false,
-          isDot: Math.abs(canvasCoordP1.x - canvasCoordP0.x) <= this.minSizeForDotPx,
+          isDot: Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
           alive: scannerData.alive,
           aflame: scannerData.aflame,
           explosionFrame: scannerData.explosion_frame,

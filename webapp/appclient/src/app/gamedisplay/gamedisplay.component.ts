@@ -584,6 +584,15 @@ export class GamedisplayComponent implements OnInit {
           this.ctx.fillText(drawableShip.distance + " M", bbXOffset, bbYOffset)
           bbYOffset += bbYInterval
         }
+        if(drawableShip.thermalSignature) {
+          this.ctx.beginPath()
+          this.ctx.fillText(
+            drawableShip.thermalSignature + ` / ${this._api.frameData.ship.scanner_ir_minimum_thermal_signature} IR`,
+            bbXOffset,
+            bbYOffset,
+          )
+          bbYOffset += bbYInterval
+        }
         if(shipIsLocked) {
           this.ctx.beginPath()
           const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
