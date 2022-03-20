@@ -345,6 +345,19 @@ export class GamedisplayComponent implements OnInit {
     for(let i in drawableObjects.ships) {
       const drawableShip: DrawableShip = drawableObjects.ships[i]
 
+      if (drawableShip.isDot) {
+        this.ctx.beginPath()
+        this.ctx.fillStyle = "rgb(0, 255, 0, 0.9)"
+        this.ctx.arc(
+          drawableShip.canvasCoordCenter.x,
+          drawableShip.canvasCoordCenter.y,
+          this._camera.minSizeForDotPx - 1,
+          0,
+          2 * Math.PI,
+        )
+        this.ctx.fill()
+      }
+
       if(drawableShip.isVisual && !drawableShip.explosionFrame) {
         // Ship is within visual range
         this.ctx.beginPath()
@@ -543,7 +556,7 @@ export class GamedisplayComponent implements OnInit {
         const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
         const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
-        this.ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+        this.ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.85)" : "rgb(255, 0, 0, 0.85)"
         this.ctx.lineWidth = shipIsLocked ? 5 : 2
         this.ctx.rect(
           drawableShip.canvasBoundingBox.x1,
@@ -558,7 +571,7 @@ export class GamedisplayComponent implements OnInit {
         const bbYInterval = 20
         this.ctx.beginPath()
         this.ctx.font = 'bold 18px Courier New'
-        this.ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
+        this.ctx.fillStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.85)" : "rgb(255, 0, 0, 0.85)"
         this.ctx.textAlign = 'left'
         let desigPrefix = cursorOnShip ? "👉" : ""
         if(!drawableShip.alive) {
