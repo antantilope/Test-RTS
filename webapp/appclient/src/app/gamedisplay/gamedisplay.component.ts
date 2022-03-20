@@ -849,6 +849,12 @@ export class GamedisplayComponent implements OnInit {
         this._camera.canvasWidth - 3,
         gryroscopeY + gryroscopeRadius + 18,
       )
+      // Thermal Signature Test
+      this.ctx.fillText(
+        this._api.frameData.ship.scanner_thermal_signature + " IR ",
+        this._camera.canvasWidth - 3,
+        gryroscopeY + gryroscopeRadius + 40,
+      )
     }
 
     // Click feedback
