@@ -329,6 +329,18 @@ export class GamedisplayComponent implements OnInit {
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
 
+    // Draw Map boundary
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = (this._api.frameData.game_frame % 100) > 50 ? "#ffff00" : "#636300"
+    this.ctx.lineWidth = 6
+    this.ctx.rect(
+      drawableObjects.mapWall.x1,
+      drawableObjects.mapWall.y1,
+      drawableObjects.mapWall.x2 - drawableObjects.mapWall.x1,
+      drawableObjects.mapWall.y2 - drawableObjects.mapWall.y1,
+    )
+    this.ctx.stroke()
+
     // draw visual ships and scanned ships
     for(let i in drawableObjects.ships) {
       const drawableShip: DrawableShip = drawableObjects.ships[i]

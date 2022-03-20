@@ -69,4 +69,5 @@ export class EBeamRayDetails {
 export class DrawableCanvasItems {
     ships: DrawableShip[]
     ebeamRays: EBeamRayDetails[]
+    mapWall?: BoxCoords
 }

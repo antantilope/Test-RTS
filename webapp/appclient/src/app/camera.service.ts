@@ -255,6 +255,9 @@ export class CameraService {
     const ship = this._api.frameData.ship
     // Point camera between ship and target
     const scannerData = ship.scanner_data.find(sd => sd.id == scannerTargetIDCursor)
+    if(!scannerData) {
+      return this.setCameraPositionAndZoomShowShipVision()
+    }
     const tx = scannerData.coord_x
     const ty = scannerData.coord_y
     const sx = ship.coord_x
@@ -284,6 +287,12 @@ export class CameraService {
 
     // Ship
     const ship: any = this._api.frameData.ship
+    const mapConfig:{
+      units_per_meter:number,
+      map_name:string,
+      x_unit_length:number,
+      y_unit_length:number
+    } = this._api.frameData.map_config
     const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
     const shipMapCoordP0: PointCoord = this.relativeCoordToAbsoluteCoord(
       this.arrayToCoords(ship.rel_rot_coord_0),
@@ -439,6 +448,16 @@ export class CameraService {
         endPoint: this.mapCoordToCanvasCoord({x:ray.end_point[0], y:ray.end_point[1]}, cameraPosition),
         color: ray.color
       })
+    }
+
+    // Add map wall\
+    const corner2 = this.mapCoordToCanvasCoord({x:mapConfig.x_unit_length, y:mapConfig.y_unit_length}, cameraPosition)
+    const corner1 = this.mapCoordToCanvasCoord({x:0, y:0}, cameraPosition)
+    drawableItems.mapWall = {
+      x1: corner1.x,
+      x2: corner2.x,
+      y1: corner1.y,
+      y2: corner2.y,
     }
 
     return drawableItems
