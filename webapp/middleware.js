@@ -16,7 +16,7 @@ const validateSessionHTTPMiddleware = (req, res, next) => {
         logger.warn(JSON.stringify(req.session));
         req.session.room_id = null
         req.session.team_id = null
-        res.status(500).send("invalid session. room_id and team_id must both be populated, or neither can be populated.");
+        res.status(500).send("invalid session. room_id and team_id must both be populated, or neither can be populated. Please refresh.");
     }
     else {
         // Session is valid.
