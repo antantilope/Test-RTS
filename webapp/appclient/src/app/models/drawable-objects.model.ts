@@ -22,6 +22,7 @@ export class ScannerDataElement {
     visual_fin_1_rel_rot_coord_0?: number[]
     visual_fin_1_rel_rot_coord_1?: number[]
     visual_engine_lit?: boolean
+    visual_engine_boosted_last_frame?: number
     visual_fill_color?: string
     visual_stroke_color?: string
     visual_line_width?: string
@@ -50,6 +51,7 @@ export class DrawableShip {
     canvasCoordFin1P1?: PointCoord
     canvasBoundingBox?: BoxCoords
     engineLit?: boolean
+    engineBoosted?: boolean
     fillColor?: string
     strokeColor?: string
     lineWidth?: number

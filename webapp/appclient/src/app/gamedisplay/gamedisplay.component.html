@@ -87,7 +87,17 @@
                             title="Fire Engine"
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || _api.frameData.ship.engine_lit"
                         >
-                            IGNIGHT
+                            IGNITE
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            (click)="btnBoostEngine()"
+                            class="gd-ctrl-btn-orange"
+                            title="Boost Engine"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || !_api.frameData.ship.engine_lit"
+                        >
+                            BOOST
                         </button>
                     </div>
                     <div>

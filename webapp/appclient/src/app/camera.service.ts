@@ -53,6 +53,8 @@ export class CameraService {
 
   public minSizeForDotPx = 6;
 
+  private framesToShowBoostedEngine = 5
+
   constructor(
     private _api: ApiService,
   ) {
@@ -345,6 +347,7 @@ export class CameraService {
         canvasCoordFin1P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_1), shipCoord), cameraPosition),
         canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
         engineLit: ship.engine_lit,
+        engineBoosted: (this._api.frameData.game_frame - ship.engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
         fillColor: "#919191",
         shipId: ship.id,
         aflame: ship.aflame,
@@ -438,6 +441,7 @@ export class CameraService {
             canvasCoordFin1P1,
             canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
             engineLit: scannerData.visual_engine_lit,
+            engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
             fillColor: scannerData.visual_fill_color,
             ...drawableShip
           }

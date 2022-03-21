@@ -373,15 +373,15 @@ export class GamedisplayComponent implements OnInit {
         if(drawableShip.engineLit) {
           const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
           const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
-          let engineOuterFlameRadius = Math.max(4, Math.round(
+          let engineOuterFlameRadius = Math.max(2, Math.round(
             Math.sqrt(
               (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
               + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
             ) / 2
-          ))
+          ) * (drawableShip.engineBoosted ? 4 : 1))
           engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
           this.ctx.beginPath()
-          this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
+          this.ctx.fillStyle = drawableShip.engineBoosted ? "rgb(71, 139, 255)" : "rgb(255, 0, 0, 0.9)"
           this.ctx.arc(
             engineFlameX,
             engineFlameY,
@@ -974,6 +974,13 @@ export class GamedisplayComponent implements OnInit {
     await this._api.post(
       "/api/rooms/command",
       {command:'light_engine'},
+    )
+  }
+
+  public async btnBoostEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'boost_engine'},
     )
   }
 

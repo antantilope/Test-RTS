@@ -401,7 +401,7 @@ class Game(BaseModel):
         self._ebeam_rays.clear()
 
         for ship_id, ship in self._ships.items():
-            ship.adjust_resources(self._fps)
+            ship.adjust_resources(self._fps, self._game_frame)
             ship.calculate_physics(self._fps)
             ship.advance_thermal_signature(self._fps)
             self.reset_and_update_scanner_states(ship_id)
@@ -491,6 +491,7 @@ class Game(BaseModel):
                         'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
                         'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
                         'visual_engine_lit': self._ships[other_id].engine_lit,
+                        'visual_engine_boosted_last_frame': self._ships[other_id].engine_boosted_last_frame,
                         'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
                         'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
                         'visual_ebeam_color': self._ships[other_id].ebeam_color,

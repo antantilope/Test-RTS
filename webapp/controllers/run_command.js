@@ -64,6 +64,12 @@ const commandHandlers = {
             ship_command: 'light_engine',
         });
     },
+    boost_engine: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'boost_engine',
+        });
+    },
     unlight_engine: (req, queueName) => {
         req.app.get(queueName).push({
             player_id: req.session.player_id,
