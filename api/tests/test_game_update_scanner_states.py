@@ -698,7 +698,7 @@ class TestGameUpdateScannerStates(TestCase):
         self.game.reset_and_update_scanner_states(self.player_1_ship_id)
         assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
 
-        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees
         self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
         self.game.reset_and_update_scanner_states(self.player_1_ship_id)
@@ -706,7 +706,7 @@ class TestGameUpdateScannerStates(TestCase):
         assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame > 45
         assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack < 1
 
-    def test_scanner_loses_locking_channel_when_traversal_degrees_are_below_locking_max(self):
+    def test_scanner_loses_locking_channel_when_traversal_degrees_are_abovw_locking_max(self):
         self.game._ships[self.player_1_ship_id].scanner_online = True
         self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
         self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
@@ -727,7 +727,7 @@ class TestGameUpdateScannerStates(TestCase):
         assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
         assert self.game._ships[self.player_1_ship_id].scanner_locking is True
 
-        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees (above max)
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees (above max)
         self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
         self.game.reset_and_update_scanner_states(self.player_1_ship_id)
@@ -756,7 +756,7 @@ class TestGameUpdateScannerStates(TestCase):
         self.game.reset_and_update_scanner_states(self.player_1_ship_id)
         assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
 
-        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees
         self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
         self.game.reset_and_update_scanner_states(self.player_1_ship_id)
@@ -765,7 +765,7 @@ class TestGameUpdateScannerStates(TestCase):
         assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack < 1
 
 
-    def test_scanner_loses_lock_when_traversal_degrees_are_below_lock_max(self):
+    def test_scanner_loses_lock_when_traversal_degrees_are_above_lock_max(self):
         self.game._ships[self.player_1_ship_id].scanner_online = True
         self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
         self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
@@ -787,7 +787,7 @@ class TestGameUpdateScannerStates(TestCase):
         assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
         assert self.game._ships[self.player_1_ship_id].scanner_locked is True
 
-        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees
         self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
         self.game.reset_and_update_scanner_states(self.player_1_ship_id)
