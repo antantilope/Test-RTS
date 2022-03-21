@@ -192,6 +192,45 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.engine_online
         assert self.ship.engine_lit
 
+    def test_boosting_engine_uses_extra_fuel_and_is_boosted(self):
+        ''' ENGINE BOOSTED '''
+        self.ship.engine_online = True
+        self.ship.engine_lit = True
+        self.ship.engine_boosted = False
+        self.ship.engine_boosting = True
+        self.ship.engine_boost_multiple = 50
+        self.ship.fuel_level = 100_000
+        self.ship.engine_fuel_usage_per_second = 100
+        self.ship.engine_battery_charge_per_second = 500
+        self.ship.battery_power = 10_000
+        self.ship.battery_capacity = 100_000
+
+        self.ship.adjust_resources(fps=2, game_frame=1)
+        assert self.ship.engine_boosting is False
+        assert self.ship.engine_boosted is True
+        expected_fuel = 100_000 - (50 + 50 * self.ship.engine_boost_multiple)
+        assert self.ship.fuel_level == expected_fuel
+
+    def test_boosting_engine_can_flame_out_the_engine(self):
+        self.ship.engine_online = True
+        self.ship.engine_lit = True
+        self.ship.engine_boosted = False
+        self.ship.engine_boosting = True
+        self.ship.engine_boost_multiple = 50
+        self.ship.fuel_level = 200
+        self.ship.engine_fuel_usage_per_second = 100 # 50 fuel will get burned for let engine, then flame out due to boost
+        self.ship.engine_battery_charge_per_second = 500
+        self.ship.battery_power = 10_000
+        self.ship.battery_capacity = 100_000
+
+        self.ship.adjust_resources(fps=2, game_frame=1)
+        # Flameout.
+        assert self.ship.engine_boosting is False
+        assert self.ship.engine_boosted is False
+        assert self.ship.engine_lit is False
+        assert self.ship.engine_online is False
+        assert self.ship.fuel_level == 150
+
     def test_lit_engine_flames_out_if_not_enough_fuel(self):
         ''' ENGINE LIT '''
         self.ship.engine_online = True
