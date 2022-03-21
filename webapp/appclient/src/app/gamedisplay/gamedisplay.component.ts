@@ -922,11 +922,20 @@ export class GamedisplayComponent implements OnInit {
 
   }
 
+
+  private async setCameraToPilotMode() {
+    if(this._camera.getMode() == CAMERA_MODE_FREE) {
+      this._camera.setModeShip()
+      this._camera.setZoomIndex(3)
+    }
+  }
+
   public async btnActivateEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_engine'},
     )
+    setTimeout(()=>{this.setCameraToPilotMode()})
   }
 
   public async btnDeactivateEngine() {
@@ -941,6 +950,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'light_engine'},
     )
+    setTimeout(()=>{this.setCameraToPilotMode()})
   }
 
   public async btnBoostEngine() {
@@ -976,6 +986,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'activate_scanner'},
     )
+    setTimeout(()=>{this._camera.setModeScanner()})
   }
 
   public async btnDeactivateScanner() {

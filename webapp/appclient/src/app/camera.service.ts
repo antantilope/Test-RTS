@@ -95,6 +95,14 @@ export class CameraService {
     }
   }
 
+  public setZoomIndex(ix: number) {
+    if(ix >= this.zoomLevels.length) {
+      return console.warn("invalid zoom index " + ix)
+    }
+    this.zoom = this.zoomLevels[ix]
+    this.zoomIndex = ix
+  }
+
   public xPan(delta: number): void {
     this.xPosition += delta
   }
