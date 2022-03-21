@@ -506,10 +506,13 @@ export class GamedisplayComponent implements OnInit {
 
       if(drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
         const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
+        const shipIsLockedOrLocking = drawableShip.shipId === this._api.frameData.ship.scanner_lock_target && (
+          this._api.frameData.ship.scanner_locked || this._api.frameData.ship.scanner_locking
+        )
         const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
         this.ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.85)" : "rgb(255, 0, 0, 0.85)"
-        this.ctx.lineWidth = shipIsLocked ? 5 : 2
+        this.ctx.lineWidth = 2.5
         this.ctx.rect(
           drawableShip.canvasBoundingBox.x1,
           drawableShip.canvasBoundingBox.y1,
@@ -545,28 +548,31 @@ export class GamedisplayComponent implements OnInit {
           )
           bbYOffset += bbYInterval
         }
-        if(shipIsLocked) {
-          this.ctx.beginPath()
+        if (shipIsLockedOrLocking && this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
           const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
           const midY  = (drawableShip.canvasBoundingBox.y2 + drawableShip.canvasBoundingBox.y1) / 2
           const dx = drawableShip.canvasBoundingBox.x2 - drawableShip.canvasBoundingBox.x1
           const dy = drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1
-          const chLen = 6
+          const maxRadius = Math.max(dx, dy)
+          const distance = maxRadius * this._api.frameData.ship.scanner_lock_traversal_slack
+          // Vertical CH
           this.ctx.beginPath()
-          this.ctx.moveTo(midX, midY - dy / 2 + chLen)
-          this.ctx.lineTo(midX,  midY - dy / 2 - chLen)
+          this.ctx.strokeStyle = this._api.frameData.ship.scanner_locked ? "rgb(255, 0, 0, 0.85)" : "rgb(255, 0, 0, 0.5)"
+          this.ctx.moveTo(midX + distance, midY + maxRadius)
+          this.ctx.lineTo(midX + distance, midY - maxRadius)
           this.ctx.stroke()
           this.ctx.beginPath()
-          this.ctx.moveTo(midX - dx / 2 + chLen, midY)
-          this.ctx.lineTo(midX - dx / 2 - chLen, midY)
+          this.ctx.moveTo(midX - distance, midY + maxRadius)
+          this.ctx.lineTo(midX - distance, midY - maxRadius)
+          this.ctx.stroke()
+          // Horizontal CH
+          this.ctx.beginPath()
+          this.ctx.moveTo(midX - maxRadius, midY + distance)
+          this.ctx.lineTo(midX + maxRadius, midY + distance)
           this.ctx.stroke()
           this.ctx.beginPath()
-          this.ctx.moveTo(midX + dx / 2 - chLen, midY)
-          this.ctx.lineTo(midX + dx / 2 + chLen, midY)
-          this.ctx.stroke()
-          this.ctx.beginPath()
-          this.ctx.moveTo(midX, midY + dy / 2 - chLen)
-          this.ctx.lineTo(midX,  midY + dy / 2 + chLen)
+          this.ctx.moveTo(midX - maxRadius, midY - distance)
+          this.ctx.lineTo(midX + maxRadius, midY - distance)
           this.ctx.stroke()
         }
       }
@@ -850,6 +856,10 @@ export class GamedisplayComponent implements OnInit {
       if (this.clickAnimationFrame > 10) {
         this.clickAnimationFrame = null
       }
+    }
+
+    if(this._api.frameData.ship.scanner_data.length && !this.scannerTargetIDCursor) {
+      this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
     }
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
