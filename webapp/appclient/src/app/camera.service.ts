@@ -386,9 +386,6 @@ export class CameraService {
 
 
     // Add own ship to drawable ships array
-    // if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
-
-    // REFACTOR: always show?
     const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
     drawableItems.ships.push({
       isSelf: true,
@@ -427,7 +424,6 @@ export class CameraService {
     ) {
       drawableItems.ships[0].isDot = true
     }
-    //} // </end of> REFACTOR: always show?
 
     // Draw other scanner elements
     const boundingBoxBuffer = 10
