@@ -508,15 +508,14 @@ class Game(BaseModel):
 
                 self._ships[ship_id].scanner_data[other_id] = scanner_data
 
-
         # Check if scanner target has gone out of range
         if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
+            self._ships[ship_id].scanner_lock_traversal_slack = None
+            self._ships[ship_id].scanner_lock_target = None
             if self._ships[ship_id].scanner_locking:
-                self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].scanner_locking = False
                 self._ships[ship_id].scanner_locking_power_used = None
             elif self._ships[ship_id].scanner_locked:
-                self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].scanner_locked = False
 
         # check if scanner target traversal is above maximum
@@ -549,6 +548,7 @@ class Game(BaseModel):
                         self._ships[ship_id].scanner_lock_target
                     ]['target_heading']
                     self._ships[ship_id].scanner_lock_traversal_slack = delta / max_traversal
+
 
     def calculate_weapons_and_damage(self, ship_id: str):
         died = self._ships[ship_id].advance_damage_properties(
