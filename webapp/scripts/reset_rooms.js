@@ -2,7 +2,7 @@
 
 const { killProcess } = require("../lib/pyprocess");
 const { get_db_connection } = require("../lib/db/get_db_connection");
-
+const { PHASE_3_COMPLETE } = require("../constants")
 
 const destroy = async (db, roomUUID) => {
     console.log("destroying room " + roomUUID);
@@ -27,7 +27,7 @@ const destroy = async (db, roomUUID) => {
     const db = await get_db_connection();
     let pids = [];
     try {
-        const rooms = await db.all("select * from api_room");
+        const rooms = await db.all("SELECT * FROM api_room WHERE phase != ?", [PHASE_3_COMPLETE]);
         for(let i in rooms) {
             await destroy(db, rooms[i].uuid);
             pids.push(rooms[i].pid)
