@@ -197,6 +197,9 @@ export class GamedisplayComponent implements OnInit {
 
   private async handleMouseClickInCanvasHeadingAdjust(canvasClickX: number, canvasClickY: number) {
     const canvasClickPoint: PointCoord = {x: canvasClickX, y: canvasClickY}
+    if(!this.drawableObjects.ships[0].isSelf) {
+      return console.warn("could not handle heading adjust. ship0 != self")
+    }
     const canvasShipPoint: PointCoord = this.drawableObjects.ships[0].canvasCoordCenter
     const heading = this._camera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
     console.log({set_heading: heading})
@@ -260,64 +263,28 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
-    // Visual Range Circle
-    const visibleRangeCanvasPXRadius = Math.round(
-      (this._api.frameData.map_config.units_per_meter
-      * this._api.frameData.ship.visual_range) / this._camera.getZoom()
-    )
-    const shipCanvasCoords = this._camera.mapCoordToCanvasCoord(
-      {x:this._api.frameData.ship.coord_x, y:this._api.frameData.ship.coord_y},
-      camCoords,
-    )
-    this.ctx.beginPath()
-    this.ctx.strokeStyle = "#808080"
-    this.ctx.lineWidth = 1
-    this.ctx.arc(
-      shipCanvasCoords.x,
-      shipCanvasCoords.y,
-      visibleRangeCanvasPXRadius,
-      0,
-      2 * Math.PI,
-    )
-    this.ctx.stroke()
-
-    // Scanner Range Cirlce
-    if(this._api.frameData.ship.scanner_online) {
-      let scannerRange;
-      let color;
-      if(this._api.frameData.ship.scanner_mode == 'radar') {
-        scannerRange = this._api.frameData.ship.scanner_radar_range
-        color = "rgb(130, 255, 134, 0.5)" // Light green
-      } else if (this._api.frameData.ship.scanner_mode == 'ir') {
-        scannerRange = this._api.frameData.ship.scanner_ir_range
-        color = "rgb(255, 130, 253, 0.5)" // Light purple
-      } else {
-        throw new Error("unknown scanner mode")
-      }
-      const scannerRangeCanvasPXRadius = Math.round(
-        (this._api.frameData.map_config.units_per_meter
-        * scannerRange) / this._camera.getZoom()
-      )
-      this.ctx.beginPath()
-      this.ctx.strokeStyle = color
-      this.ctx.lineWidth = 1
-      this.ctx.arc(
-        shipCanvasCoords.x,
-        shipCanvasCoords.y,
-        scannerRangeCanvasPXRadius,
-        0,
-        2 * Math.PI,
-      )
-      this.ctx.stroke()
-    }
-
     const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
 
+    // Vision circles
+    for(let i in drawableObjects.visionCircles) {
+      let vs = drawableObjects.visionCircles[i]
+      this.ctx.beginPath()
+      this.ctx.fillStyle = vs.color
+      this.ctx.arc(
+        vs.canvasCoord.x,
+        vs.canvasCoord.y,
+        vs.radius,
+        0,
+        2 * Math.PI,
+      )
+      this.ctx.fill()
+    }
+
     // Draw Map boundary
     this.ctx.beginPath()
-    this.ctx.strokeStyle = (this._api.frameData.game_frame % 100) > 50 ? "#ffff00" : "#636300"
-    this.ctx.lineWidth = 6
+    this.ctx.strokeStyle ="#636300"
+    this.ctx.lineWidth = Math.max(1, 500 / this._camera.getZoom())
     this.ctx.rect(
       drawableObjects.mapWall.x1,
       drawableObjects.mapWall.y1,
@@ -326,7 +293,7 @@ export class GamedisplayComponent implements OnInit {
     )
     this.ctx.stroke()
 
-    // draw visual ships and scanned ships
+    // draw ships
     for(let i in drawableObjects.ships) {
       const drawableShip: DrawableShip = drawableObjects.ships[i]
 
@@ -539,10 +506,13 @@ export class GamedisplayComponent implements OnInit {
 
       if(drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
         const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
+        const shipIsLockedOrLocking = drawableShip.shipId === this._api.frameData.ship.scanner_lock_target && (
+          this._api.frameData.ship.scanner_locked || this._api.frameData.ship.scanner_locking
+        )
         const cursorOnShip = drawableShip.shipId === this.scannerTargetIDCursor
         this.ctx.beginPath()
         this.ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.85)" : "rgb(255, 0, 0, 0.85)"
-        this.ctx.lineWidth = shipIsLocked ? 5 : 2
+        this.ctx.lineWidth = 2.5
         this.ctx.rect(
           drawableShip.canvasBoundingBox.x1,
           drawableShip.canvasBoundingBox.y1,
@@ -578,28 +548,31 @@ export class GamedisplayComponent implements OnInit {
           )
           bbYOffset += bbYInterval
         }
-        if(shipIsLocked) {
-          this.ctx.beginPath()
+        if (shipIsLockedOrLocking && this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
           const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
           const midY  = (drawableShip.canvasBoundingBox.y2 + drawableShip.canvasBoundingBox.y1) / 2
           const dx = drawableShip.canvasBoundingBox.x2 - drawableShip.canvasBoundingBox.x1
           const dy = drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1
-          const chLen = 6
+          const maxRadius = Math.max(dx, dy)
+          const distance = maxRadius * this._api.frameData.ship.scanner_lock_traversal_slack
+          // Vertical CH
           this.ctx.beginPath()
-          this.ctx.moveTo(midX, midY - dy / 2 + chLen)
-          this.ctx.lineTo(midX,  midY - dy / 2 - chLen)
+          this.ctx.strokeStyle = this._api.frameData.ship.scanner_locked ? "rgb(255, 0, 0, 0.85)" : "rgb(255, 0, 0, 0.5)"
+          this.ctx.moveTo(midX + distance, midY + maxRadius)
+          this.ctx.lineTo(midX + distance, midY - maxRadius)
           this.ctx.stroke()
           this.ctx.beginPath()
-          this.ctx.moveTo(midX - dx / 2 + chLen, midY)
-          this.ctx.lineTo(midX - dx / 2 - chLen, midY)
+          this.ctx.moveTo(midX - distance, midY + maxRadius)
+          this.ctx.lineTo(midX - distance, midY - maxRadius)
+          this.ctx.stroke()
+          // Horizontal CH
+          this.ctx.beginPath()
+          this.ctx.moveTo(midX - maxRadius, midY + distance)
+          this.ctx.lineTo(midX + maxRadius, midY + distance)
           this.ctx.stroke()
           this.ctx.beginPath()
-          this.ctx.moveTo(midX + dx / 2 - chLen, midY)
-          this.ctx.lineTo(midX + dx / 2 + chLen, midY)
-          this.ctx.stroke()
-          this.ctx.beginPath()
-          this.ctx.moveTo(midX, midY + dy / 2 - chLen)
-          this.ctx.lineTo(midX,  midY + dy / 2 + chLen)
+          this.ctx.moveTo(midX - maxRadius, midY - distance)
+          this.ctx.lineTo(midX + maxRadius, midY - distance)
           this.ctx.stroke()
         }
       }
@@ -677,7 +650,14 @@ export class GamedisplayComponent implements OnInit {
     }
 
     // Front and alerts
-    if(!this._api.frameData.ship.alive) {
+    if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
+      this.ctx.beginPath()
+      this.ctx.font = 'bold 40px courier new'
+      this.ctx.fillStyle = '#ffffff'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
+    }
+    else if(!this._api.frameData.ship.alive) {
       this.ctx.beginPath()
       this.ctx.font = 'bold 40px courier new'
       this.ctx.fillStyle = '#ff0000'
@@ -685,14 +665,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("GAME OVER", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 3)
       this.ctx.fillText("You died in space 🪦", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
-    else if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
-      this.ctx.beginPath()
-      this.ctx.font = 'bold 40px courier new'
-      this.ctx.fillStyle = '#ffffff'
-      this.ctx.textAlign = 'center'
-      this.ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
-    }
-
     // Resources (TOP LEFT)
     const tlcYInterval = 34
     const tlcKFYInterval = 28
@@ -886,6 +858,10 @@ export class GamedisplayComponent implements OnInit {
       }
     }
 
+    if(this._api.frameData.ship.scanner_data.length && !this.scannerTargetIDCursor) {
+      this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+    }
+
     window.requestAnimationFrame(this.paintDisplay.bind(this))
 
   }
@@ -956,11 +932,20 @@ export class GamedisplayComponent implements OnInit {
 
   }
 
+
+  private async setCameraToPilotMode() {
+    if(this._camera.getMode() == CAMERA_MODE_FREE) {
+      this._camera.setModeShip()
+      this._camera.setZoomIndex(3)
+    }
+  }
+
   public async btnActivateEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_engine'},
     )
+    setTimeout(()=>{this.setCameraToPilotMode()})
   }
 
   public async btnDeactivateEngine() {
@@ -975,6 +960,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'light_engine'},
     )
+    setTimeout(()=>{this.setCameraToPilotMode()})
   }
 
   public async btnBoostEngine() {
@@ -1010,6 +996,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'activate_scanner'},
     )
+    setTimeout(()=>{this._camera.setModeScanner()})
   }
 
   public async btnDeactivateScanner() {

@@ -69,8 +69,17 @@ export class EBeamRayDetails {
 }
 
 
+export class VisionCircle {
+    canvasCoord: PointCoord
+    radius: number
+    color: string
+    name: string
+}
+
+
 export class DrawableCanvasItems {
     ships: DrawableShip[]
     ebeamRays: EBeamRayDetails[]
     mapWall?: BoxCoords
+    visionCircles: VisionCircle[]
 }
