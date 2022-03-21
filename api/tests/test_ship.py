@@ -2076,6 +2076,7 @@ class TestShipThermalSignature(TestCase):
         self.ship.scanner_thermal_signature_dissipation_per_second = 100
         self.ship.engine_lit_thermal_signature_rate_per_second = 400
         self.ship.ebeam_charge_thermal_signature_rate_per_second = 200
+        self.ship.engine_boost_multiple = 25
 
     def test_thermal_signature_dissipates_to_zero(self):
         self.ship.scanner_thermal_signature = 1000
@@ -2095,6 +2096,16 @@ class TestShipThermalSignature(TestCase):
         self.ship.scanner_thermal_signature == 300
         self.ship.advance_thermal_signature(fps=1)
         self.ship.scanner_thermal_signature == 600
+
+    def test_thermal_signature_increases_due_to_engine_being_boosted(self):
+        self.ship.engine_lit = True
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 300
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 600
+        self.ship.engine_boosted = True
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 10500
 
     def test_thermal_signature_increases_due_to_ebeam_charging(self):
         self.ship.ebeam_charging = True
