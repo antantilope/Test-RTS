@@ -47,6 +47,11 @@ class ShipCommands:
 class ShipStateKey:
     MASS = 'mass'
 
+class ShipDeathType:
+    EXPLOSION = 'explosion'
+    AFLAME = 'aflame'
+    ADRIFT = 'adrift'
+
 class ShipScannerMode:
     RADAR = 'radar'
     IR = 'ir'
@@ -753,32 +758,38 @@ class Ship(BaseModel):
         self.ebeam_charge = round(self.ebeam_charge - delta_ebeam_charge)
         return True
 
-    def advance_damage_properties(self, game_frame: int, map_x: int, map_y: int, fps: int) -> bool:
+    def advance_damage_properties(self, game_frame: int, map_x: int, map_y: int, fps: int) -> Optional[Tuple]:
         if self.died_on_frame is None:
             if self.coord_x < 0 or self.coord_y < 0 or self.coord_x > map_x or self.coord_y > map_y:
                 self.die(game_frame)
                 self.explode()
-                return True
-            return
+                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
 
-        if self.explosion_frame:
-            # Ship is exploding, advance explosion frame
-            self.explosion_frame += 1
+        elif self.explosion_frame:
+            if self.explosion_frame < 200:
+                # Ship is exploding, advance explosion frame
+                self.explosion_frame += 1
+                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+            return ShipDeathType.ADRIFT, game_frame - self.died_on_frame
 
         elif self.explode_immediately:
             self.explode()
+            return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
 
         elif self.aflame_since_frame is None:
-            # Ship not aflame yet
+            # Ship not aflame yet and has not yet exploded
             seconds_since =  (game_frame - self.died_on_frame) / fps
             if seconds_since > self._seconds_to_aflame:
                 self.aflame_since_frame = game_frame
+                return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
         elif self.aflame_since_frame:
             # ship is onfire and it's going to explode
             seconds_aflame = (game_frame - self.aflame_since_frame) / fps
             if seconds_aflame > self._seconds_to_explode:
                 self.explode()
+                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+            return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
     def explode(self):
         self.explosion_frame = 1

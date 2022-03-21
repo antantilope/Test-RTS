@@ -362,6 +362,7 @@ export class CameraService {
           drawableItems.ships[0].canvasCoordP1.x
           - drawableItems.ships[0].canvasCoordP2.x
         ) <= this.minSizeForDotPx
+        && ship.alive
       ) {
         drawableItems.ships[0].isDot = true
       }
@@ -392,7 +393,7 @@ export class CameraService {
 
         let drawableShip: DrawableShip = {
           isSelf: false,
-          isDot: Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
+          isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx ,
           alive: scannerData.alive,
           aflame: scannerData.aflame,
           explosionFrame: scannerData.explosion_frame,
@@ -443,7 +444,7 @@ export class CameraService {
         }
         else {
           // Ship is not within visual range
-          drawableShip.isDot = true
+          drawableShip.isDot = scannerData.alive
           drawableShip.canvasBoundingBox = this.coordToBoxCoord(drawableShip.canvasCoordCenter, 25)
         }
 

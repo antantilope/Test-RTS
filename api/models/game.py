@@ -6,7 +6,7 @@ from time import sleep
 import re
 
 from .base import BaseModel
-from .ship import Ship, ShipCommands, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType
+from .ship import Ship, ShipCommands, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType, ShipDeathType
 from .ship_designator import get_designations
 from api import utils2d
 from api.constants import (
@@ -404,7 +404,7 @@ class Game(BaseModel):
             ship.adjust_resources(self._fps)
             ship.calculate_physics(self._fps)
             ship.advance_thermal_signature(self._fps)
-            self.update_scanner_states(ship_id)
+            self.reset_and_update_scanner_states(ship_id)
 
             # Autopilot/weapons updates must run after scanner/physics updates
             ship.run_autopilot()
@@ -422,7 +422,7 @@ class Game(BaseModel):
         self.incr_game_frame()
 
 
-    def update_scanner_states(self, ship_id: str):
+    def reset_and_update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
 
         self._ships[ship_id].scanner_data.clear()
@@ -552,17 +552,23 @@ class Game(BaseModel):
 
 
     def calculate_weapons_and_damage(self, ship_id: str):
-        died = self._ships[ship_id].advance_damage_properties(
+        death_data = self._ships[ship_id].advance_damage_properties(
             self._game_frame,
             self._map_x_unit_length,
             self._map_y_unit_length,
             MAX_SERVER_FPS,
         )
-        if died is True:
+
+        ix_visual_type = 0
+        ix_frames_since_death = 1
+
+        if death_data and death_data[ix_frames_since_death] == 0:
             self._killfeed.append({
                 "created_at_frame": self._game_frame,
                 "victim_name": self._ships[ship_id].scanner_designator,
             })
+
+        if death_data:
             return
 
         if self._ships[ship_id].ebeam_firing:
