@@ -100,3 +100,17 @@
     background-color: #380000;
     color:rgb(73, 73, 73);
 }
+
+.gd-ctrl-btn-orange {
+    width: 100%;
+    font-size:115%;
+    background-color: #7c3800;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.gd-ctrl-btn-orange:disabled {
+    background-color: #331700;
+    color:rgb(73, 73, 73);
+}

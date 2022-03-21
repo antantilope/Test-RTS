@@ -352,7 +352,6 @@ class Ship(BaseModel):
         """
         return {
             'id': self.id,
-            'available_commands': list(self.get_available_commands()),
             'team_id': self.team_id,
             'mass': self.mass,
             'coord_x': self.coord_x,
@@ -869,36 +868,6 @@ class Ship(BaseModel):
 
         if not self.engine_lit:
             self.engine_lit = True
-
-
-    def get_available_commands(self) -> Generator[str, None, None]:
-        if self.died_on_frame:
-            return # Exist generator
-
-        # Engine
-        if not self.engine_starting:
-            if not self.engine_online:
-                yield ShipCommands.ACTIVATE_ENGINE
-            else:
-                if self.engine_lit:
-                    yield ShipCommands.UNLIGHT_ENGINE
-                else:
-                    yield ShipCommands.LIGHT_ENGINE
-                    yield ShipCommands.DEACTIVATE_ENGINE
-
-        # Scanner
-        if not self.scanner_starting:
-            if not self.scanner_online:
-                yield ShipCommands.ACTIVATE_SCANNER
-            else:
-                yield ShipCommands.DEACTIVATE_SCANNER
-        yield (
-            ShipCommands.SET_SCANNER_MODE_RADAR
-            if self.scanner_mode == ShipScannerMode.IR
-            else ShipCommands.SET_SCANNER_MODE_IR
-        )
-
-
 
     def process_command(self, command: str, *args, **kwargs):
         if self.died_on_frame:

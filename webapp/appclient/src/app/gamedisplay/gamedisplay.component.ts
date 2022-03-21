@@ -38,23 +38,12 @@ const randomInt = function (min: number, max: number): number  {
 })
 export class GamedisplayComponent implements OnInit {
 
-  private frameDataEventSubscription: Subscription
-
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
   public showConfirmExit = false
   public waitingToExit = false
-
-  public enableEngineOnlineBtn = false
-  public enableEngineOfflineBtn = false
-  public enableEngineLightBtn = false
-  public enableEngineUnLightBtn = false
-  public enableScannerActivateBtn = false
-  public enableScannerDeactivateBtn = false
-  public enableScannerModeRadarBtn = false
-  public enableScannerModeIRBtn = false
 
   public scannerTargetIDCursor: string | null = null
 
@@ -105,14 +94,10 @@ export class GamedisplayComponent implements OnInit {
 
     this.registerMouseEventListener()
 
-    this.frameDataEventSubscription = this._api.frameDataEvent.subscribe((data: any) => {
-      this.refreshButtonStates()
-    })
   }
 
   ngOnDestroy() {
     console.log("GamedisplayComponent::ngOnDestroy")
-    this.frameDataEventSubscription.unsubscribe()
   }
 
 
@@ -970,27 +955,6 @@ export class GamedisplayComponent implements OnInit {
     yOffset += yInterval
 
   }
-
-
-  public async refreshButtonStates() {
-    if(this._api.frameData === null) {
-      return
-    }
-
-    // Engine
-    this.enableEngineOnlineBtn = this._api.frameData.ship.available_commands.includes('activate_engine')
-    this.enableEngineOfflineBtn = this._api.frameData.ship.available_commands.includes('deactivate_engine')
-    this.enableEngineLightBtn = this._api.frameData.ship.available_commands.includes('light_engine')
-    this.enableEngineUnLightBtn = this._api.frameData.ship.available_commands.includes('unlight_engine')
-
-    // Scanner
-    this.enableScannerActivateBtn = this._api.frameData.ship.available_commands.includes('activate_scanner')
-    this.enableScannerDeactivateBtn = this._api.frameData.ship.available_commands.includes('deactivate_scanner')
-    this.enableScannerModeRadarBtn = this._api.frameData.ship.available_commands.includes('set_scanner_mode_radar')
-    this.enableScannerModeIRBtn = this._api.frameData.ship.available_commands.includes('set_scanner_mode_ir')
-
-  }
-
 
   public async btnActivateEngine() {
     await this._api.post(
