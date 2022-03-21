@@ -655,3 +655,139 @@ class TestGameUpdateScannerStates(TestCase):
         assert isinstance(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['target_heading'], float)
         assert isinstance(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['relative_heading'], int)
 
+
+    # Test Scanner Lock/Locking Traversal Limits
+    def test_locking_scanner_sets_ships_previous_traversal_degrees(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+
+    def test_scanner_maintains_locking_channel_when_traversal_degrees_are_below_locking_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locking_max_traversal_degrees = 5
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+
+        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locking is True
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame > 45
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack < 1
+
+    def test_scanner_loses_locking_channel_when_traversal_degrees_are_below_locking_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locking_max_traversal_degrees = 1
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+        assert self.game._ships[self.player_1_ship_id].scanner_locking is True
+
+        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees (above max)
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locking is False
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame is None
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack is None
+
+    def test_scanner_maintains_lock_when_traversal_degrees_are_below_lock_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = False
+        self.game._ships[self.player_1_ship_id].scanner_locked = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locked_max_traversal_degrees = 5
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+
+        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locked is True
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame > 45
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack < 1
+
+
+    def test_scanner_loses_lock_when_traversal_degrees_are_below_lock_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = False
+        self.game._ships[self.player_1_ship_id].scanner_locked = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locked_max_traversal_degrees = 1
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+        assert self.game._ships[self.player_1_ship_id].scanner_locked is True
+
+        # Adjust ship 2's position so it's beaing is slightly more than 45 degrees
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locked is False
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame is None
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack is None

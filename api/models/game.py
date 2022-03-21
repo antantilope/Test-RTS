@@ -543,6 +543,7 @@ class Game(BaseModel):
                     self._ships[ship_id].scanner_locking = False
                     self._ships[ship_id].scanner_lock_target = None
                     self._ships[ship_id].scanner_lock_traversal_slack = None
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = None
                 else:
                     self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
                         self._ships[ship_id].scanner_lock_target
