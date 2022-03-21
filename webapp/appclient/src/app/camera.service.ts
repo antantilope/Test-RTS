@@ -324,52 +324,102 @@ export class CameraService {
     const drawableItems: DrawableCanvasItems = {
       ships: [],
       ebeamRays: [],
+      visionCircles:[],
     }
     const cameraPosition: PointCoord = this.getPosition()
 
-    // Add own ship to drawable ships array
-    if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
 
-
-      const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
-      drawableItems.ships.push({
-        isSelf: true,
-        isVisual: true,
-        alive: ship.alive,
-        designator: "you",
-        canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
-        canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
-        canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
-        canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
-        canvasCoordFin0P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_0), shipCoord), cameraPosition),
-        canvasCoordFin0P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_1), shipCoord), cameraPosition),
-        canvasCoordFin1P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_0), shipCoord), cameraPosition),
-        canvasCoordFin1P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_1), shipCoord), cameraPosition),
-        canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
-        engineLit: ship.engine_lit,
-        engineBoosted: (this._api.frameData.game_frame - ship.engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
-        fillColor: "#919191",
-        shipId: ship.id,
-        aflame: ship.aflame,
-        explosionFrame: ship.explosion_frame,
-      })
-      drawableItems.ships[0].canvasBoundingBox = this.rectCoordsToBoxCoords(
-        drawableItems.ships[0].canvasCoordP0,
-        drawableItems.ships[0].canvasCoordP1,
-        drawableItems.ships[0].canvasCoordP2,
-        drawableItems.ships[0].canvasCoordP3,
-        15,
-      )
-      if (
-        Math.abs(
-          drawableItems.ships[0].canvasCoordP1.x
-          - drawableItems.ships[0].canvasCoordP2.x
-        ) <= this.minSizeForDotPx
-        && ship.alive
-      ) {
-        drawableItems.ships[0].isDot = true
+    // Add vision circles in largest to smallest order
+    const shipCanvasCoord = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
+    if(this._api.frameData.ship.scanner_online) {
+      let scannerRange;
+      let color;
+      if(this._api.frameData.ship.scanner_mode == 'radar') {
+        scannerRange = this._api.frameData.ship.scanner_radar_range
+        color = "#001402" // dark green
+      } else if (this._api.frameData.ship.scanner_mode == 'ir') {
+        scannerRange = this._api.frameData.ship.scanner_ir_range
+        color = "#140010" // dark pink
+      } else {
+        throw new Error("unknown scanner mode")
       }
+      const scannerRangeCanvasPXRadius = Math.round(
+        (this._api.frameData.map_config.units_per_meter
+        * scannerRange) / this.getZoom()
+      )
+      drawableItems.visionCircles.push({
+        canvasCoord: shipCanvasCoord,
+        radius: scannerRangeCanvasPXRadius,
+        color,
+        name: this._api.frameData.ship.scanner_mode,
+      })
     }
+    const basicVisualRangeCanvasPxRadius = Math.round(
+      (this._api.frameData.map_config.units_per_meter
+      * this._api.frameData.ship.visual_range) / this.getZoom()
+    )
+    drawableItems.visionCircles.push({
+      canvasCoord: shipCanvasCoord,
+      radius: basicVisualRangeCanvasPxRadius,
+      color: "#121212", // Dark gray
+      name: 'eyes',
+    })
+
+    // Add map wall\
+    const corner2 = this.mapCoordToCanvasCoord({x:mapConfig.x_unit_length, y:mapConfig.y_unit_length}, cameraPosition)
+    const corner1 = this.mapCoordToCanvasCoord({x:0, y:0}, cameraPosition)
+    drawableItems.mapWall = {
+      x1: corner1.x,
+      x2: corner2.x,
+      y1: corner1.y,
+      y2: corner2.y,
+    }
+
+
+
+    // Add own ship to drawable ships array
+    // if (this.boxesOverlap(shipMapBoxCoords, cameraMapBoxCoords)) {
+
+    // REFACTOR: always show?
+    const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
+    drawableItems.ships.push({
+      isSelf: true,
+      isVisual: true,
+      alive: ship.alive,
+      designator: "you",
+      canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
+      canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
+      canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
+      canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
+      canvasCoordFin0P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_0), shipCoord), cameraPosition),
+      canvasCoordFin0P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_1), shipCoord), cameraPosition),
+      canvasCoordFin1P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_0), shipCoord), cameraPosition),
+      canvasCoordFin1P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_1), shipCoord), cameraPosition),
+      canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
+      engineLit: ship.engine_lit,
+      engineBoosted: (this._api.frameData.game_frame - ship.engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
+      fillColor: "#919191",
+      shipId: ship.id,
+      aflame: ship.aflame,
+      explosionFrame: ship.explosion_frame,
+    })
+    drawableItems.ships[0].canvasBoundingBox = this.rectCoordsToBoxCoords(
+      drawableItems.ships[0].canvasCoordP0,
+      drawableItems.ships[0].canvasCoordP1,
+      drawableItems.ships[0].canvasCoordP2,
+      drawableItems.ships[0].canvasCoordP3,
+      15,
+    )
+    if (
+      Math.abs(
+        drawableItems.ships[0].canvasCoordP1.x
+        - drawableItems.ships[0].canvasCoordP2.x
+      ) <= this.minSizeForDotPx
+      && ship.alive
+    ) {
+      drawableItems.ships[0].isDot = true
+    }
+    //} // </end of> REFACTOR: always show?
 
     // Draw other scanner elements
     const boundingBoxBuffer = 10
@@ -474,15 +524,6 @@ export class CameraService {
       })
     }
 
-    // Add map wall\
-    const corner2 = this.mapCoordToCanvasCoord({x:mapConfig.x_unit_length, y:mapConfig.y_unit_length}, cameraPosition)
-    const corner1 = this.mapCoordToCanvasCoord({x:0, y:0}, cameraPosition)
-    drawableItems.mapWall = {
-      x1: corner1.x,
-      x2: corner2.x,
-      y1: corner1.y,
-      y2: corner2.y,
-    }
 
     return drawableItems
   }
