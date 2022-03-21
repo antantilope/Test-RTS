@@ -53,6 +53,8 @@ export class CameraService {
 
   public minSizeForDotPx = 6;
 
+  private framesToShowBoostedEngine = 5
+
   constructor(
     private _api: ApiService,
   ) {
@@ -345,6 +347,7 @@ export class CameraService {
         canvasCoordFin1P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_1), shipCoord), cameraPosition),
         canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
         engineLit: ship.engine_lit,
+        engineBoosted: (this._api.frameData.game_frame - ship.engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
         fillColor: "#919191",
         shipId: ship.id,
         aflame: ship.aflame,
@@ -359,9 +362,10 @@ export class CameraService {
       )
       if (
         Math.abs(
-          drawableItems.ships[0].canvasCoordP0.x
-          - drawableItems.ships[0].canvasCoordP1.x
+          drawableItems.ships[0].canvasCoordP1.x
+          - drawableItems.ships[0].canvasCoordP2.x
         ) <= this.minSizeForDotPx
+        && ship.alive
       ) {
         drawableItems.ships[0].isDot = true
       }
@@ -392,7 +396,7 @@ export class CameraService {
 
         let drawableShip: DrawableShip = {
           isSelf: false,
-          isDot: Math.abs(canvasCoordP1.x - canvasCoordP0.x) <= this.minSizeForDotPx,
+          isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx ,
           alive: scannerData.alive,
           aflame: scannerData.aflame,
           explosionFrame: scannerData.explosion_frame,
@@ -437,13 +441,14 @@ export class CameraService {
             canvasCoordFin1P1,
             canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
             engineLit: scannerData.visual_engine_lit,
+            engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
             fillColor: scannerData.visual_fill_color,
             ...drawableShip
           }
         }
         else {
           // Ship is not within visual range
-          drawableShip.isDot = true
+          drawableShip.isDot = scannerData.alive
           drawableShip.canvasBoundingBox = this.coordToBoxCoord(drawableShip.canvasCoordCenter, 25)
         }
 

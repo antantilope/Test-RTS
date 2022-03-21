@@ -58,38 +58,23 @@
                     <!-- Engine Sub Column 1 -->
                     <div>
                         <button
-                            *ngIf="enableEngineOnlineBtn"
                             (click)="btnActivateEngine()"
-                            class="command-btn"
-                            style="background: url('/static/img/activate-engine.jpg'); background-size:100% 100%;"
-                            title="Activate Engine"
+                            class="gd-ctrl-btn"
+                            title="Start Engine"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.engine_online || _api.frameData.ship.engine_starting"
+                            [ngStyle]="{'color': (_api.frameData.ship.engine_online) ? '#00ff00' : '#000000'}"
                         >
-                        </button>
-                        <button
-                            *ngIf="!enableEngineOnlineBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/activate-engine-gs.jpg'); background-size:100% 100%;"
-                            title="Activate Engine"
-                            disabled
-                        >
+                            START
                         </button>
                     </div>
                     <div>
                         <button
-                            *ngIf="enableEngineOfflineBtn"
                             (click)="btnDeactivateEngine()"
-                            class="command-btn"
-                            style="background: url('/static/img/deactivate-engine.jpg'); background-size:100% 100%;"
-                            title="Deactivate Engine"
+                            class="gd-ctrl-btn"
+                            title="Shutdown Engine"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || _api.frameData.ship.engine_starting"
                         >
-                        </button>
-                        <button
-                            *ngIf="!enableEngineOfflineBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/deactivate-engine-gs.jpg'); background-size:100% 100%;"
-                            title="Deactivate Engine"
-                            disabled
-                        >
+                            STOP
                         </button>
                     </div>
                 </div>
@@ -97,38 +82,32 @@
                     <!-- Engine Sub Column 2 -->
                     <div>
                         <button
-                            *ngIf="enableEngineLightBtn"
                             (click)="btnLightEngine()"
-                            class="command-btn"
-                            style="background: url('/static/img/light-engine.jpg'); background-size:100% 100%;"
+                            class="gd-ctrl-btn-orange"
                             title="Fire Engine"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || _api.frameData.ship.engine_lit"
                         >
-                        </button>
-                        <button
-                            *ngIf="!enableEngineLightBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/light-engine-gs.jpg'); background-size:100% 100%;"
-                            title="Fire Engine"
-                            disabled
-                        >
+                            IGNITE
                         </button>
                     </div>
                     <div>
                         <button
-                            *ngIf="enableEngineUnLightBtn"
-                            (click)="btnUnlightEngine()"
-                            class="command-btn"
-                            style="background: url('/static/img/unlight-engine.jpg'); background-size:100% 100%;"
-                            title="Stop Engine"
+                            (click)="btnBoostEngine()"
+                            class="gd-ctrl-btn-orange"
+                            title="Boost Engine"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || !_api.frameData.ship.engine_lit"
                         >
+                            BOOST
                         </button>
+                    </div>
+                    <div>
                         <button
-                            *ngIf="!enableEngineUnLightBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/unlight-engine-gs.jpg'); background-size:100% 100%;"
+                            (click)="btnUnlightEngine()"
+                            class="gd-ctrl-btn"
                             title="Stop Engine"
-                            disabled
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || !_api.frameData.ship.engine_lit"
                         >
+                            IDLE
                         </button>
                     </div>
                 </div>
@@ -140,45 +119,30 @@
                 class="command-bar-column-header"
                 [ngStyle]="{'color': (_api.frameData.ship.scanner_online) ? '#00ff00' : '#ffffff'}"
             >
-                SCANNER | {{ _api.frameData.ship.scanner_mode }}
+                SCANNER
             </div>
             <div style="display:flex;">
                 <div>
                     <!-- Scanner Sub Column 1 -->
                     <div>
                         <button
-                            *ngIf="enableScannerActivateBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/activate-scanner.jpg'); background-size:100% 100%;"
+                            class="gd-ctrl-btn"
                             (click)="btnActivateScanner()"
                             title="Activate Scanner"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_online || _api.frameData.ship.scanner_starting"
+                            [ngStyle]="{'color': (_api.frameData.ship.scanner_online) ? '#00ff00' : '#000000'}"
                         >
-                        </button>
-                        <button
-                            *ngIf="!enableScannerActivateBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/activate-scanner-gs.jpg'); background-size:100% 100%;"
-                            title="Activate Scanner"
-                            disabled
-                        >
+                            START
                         </button>
                     </div>
                     <div>
                         <button
-                            *ngIf="enableScannerDeactivateBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/deactivate-scanner.jpg'); background-size:100% 100%;"
+                            class="gd-ctrl-btn"
                             (click)="btnDeactivateScanner()"
                             title="Deactivate Scanner"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.scanner_online"
                         >
-                        </button>
-                        <button
-                            *ngIf="!enableScannerDeactivateBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/deactivate-scanner-gs.jpg'); background-size:100% 100%;"
-                            title="Deactivate Scanner"
-                            disabled
-                        >
+                            STOP
                         </button>
                     </div>
                 </div>
@@ -186,38 +150,24 @@
                     <!-- Scanner Sub Column 2 -->
                     <div>
                         <button
-                            *ngIf="enableScannerModeRadarBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/scanner-mode-radar.jpg'); background-size:100% 100%;"
+                            class="gd-ctrl-btn"
                             (click)="btnSetScannerModeRadar()"
                             title="RADAR mode"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.scanner_online || _api.frameData.ship.scanner_mode == 'radar'"
+                            [ngStyle]="{'color': (_api.frameData.ship.scanner_online && _api.frameData.ship.scanner_mode == 'radar') ? '#00ff00' : '#000000'}"
                         >
-                        </button>
-                        <button
-                            *ngIf="!enableScannerModeRadarBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/scanner-mode-radar-gs.jpg'); background-size:100% 100%;"
-                            title="RADAR mode"
-                            disabled
-                        >
+                            RADAR
                         </button>
                     </div>
                     <div>
                         <button
-                            *ngIf="enableScannerModeIRBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/scanner-mode-ir.jpg'); background-size:100% 100%;"
+                            class="gd-ctrl-btn"
                             (click)="btnSetScannerModeIR()"
                             title="INFRA RED mode"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.scanner_online || _api.frameData.ship.scanner_mode == 'ir'"
+                            [ngStyle]="{'color': (_api.frameData.ship.scanner_online && _api.frameData.ship.scanner_mode == 'ir') ? '#00ff00' : '#000000'}"
                         >
-                        </button>
-                        <button
-                            *ngIf="!enableScannerModeIRBtn"
-                            class="command-btn"
-                            style="background: url('/static/img/scanner-mode-ir-gs.jpg'); background-size:100% 100%;"
-                            title="INFRA RED mode"
-                            disabled
-                        >
+                            IR
                         </button>
                     </div>
                 </div>
@@ -268,9 +218,10 @@
                             class="gd-ctrl-btn"
                             style="min-width:80px;"
                             [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.ebeam_charging || _api.frameData.ship.ebeam_firing"
+                            [ngStyle]="{'color': (_api.frameData.ship.ebeam_charging) ? '#00ff00' : '#000000'}"
                             (click)="btnClickChargeEBeam()"
                         >
-                            charge ⚡
+                            CHARGE
                         </button>
                     </div>
                     <div>
@@ -280,17 +231,17 @@
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.ebeam_charging"
                             (click)="btnClickPauseChargeEBeam()"
                         >
-                            pause 🔌
+                            PAUSE
                         </button>
                     </div>
                     <div>
                         <button
-                            class="gd-ctrl-btn"
+                            class="gd-ctrl-btn-orange"
                             style="min-width:80px;"
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.ebeam_can_fire"
                             (click)="btnClickFireEBeam()"
                         >
-                            fire 🔥
+                            FIRE
                         </button>
                     </div>
                 </div>

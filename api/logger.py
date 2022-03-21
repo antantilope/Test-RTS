@@ -1,4 +1,8 @@
 
+""" Logging on the game server should be limited
+        > if the server crashes we cant to log the traceback
+"""
+
 import datetime as dt
 import logging
 import os

@@ -87,8 +87,8 @@ class TestGameUpdateScannerStates(TestCase):
             self.game._ships[self.player_1_ship_id].coords,
             self.game._ships[self.player_2_ship_id].coords,
         ) / self.upm) == 354
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
 
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
@@ -127,8 +127,8 @@ class TestGameUpdateScannerStates(TestCase):
             self.game._ships[self.player_1_ship_id].coords,
             self.game._ships[self.player_2_ship_id].coords,
         ) / self.upm) == 354
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
 
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
@@ -161,8 +161,8 @@ class TestGameUpdateScannerStates(TestCase):
             self.game._ships[self.player_1_ship_id].coords,
             self.game._ships[self.player_2_ship_id].coords,
         ) / self.upm) == 354
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
 
@@ -189,8 +189,8 @@ class TestGameUpdateScannerStates(TestCase):
             self.game._ships[self.player_1_ship_id].coords,
             self.game._ships[self.player_2_ship_id].coords,
         ) / self.upm) == 354
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
 
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
@@ -204,8 +204,8 @@ class TestGameUpdateScannerStates(TestCase):
         # Flip Ranges
         self.game._ships[self.player_2_ship_id].scanner_radar_range = 1000 # 1000 meters
         self.game._ships[self.player_1_ship_id].scanner_radar_range = 200  # 200 meters (not enough range)
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         # Now ship 2 can see ship 1, but ship 1 cannot see ship 2.
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
@@ -244,15 +244,15 @@ class TestGameUpdateScannerStates(TestCase):
         # Ship 1 cannot find ship 2 with RADAR scanner (too far away)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
 
         # Ship 1 can find ship 2 with INFRA RED scanner (ship is close enough with high enough of a thermal signature)
         self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.IR
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['thermal_signature'] == 75
@@ -292,22 +292,22 @@ class TestGameUpdateScannerStates(TestCase):
         # Ship 1 cannot find ship 2 with RADAR scanner (too far away)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
 
         # Ship 1 cannot find ship 2 with IR because heat signature too low
         self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.IR
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
 
         # Boost thermal signature of ship 2 and it can be detected
         self.game._ships[self.player_2_ship_id].scanner_thermal_signature = 100
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['thermal_signature'] == 100
@@ -331,8 +331,8 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
 
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         self.assertEqual(self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id],
@@ -348,6 +348,7 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_p2': self.game._ships[self.player_2_ship_id].map_p2,
                 'visual_p3': self.game._ships[self.player_2_ship_id].map_p3,
                 'visual_engine_lit': True,
+                'visual_engine_boosted_last_frame':-10,
                 'visual_ebeam_charging': False,
                 'visual_ebeam_firing': False,
                 'visual_ebeam_color': '#ff0000',
@@ -374,6 +375,7 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
                 'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
                 'visual_engine_lit': False,
+                'visual_engine_boosted_last_frame':-10,
                 'visual_ebeam_charging': False,
                 'visual_ebeam_firing': False,
                 'visual_ebeam_color': '#ff0000',
@@ -404,8 +406,8 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
 
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id], {
@@ -420,6 +422,7 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
             'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
             'visual_engine_lit': False,
+            'visual_engine_boosted_last_frame': -10,
             'visual_ebeam_charging': False,
             'visual_ebeam_firing': False,
             'visual_ebeam_color': '#ff0000',
@@ -455,8 +458,8 @@ class TestGameUpdateScannerStates(TestCase):
         self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
 
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
 
@@ -487,15 +490,15 @@ class TestGameUpdateScannerStates(TestCase):
         self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
 
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0 # Ship 2 radar sensitivity too low
 
         self.game._ships[self.player_2_ship_id].scanner_radar_sensitivity = 1
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1 # ship 2 can now spot
         assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
@@ -524,16 +527,16 @@ class TestGameUpdateScannerStates(TestCase):
         self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
 
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
         assert 'relative_heading' in self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]
 
         self.game._ships[self.player_2_ship_id].scanner_radar_sensitivity = 1
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         assert 'relative_heading' in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
@@ -563,8 +566,8 @@ class TestGameUpdateScannerStates(TestCase):
         self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
 
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         assert not self.game._ships[self.player_1_ship_id].scanner_locked
@@ -576,8 +579,8 @@ class TestGameUpdateScannerStates(TestCase):
         # Ship 2 at 2500, 2500 meters
         self.game._ships[self.player_2_ship_id].coord_x = 2500 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 2500 * self.upm
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
         assert not self.game._ships[self.player_1_ship_id].scanner_locked
@@ -609,8 +612,8 @@ class TestGameUpdateScannerStates(TestCase):
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
 
         # Ship 1 is locked onto ship 2
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 1
         assert self.game._ships[self.player_1_ship_id].scanner_locked
@@ -620,8 +623,8 @@ class TestGameUpdateScannerStates(TestCase):
         # Ship 2 at 2500, 2500 meters
         self.game._ships[self.player_2_ship_id].coord_x = 2500 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 2500 * self.upm
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
         assert not self.game._ships[self.player_1_ship_id].scanner_locked
@@ -644,8 +647,8 @@ class TestGameUpdateScannerStates(TestCase):
         self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
         self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
 
-        self.game.update_scanner_states(self.player_1_ship_id)
-        self.game.update_scanner_states(self.player_2_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
 
         assert "relative_heading" in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
         assert "target_heading" in self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]
@@ -655,3 +658,139 @@ class TestGameUpdateScannerStates(TestCase):
         assert isinstance(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['target_heading'], float)
         assert isinstance(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id]['relative_heading'], int)
 
+
+    # Test Scanner Lock/Locking Traversal Limits
+    def test_locking_scanner_sets_ships_previous_traversal_degrees(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+
+    def test_scanner_maintains_locking_channel_when_traversal_degrees_are_below_locking_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locking_max_traversal_degrees = 5
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locking is True
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame > 45
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack < 1
+
+    def test_scanner_loses_locking_channel_when_traversal_degrees_are_abovw_locking_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locking_max_traversal_degrees = 1
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+        assert self.game._ships[self.player_1_ship_id].scanner_locking is True
+
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees (above max)
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locking is False
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame is None
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack is None
+
+    def test_scanner_maintains_lock_when_traversal_degrees_are_below_lock_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = False
+        self.game._ships[self.player_1_ship_id].scanner_locked = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locked_max_traversal_degrees = 5
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locked is True
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame > 45
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack < 1
+
+
+    def test_scanner_loses_lock_when_traversal_degrees_are_above_lock_max(self):
+        self.game._ships[self.player_1_ship_id].scanner_online = True
+        self.game._ships[self.player_1_ship_id].scanner_radar_range = 2000
+        self.game._ships[self.player_1_ship_id].scanner_mode = ShipScannerMode.RADAR
+        self.game._ships[self.player_1_ship_id].scanner_locking = False
+        self.game._ships[self.player_1_ship_id].scanner_locked = True
+        self.game._ships[self.player_1_ship_id].scanner_lock_target = self.player_2_ship_id
+        self.game._ships[self.player_1_ship_id].scanner_idle_power_requirement_per_second = 1
+        self.game._ships[self.player_1_ship_id].battery_power = 500_000
+        self.game._ships[self.player_1_ship_id].scanner_locked_max_traversal_degrees = 1
+        self.game._fps = 2
+        # Place ships inside radar range
+        # Ship 1 at 500, 500 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 500 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 500 * self.upm
+        # Ship 2 at 1500, 1500 meters (45.0 degrees)
+        self.game._ships[self.player_2_ship_id].coord_x = 1500 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert round(self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame) == 45
+        assert self.game._ships[self.player_1_ship_id].scanner_locked is True
+
+        # Adjust ship 2's position so it's bearing is slightly more than 45 degrees
+        self.game._ships[self.player_2_ship_id].coord_x = 1550 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 1500 * self.upm
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        assert self.game._ships[self.player_1_ship_id].scanner_locked is False
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame is None
+        assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack is None

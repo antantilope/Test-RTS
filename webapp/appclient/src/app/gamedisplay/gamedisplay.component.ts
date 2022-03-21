@@ -38,23 +38,12 @@ const randomInt = function (min: number, max: number): number  {
 })
 export class GamedisplayComponent implements OnInit {
 
-  private frameDataEventSubscription: Subscription
-
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
   public showConfirmExit = false
   public waitingToExit = false
-
-  public enableEngineOnlineBtn = false
-  public enableEngineOfflineBtn = false
-  public enableEngineLightBtn = false
-  public enableEngineUnLightBtn = false
-  public enableScannerActivateBtn = false
-  public enableScannerDeactivateBtn = false
-  public enableScannerModeRadarBtn = false
-  public enableScannerModeIRBtn = false
 
   public scannerTargetIDCursor: string | null = null
 
@@ -105,14 +94,10 @@ export class GamedisplayComponent implements OnInit {
 
     this.registerMouseEventListener()
 
-    this.frameDataEventSubscription = this._api.frameDataEvent.subscribe((data: any) => {
-      this.refreshButtonStates()
-    })
   }
 
   ngOnDestroy() {
     console.log("GamedisplayComponent::ngOnDestroy")
-    this.frameDataEventSubscription.unsubscribe()
   }
 
 
@@ -388,15 +373,15 @@ export class GamedisplayComponent implements OnInit {
         if(drawableShip.engineLit) {
           const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
           const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
-          let engineOuterFlameRadius = Math.max(4, Math.round(
+          let engineOuterFlameRadius = Math.max(2, Math.round(
             Math.sqrt(
               (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
               + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
             ) / 2
-          ))
+          ) * (drawableShip.engineBoosted ? 4 : 1))
           engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
           this.ctx.beginPath()
-          this.ctx.fillStyle = "rgb(255, 0, 0, 0.9)"
+          this.ctx.fillStyle = drawableShip.engineBoosted ? "rgb(71, 139, 255)" : "rgb(255, 0, 0, 0.9)"
           this.ctx.arc(
             engineFlameX,
             engineFlameY,
@@ -582,6 +567,15 @@ export class GamedisplayComponent implements OnInit {
         if(drawableShip.distance) {
           this.ctx.beginPath()
           this.ctx.fillText(drawableShip.distance + " M", bbXOffset, bbYOffset)
+          bbYOffset += bbYInterval
+        }
+        if(drawableShip.thermalSignature) {
+          this.ctx.beginPath()
+          this.ctx.fillText(
+            drawableShip.thermalSignature + ` / ${this._api.frameData.ship.scanner_ir_minimum_thermal_signature} IR`,
+            bbXOffset,
+            bbYOffset,
+          )
           bbYOffset += bbYInterval
         }
         if(shipIsLocked) {
@@ -803,7 +797,7 @@ export class GamedisplayComponent implements OnInit {
         2 * Math.PI,
       )
       this.ctx.fill()
-      // Line
+      // Velocity Line
       if(
         this._api.frameData.ship.velocity_x_meters_per_second
         || this._api.frameData.ship.velocity_y_meters_per_second
@@ -826,6 +820,31 @@ export class GamedisplayComponent implements OnInit {
         this.ctx.lineTo(gyroLinePointB.x, gyroLinePointB.y)
         this.ctx.stroke()
       }
+      // Scanner Traversal Crosshairs
+      if(this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
+        const crossOffset = gryroscopeRadius * this._api.frameData.ship.scanner_lock_traversal_slack
+        this.ctx.beginPath()
+        this.ctx.strokeStyle = 'rgb(255, 0, 0, 0.75)'
+        this.ctx.lineWidth = 4
+        // Verticle hairs
+        this.ctx.moveTo(gryroscopeX - crossOffset, gryroscopeY - gryroscopeRadius)
+        this.ctx.lineTo(gryroscopeX - crossOffset, gryroscopeY + gryroscopeRadius)
+        this.ctx.stroke()
+        this.ctx.beginPath()
+        this.ctx.moveTo(gryroscopeX + crossOffset, gryroscopeY - gryroscopeRadius)
+        this.ctx.lineTo(gryroscopeX + crossOffset, gryroscopeY + gryroscopeRadius)
+        this.ctx.stroke()
+
+        // Horizontal hairs
+        this.ctx.beginPath()
+        this.ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY - crossOffset)
+        this.ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY - crossOffset)
+        this.ctx.stroke()
+        this.ctx.beginPath()
+        this.ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY + crossOffset)
+        this.ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY + crossOffset)
+        this.ctx.stroke()
+      }
       // Velocity Text
       const velocity = Math.sqrt(
         Math.pow(this._api.frameData.ship.velocity_x_meters_per_second, 2)
@@ -839,6 +858,12 @@ export class GamedisplayComponent implements OnInit {
         velocity + " M/S",
         this._camera.canvasWidth - 3,
         gryroscopeY + gryroscopeRadius + 18,
+      )
+      // Thermal Signature Test
+      this.ctx.fillText(
+        this._api.frameData.ship.scanner_thermal_signature + " IR ",
+        this._camera.canvasWidth - 3,
+        gryroscopeY + gryroscopeRadius + 40,
       )
     }
 
@@ -931,27 +956,6 @@ export class GamedisplayComponent implements OnInit {
 
   }
 
-
-  public async refreshButtonStates() {
-    if(this._api.frameData === null) {
-      return
-    }
-
-    // Engine
-    this.enableEngineOnlineBtn = this._api.frameData.ship.available_commands.includes('activate_engine')
-    this.enableEngineOfflineBtn = this._api.frameData.ship.available_commands.includes('deactivate_engine')
-    this.enableEngineLightBtn = this._api.frameData.ship.available_commands.includes('light_engine')
-    this.enableEngineUnLightBtn = this._api.frameData.ship.available_commands.includes('unlight_engine')
-
-    // Scanner
-    this.enableScannerActivateBtn = this._api.frameData.ship.available_commands.includes('activate_scanner')
-    this.enableScannerDeactivateBtn = this._api.frameData.ship.available_commands.includes('deactivate_scanner')
-    this.enableScannerModeRadarBtn = this._api.frameData.ship.available_commands.includes('set_scanner_mode_radar')
-    this.enableScannerModeIRBtn = this._api.frameData.ship.available_commands.includes('set_scanner_mode_ir')
-
-  }
-
-
   public async btnActivateEngine() {
     await this._api.post(
       "/api/rooms/command",
@@ -970,6 +974,13 @@ export class GamedisplayComponent implements OnInit {
     await this._api.post(
       "/api/rooms/command",
       {command:'light_engine'},
+    )
+  }
+
+  public async btnBoostEngine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'boost_engine'},
     )
   }
 

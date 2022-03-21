@@ -6,7 +6,7 @@ from time import sleep
 import re
 
 from .base import BaseModel
-from .ship import Ship, ShipCommands, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType
+from .ship import Ship, ShipCommands, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType, ShipDeathType
 from .ship_designator import get_designations
 from api import utils2d
 from api.constants import (
@@ -401,10 +401,10 @@ class Game(BaseModel):
         self._ebeam_rays.clear()
 
         for ship_id, ship in self._ships.items():
-            ship.adjust_resources(self._fps)
+            ship.adjust_resources(self._fps, self._game_frame)
             ship.calculate_physics(self._fps)
             ship.advance_thermal_signature(self._fps)
-            self.update_scanner_states(ship_id)
+            self.reset_and_update_scanner_states(ship_id)
 
             # Autopilot/weapons updates must run after scanner/physics updates
             ship.run_autopilot()
@@ -422,7 +422,7 @@ class Game(BaseModel):
         self.incr_game_frame()
 
 
-    def update_scanner_states(self, ship_id: str):
+    def reset_and_update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
 
         self._ships[ship_id].scanner_data.clear()
@@ -491,6 +491,7 @@ class Game(BaseModel):
                         'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
                         'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
                         'visual_engine_lit': self._ships[other_id].engine_lit,
+                        'visual_engine_boosted_last_frame': self._ships[other_id].engine_boosted_last_frame,
                         'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
                         'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
                         'visual_ebeam_color': self._ships[other_id].ebeam_color,
@@ -508,29 +509,67 @@ class Game(BaseModel):
 
                 self._ships[ship_id].scanner_data[other_id] = scanner_data
 
-
+        # Check if scanner target has gone out of range
         if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
+            self._ships[ship_id].scanner_lock_traversal_slack = None
+            self._ships[ship_id].scanner_lock_target = None
             if self._ships[ship_id].scanner_locking:
-                self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].scanner_locking = False
                 self._ships[ship_id].scanner_locking_power_used = None
             elif self._ships[ship_id].scanner_locked:
-                self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].scanner_locked = False
+
+        # check if scanner target traversal is above maximum
+        if self._ships[ship_id].scanner_lock_target and (self._ships[ship_id].scanner_locking or self._ships[ship_id].scanner_locked):
+            if self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame is None:
+                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                    self._ships[ship_id].scanner_lock_target
+                ]['target_heading']
+            else:
+                target_heading = self._ships[ship_id].scanner_data[
+                    self._ships[ship_id].scanner_lock_target
+                ]['target_heading']
+                delta = abs(
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame
+                    - target_heading
+                )
+                if self._ships[ship_id].scanner_locking:
+                    max_traversal = self._ships[ship_id].scanner_locking_max_traversal_degrees / self._fps
+                elif self._ships[ship_id].scanner_locked:
+                    max_traversal = self._ships[ship_id].scanner_locked_max_traversal_degrees / self._fps
+                else:
+                    raise NotImplementedError
+                if delta > max_traversal:
+                    self._ships[ship_id].scanner_locked = False
+                    self._ships[ship_id].scanner_locking = False
+                    self._ships[ship_id].scanner_lock_target = None
+                    self._ships[ship_id].scanner_lock_traversal_slack = None
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = None
+                else:
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                        self._ships[ship_id].scanner_lock_target
+                    ]['target_heading']
+                    self._ships[ship_id].scanner_lock_traversal_slack = delta / max_traversal
 
 
     def calculate_weapons_and_damage(self, ship_id: str):
-        died = self._ships[ship_id].advance_damage_properties(
+        death_data = self._ships[ship_id].advance_damage_properties(
             self._game_frame,
             self._map_x_unit_length,
             self._map_y_unit_length,
             MAX_SERVER_FPS,
         )
-        if died is True:
+
+        ix_visual_type = 0
+        ix_frames_since_death = 1
+
+        if death_data and death_data[ix_frames_since_death] == 0:
             self._killfeed.append({
                 "created_at_frame": self._game_frame,
                 "victim_name": self._ships[ship_id].scanner_designator,
             })
+
+        if death_data:
             return
 
         if self._ships[ship_id].ebeam_firing:

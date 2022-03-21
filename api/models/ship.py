@@ -30,6 +30,7 @@ class ShipCommands:
     DEACTIVATE_ENGINE = 'deactivate_engine'
     LIGHT_ENGINE = 'light_engine'
     UNLIGHT_ENGINE = 'unlight_engine'
+    BOOST_ENGINE = 'boost_engine'
 
     ACTIVATE_SCANNER = 'activate_scanner'
     DEACTIVATE_SCANNER = 'deactivate_scanner'
@@ -46,6 +47,11 @@ class ShipCommands:
 
 class ShipStateKey:
     MASS = 'mass'
+
+class ShipDeathType:
+    EXPLOSION = 'explosion'
+    AFLAME = 'aflame'
+    ADRIFT = 'adrift'
 
 class ShipScannerMode:
     RADAR = 'radar'
@@ -163,6 +169,10 @@ class Ship(BaseModel):
         self.engine_newtons = 0
         self.engine_lit = False
         self.engine_online = False
+        self.engine_boosting = False
+        self.engine_boosted = False
+        self.engine_boosted_last_frame = -10
+        self.engine_boost_multiple = None
         self.engine_starting = False
         self.engine_startup_power_used = None
         self.engine_idle_power_requirement_per_second = None
@@ -171,6 +181,7 @@ class Ship(BaseModel):
         self.engine_activation_power_required_per_second = None
         self.engine_fuel_usage_per_second = None
         self.engine_battery_charge_per_second = None
+        self.engine_lit_thermal_signature_rate_per_second = None
 
         # Scanner
         self.scanner_designator = None # A unique "human readable" identifier used to identify this ship on other ships' scanners
@@ -195,12 +206,18 @@ class Ship(BaseModel):
         self.scanner_data: Dict[str, ScannedElement] = {}
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
-        self.scanner_thermal_signature_delta = None
         self.anti_radar_coating_level = None
+
+        self.scanner_thermal_signature_dissipation_per_second = None
+
+        self.scanner_locking_max_traversal_degrees = None
+        self.scanner_locked_max_traversal_degrees = None
+        self.scanner_lock_traversal_degrees_previous_frame = None
+        self.scanner_lock_traversal_slack = None
 
         # Ship Energy Beam
         self.ebeam_charge_rate_per_second = None
-        self.ebeam_charge_thermal_rate_per_second = None
+        self.ebeam_charge_thermal_signature_rate_per_second = None
         self.ebeam_charge = None
         self.ebeam_charge_capacity = None
         self.ebeam_charging = False
@@ -340,7 +357,6 @@ class Ship(BaseModel):
         """
         return {
             'id': self.id,
-            'available_commands': list(self.get_available_commands()),
             'team_id': self.team_id,
             'mass': self.mass,
             'coord_x': self.coord_x,
@@ -365,6 +381,8 @@ class Ship(BaseModel):
             'engine_online': self.engine_online,
             'engine_lit': self.engine_lit,
             'engine_starting': self.engine_starting,
+            'engine_boosted': self.engine_boosted,
+            'engine_boosted_last_frame': self.engine_boosted_last_frame,
 
             'scanner_online': self.scanner_online,
             'scanner_locking': self.scanner_locking,
@@ -377,6 +395,7 @@ class Ship(BaseModel):
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
             'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
+            'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
 
             'ebeam_firing': self.ebeam_firing,
             'ebeam_charging': self.ebeam_charging,
@@ -457,6 +476,8 @@ class Ship(BaseModel):
         instance.engine_idle_power_requirement_per_second = constants.ENGINE_IDLE_POWER_REQUIREMENT_PER_SECOND
         instance.engine_fuel_usage_per_second = constants.ENGINE_FUEL_USAGE_PER_SECOND
         instance.engine_battery_charge_per_second = constants.ENGINE_BATTERY_CHARGE_PER_SECOND
+        instance.engine_lit_thermal_signature_rate_per_second = constants.ENGINE_LIT_THERMAL_SIGNATURE_RATE_PER_SECOND
+        instance.engine_boost_multiple = constants.ENGINE_BOOST_MULTIPLE
 
         instance.scanner_mode = ShipScannerMode.RADAR
         instance.scanner_radar_range = constants.SCANNER_MODE_RADAR_RANGE_M
@@ -470,11 +491,15 @@ class Ship(BaseModel):
         instance.scanner_get_lock_power_requirement_total = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_TOTAL
         instance.scanner_get_lock_power_requirement_per_second = constants.SCANNER_GET_LOCK_POWER_REQUIREMENT_PER_SECOND
         instance.scanner_thermal_signature = 0
-        instance.scanner_thermal_signature_delta = 0
         instance.anti_radar_coating_level = 0
 
+        instance.scanner_thermal_signature_dissipation_per_second = constants.THERMAL_DISSIPATION_PER_SECOND
+
+        instance.scanner_locking_max_traversal_degrees = constants.SCANNER_LOCKING_MAX_TRAVERSAL_DEGREES
+        instance.scanner_locked_max_traversal_degrees = constants.SCANNER_LOCKED_MAX_TRAVERSAL_DEGREES
+
         instance.ebeam_charge_rate_per_second = constants.EBEAM_CHARGE_RATE_PER_SECOND
-        instance.ebeam_charge_thermal_rate_per_second = constants.EBEAM_CHARGE_THERMAL_RATE_PER_SECOND
+        instance.ebeam_charge_thermal_signature_rate_per_second = constants.EBEAM_CHARGE_THERMAL_SIGNATURE_RATE_PER_SECOND
         instance.ebeam_charge = 0
         instance.ebeam_charge_capacity = constants.EBEAM_CHARGE_CAPACITY
         instance.ebeam_charge_power_draw_multiple = constants.EBEAM_CHARGE_BATTERY_POWER_DRAW_MULTIPLE
@@ -533,7 +558,7 @@ class Ship(BaseModel):
         self.fuel_level -= quantity
 
 
-    def adjust_resources(self, fps: int):
+    def adjust_resources(self, fps: int, game_frame: int):
 
         ''' ENERGY BEAM '''
         if self.ebeam_charging:
@@ -547,7 +572,6 @@ class Ship(BaseModel):
                     self.ebeam_charge + adj,
                     self.ebeam_charge_capacity,
                 )
-                self.scanner_thermal_signature_delta += (self.ebeam_charge_thermal_rate_per_second / fps)
             if self.ebeam_charge >= self.ebeam_charge_capacity:
                 self.ebeam_charging = False
 
@@ -566,6 +590,8 @@ class Ship(BaseModel):
                 self.scanner_locking = False
                 self.scanner_lock_target = None
                 self.scanner_locked = False
+                self.scanner_lock_traversal_degrees_previous_frame = None
+                self.scanner_lock_traversal_slack = None
 
             else:
                 if self.scanner_locking:
@@ -589,6 +615,8 @@ class Ship(BaseModel):
                             self.scanner_locking = False
                             self.scanner_lock_target = None
                             self.scanner_locking_power_used = None
+                            self.scanner_lock_traversal_degrees_previous_frame = None
+                            self.scanner_lock_traversal_slack = None
                         else:
                             self.scanner_locking_power_used += adj
 
@@ -631,6 +659,7 @@ class Ship(BaseModel):
 
 
         ''' ENGINE POWER DRAW (STARTING) # # # '''
+        self.engine_boosted = False
         if self.engine_starting:
             startup_complete = self.engine_startup_power_used >= self.engine_activation_power_required_total
             if startup_complete:
@@ -689,6 +718,7 @@ class Ship(BaseModel):
                 # Flame out.
                 self.engine_lit = False
                 self.engine_online = False
+                self.engine_boosting = False
             else:
                 self.charge_battery(
                     max(
@@ -697,10 +727,30 @@ class Ship(BaseModel):
                     )
                 )
 
+            if self.engine_boosting:
+                self.engine_boosting = False
+                try:
+                    self.use_fuel(
+                        max(
+                            round(self.engine_fuel_usage_per_second / fps) * self.engine_boost_multiple,
+                            1,
+                        )
+                    )
+                except InsufficientFuelError:
+                    # Flame out.
+                    self.engine_lit = False
+                    self.engine_online = False
+                    self.engine_boosted = False
+
+                else:
+                    self.engine_boosted = True
+                    self.engine_boosted_last_frame = game_frame
+
 
     def calculate_physics(self, fps: int) -> None:
         if self.engine_lit:
-            adj_meters_per_second = float(self.engine_newtons / self.mass)
+            force = self.engine_newtons * (self.engine_boost_multiple if self.engine_boosted else 1)
+            adj_meters_per_second = float(force / self.mass)
             adj_meters_per_frame = float(adj_meters_per_second / fps)
 
             delta_x, delta_y = utils2d.calculate_x_y_components(
@@ -737,32 +787,38 @@ class Ship(BaseModel):
         self.ebeam_charge = round(self.ebeam_charge - delta_ebeam_charge)
         return True
 
-    def advance_damage_properties(self, game_frame: int, map_x: int, map_y: int, fps: int) -> bool:
+    def advance_damage_properties(self, game_frame: int, map_x: int, map_y: int, fps: int) -> Optional[Tuple]:
         if self.died_on_frame is None:
             if self.coord_x < 0 or self.coord_y < 0 or self.coord_x > map_x or self.coord_y > map_y:
                 self.die(game_frame)
                 self.explode()
-                return True
-            return
+                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
 
-        if self.explosion_frame:
-            # Ship is exploding, advance explosion frame
-            self.explosion_frame += 1
+        elif self.explosion_frame:
+            if self.explosion_frame < 200:
+                # Ship is exploding, advance explosion frame
+                self.explosion_frame += 1
+                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+            return ShipDeathType.ADRIFT, game_frame - self.died_on_frame
 
         elif self.explode_immediately:
             self.explode()
+            return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
 
         elif self.aflame_since_frame is None:
-            # Ship not aflame yet
+            # Ship not aflame yet and has not yet exploded
             seconds_since =  (game_frame - self.died_on_frame) / fps
             if seconds_since > self._seconds_to_aflame:
                 self.aflame_since_frame = game_frame
+                return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
         elif self.aflame_since_frame:
             # ship is onfire and it's going to explode
             seconds_aflame = (game_frame - self.aflame_since_frame) / fps
             if seconds_aflame > self._seconds_to_explode:
                 self.explode()
+                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+            return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
     def explode(self):
         self.explosion_frame = 1
@@ -783,11 +839,15 @@ class Ship(BaseModel):
         self.autopilot_program = None
 
     def advance_thermal_signature(self, fps: int) -> None:
-        self.scanner_thermal_signature_delta = 0
-        delta_thermal = self.scanner_thermal_signature_delta - (5 / fps)
+        delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps
+        if self.engine_lit:
+            multiple = self.engine_boost_multiple if self.engine_boosted else 1
+            delta += ((multiple * self.engine_lit_thermal_signature_rate_per_second) / fps)
+        if self.ebeam_charging:
+            delta += self.ebeam_charge_thermal_signature_rate_per_second / fps
         self.scanner_thermal_signature = max(
-            self.scanner_thermal_signature + delta_thermal,
             0,
+            round(self.scanner_thermal_signature + delta)
         )
 
     def run_autopilot(self) -> None:
@@ -840,36 +900,6 @@ class Ship(BaseModel):
         if not self.engine_lit:
             self.engine_lit = True
 
-
-    def get_available_commands(self) -> Generator[str, None, None]:
-        if self.died_on_frame:
-            return # Exist generator
-
-        # Engine
-        if not self.engine_starting:
-            if not self.engine_online:
-                yield ShipCommands.ACTIVATE_ENGINE
-            else:
-                if self.engine_lit:
-                    yield ShipCommands.UNLIGHT_ENGINE
-                else:
-                    yield ShipCommands.LIGHT_ENGINE
-                    yield ShipCommands.DEACTIVATE_ENGINE
-
-        # Scanner
-        if not self.scanner_starting:
-            if not self.scanner_online:
-                yield ShipCommands.ACTIVATE_SCANNER
-            else:
-                yield ShipCommands.DEACTIVATE_SCANNER
-        yield (
-            ShipCommands.SET_SCANNER_MODE_RADAR
-            if self.scanner_mode == ShipScannerMode.IR
-            else ShipCommands.SET_SCANNER_MODE_IR
-        )
-
-
-
     def process_command(self, command: str, *args, **kwargs):
         if self.died_on_frame:
             return
@@ -883,6 +913,8 @@ class Ship(BaseModel):
             self.cmd_deactivate_engine()
         elif command == ShipCommands.LIGHT_ENGINE:
             self.cmd_light_engine()
+        elif command == ShipCommands.BOOST_ENGINE:
+            self.cmd_boost_engine()
         elif command == ShipCommands.UNLIGHT_ENGINE:
             self.cmd_unlight_engine()
 
@@ -1001,6 +1033,11 @@ class Ship(BaseModel):
             return
         self.engine_lit = True
 
+    def cmd_boost_engine(self) -> None:
+        if not self.engine_online or not self.engine_lit:
+            return
+        self.engine_boosting = True
+
     # Scanner Commands
     def cmd_activate_scanner(self) -> None:
         if self.scanner_online or self.scanner_starting:
@@ -1016,6 +1053,8 @@ class Ship(BaseModel):
         self.scanner_locking = False
         self.scanner_locking_power_used = None
         self.scanner_lock_target = None
+        self.scanner_lock_traversal_degrees_previous_frame = None
+        self.scanner_lock_traversal_slack = None
         self.scanner_data.clear()
 
     def cmd_set_scanner_mode_radar(self) -> None:
@@ -1033,6 +1072,7 @@ class Ship(BaseModel):
         self.scanner_locked = False
         self.scanner_locking_power_used = 0
         self.scanner_lock_target = target_id
+        self.scanner_lock_traversal_degrees_previous_frame = None
 
     def cmd_charge_ebeam(self):
         if not self.ebeam_charging:

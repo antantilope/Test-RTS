@@ -1,5 +1,4 @@
 function drawMapPreview(mapData, canvas) {
-    console.log("hello51")
     const ctx = canvas.getContext("2d");
     const yOffset = 20;
     const metersPerCanvasPxX = mapData.meters_x / canvas.width;
