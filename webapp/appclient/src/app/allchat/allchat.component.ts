@@ -1,9 +1,9 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core'
 import { Subscription } from 'rxjs'
 
 import { AllchatService } from "../allchat.service"
-import { ApiService } from '../api.service';
-import { PaneService } from '../pane.service';
+import { ApiService } from '../api.service'
+import { PaneService } from '../pane.service'
 
 @Component({
   selector: 'app-allchat',
@@ -12,11 +12,15 @@ import { PaneService } from '../pane.service';
 })
 export class AllchatComponent implements OnInit {
 
-  @ViewChild("paneBodyElement") paneBodyElement: ElementRef;
-  @ViewChild("textInputElement") textInputElement: ElementRef;
+  private paneName: string
+
+  @ViewChild("paneElement") paneElement: ElementRef
+  @ViewChild("paneBodyElement") paneBodyElement: ElementRef
+  @ViewChild("textInputElement") textInputElement: ElementRef
 
   msgInput:string = "";
-  newAllchatAddedSubscription: Subscription;
+  newAllchatAddedSubscription: Subscription
+  zIndexesUpdatedSubscription: Subscription
 
   constructor(
     public _allchat: AllchatService,
@@ -24,21 +28,40 @@ export class AllchatComponent implements OnInit {
     public _pane: PaneService,
   ) {
     console.log("allchat componenent::constructor()")
-    this._allchat.unreadCount = 0
+    this._allchat.resetUnreadCount()
+    this.paneName = this._pane.PANE_ALL_CHAT
   }
 
   ngOnInit(): void {
     console.log("allchat componenent::ngOnInit()")
-    this.focusOnInput()
+    this.select()
     this.newAllchatAddedSubscription = this._allchat.newAllchatAdded.subscribe(()=>{
       setTimeout(()=>{
         this.scrollPaneToBottom()
       }, 25);
     })
+    this.zIndexesUpdatedSubscription = this._pane.zIndexesUpdated.subscribe((zIndexes: string[]) => {
+      const paneZIndex = zIndexes.indexOf(this.paneName);
+      if(paneZIndex === -1) {
+        return console.error(
+          "cannot find paneName " + this.paneName + " in zIndexes " + JSON.stringify(zIndexes))
+      }
+      this.paneElement.nativeElement.style.zIndex = paneZIndex
+    })
+  }
+
+  ngAfterViewInit() {
+    this.paneElement.nativeElement.addEventListener('mouseenter', ()=>{
+      this._pane.registerMouseEnteringPane(this.paneName)
+    })
+    this.paneElement.nativeElement.addEventListener('mouseleave', ()=>{
+      this._pane.registerMouseLeavingPane(this.paneName)
+    })
   }
 
   ngOnDestroy()	{
     this.newAllchatAddedSubscription.unsubscribe();
+    this.zIndexesUpdatedSubscription.unsubscribe();
   }
 
 
@@ -59,6 +82,11 @@ export class AllchatComponent implements OnInit {
       console.log("focusOnInput()");
       this.textInputElement.nativeElement.focus();
     });
+  }
+
+  select () {
+    this.focusOnInput()
+    this._pane.addToTopOfZIndexes(this.paneName)
   }
 
 }

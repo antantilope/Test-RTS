@@ -1,8 +1,13 @@
 
-<div id="draggable-container" ngDraggable>
+<div
+    id="draggable-container"
+    (mousedown)="select();"
+    #paneElement
+    ngDraggable
+>
     <div id="title-bar">
         <strong>All Chat</strong>
-        <button id="close-btn" (click)="_pane.allChatPaneVisible=false">
+        <button id="close-btn" (click)="_pane.toggleAllChatPane()">
             x
         </button>
     </div>

@@ -110,9 +110,6 @@ export class GamedisplayComponent implements OnInit {
   private registerMouseEventListener(): void {
     // Zoom camera
     window.addEventListener('wheel', event => {
-      if (this._pane.mouseInPane) {
-        return
-      }
       if (this._camera.canManualZoom()) {
         const zoomIn = event.deltaY < 0
         this._camera.adjustZoom(zoomIn)
@@ -121,14 +118,17 @@ export class GamedisplayComponent implements OnInit {
 
     // Pan camera
     this.canvas.nativeElement.addEventListener('mouseenter', ()=>{
+      console.log("canvas mouse enter")
       this.mouseInCanvas = true
     })
     this.canvas.nativeElement.addEventListener('mouseleave', event => {
+      console.log("canvas mouse leave")
       const canvasWidth = this.canvas.nativeElement.width
       const canvasHeight = this.canvas.nativeElement.height
       const eventXPos = event.clientX
       const eventYPos = event.clientY
       if (eventYPos < 0 || eventYPos > canvasHeight || eventXPos < 0 || eventXPos > canvasWidth) {
+        console.log("canvas mouse leave (saved)")
         this.mouseClickDownInCanvas = false
         this.mouseInCanvas = false
         this.mousePanLastX = null
@@ -142,14 +142,13 @@ export class GamedisplayComponent implements OnInit {
       }
     })
     window.addEventListener('mouseup', (event) => {
-      if(!this.mouseMovedWhileDown && this.mouseInCanvas) {
+      if(!this.mouseMovedWhileDown && this.mouseInCanvas && !this._pane.mouseInPane()) {
         this.handleMouseClickInCanvas(event)
       }
       this.mouseClickDownInCanvas = false
       this.mouseMovedWhileDown = false
       this.mousePanLastX = null
       this.mousePanLastY = null
-
     })
     window.addEventListener('mousemove', event => {
       this.mouseMovedWhileDown = true
@@ -175,9 +174,6 @@ export class GamedisplayComponent implements OnInit {
   public handleMouseClickInCanvas(event: any): void {
     console.log("handleMouseClickInCanvas")
     if(this._api.frameData === null) {
-      return
-    }
-    if (this._pane.mouseInPane) {
       return
     }
     const mouseCanvasX = event.clientX - this.canvas.nativeElement.offsetLeft
@@ -1155,7 +1151,7 @@ export class GamedisplayComponent implements OnInit {
   }
 
   async btnToggleAllChatPane(){
-    this._pane.allChatPaneVisible = !this._pane.allChatPaneVisible
+    this._pane.toggleAllChatPane()
   }
 
 }
