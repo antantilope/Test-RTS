@@ -10,6 +10,7 @@ export class PaneService {
   public PANE_MAIN_MENU = "main-menu"
 
   public allChatPaneVisible: boolean = false
+  public mainMenuPaneVisible: boolean = false
 
   private zIndexes: string[] = []
   public zIndexesUpdated: Subject<string[]> = new Subject()
@@ -21,6 +22,7 @@ export class PaneService {
   ) {
     this.zIndexes = [
       this.PANE_ALL_CHAT,
+      this.PANE_MAIN_MENU,
     ]
   }
 
@@ -29,6 +31,14 @@ export class PaneService {
     this.allChatPaneVisible = !this.allChatPaneVisible
     if(remove) {
       this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_ALL_CHAT)
+    }
+  }
+
+  toggleMainMenuPane() {
+    const remove = this.mainMenuPaneVisible
+    this.mainMenuPaneVisible = !this.mainMenuPaneVisible
+    if(remove) {
+      this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_MAIN_MENU)
     }
   }
 

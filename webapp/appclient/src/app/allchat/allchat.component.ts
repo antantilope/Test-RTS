@@ -47,6 +47,12 @@ export class AllchatComponent implements OnInit {
           "cannot find paneName " + this.paneName + " in zIndexes " + JSON.stringify(zIndexes))
       }
       this.paneElement.nativeElement.style.zIndex = paneZIndex
+      const isSelected = paneZIndex == (zIndexes.length - 1) // Pane is "top" if it's in the last zindex postion.
+      if(isSelected) {
+        this.paneElement.nativeElement.style.border = "1px solid #33002d"
+      } else {
+        this.paneElement.nativeElement.style.removeProperty("border")
+      }
     })
   }
 
@@ -57,6 +63,7 @@ export class AllchatComponent implements OnInit {
     this.paneElement.nativeElement.addEventListener('mouseleave', ()=>{
       this._pane.registerMouseLeavingPane(this.paneName)
     })
+    this.select()
   }
 
   ngOnDestroy()	{

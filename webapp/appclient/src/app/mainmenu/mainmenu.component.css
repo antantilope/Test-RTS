@@ -1,0 +1,33 @@
+
+#draggable-container {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    height: 50%;
+    background-color: #f4b5ff;
+    cursor: grab;
+    overflow-y: clip;
+    border-radius: 5px;
+}
+
+#title-bar {
+    display: flex;
+    justify-content: space-between;
+    background-color: #2c0023;
+    color: #ffffff;
+    padding:3px;
+}
+
+#close-btn {
+    color: #ffffff;
+    background-color: #ff0000;
+    font-weight: bold;
+}
+
+#pane-body {
+    overflow-y:scroll;
+    width:auto;
+    height:auto;
+    padding:5px;
+}

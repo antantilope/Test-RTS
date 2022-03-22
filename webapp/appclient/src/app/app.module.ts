@@ -10,6 +10,7 @@ import { AppComponent } from './app.component';
 import { TakeoverComponent } from './takeover/takeover.component';
 import { GamedisplayComponent } from './gamedisplay/gamedisplay.component';
 import { AllchatComponent } from './allchat/allchat.component';
+import { MainmenuComponent } from './mainmenu/mainmenu.component';
 
 
 @NgModule({
@@ -18,6 +19,7 @@ import { AllchatComponent } from './allchat/allchat.component';
     TakeoverComponent,
     GamedisplayComponent,
     AllchatComponent,
+    MainmenuComponent,
   ],
   imports: [
     BrowserModule,

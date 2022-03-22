@@ -42,7 +42,6 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
 
-  public showConfirmExit = false
   public waitingToExit = false
 
   public scannerTargetIDCursor: string | null = null
@@ -110,6 +109,9 @@ export class GamedisplayComponent implements OnInit {
   private registerMouseEventListener(): void {
     // Zoom camera
     window.addEventListener('wheel', event => {
+      if(this._pane.mouseInPane()) {
+        return
+      }
       if (this._camera.canManualZoom()) {
         const zoomIn = event.deltaY < 0
         this._camera.adjustZoom(zoomIn)
@@ -1136,22 +1138,25 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  async btnClickLeaveMatch() {
-    if(this.waitingToExit) {
-      return
-    }
-    this.waitingToExit = true
-    const resp = await this._api.post(
-      "/api/rooms/command",
-      {command:'leave_game'},
-    )
-    setTimeout(()=>{
-      location.reload()
-    }, 1000)
-  }
+  // async btnClickLeaveMatch() {
+  //   if(this.waitingToExit) {
+  //     return
+  //   }
+  //   this.waitingToExit = true
+  //   const resp = await this._api.post(
+  //     "/api/rooms/command",
+  //     {command:'leave_game'},
+  //   )
+  //   setTimeout(()=>{
+  //     location.reload()
+  //   }, 1000)
+  // }
 
   async btnToggleAllChatPane(){
     this._pane.toggleAllChatPane()
   }
 
+  btnToggleMainMenuPane() {
+    this._pane.toggleMainMenuPane()
+  }
 }
