@@ -9,6 +9,7 @@ import { AngularDraggableModule } from 'angular2-draggable';
 import { AppComponent } from './app.component';
 import { TakeoverComponent } from './takeover/takeover.component';
 import { GamedisplayComponent } from './gamedisplay/gamedisplay.component';
+import { AllchatComponent } from './allchat/allchat.component';
 
 
 @NgModule({
@@ -16,6 +17,7 @@ import { GamedisplayComponent } from './gamedisplay/gamedisplay.component';
     AppComponent,
     TakeoverComponent,
     GamedisplayComponent,
+    AllchatComponent,
   ],
   imports: [
     BrowserModule,

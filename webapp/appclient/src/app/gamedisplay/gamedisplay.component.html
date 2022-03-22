@@ -1,4 +1,7 @@
 
+<app-allchat *ngIf="_pane.allChatPaneVisible">
+</app-allchat>
+
 <div id="outer-game-display-container">
 
     <div id="sidebar-canvas-container" class="game-display-container">
@@ -33,6 +36,19 @@
             <div  *ngIf="_camera.getMode() !== 'free'">
                 <button class="sidebar-btn" (click)="_camera.setModeFree()" title="Camera: Free">
                     💠🎥
+                </button>
+            </div>
+            <div class="btn-gap">
+            </div>
+            <div>
+                <button class="sidebar-btn blue-btn" (click)="btnToggleAllChatPane()" title="All Chat">
+                    💬
+                    <span
+                        class="chat-notification-ct"
+                        *ngIf="_allchat.unreadCount && !_pane.allChatPaneVisible"
+                    >
+                        {{ _allchat.unreadCount }}
+                    </span>
                 </button>
             </div>
         </div>

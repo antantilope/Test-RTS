@@ -1,0 +1,21 @@
+
+<div id="draggable-container" ngDraggable>
+    <div id="title-bar">
+        <strong>All Chat</strong>
+        <button id="close-btn" (click)="_pane.allChatPaneVisible=false">
+            x
+        </button>
+    </div>
+    <div #paneBodyElement id="card-body">
+        <div
+            *ngFor="let m of _allchat.messages"
+            class="pubmsg-line"
+        >
+            <strong>{{ m.sender }}</strong>:
+            {{ m.message }}
+        </div>
+        <div id="text-input-container">
+            <input #textInputElement id="text-input" [(ngModel)]="msgInput" (keydown.enter)="enterKeyDown($event)">
+        </div>
+    </div>
+</div>

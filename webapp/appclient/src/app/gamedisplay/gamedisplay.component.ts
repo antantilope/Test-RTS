@@ -22,6 +22,7 @@ import {
   CAMERA_MODE_FREE,
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
+import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
 
 
@@ -75,6 +76,7 @@ export class GamedisplayComponent implements OnInit {
     private _formatting: FormattingService,
     public _user: UserService,
     public _pane: PaneService,
+    public _allchat: AllchatService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
@@ -1150,6 +1152,10 @@ export class GamedisplayComponent implements OnInit {
     setTimeout(()=>{
       location.reload()
     }, 1000)
+  }
+
+  async btnToggleAllChatPane(){
+    this._pane.allChatPaneVisible = !this._pane.allChatPaneVisible
   }
 
 }
