@@ -43,7 +43,7 @@ exports.adminRoomDeleteController = async (req, res) => {
     }
     const room_uuid = req.body.room_uuid;
     if(!room_uuid) {
-        return res.status(400).send("room_uuid is required data")
+        return res.status(400).json({msg:"room_uuid is required data"})
     }
     const db = await get_db_connection();
     let user;

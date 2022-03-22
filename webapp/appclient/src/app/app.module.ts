@@ -9,8 +9,6 @@ import { AngularDraggableModule } from 'angular2-draggable';
 import { AppComponent } from './app.component';
 import { TakeoverComponent } from './takeover/takeover.component';
 import { GamedisplayComponent } from './gamedisplay/gamedisplay.component';
-import { ScannerpaneComponent } from './scannerpane/scannerpane.component';
-
 
 
 @NgModule({
@@ -18,7 +16,6 @@ import { ScannerpaneComponent } from './scannerpane/scannerpane.component';
     AppComponent,
     TakeoverComponent,
     GamedisplayComponent,
-    ScannerpaneComponent
   ],
   imports: [
     BrowserModule,
