@@ -7,11 +7,16 @@ import { CameraService } from './camera.service';
 export class PaneService {
 
   public mouseInPane: boolean = false
-  public showChatPane: boolean = false
+  public allChatPaneVisible: boolean = false
 
   constructor(
     private _camera: CameraService,
   ) { }
 
-
+  public showChatPane() {
+    this.allChatPaneVisible = true
+  }
+  public hideChatPAne(){
+    this.allChatPaneVisible = false
+  }
 }

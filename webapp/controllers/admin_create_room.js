@@ -105,7 +105,7 @@ const addPlayerToGameServer = (port, playerName, playerId, teamId, roomUUID, map
 }
 
 
-exports.createRoomController = async (req, res) => {
+exports.adminCreateRoomController = async (req, res) => {
     if(!req.session.player_id) {
         return res.sendStatus(401);
     }

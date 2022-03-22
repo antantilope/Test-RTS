@@ -255,7 +255,7 @@
                     $("#create-new-room-btn").prop("disabled", true);
                     const data = { map_id, room_name, owner_is_observer }
                     $.post({
-                        url: "/api/rooms/create",
+                        url: "/api/admin/rooms/create",
                         contentType: "application/json",
                         data: JSON.stringify(data),
                         success: (data, status, xhr) => {
