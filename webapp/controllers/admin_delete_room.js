@@ -1,9 +1,9 @@
 
 const {
     EVENT_ROOM_LIST_UPDATE,
-    EVENT_LOBBY_UPDATE,
+    EVENT_SIGKILL,
 } = require("../lib/event_names");
-const { get_rooms_page_name } = require("../lib/room_names");
+const { get_rooms_page_name, get_room_room_name } = require("../lib/room_names");
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_user_details } = require("../lib/db/get_user_details");
 const { get_room } = require("../lib/db/get_rooms");
@@ -63,7 +63,7 @@ exports.adminRoomDeleteController = async (req, res) => {
     } catch (err) {
         throw err;
     } finally {
-        db.close()
+        db.close();
     }
 
     let msg = "ok";
@@ -78,14 +78,18 @@ exports.adminRoomDeleteController = async (req, res) => {
     }
 
     req.app.get('socketio')
-    .to(get_rooms_page_name())
-    .emit(
-        EVENT_ROOM_LIST_UPDATE,
-        {
-            uuid: room.uuid,
-            remove: true,
-        },
-    );
+        .to(get_rooms_page_name())
+        .emit(
+            EVENT_ROOM_LIST_UPDATE,
+            {
+                uuid: room.uuid,
+                remove: true,
+            },
+        );
+
+    req.app.get("socketio")
+        .to(get_room_room_name(room.uuid))
+        .emit(EVENT_SIGKILL, {});
 
     return res.status(200).json({msg})
 }

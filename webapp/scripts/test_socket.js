@@ -10,6 +10,12 @@ const net = require('net');
 
     const client = new net.Socket();
 
+    client.on("error", (err) => {
+        client.destroy();
+        console.error("test : could not connect to game server on port " + port);
+        console.error(JSON.stringify(err));
+    });
+
     client.connect(port, 'localhost', () => {
         console.log("connected!, sending ping...");
         client.write('{"ping":{}}\n');

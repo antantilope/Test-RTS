@@ -84,6 +84,11 @@ const runGameLoop = (room_id, port, app, io) => {
     // TODO: query command queue
     // TODO: research KeepAlive for TCP sockets.
     const client = new net.Socket();
+    client.on("error", (err) => {
+        logger.error("could not connect to game server on port " + port);
+        logger.error(JSON.stringify(err));
+        logger.error("game loop has died on the vine.");
+    })
     client.connect(port, 'localhost', () => {
         logger.info("connected to GameAPI on port " + port);
 
@@ -164,6 +169,11 @@ const runGameLoop = (room_id, port, app, io) => {
 const doCountdown = (room_id, port, app, io) => {
     const client = new net.Socket();
     logger.info('connecting to GameAPI on port ' + port)
+    client.on("error", (err) => {
+        client.destroy();
+        logger.error("do  countdown: could not connect to game server on port " + port);
+        logger.error(JSON.stringify(err));
+    });
     client.connect(port, 'localhost', () => {
         logger.info("connected to GameAPI");
         const dataToWrite = JSON.stringify({decr_phase_1_starting_countdown:{}}) + "\n";
@@ -286,6 +296,11 @@ exports.startGameController = startGameController = async (req, res) => {
     // Update GameAPI to advance phase to "starting"
     logger.info("Connecting to GameAPI port " + room.roomDetails.port);
     const client = new net.Socket();
+    client.on("error", (err) => {
+        client.destroy();
+        logger.error("advance to phase 1: could not connect to game server on port " + room.roomDetails.port);
+        logger.error(JSON.stringify(err));
+    });
     client.connect(room.roomDetails.port, 'localhost', () => {
         logger.info("connected to GameAPI");
         const dataToWrite = JSON.stringify({advance_to_phase_1_starting:{}}) + "\n";

@@ -21,6 +21,9 @@ export class ApiService {
   private EVENT_STARTCOUNTDOWN: string = "startcountdown"
   public startCountdownEvent: Subject<StartCountdownPayload> = new Subject()
 
+  private EVENT_SIGKILL: string = "sigkill"
+  public sigkillEvent: Subject<void> = new Subject()
+
   constructor(
     private _http: HttpClient,
   ) {
@@ -44,6 +47,12 @@ export class ApiService {
       this.startCountdownEvent.next(data)
     })
 
+    this.socket.on(this.EVENT_SIGKILL, ()=>{
+      this.sigkillEvent.next()
+      setTimeout(() => {
+        location.reload()
+      }, 1500);
+    })
   }
 
   public async get(url:string) {

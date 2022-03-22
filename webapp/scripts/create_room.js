@@ -10,6 +10,7 @@ const { killProcess,  spawnPythonSocketServer } = require("../lib/pyprocess");
 const {
     EVENT_PUBMSG
 } = require("../lib/event_names");
+const { logger } = require("../lib/logger")
 
 const create = async (db, room_uuid, team_uuid, port, pid, owner_uuid, room_name, max_players, owner_is_observer) => {
     /*
@@ -119,6 +120,11 @@ const create = async (db, room_uuid, team_uuid, port, pid, owner_uuid, room_name
         // TODO: use a less brittle method for waiting for the python process to spin up.
         console.log("Opening connection to game socket on port " + port)
         const client = new net.Socket();
+        client.on("error", (err) => {
+            client.destroy();
+            logger.error("add player (scheduled): could not connect to game server on port " + port);
+            logger.error(JSON.stringify(err));
+        });
         client.connect(port, 'localhost', () => {
             const dataToWrite = JSON.stringify({
                 add_player: {
@@ -141,6 +147,6 @@ const create = async (db, room_uuid, team_uuid, port, pid, owner_uuid, room_name
             }
             console.log(respData)
         });
-    }, 2000);
+    }, 1200);
 
 })();

@@ -69,7 +69,12 @@
                             $(row).append(port);
 
                             let pid = document.createElement("div");
-                            $(pid).text("pid: " + room.pid + " ok:" + room.pidLive);
+                            $(pid).text("pid: " + room.pid);
+                            if(room.pidLive) {
+                                $(pid).css({'color': '#009407', 'font-weight': 'bold'}) // green
+                            } else {
+                                $(pid).css({'color': '#c20000', 'font-weight': 'bold'}) // red
+                            }
                             $(row).append(pid);
 
                             let delbtn = document.createElement("button");

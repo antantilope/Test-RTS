@@ -123,6 +123,11 @@ exports.leaveRoomController = async (req, res) => {
         logger.info("writing data to GameAPI " + dataToWrite);
         client.write(dataToWrite);
     });
+    client.on("error", (err) => {
+        client.destroy();
+        logger.error("leave room: could not connect to game server on port " + roomDetails.port);
+        logger.error(JSON.stringify(err));
+    });
     client.on("data", data => {
         logger.info("received remove_player response from GameAPI, disconnecting...");
         client.destroy();
