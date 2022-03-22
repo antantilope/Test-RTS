@@ -65,6 +65,9 @@ exports.leaveRoomController = async (req, res) => {
     let playerDetails;
     try {
         roomDetails = await get_room(db, sess_room_id);
+        if(!roomDetails) {
+            return res.status(404).send("room not found");
+        }
         if(roomDetails.phase != PHASE_0_LOBBY){
             return res.status(400).send("Cannot leave room in phase " + roomDetails.phase)
         }

@@ -82,6 +82,10 @@
         <script>
             function createOrUpdateRoomRow(room) {
                 console.log("updating room list", room);
+                if(room.remove) {
+                    $(`#room-row-${room.uuid}`).slideUp();
+                    return;
+                }
                 const roomFull = room.player_count >= room.max_players;
                 const roomIsInLobbyPhase = room.phase === '0-lobby';
                 const rowElementId = `room-row-${room.uuid}`;

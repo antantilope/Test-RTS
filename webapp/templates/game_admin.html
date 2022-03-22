@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="/static/js/jquery.js"></script>
+        <style>
+            body {
+                font-family: arial;
+                margin: 2rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Game Admin</h1>
+        <hr>
+        <div id="room-PIDs">
+
+        </div>
+        <script>
+            $(document).ready(()=>{
+                // Start of CSRF Setup //
+                function csrfSafeMethod(method) {
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+                window.csrftoken = (function (cname) {
+                    let name = cname + "=";
+                    let decodedCookie = decodeURIComponent(document.cookie);
+                    let ca = decodedCookie.split(';');
+                    for(let i = 0; i <ca.length; i++) {
+                        let c = ca[i];
+                        while (c.charAt(0) == ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return "";
+                })("csrftoken");
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("csrf-token", window.csrftoken);
+                        }
+                    }
+                });
+                // End of CSRF Setup //
+                $.get({
+                    url: "/api/admin/rooms/list",
+                    success: (roomDetails) => {
+                        roomDetails.forEach(room => {
+                            let row = document.createElement("div");
+                            $(row).css({
+                                "display":"flex",
+                                "justify-content":"space-between",
+                                "border": "1px solid black",
+                                "padding": "3px",
+                                "margin-bottom":"2px",
+                            });
+
+                            let name = document.createElement("div");
+                            $(name).text("name: " + room.name);
+                            $(row).append(name);
+                            let phase = document.createElement("div");
+                            $(phase).text("phase: " + room.phase);
+                            $(row).append(phase);
+                            let port = document.createElement("div");
+                            $(port).text("port: " + room.port);
+                            $(row).append(port);
+
+                            let pid = document.createElement("div");
+                            $(pid).text("pid: " + room.pid + " ok:" + room.pidLive);
+                            $(row).append(pid);
+
+                            let delbtn = document.createElement("button");
+                            $(delbtn).text("🗑️");
+                            $(row).append(delbtn);
+                            $("#room-PIDs").append(row);
+                            $(delbtn).click(()=>{
+                                $(delbtn).prop("disabled", true);
+                                $.post({
+                                    url:"/api/admin/rooms/delete",
+                                    contentType: "application/json",
+                                    data: JSON.stringify({room_uuid: room.uuid}),
+                                    success: (data, status, xhr) => {
+                                        $(row).slideUp();
+                                    },
+                                    error:function(jqXHR, textStatus, errorThrown) {
+                                        alert("Error, status = " + textStatus + ", " +
+                                            "error thrown: " + errorThrown
+                                        );
+                                    }
+                                });
+                            });
+                        });
+                    },
+                });
+
+            })
+        </script>
+    </body>
+</html>
