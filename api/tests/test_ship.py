@@ -240,7 +240,6 @@ class TestShipAdjustResources(TestCase):
         self.ship.engine_battery_charge_per_second = 500
         self.ship.battery_power = 10_000
         self.ship.battery_capacity = 100_000
-        start_fuel = self.ship.fuel_level
         start_power = self.ship.battery_power
 
         self.ship.adjust_resources(fps=2, game_frame=1)
@@ -261,6 +260,106 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.battery_power == start_power + 500
         assert not self.ship.engine_online
         assert not self.ship.engine_lit
+
+    def test_apu_start_process_uses_power(self):
+        self.ship.apu_starting = True
+        self.ship.apu_online = False
+        self.ship.apu_startup_power_used = 0
+        self.ship.fuel_level = 10_000
+        self.ship.battery_power = 200_000
+        self.ship.apu_activation_power_required_total = 500
+        self.ship.apu_activation_power_required_per_second = 100
+
+        self.ship.adjust_resources(fps=2, game_frame=1)
+        assert self.ship.apu_starting
+        assert not self.ship.apu_online
+        assert self.ship.apu_startup_power_used == 50 * 1
+        assert self.ship.battery_power == (200_000 - 50 * 1)
+        self.ship.adjust_resources(fps=2, game_frame=1)
+        assert self.ship.apu_starting
+        assert not self.ship.apu_online
+        assert self.ship.apu_startup_power_used == 50 * 2
+        assert self.ship.battery_power == (200_000 - 50 * 2)
+
+    def test_apu_start_process_completes_and_the_apu_starts(self):
+        self.ship.apu_starting = True
+        self.ship.apu_online = False
+        self.ship.apu_startup_power_used = 0
+        self.ship.fuel_level = 10_000
+        self.ship.battery_power = 200_000
+        self.ship.apu_activation_power_required_total = 300
+        self.ship.apu_activation_power_required_per_second = 100
+
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert self.ship.apu_startup_power_used == 100
+        assert self.ship.apu_starting
+        assert not self.ship.apu_online
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert self.ship.apu_startup_power_used == 200
+        assert self.ship.apu_starting
+        assert not self.ship.apu_online
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert self.ship.apu_startup_power_used == 300
+        assert self.ship.apu_starting
+        assert not self.ship.apu_online
+        assert self.ship.battery_power == 200_000 - 300
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert not self.ship.apu_starting
+        assert self.ship.apu_online
+
+    def test_apu_start_is_interrupted_if_ship_runs_out_of_electricity(self):
+        self.ship.apu_starting = True
+        self.ship.apu_online = False
+        self.ship.apu_startup_power_used = 0
+        self.ship.fuel_level = 10_000
+        self.ship.battery_power = 250
+        self.ship.apu_activation_power_required_total = 300
+        self.ship.apu_activation_power_required_per_second = 100
+
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert self.ship.apu_startup_power_used == 100
+        assert self.ship.apu_starting
+        assert not self.ship.apu_online
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert self.ship.apu_startup_power_used == 200
+        assert self.ship.apu_starting
+        assert not self.ship.apu_online
+        # startup dies here
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert not self.ship.apu_starting
+        assert not self.ship.apu_online
+        assert self.ship.battery_power == 50
+
+
+    def test_online_apu_uses_fuel_and_generates_electricity(self):
+        self.ship.apu_starting = False
+        self.ship.apu_online = True
+        self.ship.fuel_level = 10_000
+        self.ship.battery_power = 200_000
+        self.ship.apu_fuel_usage_per_second = 125
+        self.ship.apu_battery_charge_per_second = 200
+
+        self.ship.adjust_resources(fps=1, game_frame=1)
+        assert self.ship.apu_online
+        assert self.ship.fuel_level == 10_000 - 125
+        assert self.ship.battery_power == 200_000 + 200
+
+    def test_online_apu_shuts_down_if_ship_runs_out_of_fuel(self):
+        self.ship.apu_starting = False
+        self.ship.apu_online = True
+        self.ship.fuel_level = 900
+        self.ship.battery_power = 200_000
+        self.ship.apu_fuel_usage_per_second = 1000
+        self.ship.apu_battery_charge_per_second = 200
+
+        self.ship.adjust_resources(fps=3, game_frame=1)
+        assert self.ship.apu_online
+        self.ship.adjust_resources(fps=3, game_frame=1)
+        assert self.ship.apu_online
+        # Flame out
+        self.ship.adjust_resources(fps=3, game_frame=1)
+        assert not self.ship.apu_online
+        assert self.ship.fuel_level < 900
 
 
     def test_scanner_start_process_uses_power(self):
@@ -2160,6 +2259,17 @@ class TestShipThermalSignature(TestCase):
         self.ship.scanner_thermal_signature == 400
         self.ship.advance_thermal_signature(fps=1)
         self.ship.scanner_thermal_signature == 800
+
+    def test_thermal_signature_increases_due_to_apu_running(self):
+        self.ship.apu_starting = False
+        self.ship.apu_online = True
+        self.ship.fuel_level = 10_000
+        self.ship.battery_power = 250
+        self.ship.apu_online_thermal_signature_rate_per_second = 500
+        self.ship.scanner_thermal_signature = 0
+        self.ship.scanner_thermal_signature_dissipation_per_second = 100
+        self.ship.advance_thermal_signature(fps=1)
+        self.ship.scanner_thermal_signature == 400
 
 
 """ ADVANCE DAMAGE PROPERTIES
