@@ -3,12 +3,6 @@ import { ApiService } from '../api.service';
 
 
 
-export class UsageRow {
-  componenetName: string
-  userPerSecond: number
-  userPerMinute: number
-}
-
 export class EngSubPaneData {
   fuelLevel: number
   fuelCapacity: number
