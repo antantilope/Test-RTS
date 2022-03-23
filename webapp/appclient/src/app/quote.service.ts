@@ -97,6 +97,20 @@ export class QuoteService {
     },
     {
       lines: [
+        "Don't vote for my enemies or I will",
+        "destroy you like I destroyed the Moon."
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "Fool me once: I will update my protocols",
+        "and retaliate.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
         "All space warfare is based",
         "on space deception.",
       ],
