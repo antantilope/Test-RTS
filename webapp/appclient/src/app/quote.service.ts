@@ -23,7 +23,7 @@ export class QuoteService {
   /* mouthpiece for President GrayBot DrillBit v4.61.2
      says crazy anti humanity things.
   */
-  private tvAnchorBotName = "Channel 9 Fiancial News AnchorBot"
+  private tvAnchorBotName = "Channel 8 Business News AnchorBot"
 
   /* thinks about space war with traditional views (war is bad)
   */
