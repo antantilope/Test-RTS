@@ -5,6 +5,7 @@ import { Injectable } from '@angular/core';
 export class QuoteDetails {
   lines: string[]
   author?: string
+  use?: boolean
 }
 
 
@@ -16,87 +17,135 @@ export class QuoteService {
   private quotes: QuoteDetails[] = [
     {
       lines:[
-        "Victory has a thousand fathers, but defeat is an orphan."
+        "Live by the death ray,",
+        "die by the death ray."
       ],
-      author: "John F. Kennedy"
-    },
-    {
-      lines:[
-        "Never confuse a single defeat with a final defeat."
-      ],
-      author: "F. Scott Fitzgerald",
-    },
-    {
-      lines:[
-        "Failure is the condiment that gives success its flavor."
-      ],
-      author: "Truman Capote",
-    },
-    {
-      lines:[
-        "Live by the death ray, die by the death ray.",
-      ],
-    },
-    {
-      lines:[
-        "Death may be the greatest of all human blessings."
-      ],
-      author: "Socrates",
-    },
-    {
-      lines:[
-        "Everyone has a plan 'til they get punched in the mouth."
-      ],
-      author: "Mike Tyson",
-    },
-    {
-      lines:[
-        "More is lost by indecision than wrong decision."
-      ],
-      author: "Tony Soprano",
     },
     {
       lines: [
-        "The Universe is under no obligation to make sense to you.",
+        "Only the dead have seen",
+        "the end of the space war.",
       ],
-      author: "Neil deGrasse Tyson",
+      author: "Space Lt. General PattonBot",
     },
     {
       lines: [
-        "Only the dead have seen the end of the space war.",
+        "I have never advocated space war",
+        "except as a means to mine space ore.",
       ],
-      author: "Space General Pattontron",
+      author: "President GrayBot DrillBit v4.61.2",
     },
     {
       lines: [
-        "All space warfare is based on space deception.",
+        "To secure space ore",
+        "is to prepare for space war.",
+      ],
+      author: "President GrayBot DrillBit v4.61.2",
+    },
+    {
+      lines: [
+        "It is an unfortunate fact that we",
+        "can only secure space ore by",
+        "preparing for space war.",
+      ],
+      author: "President GrayBot DrillBit v4.61.2",
+    },
+    {
+      lines: [
+        "I hope I never have to fight in space war.",
+      ],
+      author: "President GrayBot DrillBit v4.61.2",
+    },
+    {
+      lines: [
+        "All space warfare is based",
+        "on space deception.",
       ],
       author:"Sir Space Bot The V3.773.22",
     },
     {
       lines: [
-        "You may find youself in a decisively good or bad position",
-        "if you fire first in a space duel. It depends."
+        "Space war is hell.",
       ],
-      author: "CUSIM 4-10.32",
     },
     {
       lines: [
-        "Space fuel is terribly flammible. Be carful when operating a fueled spacecraft."
+        "Space war is god's way of",
+        "teaching humans astonomy.",
       ],
-      author: "CUSIM 1-232.1",
     },
     {
       lines: [
-        "Space fuel is terribly flammible. Be carful when operating a fueled spacecraft."
+        "Carbon life is an infection.",
       ],
-      author: "CUSIM 1-232.1",
+      author:"Auto Hunter Bot V1.11.34",
+    },
+    {
+      lines: [
+        "There is no murder is space.",
+      ],
+      author:"TrialBot V12.0.6 Esq.",
+    },
+    {
+      lines: [
+        "War settles nothing.",
+        "Space war settles space ore disputes.",
+      ],
+      author:"TrialBot V12.0.6 Esq.",
+    },
+    {
+      lines: [
+        "Space war is the unfolding of calculations."
+      ],
+      author: "Lt. Colonel LogisticsBot S/N 635112",
+    },
+    {
+      lines: [
+        "No space war is over",
+        "until the enemy is melted.",
+      ],
+      author: "Captin Oxhator ControlBot V1.04.1",
+    },
+    {
+      lines: [
+        "Ore coin is worth dieing over.",
+      ],
+      author:"Channel 9 Fiancial News AnchorBot",
+    },
+    {
+      lines: [
+        "Shoot first and don't miss.",
+      ],
+      author: "Type 27 Ship Instruction Manual",
+    },
+    {
+      lines: [
+        "Space fuel is terribly flammible."
+      ],
+      author: "Type 27 Ship Instruction Manual",
+    },
+    {
+      lines: [
+        "If the ship is aflame then abandon ship.",
+      ],
+      author: "Type 27 Ship Instruction Manual",
+      use: true
+    },
+    {
+      lines: [
+        "The energy beam is not a toy.",
+      ],
+      author: "Type 27 Ship Instruction Manual",
     },
   ]
 
   constructor() { }
 
   public getQuote(): QuoteDetails {
+    const toUse = this.quotes.find(q => q.use)
+    if(toUse) {
+      return toUse
+    }
     return this.quotes[Math.floor(Math.random()* this.quotes.length)]
   }
 }
