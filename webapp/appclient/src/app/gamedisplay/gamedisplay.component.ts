@@ -637,20 +637,21 @@ export class GamedisplayComponent implements OnInit {
     lrcYOffset -= lrcYInterval
     // Red alerts
     lrcYInterval = 30
-    this.ctx.font = 'bold 24px courier new'
-    this.ctx.fillStyle = 'rgb(222, 2, 2, 0.8)'
-    if(this._api.frameData.ship.fuel_level < 1200) {
+    this.ctx.font = 'bold 22px courier new'
+    const redalertColorAlpha = this._api.frameData.game_frame % 70 > 35 ? "1" : "0.65"
+    this.ctx.fillStyle = `rgb(255, 2, 2, ${redalertColorAlpha})`
+    if(1|| this._api.frameData.ship.fuel_level < 1200) {
       this.ctx.beginPath()
       this.ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
-    if(this._api.frameData.ship.battery_power < 45000) {
+    if(1 || this._api.frameData.ship.battery_power < 45000) {
       this.ctx.beginPath()
       this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
 
-    // Front and alerts
+    // Front center and alerts
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       this.ctx.beginPath()
       this.ctx.font = 'bold 40px courier new'
@@ -664,7 +665,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = '#ff0000'
       this.ctx.textAlign = 'center'
       this.ctx.fillText("GAME OVER", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 3)
-      this.ctx.fillText("You died in space 🪦", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
     // Resources (TOP LEFT)
     const tlcYInterval = 34
@@ -832,7 +832,7 @@ export class GamedisplayComponent implements OnInit {
         this._camera.canvasWidth - 3,
         gryroscopeY + gryroscopeRadius + 18,
       )
-      // Thermal Signature Test
+      // Thermal Signature Text
       this.ctx.fillText(
         this._api.frameData.ship.scanner_thermal_signature + " IR ",
         this._camera.canvasWidth - 3,

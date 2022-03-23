@@ -19,14 +19,14 @@
 #title-bar {
     display: flex;
     justify-content: space-between;
-    background-color: #2c0023;
+    background-color: #660080;
     color: #ffffff;
     padding:3px;
 }
 
 #close-btn {
     color: #ffffff;
-    background-color: #13000f;
+    background-color: #30003b;
     font-weight: bold;
     border-radius:50%;
     cursor: pointer;
