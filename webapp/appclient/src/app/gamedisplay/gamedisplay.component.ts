@@ -640,12 +640,12 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.font = 'bold 22px courier new'
     const redalertColorAlpha = this._api.frameData.game_frame % 70 > 35 ? "1" : "0.65"
     this.ctx.fillStyle = `rgb(255, 2, 2, ${redalertColorAlpha})`
-    if(1|| this._api.frameData.ship.fuel_level < 1200) {
+    if(this._api.frameData.ship.fuel_level < 1200) {
       this.ctx.beginPath()
       this.ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
-    if(1 || this._api.frameData.ship.battery_power < 45000) {
+    if(this._api.frameData.ship.battery_power < 45000) {
       this.ctx.beginPath()
       this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
@@ -1147,4 +1147,9 @@ export class GamedisplayComponent implements OnInit {
   btnToggleMainMenuPane() {
     this._pane.toggleMainMenuPane()
   }
+
+  async btnToggleShipPane(){
+    this._pane.toggleShipPane()
+  }
+
 }

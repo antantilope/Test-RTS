@@ -1,1 +1,39 @@
-<p>shippane works!</p>
+
+<div
+    id="draggable-container"
+    (mousedown)="select();"
+    #paneElement
+    ngDraggable
+    ngResizable
+>
+    <div id="title-bar">
+        <strong>Ship Menu</strong>
+        <button id="close-btn" (click)="_pane.toggleShipPane()">
+            x
+        </button>
+    </div>
+    <div #paneBodyElement id="card-body">
+        <div id="subpane-selector">
+            <button
+                [disabled]="selectedSubPane==subPaneNameEngineering"
+                (click)="selectEngineeringSubPane()"
+                class="subpane-selector-btn"
+            >
+                Engineering
+            </button>
+            <button
+                [disabled]="selectedSubPane==subPaneNameUpgrades"
+                (click)="selectUpgradesSubPane()"
+                class="subpane-selector-btn"
+            >
+                Upgrades
+            </button>
+        </div>
+        <div id="sub-pane-container">
+            <app-engpane *ngIf="selectedSubPane==subPaneNameEngineering">
+            </app-engpane>
+            <app-upgradepane *ngIf="selectedSubPane==subPaneNameUpgrades">
+            </app-upgradepane>
+        </div>
+    </div>
+</div>

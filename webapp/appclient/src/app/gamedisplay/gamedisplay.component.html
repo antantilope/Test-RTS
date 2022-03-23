@@ -6,6 +6,9 @@
 <app-mainmenu *ngIf="_pane.mainMenuPaneVisible">
 </app-mainmenu>
 
+<app-shippane *ngIf="_pane.shipPaneVisible">
+</app-shippane>
+
 <!-- end of DRAGGABLE PANES -->
 
 <div id="outer-game-display-container">
@@ -37,7 +40,7 @@
             <div class="btn-gap">
             </div>
             <div>
-                <button class="sidebar-btn blue-btn" title="Ship Menu">
+                <button class="sidebar-btn blue-btn" (click)="btnToggleShipPane()" title="Ship Menu">
                     🚀
                 </button>
             </div>
