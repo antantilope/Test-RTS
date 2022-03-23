@@ -34,7 +34,6 @@ export class AllchatComponent implements OnInit {
 
   ngOnInit(): void {
     console.log("allchat componenent::ngOnInit()")
-    this.select()
     this.newAllchatAddedSubscription = this._allchat.newAllchatAdded.subscribe(()=>{
       setTimeout(()=>{
         this.scrollPaneToBottom()

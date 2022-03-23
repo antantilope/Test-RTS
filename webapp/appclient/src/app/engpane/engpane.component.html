@@ -1,0 +1,52 @@
+<div *ngIf="data === null">
+    <h2><i>OFFLINE</i></h2>
+</div>
+<div *ngIf="data !== null">
+    <div>
+        <div class="section-heading">
+            <strong>Fuel</strong>
+        </div>
+        <div>
+            {{ data.fuelLevel }} / {{ data.fuelCapacity }}
+        </div>
+        <div id="progress-container">
+            <progress value="{{ data.fuelLevel }}" max="{{ data.fuelCapacity }}">
+            </progress>
+        </div>
+        <div *ngIf="data.fuelUsagePerSecond !== null">
+            <div>
+                <span class="usage-label">Use/Sec</span>
+                {{ data.fuelUsagePerSecond }}
+            </div>
+            <div>
+                <span class="usage-label">Use/Min</span>
+                {{ data.fuelUsagePerMinute }}
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div>
+        <div class="section-heading">
+            <strong>Battery</strong>
+        </div>
+        <div>
+            {{ data.batteryPower }} / {{ data.batteryCapacity }}
+        </div>
+        <div id="progress-container">
+            <progress value="{{ data.batteryPower }}" max="{{ data.batteryCapacity }}">
+            </progress>
+        </div>
+        <div *ngIf="data.batteryUsagePerSecond !== null">
+            <div>
+                <span class="usage-label">Use/Sec</span>
+                {{ data.batteryUsagePerSecond }}
+            </div>
+            <div>
+                <span class="usage-label">Use/Min</span>
+                {{ data.batteryUsagePerMinute }}
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>
+

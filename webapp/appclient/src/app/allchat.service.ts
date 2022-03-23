@@ -12,7 +12,7 @@ import { PaneService } from './pane.service';
 })
 export class AllchatService {
 
-  private maxMessages = 25;
+  private maxMessages = 75;
   private maxNotificationCount = 9
   public unreadCount = 0;
   public messages: AllChatMessage[] = []

@@ -15,6 +15,7 @@ import { TimerItem } from '../models/timer-item.model'
 import { ApiService } from "../api.service"
 import { UserService } from "../user.service"
 import { PaneService } from '../pane.service'
+import { QuoteService, QuoteDetails } from '../quote.service'
 import {
   CameraService,
   CAMERA_MODE_SHIP,
@@ -24,6 +25,7 @@ import {
 import { FormattingService } from '../formatting.service'
 import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
+
 
 
 const randomInt = function (min: number, max: number): number  {
@@ -68,6 +70,8 @@ export class GamedisplayComponent implements OnInit {
 
   private drawableObjects: DrawableCanvasItems | null = null
 
+  private deathQuote: QuoteDetails | null = null;
+
   constructor(
     public _api: ApiService,
     public _camera: CameraService,
@@ -75,12 +79,14 @@ export class GamedisplayComponent implements OnInit {
     public _user: UserService,
     public _pane: PaneService,
     public _allchat: AllchatService,
+    private _quote: QuoteService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
 
   ngOnInit(): void {
     console.log("GamedisplayComponent::ngOnInit")
+    this.deathQuote = this._quote.getQuote()
   }
 
   ngAfterViewInit() {
@@ -637,8 +643,9 @@ export class GamedisplayComponent implements OnInit {
     lrcYOffset -= lrcYInterval
     // Red alerts
     lrcYInterval = 30
-    this.ctx.font = 'bold 24px courier new'
-    this.ctx.fillStyle = 'rgb(222, 2, 2, 0.8)'
+    this.ctx.font = 'bold 22px courier new'
+    const redalertColorAlpha = this._api.frameData.game_frame % 70 > 35 ? "1" : "0.65"
+    this.ctx.fillStyle = `rgb(255, 2, 2, ${redalertColorAlpha})`
     if(this._api.frameData.ship.fuel_level < 1200) {
       this.ctx.beginPath()
       this.ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
@@ -650,21 +657,39 @@ export class GamedisplayComponent implements OnInit {
       lrcYOffset -= lrcYInterval
     }
 
-    // Front and alerts
+    // Front center and alerts
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       this.ctx.beginPath()
-      this.ctx.font = 'bold 40px courier new'
+      this.ctx.font = 'bold 65px courier new'
       this.ctx.fillStyle = '#ffffff'
       this.ctx.textAlign = 'center'
       this.ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
     else if(!this._api.frameData.ship.alive) {
       this.ctx.beginPath()
-      this.ctx.font = 'bold 40px courier new'
+      this.ctx.font = 'bold 56px courier new'
       this.ctx.fillStyle = '#ff0000'
       this.ctx.textAlign = 'center'
-      this.ctx.fillText("GAME OVER", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 3)
-      this.ctx.fillText("You died in space 🪦", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
+      let deathTextYOffset = this._camera.canvasHalfHeight / 3
+      const deathQuoteOffset = 50
+      if(this._api.frameData.game_frame % 50 > 25) {
+        this.ctx.fillText("GAME OVER", this._camera.canvasHalfWidth, deathTextYOffset)
+      }
+      deathTextYOffset += (deathQuoteOffset * 2)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = '#9e9e9e'
+      this.ctx.textAlign = 'left'
+      this.ctx.font = 'bold 40px Verdana'
+      for(let i in this.deathQuote.lines) {
+        const prefix = parseInt(i) === 0 ? '"' : ""
+        this.ctx.fillText(prefix + this.deathQuote.lines[i], 100, deathTextYOffset)
+        deathTextYOffset += deathQuoteOffset
+      }
+      this.ctx.font = 'bold 32px Verdana'
+      deathTextYOffset += deathQuoteOffset * 0.5
+      this.ctx.beginPath()
+      this.ctx.fillText("- " + (this.deathQuote.author || "Unknown"), 100, deathTextYOffset)
+
     }
     // Resources (TOP LEFT)
     const tlcYInterval = 34
@@ -832,7 +857,7 @@ export class GamedisplayComponent implements OnInit {
         this._camera.canvasWidth - 3,
         gryroscopeY + gryroscopeRadius + 18,
       )
-      // Thermal Signature Test
+      // Thermal Signature Text
       this.ctx.fillText(
         this._api.frameData.ship.scanner_thermal_signature + " IR ",
         this._camera.canvasWidth - 3,
@@ -1147,4 +1172,9 @@ export class GamedisplayComponent implements OnInit {
   btnToggleMainMenuPane() {
     this._pane.toggleMainMenuPane()
   }
+
+  async btnToggleShipPane(){
+    this._pane.toggleShipPane()
+  }
+
 }

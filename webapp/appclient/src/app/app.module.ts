@@ -11,6 +11,9 @@ import { TakeoverComponent } from './takeover/takeover.component';
 import { GamedisplayComponent } from './gamedisplay/gamedisplay.component';
 import { AllchatComponent } from './allchat/allchat.component';
 import { MainmenuComponent } from './mainmenu/mainmenu.component';
+import { ShippaneComponent } from './shippane/shippane.component';
+import { EngpaneComponent } from './engpane/engpane.component';
+import { UpgradepaneComponent } from './upgradepane/upgradepane.component';
 
 
 @NgModule({
@@ -20,6 +23,9 @@ import { MainmenuComponent } from './mainmenu/mainmenu.component';
     GamedisplayComponent,
     AllchatComponent,
     MainmenuComponent,
+    ShippaneComponent,
+    EngpaneComponent,
+    UpgradepaneComponent,
   ],
   imports: [
     BrowserModule,

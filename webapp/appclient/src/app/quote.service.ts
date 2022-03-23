@@ -5,6 +5,7 @@ import { Injectable } from '@angular/core';
 export class QuoteDetails {
   lines: string[]
   author?: string
+  use?: boolean
 }
 
 
@@ -13,90 +14,198 @@ export class QuoteDetails {
 })
 export class QuoteService {
 
+
+  /* Very interested in mining space ore and business.
+    Very interested in his own well being and politics
+  */
+  private presidentName = "President GrayBot DrillBit v4.61.2"
+
+  /* mouthpiece for President GrayBot DrillBit v4.61.2
+     says crazy anti humanity things.
+  */
+  private tvAnchorBotName = "Channel 8 Business News AnchorBot"
+
+  /* thinks about space war with traditional views (war is bad)
+  */
+  private generalName = "Space Lt. General PattonBot"
+
+  /* thinks about space war like a feudal lord. Thinks it's art.
+  */
+  private knightedName = "Sir Space Bot The V3.773.22"
+
+  /* Cold hearted, math loving robot
+  */
+  private mathLovingBotName = "Lt. Colonel LogisticsBot S/N 635112"
+
+  /* has very robotic/scientific hatred for humans.
+  */
+  private humanHatingBotName = "Auto Hunter Bot V1.11.34"
+
+  /* lawyer, letter of the law.
+  */
+  private legalBotName = "TrialBot V12.0.6 Esq."
+
+  /* Top-gun type robot
+  */
+  private topGunBotName = "Captin Oxhator ControlBot V1.04.1"
+
+  /* provides very cold and unhelpful advice.
+  */
+  private instructionManualName = "Type 27/28 Ship Instruction Manual"
+
   private quotes: QuoteDetails[] = [
     {
       lines:[
-        "Victory has a thousand fathers, but defeat is an orphan."
+        "Live by the death ray,",
+        "die by the death ray."
       ],
-      author: "John F. Kennedy"
-    },
-    {
-      lines:[
-        "Never confuse a single defeat with a final defeat."
-      ],
-      author: "F. Scott Fitzgerald",
-    },
-    {
-      lines:[
-        "Failure is the condiment that gives success its flavor."
-      ],
-      author: "Truman Capote",
-    },
-    {
-      lines:[
-        "Live by the death ray, die by the death ray.",
-      ],
-    },
-    {
-      lines:[
-        "Death may be the greatest of all human blessings."
-      ],
-      author: "Socrates",
-    },
-    {
-      lines:[
-        "Everyone has a plan 'til they get punched in the mouth."
-      ],
-      author: "Mike Tyson",
-    },
-    {
-      lines:[
-        "More is lost by indecision than wrong decision."
-      ],
-      author: "Tony Soprano",
     },
     {
       lines: [
-        "The Universe is under no obligation to make sense to you.",
+        "Only the dead have seen",
+        "the end of the space war.",
       ],
-      author: "Neil deGrasse Tyson",
+      author: this.generalName,
     },
     {
       lines: [
-        "Only the dead have seen the end of the space war.",
+        "I have never advocated space war",
+        "except as a means to mine space ore.",
       ],
-      author: "Space General Pattontron",
+      author: this.presidentName,
     },
     {
       lines: [
-        "All space warfare is based on space deception.",
+        "To secure space ore",
+        "is to prepare for space war.",
       ],
-      author:"Sir Space Bot The V3.773.22",
+      author: this.presidentName,
     },
     {
       lines: [
-        "You may find youself in a decisively good or bad position",
-        "if you fire first in a space duel. It depends."
+        "It is an unfortunate fact that we",
+        "can only secure space ore by",
+        "preparing for space war.",
       ],
-      author: "CUSIM 4-10.32",
+      author: this.presidentName,
     },
     {
       lines: [
-        "Space fuel is terribly flammible. Be carful when operating a fueled spacecraft."
+        "I hope I never have to fight in space war.",
       ],
-      author: "CUSIM 1-232.1",
+      author: this.presidentName,
     },
     {
       lines: [
-        "Space fuel is terribly flammible. Be carful when operating a fueled spacecraft."
+        "Don't vote for my enemies or I will",
+        "destroy you like I destroyed the Moon."
       ],
-      author: "CUSIM 1-232.1",
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "Fool me once: I will update my subroutines",
+        "and retaliate.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "All space warfare is based",
+        "on space deception.",
+      ],
+      author: this.knightedName,
+    },
+    {
+      lines: [
+        "Space war is hell.",
+      ],
+      author: this.generalName,
+    },
+    {
+      lines: [
+        "Space war is god's way of",
+        "teaching humans astonomy.",
+      ],
+    },
+    {
+      lines: [
+        "Carbon life is an infection.",
+      ],
+      author: this.humanHatingBotName,
+    },
+    {
+      lines: [
+        "There is no murder in space.",
+      ],
+      author: this.legalBotName,
+    },
+    {
+      lines: [
+        "War settles nothing.",
+        "Space war settles space ore disputes.",
+      ],
+      author: this.legalBotName,
+    },
+    {
+      lines: [
+        "Earth's legal jurisdiction ends",
+        "at an altitude of 2 million meters.",
+      ],
+      author: this.legalBotName,
+    },
+    {
+      lines: [
+        "Space war is the unfolding of calculations."
+      ],
+      author: this.mathLovingBotName,
+    },
+    {
+      lines: [
+        "No space war is over",
+        "until the enemy is melted.",
+      ],
+      author: this.topGunBotName,
+    },
+    {
+      lines: [
+        "Ore coin is worth dieing over.",
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        "Shoot first and don't miss.",
+      ],
+      author: this.instructionManualName,
+    },
+    {
+      lines: [
+        "Space fuel is terribly flammible."
+      ],
+      author: this.instructionManualName,
+    },
+    {
+      lines: [
+        "If the ship is aflame then abandon ship.",
+      ],
+      author: this.instructionManualName,
+    },
+    {
+      lines: [
+        "The energy beam is not a toy.",
+      ],
+      author: this.instructionManualName,
     },
   ]
 
   constructor() { }
 
   public getQuote(): QuoteDetails {
+    const toUse = this.quotes.find(q => q.use)
+    if(toUse) {
+      return toUse
+    }
     return this.quotes[Math.floor(Math.random()* this.quotes.length)]
   }
 }
