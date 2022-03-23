@@ -17,6 +17,7 @@ export class TakeoverService {
 
   private startCountdownEventSubscription: Subscription
   private frameDataEventSubscription: Subscription
+  private sigkillEventSubscription: Subscription
 
   constructor(
     private _api: ApiService,
@@ -41,12 +42,18 @@ export class TakeoverService {
       this.takeoverMessage = this.defaultMessage
     })
 
+    this.sigkillEventSubscription = this._api.sigkillEvent.subscribe(()=>{
+      this.showTakeover = true
+      this.takeoverMessage = "Server has closed this room. Redirecting...."
+    })
+
   }
 
   ngOnDestroy() {
     console.log("TakeoverService::ngOnDestroy")
     this.startCountdownEventSubscription.unsubscribe()
     this.frameDataEventSubscription.unsubscribe()
+    this.sigkillEventSubscription.unsubscribe()
   }
 
 }

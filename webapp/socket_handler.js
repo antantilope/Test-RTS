@@ -76,11 +76,13 @@ exports.handleSocketConnection = async (io, socket) => {
                 db.close();
             }
 
-            const outmsg = `${userDetails.handle} 💬 ${message}`;
-            logger.silly("emitting event " + EVENT_PUBMSG + " with message " + outmsg);
+            logger.silly("emitting event " + EVENT_PUBMSG + " with message " + `${userDetails.handle} ${message}`);
             io.to(get_room_room_name(sess_room_id)).emit(
                 EVENT_PUBMSG,
-                outmsg,
+                {
+                    sender: userDetails.handle,
+                    message,
+                },
             );
         });
     }

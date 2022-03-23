@@ -43,6 +43,12 @@ exports.pingServerController = async (req, res) => {
     const port = room.port;
     logger.info("Connecting to GameAPI port " + port);
     const client = new net.Socket();
+    client.on("error", (err) => {
+        client.destroy();
+        logger.error("PING controller could not connect to game server on port " + port);
+        logger.error(JSON.stringify(err));
+        return res.status(502).json(err);
+    });
     client.connect(port, 'localhost', () => {
         logger.info("connected to GameAPI");
         const dataToWrite = JSON.stringify({ping:{}}) + "\n";

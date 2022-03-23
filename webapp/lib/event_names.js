@@ -5,3 +5,4 @@ exports.EVENT_PUBMSG = "pubmsg";
 exports.EVENT_MAPCONFIG = "mapconfig";
 exports.EVENT_STARTGAME = "startcountdown";
 exports.EVENT_FRAMEDATA = "framedata";
+exports.EVENT_SIGKILL = 'sigkill'

@@ -22,7 +22,9 @@ const { joinRoomController } = require("./controllers/join_room");
 const { leaveRoomController } = require("./controllers/leave_room");
 const { roomDetailsController } = require("./controllers/room_details");
 const { getMapsController } = require("./controllers/get_maps");
-const { createRoomController } = require("./controllers/create_room");
+const { adminCreateRoomController } = require("./controllers/admin_create_room");
+const { adminRoomListController } = require("./controllers/admin_room_list");
+const { adminRoomDeleteController } = require("./controllers/admin_delete_room");
 const {
     startGameController,
     relaunchGameLoops,
@@ -186,6 +188,31 @@ expressApp.get('/logout', (req, res) => {
     return res.redirect('/');
 });
 
+/* Admin
+*/
+expressApp.get("/admin", async (req, res) => {
+    if(!req.session.player_id){
+        return res.sendStatus(401);
+    }
+    const db = await get_db_connection();
+    let user;
+    try {
+        user = await get_user_details(db, req.session.player_id)
+    } catch (err) {
+        throw err;
+    } finally {
+        db.close()
+    }
+    if(!user || !user.is_superuser) {
+        return res.sendStatus(403);
+    }
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    return res.sendFile(path.join(__dirname, 'templates/game_admin.html'));
+})
+expressApp.get("/api/admin/rooms/list", setJSONContentType, adminRoomListController)
+expressApp.post("/api/admin/rooms/delete", setJSONContentType, adminRoomDeleteController)
+expressApp.post('/api/admin/rooms/create', setJSONContentType, adminCreateRoomController);
+
 
 /* Game Rooms
 */
@@ -205,7 +232,7 @@ expressApp.get('/api/rooms/details', setJSONContentType, roomDetailsController);
 expressApp.post('/api/rooms/start', setJSONContentType, startGameController);
 expressApp.post('/api/rooms/command', setJSONContentType, RunCommandController);
 expressApp.get('/api/maps/list', setJSONContentType, getMapsController);
-expressApp.post('/api/rooms/create', setJSONContentType, createRoomController);
+
 
 // Launch the HTTP Server
 httpServer.listen(locals.port, () => {

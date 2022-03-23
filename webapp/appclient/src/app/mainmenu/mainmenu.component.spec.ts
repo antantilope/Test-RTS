@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ScannerpaneComponent } from './scannerpane.component';
+import { MainmenuComponent } from './mainmenu.component';
 
-describe('ScannerpaneComponent', () => {
-  let component: ScannerpaneComponent;
-  let fixture: ComponentFixture<ScannerpaneComponent>;
+describe('MainmenuComponent', () => {
+  let component: MainmenuComponent;
+  let fixture: ComponentFixture<MainmenuComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ScannerpaneComponent ]
+      declarations: [ MainmenuComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ScannerpaneComponent);
+    fixture = TestBed.createComponent(MainmenuComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

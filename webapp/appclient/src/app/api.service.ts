@@ -5,6 +5,7 @@ import { io } from 'socket.io-client'
 import { Subject } from 'rxjs'
 
 import { StartCountdownPayload } from './models/startcountdown-payload.model'
+import { AllChatMessage } from './models/allchat-message.model';
 
 
 @Injectable({
@@ -20,6 +21,12 @@ export class ApiService {
 
   private EVENT_STARTCOUNTDOWN: string = "startcountdown"
   public startCountdownEvent: Subject<StartCountdownPayload> = new Subject()
+
+  private EVENT_SIGKILL: string = "sigkill"
+  public sigkillEvent: Subject<void> = new Subject()
+
+  private EVENT_PUBMSG = "pubmsg"
+  public pubmsgEvent: Subject<AllChatMessage> = new Subject()
 
   constructor(
     private _http: HttpClient,
@@ -44,6 +51,20 @@ export class ApiService {
       this.startCountdownEvent.next(data)
     })
 
+    this.socket.on(this.EVENT_SIGKILL, ()=>{
+      this.sigkillEvent.next()
+      setTimeout(() => {
+        location.reload()
+      }, 1500);
+    })
+
+    this.socket.on(this.EVENT_PUBMSG, (message: AllChatMessage)=>{
+      this.pubmsgEvent.next(message);
+    })
+  }
+
+  public async sendPublicMessage(msg: string) {
+    this.socket.emit(this.EVENT_PUBMSG, msg)
   }
 
   public async get(url:string) {

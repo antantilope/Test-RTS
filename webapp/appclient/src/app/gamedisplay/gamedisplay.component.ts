@@ -6,7 +6,6 @@ import {
   ElementRef,
   HostListener,
 } from '@angular/core'
-import { Subscription } from 'rxjs'
 
 import {
   DrawableCanvasItems,
@@ -23,6 +22,7 @@ import {
   CAMERA_MODE_FREE,
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
+import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
 
 
@@ -41,9 +41,7 @@ export class GamedisplayComponent implements OnInit {
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
-
-  public showConfirmExit = false
-  public waitingToExit = false
+  @ViewChild("sidebarElement") sidebarElement: ElementRef
 
   public scannerTargetIDCursor: string | null = null
 
@@ -76,6 +74,7 @@ export class GamedisplayComponent implements OnInit {
     private _formatting: FormattingService,
     public _user: UserService,
     public _pane: PaneService,
+    public _allchat: AllchatService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
@@ -109,7 +108,7 @@ export class GamedisplayComponent implements OnInit {
   private registerMouseEventListener(): void {
     // Zoom camera
     window.addEventListener('wheel', event => {
-      if (this._pane.mouseInPane) {
+      if(this._pane.mouseInPane()) {
         return
       }
       if (this._camera.canManualZoom()) {
@@ -127,7 +126,13 @@ export class GamedisplayComponent implements OnInit {
       const canvasHeight = this.canvas.nativeElement.height
       const eventXPos = event.clientX
       const eventYPos = event.clientY
-      if (eventYPos < 0 || eventYPos > canvasHeight || eventXPos < 0 || eventXPos > canvasWidth) {
+      if (
+        eventYPos < 0
+        || eventYPos > canvasHeight
+        || eventXPos < 0
+        || eventXPos > canvasWidth
+        || eventXPos < this.sidebarElement.nativeElement.offsetWidth
+      ) {
         this.mouseClickDownInCanvas = false
         this.mouseInCanvas = false
         this.mousePanLastX = null
@@ -141,14 +146,13 @@ export class GamedisplayComponent implements OnInit {
       }
     })
     window.addEventListener('mouseup', (event) => {
-      if(!this.mouseMovedWhileDown && this.mouseInCanvas) {
+      if(!this.mouseMovedWhileDown && this.mouseInCanvas && !this._pane.mouseInPane()) {
         this.handleMouseClickInCanvas(event)
       }
       this.mouseClickDownInCanvas = false
       this.mouseMovedWhileDown = false
       this.mousePanLastX = null
       this.mousePanLastY = null
-
     })
     window.addEventListener('mousemove', event => {
       this.mouseMovedWhileDown = true
@@ -174,9 +178,6 @@ export class GamedisplayComponent implements OnInit {
   public handleMouseClickInCanvas(event: any): void {
     console.log("handleMouseClickInCanvas")
     if(this._api.frameData === null) {
-      return
-    }
-    if (this._pane.mouseInPane) {
       return
     }
     const mouseCanvasX = event.clientX - this.canvas.nativeElement.offsetLeft
@@ -1139,18 +1140,11 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  async btnClickLeaveMatch() {
-    if(this.waitingToExit) {
-      return
-    }
-    this.waitingToExit = true
-    const resp = await this._api.post(
-      "/api/rooms/command",
-      {command:'leave_game'},
-    )
-    setTimeout(()=>{
-      location.reload()
-    }, 1000)
+  async btnToggleAllChatPane(){
+    this._pane.toggleAllChatPane()
   }
 
+  btnToggleMainMenuPane() {
+    this._pane.toggleMainMenuPane()
+  }
 }

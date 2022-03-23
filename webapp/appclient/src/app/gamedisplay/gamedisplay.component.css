@@ -66,6 +66,10 @@
     background-color: #f582ff;
 }
 
+.blue-btn {
+    background-color: #747dff;
+}
+
 .yellow-btn {
     background-color: #ffef60;
 }
@@ -113,4 +117,13 @@
 .gd-ctrl-btn-orange:disabled {
     background-color: #331700;
     color:rgb(73, 73, 73);
+}
+
+.chat-notification-ct {
+    color: #ffffff;
+    background-color: #7c4600;
+    font-weight: bold;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-radius: 3px;
 }

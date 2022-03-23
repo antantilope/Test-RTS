@@ -49,6 +49,11 @@ const setGameMapData = async (port, mapDetails) => {
     });
     console.log("writing data to GameServer " + dataToWrite);
     const client = new net.Socket();
+    client.on("error", (err) => {
+        client.destroy();
+        logger.error("set map: could not connect to game server on port " + port);
+        logger.error(JSON.stringify(err));
+    });
     client.connect(port, 'localhost', () => {
         client.write(dataToWrite + "\n");
     });
@@ -68,6 +73,11 @@ const setGameMapData = async (port, mapDetails) => {
 
 const addPlayerToGameServer = (port, playerName, playerId, teamId, roomUUID, mapDetails) => {
     const client = new net.Socket();
+    client.on("error", (err) => {
+        client.destroy();
+        logger.error("add player: could not connect to game server on port " + port);
+        logger.error(JSON.stringify(err));
+    });
     client.connect(port, 'localhost', () => {
         const dataToWrite = JSON.stringify({
             add_player: {
@@ -95,7 +105,7 @@ const addPlayerToGameServer = (port, playerName, playerId, teamId, roomUUID, map
 }
 
 
-exports.createRoomController = async (req, res) => {
+exports.adminCreateRoomController = async (req, res) => {
     if(!req.session.player_id) {
         return res.sendStatus(401);
     }

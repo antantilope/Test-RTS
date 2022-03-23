@@ -1,0 +1,22 @@
+
+<div
+    id="draggable-container"
+    (mousedown)="select();"
+    #paneElement
+    ngDraggable
+    ngResizable
+>
+    <div id="title-bar">
+        <strong>Main Menu</strong>
+        <button id="close-btn" (click)="_pane.toggleMainMenuPane()">
+            x
+        </button>
+    </div>
+    <div #paneBodyElement id="pane-body">
+        <div>
+            <button id="exit-btn" [disabled]="waitingToExit" (click)="btnClickLeaveMatch()">
+                {{ exitBtnText }}
+            </button>
+        </div>
+    </div>
+</div>

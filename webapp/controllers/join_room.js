@@ -131,6 +131,10 @@ exports.joinRoomController = async (req, res) => {
 
             logger.info("Connecting to GameAPI port " + port);
             const client = new net.Socket();
+            client.on("error", (err)=>{
+                logger.error("could not connect to game server to register player");
+                logger.error(JSON.stringify(err));
+            });
             client.connect(port, 'localhost', () => {
                 logger.info("connected to GameAPI");
                 const dataToWrite = JSON.stringify({
@@ -171,8 +175,8 @@ exports.joinRoomController = async (req, res) => {
         } else {
             logger.error("unexpected database response");
             logger.error(JSON.stringify(resp));
-            return res.status(500).send(
-                "Unable to save all changes."
+            return res.status(500).json(
+                {error: "Unable to save all changes."}
             );
         }
     }

@@ -65,6 +65,9 @@ exports.leaveRoomController = async (req, res) => {
     let playerDetails;
     try {
         roomDetails = await get_room(db, sess_room_id);
+        if(!roomDetails) {
+            return res.status(404).send("room not found");
+        }
         if(roomDetails.phase != PHASE_0_LOBBY){
             return res.status(400).send("Cannot leave room in phase " + roomDetails.phase)
         }
@@ -119,6 +122,11 @@ exports.leaveRoomController = async (req, res) => {
         const dataToWrite = JSON.stringify({remove_player:playerDetails.uuid}) + "\n";
         logger.info("writing data to GameAPI " + dataToWrite);
         client.write(dataToWrite);
+    });
+    client.on("error", (err) => {
+        client.destroy();
+        logger.error("leave room: could not connect to game server on port " + roomDetails.port);
+        logger.error(JSON.stringify(err));
     });
     client.on("data", data => {
         logger.info("received remove_player response from GameAPI, disconnecting...");

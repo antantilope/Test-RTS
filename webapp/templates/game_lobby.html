@@ -179,6 +179,10 @@
                                 else {
                                     alert("Cannot start game yet. Need at least 2 players and the map must be configured.");
                                 }
+                            },
+                            error: (exhr, estatus, eerror) => {
+                                console.error({exhr, estatus, eerror});
+                                addToChat("An error occured: " + exhr.responseJSON.code, 15000);
                             }
                         });
                     });
@@ -202,6 +206,10 @@
                                         12000,
                                     );
                                 }
+                            },
+                            error: (exhr, estatus, eerror) => {
+                                console.error({exhr, estatus, eerror});
+                                addToChat("An error occured: " + exhr.responseJSON.code, 15000);
                             }
                         });
                     })
@@ -339,6 +347,12 @@
                 socket.on("connect", () => {
                     console.log("Socket Connected...");
                 });
+                socket.on("sigkill", ()=>{
+                    addToChat("🤖📢 Server has closed this room. Redirecting....")
+                    setTimeout(()=>{
+                        location.reload();
+                    }, 750)
+                });
                 socket.on("room_lobby_update", (data, msg) => {
                     console.log({room_lobby_update: data});
                     drawLobby(
@@ -351,7 +365,7 @@
                 });
                 socket.on("pubmsg", msg => {
                     console.log({pubmsg: msg});
-                    addToChat(msg);
+                    addToChat(`${msg.sender} 💬 ${msg.message}`);
                 });
                 socket.on("mapconfig", (data) => {
                     addToChat("🤖📢 the map has updated: " + `${data.x_km} x ${data.y_km} KM`);
