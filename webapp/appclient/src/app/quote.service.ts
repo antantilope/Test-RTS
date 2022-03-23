@@ -129,7 +129,6 @@ export class QuoteService {
         "If the ship is aflame then abandon ship.",
       ],
       author: "Type 27 Ship Instruction Manual",
-      use: true
     },
     {
       lines: [
