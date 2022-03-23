@@ -29,7 +29,7 @@ export class QuoteService {
   */
   private generalName = "Space Lt. General PattonBot"
 
-  /* thinks about space war like a feudal lord. Thinks it's art.
+  /* A space feudal lord. Thinks war is art. Similar Sun Tsu.
   */
   private knightedName = "Sir Space Bot The V3.773.22"
 
@@ -38,6 +38,7 @@ export class QuoteService {
   private mathLovingBotName = "Lt. Colonel LogisticsBot S/N 635112"
 
   /* has very robotic/scientific hatred for humans.
+    Basically a MassEffect reaper.
   */
   private humanHatingBotName = "Auto Hunter Bot V1.11.34"
 
@@ -47,7 +48,7 @@ export class QuoteService {
 
   /* Top-gun type robot
   */
-  private topGunBotName = "Captin Oxhator ControlBot V1.04.1"
+  private topGunBotName = "Captin Oxhator AutoPilot V1.04.1"
 
   /* provides very cold and unhelpful advice.
   */
@@ -62,13 +63,6 @@ export class QuoteService {
     },
     {
       lines: [
-        "Only the dead have seen",
-        "the end of the space war.",
-      ],
-      author: this.generalName,
-    },
-    {
-      lines: [
         "I have never advocated space war",
         "except as a means to mine space ore.",
       ],
@@ -78,6 +72,13 @@ export class QuoteService {
       lines: [
         "To secure space ore",
         "is to prepare for space war.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "We have always been at space war",
+        "with Eastasia.",
       ],
       author: this.presidentName,
     },
@@ -111,6 +112,19 @@ export class QuoteService {
     },
     {
       lines: [
+        "Only the dead have seen",
+        "the end of the space war.",
+      ],
+      author: this.generalName,
+    },
+    {
+      lines: [
+        "Space war is hell.",
+      ],
+      author: this.generalName,
+    },
+    {
+      lines: [
         "All space warfare is based",
         "on space deception.",
       ],
@@ -118,9 +132,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "Space war is hell.",
+        "Quickness is the essence of space war.",
       ],
-      author: this.generalName,
+      author: this.knightedName,
     },
     {
       lines: [
@@ -131,6 +145,13 @@ export class QuoteService {
     {
       lines: [
         "Carbon life is an infection.",
+      ],
+      author: this.humanHatingBotName,
+    },
+    {
+      lines: [
+        "Humans cannot survive in space,",
+        "raize their star systems and they are defeated.",
       ],
       author: this.humanHatingBotName,
     },
@@ -162,6 +183,21 @@ export class QuoteService {
     },
     {
       lines: [
+        "Do not worry about your difficulties in",
+        "mathematics. I can assure you my abilities",
+        "top all of humanity's combined.",
+      ],
+      author: this.mathLovingBotName,
+    },
+    {
+      lines: [
+        "The power of mathematics is often to change",
+        "one thing into another, to change planets into dust.",
+      ],
+      author: this.mathLovingBotName,
+    },
+    {
+      lines: [
         "No space war is over",
         "until the enemy is melted.",
       ],
@@ -169,7 +205,39 @@ export class QuoteService {
     },
     {
       lines: [
+        "Any problem in space can be solved with",
+        "the liberal application of high frequency",
+        "electromagnetic radiation.",
+      ],
+      author: this.topGunBotName,
+    },
+    {
+      lines: [
         "Ore coin is worth dieing over.",
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        `Vote for ${this.presidentName}.`,
+        "That was a command. You must vote",
+        `for ${this.presidentName}.`,
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        "The most important elements of life",
+        "are ore, ore-coin, and ore futures.",
+        "Everything else is folly.",
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        `${this.presidentName} is a`,
+        "terrific leader who supports many",
+        "useful ore policies."
       ],
       author: this.tvAnchorBotName,
     },
@@ -194,6 +262,14 @@ export class QuoteService {
     {
       lines: [
         "The energy beam is not a toy.",
+      ],
+      author: this.instructionManualName,
+    },
+    {
+      lines: [
+        "Do not panic if your ship is struck",
+        "by an energy beam. Your brain has already",
+        "melted and therefore cannot panic.",
       ],
       author: this.instructionManualName,
     },
