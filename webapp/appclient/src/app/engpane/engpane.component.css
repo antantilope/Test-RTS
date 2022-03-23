@@ -1,8 +1,16 @@
 
+div {
+    font-family: 'Courier New', Courier, monospace;
+}
 .section-heading {
     margin: 6px;
 }
 
 #progress-container {
     margin-bottom: 12px;
+}
+
+.usage-label {
+    color: #ff0000;
+    font-weight: bold;
 }
