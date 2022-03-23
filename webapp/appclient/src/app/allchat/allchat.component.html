@@ -4,6 +4,7 @@
     (mousedown)="select();"
     #paneElement
     ngDraggable
+    ngResizable
 >
     <div id="title-bar">
         <strong>All Chat</strong>
@@ -20,7 +21,12 @@
             {{ m.message }}
         </div>
         <div id="text-input-container">
-            <input #textInputElement id="text-input" [(ngModel)]="msgInput" (keydown.enter)="enterKeyDown($event)">
+            <input
+                #textInputElement id="text-input"
+                [(ngModel)]="msgInput"
+                (keydown.enter)="enterKeyDown($event)"
+                autocomplete="off"
+            >
         </div>
     </div>
 </div>

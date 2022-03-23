@@ -1,6 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { PaneService } from '../pane.service';
 import { Subscription } from 'rxjs'
+import { ApiService } from '../api.service';
 
 
 @Component({
@@ -11,12 +12,15 @@ import { Subscription } from 'rxjs'
 export class MainmenuComponent implements OnInit {
 
   private paneName: string;
+  public exitBtnText = "Leave Game"
+  public waitingToExit = false
 
   @ViewChild("paneElement") paneElement: ElementRef
   zIndexesUpdatedSubscription: Subscription
 
   constructor(
-    public _pane: PaneService
+    public _pane: PaneService,
+    private _api: ApiService,
   ) {
     this.paneName = this._pane.PANE_MAIN_MENU
   }
@@ -50,6 +54,20 @@ export class MainmenuComponent implements OnInit {
 
   select() {
     this._pane.addToTopOfZIndexes(this.paneName)
+  }
+
+  async btnClickLeaveMatch() {
+    if(this.waitingToExit) {
+      return
+    }
+    this.waitingToExit = true
+    const resp = await this._api.post(
+      "/api/rooms/command",
+      {command:'leave_game'},
+    )
+    setTimeout(()=>{
+      location.reload()
+    }, 1000)
   }
 
 }

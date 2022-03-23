@@ -41,8 +41,7 @@ export class GamedisplayComponent implements OnInit {
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
-
-  public waitingToExit = false
+  @ViewChild("sidebarElement") sidebarElement: ElementRef
 
   public scannerTargetIDCursor: string | null = null
 
@@ -129,7 +128,13 @@ export class GamedisplayComponent implements OnInit {
       const canvasHeight = this.canvas.nativeElement.height
       const eventXPos = event.clientX
       const eventYPos = event.clientY
-      if (eventYPos < 0 || eventYPos > canvasHeight || eventXPos < 0 || eventXPos > canvasWidth) {
+      if (
+        eventYPos < 0
+        || eventYPos > canvasHeight
+        || eventXPos < 0
+        || eventXPos > canvasWidth
+        || eventXPos < this.sidebarElement.nativeElement.offsetWidth
+      ) {
         console.log("canvas mouse leave (saved)")
         this.mouseClickDownInCanvas = false
         this.mouseInCanvas = false
@@ -1137,20 +1142,6 @@ export class GamedisplayComponent implements OnInit {
       )
     }
   }
-
-  // async btnClickLeaveMatch() {
-  //   if(this.waitingToExit) {
-  //     return
-  //   }
-  //   this.waitingToExit = true
-  //   const resp = await this._api.post(
-  //     "/api/rooms/command",
-  //     {command:'leave_game'},
-  //   )
-  //   setTimeout(()=>{
-  //     location.reload()
-  //   }, 1000)
-  // }
 
   async btnToggleAllChatPane(){
     this._pane.toggleAllChatPane()

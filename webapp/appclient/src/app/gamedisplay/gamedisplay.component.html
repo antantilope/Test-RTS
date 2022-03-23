@@ -11,7 +11,7 @@
 <div id="outer-game-display-container">
 
     <div id="sidebar-canvas-container" class="game-display-container">
-        <div id="sidebar-container" class="game-display-container">
+        <div #sidebarElement id="sidebar-container" class="game-display-container">
             <div>
                 <button (click)="btnToggleMainMenuPane()" class="sidebar-btn purple-btn" style="padding-top:3px" title="Menu">
                     ⚙️
@@ -32,6 +32,13 @@
             <div  *ngIf="_camera.getMode() !== 'free'">
                 <button class="sidebar-btn" (click)="_camera.setModeFree()" title="Camera: Free">
                     💠🎥
+                </button>
+            </div>
+            <div class="btn-gap">
+            </div>
+            <div>
+                <button class="sidebar-btn blue-btn" title="Ship Menu">
+                    🚀
                 </button>
             </div>
             <div class="btn-gap">

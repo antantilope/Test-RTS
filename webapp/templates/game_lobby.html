@@ -365,7 +365,7 @@
                 });
                 socket.on("pubmsg", msg => {
                     console.log({pubmsg: msg});
-                    addToChat(msg);
+                    addToChat(`${msg.sender} 💬 ${msg.message}`);
                 });
                 socket.on("mapconfig", (data) => {
                     addToChat("🤖📢 the map has updated: " + `${data.x_km} x ${data.y_km} KM`);

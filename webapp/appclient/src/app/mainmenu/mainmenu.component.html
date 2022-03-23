@@ -4,6 +4,7 @@
     (mousedown)="select();"
     #paneElement
     ngDraggable
+    ngResizable
 >
     <div id="title-bar">
         <strong>Main Menu</strong>
@@ -12,6 +13,10 @@
         </button>
     </div>
     <div #paneBodyElement id="pane-body">
-        <h2>Main Menu</h2>
+        <div>
+            <button id="exit-btn" [disabled]="waitingToExit" (click)="btnClickLeaveMatch()">
+                {{ exitBtnText }}
+            </button>
+        </div>
     </div>
 </div>

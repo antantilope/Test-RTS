@@ -1,14 +1,19 @@
 
 #draggable-container {
     position: absolute;
+    top: 50px; left: 150px;
     display: flex;
     flex-direction: column;
-    width: 50%;
-    height: 50%;
+    width: 300px;
+    height: 250px;
     background-color: #b5ccff;
     cursor: grab;
     overflow-y: clip;
-    border-radius: 5px;
+    border-radius: 8px;
+    max-width:500px;
+    min-width: 100px;
+    max-height: 500px;
+    min-height:100px;
 }
 
 #title-bar {
@@ -21,8 +26,10 @@
 
 #close-btn {
     color: #ffffff;
-    background-color: #ff0000;
+    background-color: rgb(4, 0, 22);
     font-weight: bold;
+    border-radius:50%;
+    cursor: pointer;
 }
 
 #card-body {
