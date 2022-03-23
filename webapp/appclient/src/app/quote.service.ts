@@ -14,6 +14,45 @@ export class QuoteDetails {
 })
 export class QuoteService {
 
+
+  /* Very interested in mining space ore and business.
+    Very interested in his own well being and politics
+  */
+  private presidentName = "President GrayBot DrillBit v4.61.2"
+
+  /* mouthpiece for President GrayBot DrillBit v4.61.2
+     says crazy anti humanity things.
+  */
+  private tvAnchorBotName = "Channel 9 Fiancial News AnchorBot"
+
+  /* thinks about space war with traditional views (war is bad)
+  */
+  private generalName = "Space Lt. General PattonBot"
+
+  /* thinks about space war like a feudal lord. Thinks it's art.
+  */
+  private knightedName = "Sir Space Bot The V3.773.22"
+
+  /* Cold hearted, math loving robot
+  */
+  private mathLovingBotName = "Lt. Colonel LogisticsBot S/N 635112"
+
+  /* has very robotic/scientific hatred for humans.
+  */
+  private humanHatingBotName = "Auto Hunter Bot V1.11.34"
+
+  /* lawyer, letter of the law.
+  */
+  private legalBotName = "TrialBot V12.0.6 Esq."
+
+  /* Top-gun type robot
+  */
+  private topGunBotName = "Captin Oxhator ControlBot V1.04.1"
+
+  /* provides very cold and unhelpful advice.
+  */
+ private instructionManualName = "Type 27/28 Ship Instruction Manual"
+
   private quotes: QuoteDetails[] = [
     {
       lines:[
@@ -26,21 +65,21 @@ export class QuoteService {
         "Only the dead have seen",
         "the end of the space war.",
       ],
-      author: "Space Lt. General PattonBot",
+      author: this.generalName,
     },
     {
       lines: [
         "I have never advocated space war",
         "except as a means to mine space ore.",
       ],
-      author: "President GrayBot DrillBit v4.61.2",
+      author: this.presidentName,
     },
     {
       lines: [
         "To secure space ore",
         "is to prepare for space war.",
       ],
-      author: "President GrayBot DrillBit v4.61.2",
+      author: this.presidentName,
     },
     {
       lines: [
@@ -48,20 +87,20 @@ export class QuoteService {
         "can only secure space ore by",
         "preparing for space war.",
       ],
-      author: "President GrayBot DrillBit v4.61.2",
+      author: this.presidentName,
     },
     {
       lines: [
         "I hope I never have to fight in space war.",
       ],
-      author: "President GrayBot DrillBit v4.61.2",
+      author: this.presidentName,
     },
     {
       lines: [
         "All space warfare is based",
         "on space deception.",
       ],
-      author:"Sir Space Bot The V3.773.22",
+      author: this.knightedName,
     },
     {
       lines: [
@@ -78,63 +117,70 @@ export class QuoteService {
       lines: [
         "Carbon life is an infection.",
       ],
-      author:"Auto Hunter Bot V1.11.34",
+      author: this.humanHatingBotName,
     },
     {
       lines: [
         "There is no murder is space.",
       ],
-      author:"TrialBot V12.0.6 Esq.",
+      author: this.legalBotName,
     },
     {
       lines: [
         "War settles nothing.",
         "Space war settles space ore disputes.",
       ],
-      author:"TrialBot V12.0.6 Esq.",
+      author: this.legalBotName,
+    },
+    {
+      lines: [
+        "Earth's legal jurisdiction ends",
+        "at an altitude of 2 million meters.",
+      ],
+      author: this.legalBotName,
     },
     {
       lines: [
         "Space war is the unfolding of calculations."
       ],
-      author: "Lt. Colonel LogisticsBot S/N 635112",
+      author: this.mathLovingBotName,
     },
     {
       lines: [
         "No space war is over",
         "until the enemy is melted.",
       ],
-      author: "Captin Oxhator ControlBot V1.04.1",
+      author: this.topGunBotName,
     },
     {
       lines: [
         "Ore coin is worth dieing over.",
       ],
-      author:"Channel 9 Fiancial News AnchorBot",
+      author: this.tvAnchorBotName,
     },
     {
       lines: [
         "Shoot first and don't miss.",
       ],
-      author: "Type 27 Ship Instruction Manual",
+      author: this.instructionManualName,
     },
     {
       lines: [
         "Space fuel is terribly flammible."
       ],
-      author: "Type 27 Ship Instruction Manual",
+      author: this.instructionManualName,
     },
     {
       lines: [
         "If the ship is aflame then abandon ship.",
       ],
-      author: "Type 27 Ship Instruction Manual",
+      author: this.instructionManualName,
     },
     {
       lines: [
         "The energy beam is not a toy.",
       ],
-      author: "Type 27 Ship Instruction Manual",
+      author: this.instructionManualName,
     },
   ]
 
