@@ -136,7 +136,7 @@ export class QuoteService {
     },
     {
       lines: [
-        "There is no murder is space.",
+        "There is no murder in space.",
       ],
       author: this.legalBotName,
     },
