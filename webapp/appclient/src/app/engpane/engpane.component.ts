@@ -43,7 +43,6 @@ export class EngpaneComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    console.log("EngPane::ngOnDestroy")
     // Flip this flag so refreshData callbacks stop.
     this.destroyed = true
   }

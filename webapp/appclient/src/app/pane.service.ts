@@ -81,12 +81,10 @@ export class PaneService {
     if(this._mouseInPane.indexOf(paneName) === -1) {
       this._mouseInPane.push(paneName)
     }
-    console.log(this._mouseInPane)
   }
 
   registerMouseLeavingPane(paneName: string) {
     this._mouseInPane = this._mouseInPane.filter(pn => pn !== paneName)
-    console.log(this._mouseInPane)
   }
 
 }
