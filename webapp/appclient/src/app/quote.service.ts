@@ -104,7 +104,7 @@ export class QuoteService {
     },
     {
       lines: [
-        "Fool me once: I will update my protocols",
+        "Fool me once: I will update my subroutines",
         "and retaliate.",
       ],
       author: this.presidentName,
