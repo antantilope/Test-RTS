@@ -120,6 +120,7 @@ export class QuoteService {
       lines: [
         "Space war is hell.",
       ],
+      author: this.generalName,
     },
     {
       lines: [
