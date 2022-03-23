@@ -51,7 +51,7 @@ export class QuoteService {
 
   /* provides very cold and unhelpful advice.
   */
- private instructionManualName = "Type 27/28 Ship Instruction Manual"
+  private instructionManualName = "Type 27/28 Ship Instruction Manual"
 
   private quotes: QuoteDetails[] = [
     {
