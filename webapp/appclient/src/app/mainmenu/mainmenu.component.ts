@@ -68,6 +68,7 @@ export class MainmenuComponent implements OnInit {
     setTimeout(()=>{
       location.reload()
     }, 1000)
+    this.exitBtnText = "redirecting..."
   }
 
 }
