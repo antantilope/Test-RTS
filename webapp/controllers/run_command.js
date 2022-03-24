@@ -76,6 +76,18 @@ const commandHandlers = {
             ship_command: 'unlight_engine',
         });
     },
+    activate_apu: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'activate_apu',
+        });
+    },
+    deactivate_apu: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'deactivate_apu',
+        });
+    },
     activate_scanner: (req, queueName) => {
         req.app.get(queueName).push({
             player_id: req.session.player_id,

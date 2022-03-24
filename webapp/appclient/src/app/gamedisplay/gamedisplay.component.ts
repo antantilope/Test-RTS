@@ -72,6 +72,10 @@ export class GamedisplayComponent implements OnInit {
 
   private deathQuote: QuoteDetails | null = null;
 
+  private actionTileImgEngineLit: any = new Image()
+  private actionTileImgEngineOnline: any = new Image()
+  private actionTileImgScannerOnline: any = new Image()
+
   constructor(
     public _api: ApiService,
     public _camera: CameraService,
@@ -87,6 +91,10 @@ export class GamedisplayComponent implements OnInit {
   ngOnInit(): void {
     console.log("GamedisplayComponent::ngOnInit")
     this.deathQuote = this._quote.getQuote()
+
+    this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
+    this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
+    this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
   }
 
   ngAfterViewInit() {
@@ -656,6 +664,33 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
       lrcYOffset -= lrcYInterval
     }
+    if (this._api.frameData.ship.engine_lit) {
+      this.ctx.drawImage(
+        this.actionTileImgEngineLit,
+        lrcXOffset,
+        lrcYOffset - 100,
+        100, 100,
+      )
+      lrcYOffset -= 120
+    }
+    else if (this._api.frameData.ship.engine_online) {
+      this.ctx.drawImage(
+        this.actionTileImgEngineOnline,
+        lrcXOffset,
+        lrcYOffset - 100,
+        100, 100,
+      )
+      lrcYOffset -= 120
+    }
+    if(this._api.frameData.ship.scanner_online) {
+      this.ctx.drawImage(
+        this.actionTileImgScannerOnline,
+        lrcXOffset,
+        lrcYOffset - 100,
+        100, 100,
+      )
+      lrcYOffset -= 120
+    }
 
     // Front center and alerts
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
@@ -1000,6 +1035,20 @@ export class GamedisplayComponent implements OnInit {
     await this._api.post(
       "/api/rooms/command",
       {command:'unlight_engine'},
+    )
+  }
+
+  public async btnActivateAPU() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'activate_apu'},
+    )
+  }
+
+  public async btnDeactivateAPU() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'deactivate_apu'},
     )
   }
 

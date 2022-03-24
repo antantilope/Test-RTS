@@ -65,13 +65,13 @@ export class EngpaneComponent implements OnInit {
         } else {
           const timediff = (new Date().valueOf()) - this.lastUpdate
           this.lastUpdate = new Date().valueOf()
-          const fuelDiff = Math.min(0, this.data.fuelLevel - previousData.fuelLevel)
-          const batteryDiff =  Math.min(0, this.data.batteryPower - previousData.batteryPower)
-          if(fuelDiff < 0) {
+          const fuelDiff = this.data.fuelLevel - previousData.fuelLevel
+          const batteryDiff = this.data.batteryPower - previousData.batteryPower
+          if(fuelDiff != 0) {
             this.data.fuelUsagePerSecond = Math.round(fuelDiff * 1000 / timediff)
             this.data.fuelUsagePerMinute = Math.round(fuelDiff * 1000 * 60 / timediff)
           }
-          if(batteryDiff < 0) {
+          if(batteryDiff != 0) {
             this.data.batteryUsagePerSecond = Math.round(batteryDiff * 1000 / timediff)
             this.data.batteryUsagePerMinute = Math.round(batteryDiff * 1000 * 60 / timediff)
           }

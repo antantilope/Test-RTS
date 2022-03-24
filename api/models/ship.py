@@ -32,6 +32,9 @@ class ShipCommands:
     UNLIGHT_ENGINE = 'unlight_engine'
     BOOST_ENGINE = 'boost_engine'
 
+    ACTIVATE_APU = 'activate_apu'
+    DEACTIVATE_APU = 'deactivate_apu'
+
     ACTIVATE_SCANNER = 'activate_scanner'
     DEACTIVATE_SCANNER = 'deactivate_scanner'
     SET_SCANNER_MODE_RADAR = 'set_scanner_mode_radar'
@@ -182,6 +185,17 @@ class Ship(BaseModel):
         self.engine_fuel_usage_per_second = None
         self.engine_battery_charge_per_second = None
         self.engine_lit_thermal_signature_rate_per_second = None
+
+        # APU
+        self.apu_starting = False
+        self.apu_startup_power_used = None
+        self.apu_online = False
+        self.apu_seconds_to_activate = None
+        self.apu_activation_power_required_total = None
+        self.apu_activation_power_required_per_second = None
+        self.apu_online_thermal_signature_rate_per_second = None
+        self.apu_fuel_usage_per_second = None
+        self.apu_battery_charge_per_second = None
 
         # Scanner
         self.scanner_designator = None # A unique "human readable" identifier used to identify this ship on other ships' scanners
@@ -384,6 +398,9 @@ class Ship(BaseModel):
             'engine_boosted': self.engine_boosted,
             'engine_boosted_last_frame': self.engine_boosted_last_frame,
 
+            'apu_starting': self.apu_starting,
+            'apu_online': self.apu_online,
+
             'scanner_online': self.scanner_online,
             'scanner_locking': self.scanner_locking,
             'scanner_locked': self.scanner_locked,
@@ -479,6 +496,13 @@ class Ship(BaseModel):
         instance.engine_lit_thermal_signature_rate_per_second = constants.ENGINE_LIT_THERMAL_SIGNATURE_RATE_PER_SECOND
         instance.engine_boost_multiple = constants.ENGINE_BOOST_MULTIPLE
 
+        instance.apu_seconds_to_activate = constants.APU_SECONDS_TO_START
+        instance.apu_activation_power_required_total = constants.ACTIVATE_APU_POWER_REQUIREMENT_TOTAL
+        instance.apu_activation_power_required_per_second = constants.ACTIVATE_APU_POWER_REQUIREMENT_PER_SECOND
+        instance.apu_online_thermal_signature_rate_per_second = constants.APU_ONLINE_THERMAL_SIGNATURE_RATE_PER_SECOND
+        instance.apu_battery_charge_per_second = constants.APU_BATTERY_CHARGE_PER_SECOND
+        instance.apu_fuel_usage_per_second = constants.ENGINE_FUEL_USAGE_PER_SECOND
+
         instance.scanner_mode = ShipScannerMode.RADAR
         instance.scanner_radar_range = constants.SCANNER_MODE_RADAR_RANGE_M
         instance.scanner_ir_range = constants.SCANNER_MODE_IR_RANGE_M
@@ -537,6 +561,13 @@ class Ship(BaseModel):
                 'name': 'E-Beam Charge',
                 'percent': round(
                     self.ebeam_charge / self.ebeam_charge_capacity * 100
+                ),
+            }
+        if self.apu_starting:
+            yield {
+                'name': 'APU Startup',
+                'percent': round(
+                    self.apu_startup_power_used / self.apu_activation_power_required_total * 100
                 ),
             }
 
@@ -746,6 +777,43 @@ class Ship(BaseModel):
                     self.engine_boosted = True
                     self.engine_boosted_last_frame = game_frame
 
+        # Auxiliary Power Unit
+        if self.apu_starting:
+            apu_startup_complete = self.apu_startup_power_used >= self.apu_activation_power_required_total
+            if apu_startup_complete:
+                self.apu_starting = False
+                self.apu_online = True
+            else:
+                # FIXME: this can potentially draw slightly too much power on startup.
+                adj = max(
+                    round(self.apu_activation_power_required_per_second / fps),
+                    1,
+                )
+                try:
+                    self.use_battery_power(adj)
+                except InsufficientPowerError:
+                    self.apu_starting = False
+                else:
+                    self.apu_startup_power_used += adj
+
+        elif self.apu_online:
+            try:
+                self.use_fuel(
+                    max(
+                        round(self.apu_fuel_usage_per_second / fps),
+                        1,
+                    )
+                )
+            except InsufficientFuelError:
+                self.apu_online = False
+            else:
+                self.charge_battery(
+                    max(
+                        round(self.apu_battery_charge_per_second / fps),
+                        1,
+                    )
+                )
+
 
     def calculate_physics(self, fps: int) -> None:
         if self.engine_lit:
@@ -845,6 +913,8 @@ class Ship(BaseModel):
             delta += ((multiple * self.engine_lit_thermal_signature_rate_per_second) / fps)
         if self.ebeam_charging:
             delta += self.ebeam_charge_thermal_signature_rate_per_second / fps
+        if self.apu_online:
+            delta += self.apu_online_thermal_signature_rate_per_second / fps
         self.scanner_thermal_signature = max(
             0,
             round(self.scanner_thermal_signature + delta)
@@ -917,6 +987,11 @@ class Ship(BaseModel):
             self.cmd_boost_engine()
         elif command == ShipCommands.UNLIGHT_ENGINE:
             self.cmd_unlight_engine()
+
+        elif command == ShipCommands.ACTIVATE_APU:
+            self.cmd_activate_apu()
+        elif command == ShipCommands.DEACTIVATE_APU:
+            self.cmd_deactivate_apu()
 
         elif command == ShipCommands.ACTIVATE_SCANNER:
             self.cmd_activate_scanner()
@@ -1108,3 +1183,12 @@ class Ship(BaseModel):
             if self.autopilot_program == AutoPilotPrograms.POSITION_HOLD:
                 self.engine_lit = False
             self.autopilot_program = None
+
+    def cmd_activate_apu(self):
+        if not self.apu_online and not self.apu_starting:
+            self.apu_starting = True
+            self.apu_startup_power_used = 0
+
+    def cmd_deactivate_apu(self):
+        if self.apu_online:
+            self.apu_online = False
