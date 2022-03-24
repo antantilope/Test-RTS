@@ -15,11 +15,13 @@
         </div>
         <div *ngIf="data.fuelUsagePerSecond !== null">
             <div>
-                <span class="usage-label">Use/Sec</span>
+                <span *ngIf="data.fuelUsagePerSecond < 0" class="usage-label">Use/Sec</span>
+                <span *ngIf="data.fuelUsagePerSecond > 0" class="supply-label">Inc/Sec</span>
                 {{ data.fuelUsagePerSecond }}
             </div>
             <div>
-                <span class="usage-label">Use/Min</span>
+                <span *ngIf="data.fuelUsagePerSecond < 0" class="usage-label">Use/Sec</span>
+                <span *ngIf="data.fuelUsagePerSecond > 0" class="supply-label">Inc/Sec</span>
                 {{ data.fuelUsagePerMinute }}
             </div>
         </div>
@@ -38,11 +40,13 @@
         </div>
         <div *ngIf="data.batteryUsagePerSecond !== null">
             <div>
-                <span class="usage-label">Use/Sec</span>
+                <span *ngIf="data.batteryUsagePerSecond < 0" class="usage-label">Use/Sec</span>
+                <span *ngIf="data.batteryUsagePerSecond > 0" class="supply-label">Inc/Sec</span>
                 {{ data.batteryUsagePerSecond }}
             </div>
             <div>
-                <span class="usage-label">Use/Min</span>
+                <span *ngIf="data.batteryUsagePerSecond < 0" class="usage-label">Use/Min</span>
+                <span *ngIf="data.batteryUsagePerSecond > 0" class="supply-label">Inc/Min</span>
                 {{ data.batteryUsagePerMinute }}
             </div>
         </div>
