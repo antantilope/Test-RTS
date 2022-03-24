@@ -1003,6 +1003,20 @@ export class GamedisplayComponent implements OnInit {
     )
   }
 
+  public async btnActivateAPU() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'activate_apu'},
+    )
+  }
+
+  public async btnDeactivateAPU() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'deactivate_apu'},
+    )
+  }
+
   public async btnSetScannerModeRadar() {
     await this._api.post(
       "/api/rooms/command",

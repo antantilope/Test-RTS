@@ -565,7 +565,7 @@ class Ship(BaseModel):
             }
         if self.apu_starting:
             yield {
-                'name': 'APU',
+                'name': 'APU Startup',
                 'percent': round(
                     self.apu_startup_power_used / self.apu_activation_power_required_total * 100
                 ),
