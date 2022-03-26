@@ -438,6 +438,28 @@ export class DrawingService {
       )
       ctx.fill()
     }
+    // Draw flame sparks
+    const sparkLineCount = randomInt(-8, 2)
+    ctx.lineWidth = Math.max(1, Math.floor(3 / this._camera.getZoom()))
+    for(let i=0; i<sparkLineCount; i++) {
+      let lineLength = fireBallRadiusCanvasPx * randomInt(9, 12)
+      let angle = randomInt(0, 359)
+      let linep1 = this._camera.getCanvasPointAtLocation(
+        canvasCoord,
+        angle,
+        randomInt(0, Math.max(1, Math.floor(fireBallRadiusCanvasPx / 3))),
+      )
+      let linep2 = this._camera.getCanvasPointAtLocation(
+        canvasCoord,
+        angle,
+        lineLength,
+      )
+      ctx.beginPath()
+      ctx.strokeStyle = `rgb(255, 255, 0, 0.8)`
+      ctx.moveTo(linep1.x, linep1.y)
+      ctx.lineTo(linep2.x, linep2.y)
+      ctx.stroke()
+    }
   }
 
   private drawExplosionFrameEffect(
