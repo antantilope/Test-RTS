@@ -223,7 +223,7 @@
                         <button
                             class="gd-ctrl-btn"
                             (click)="btnClickScannerCursorUp()"
-                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking || !_api.frameData.ship.scanner_online"
                         >
                             ⬆️
                         </button>
@@ -232,7 +232,7 @@
                         <button
                             class="gd-ctrl-btn"
                             (click)="btnClickScannerCursorDown()"
-                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking || !_api.frameData.ship.scanner_online"
                         >
                             ⬇️
                         </button>
@@ -241,7 +241,7 @@
                         <button
                             class="gd-ctrl-btn"
                             (click)="btnClickScannerCursorLock()"
-                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.scanner_locking || !_api.frameData.ship.scanner_online"
                         >
                             lock
                         </button>
