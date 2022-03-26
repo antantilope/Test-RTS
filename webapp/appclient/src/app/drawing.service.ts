@@ -503,20 +503,20 @@ export class DrawingService {
           lineLength,
         )
         ctx.beginPath()
-        ctx.strokeStyle = "rgb(255, 220, 220, 0.90)"
+        ctx.strokeStyle = `rgb(255, 220, 220, 0.${randomInt(2, 9)})`
         ctx.moveTo(linep1.x, linep1.y)
         ctx.lineTo(linep2.x, linep2.y)
         ctx.stroke()
       }
     } else {
-      let smokePuffSize = maxFireBallRadiusCanvasPx + (explosionFrame * 1.2 / this._camera.getZoom());
+      let smokePuffSize = maxFireBallRadiusCanvasPx * 0.9 + (explosionFrame * 1.5);
       let alpha = (1 - ((explosionFrame - 76) / 75)) / 3
       ctx.beginPath()
-      ctx.fillStyle = `rgb(255, 130, 130, ${alpha})`
+      ctx.fillStyle = `rgb(255, 0, 0, ${alpha})`
       ctx.arc(
         canvasCoord.x,
         canvasCoord.y,
-        smokePuffSize,
+        Math.round(smokePuffSize),
         0,
         2 * Math.PI,
       )
@@ -607,7 +607,7 @@ export class DrawingService {
     }
 
     if(drawableShip.aflame) {
-      const flameRadiusCanvasPx = Math.max(4, Math.round(
+      const flameRadiusCanvasPx = Math.max(1, Math.round(
         Math.sqrt(
           (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
           + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
