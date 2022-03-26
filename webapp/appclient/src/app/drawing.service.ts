@@ -5,7 +5,6 @@ import { CameraService } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
 import { UserService } from "./user.service";
-
 import {
   BoxCoords
 } from "./models/box-coords.model"
@@ -15,6 +14,7 @@ import {
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
 import { TimerItem } from './models/timer-item.model';
+import { PointCoord } from './models/point-coord.model';
 
 
 
@@ -415,6 +415,115 @@ export class DrawingService {
     }
   }
 
+  private drawAflameEffect(
+    ctx: CanvasRenderingContext2D,
+    canvasCoord: PointCoord,
+    fireBallRadiusCanvasPx: number,
+  ) {
+    // Draw dancing fireballs
+    for(let i=0; i<3; i++) {
+      let tFlameRadius = fireBallRadiusCanvasPx + randomInt(
+        fireBallRadiusCanvasPx / 4,
+        fireBallRadiusCanvasPx * 4,
+      )
+      const quarterFlameRadius = Math.max(1, Math.round(tFlameRadius / 4))
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(2, 5)})`
+      ctx.arc(
+        canvasCoord.x + randomInt(-1 * quarterFlameRadius, quarterFlameRadius),
+        canvasCoord.y + randomInt(-1 * quarterFlameRadius, quarterFlameRadius),
+        tFlameRadius,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
+    }
+  }
+
+  private drawExplosionFrameEffect(
+    ctx: CanvasRenderingContext2D,
+    canvasCoord: PointCoord,
+    explosionFrame: number,
+    maxFireBallRadiusCanvasPx: number,
+  ) {
+    if(explosionFrame < 8) {
+      let fbSize = (explosionFrame / 7) * maxFireBallRadiusCanvasPx
+      ctx.beginPath()
+      ctx.fillStyle = 'rgb(255, 0, 0, 1)'
+      ctx.arc(
+        canvasCoord.x + randomInt(-3, 3),
+        canvasCoord.y + randomInt(-3, 3),
+        fbSize,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
+    } else if (explosionFrame < 76) {
+      // Main fireball
+      let fbSize = maxFireBallRadiusCanvasPx * (randomInt(5, 8) / 7)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(5, 9)})`
+      ctx.arc(
+        canvasCoord.x + randomInt(-3, 3),
+        canvasCoord.y + randomInt(-3, 3),
+        fbSize,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
+      // Inner sub fireballs
+      const subFireBallsCount = randomInt(2, 4)
+      for(let i=0; i<subFireBallsCount; i++) {
+        let subFBSize = Math.floor(fbSize / randomInt(2, 4))
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(255, ${randomInt(20, 65)}, 0, 0.${randomInt(7, 9)})`
+        ctx.arc(
+          canvasCoord.x + randomInt(-8, 8),
+          canvasCoord.y + randomInt(-8, 8),
+          subFBSize,
+          0,
+          2 * Math.PI,
+        )
+        ctx.fill()
+      }
+      // Deris Lines
+      const debrisLineCount = randomInt(-6, 6)
+      ctx.lineWidth = 2
+      for(let i=0; i<debrisLineCount; i++) {
+        let lineLength = maxFireBallRadiusCanvasPx * randomInt(1, 6)
+        let angle = randomInt(0, 359)
+        let linep1 = this._camera.getCanvasPointAtLocation(
+          canvasCoord,
+          angle,
+          randomInt(0, Math.max(1, Math.floor(maxFireBallRadiusCanvasPx / 10))),
+        )
+        let linep2 = this._camera.getCanvasPointAtLocation(
+          canvasCoord,
+          angle,
+          lineLength,
+        )
+        ctx.beginPath()
+        ctx.strokeStyle = "rgb(255, 220, 220, 0.90)"
+        ctx.moveTo(linep1.x, linep1.y)
+        ctx.lineTo(linep2.x, linep2.y)
+        ctx.stroke()
+      }
+    } else {
+      let smokePuffSize = maxFireBallRadiusCanvasPx + (explosionFrame * 1.2 / this._camera.getZoom());
+      let alpha = (1 - ((explosionFrame - 76) / 75)) / 3
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 130, 130, ${alpha})`
+      ctx.arc(
+        canvasCoord.x,
+        canvasCoord.y,
+        smokePuffSize,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
+    }
+  }
+
   public drawShip(
     ctx: CanvasRenderingContext2D,
     drawableShip: DrawableShip,
@@ -498,46 +607,17 @@ export class DrawingService {
     }
 
     if(drawableShip.aflame) {
-      const flameRadius = Math.max(4, Math.round(
+      const flameRadiusCanvasPx = Math.max(4, Math.round(
         Math.sqrt(
           (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
           + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
         ) / 4
       ))
-      for(let i=0; i<2; i++) {
-        let tFlameRadius = flameRadius + randomInt(flameRadius / 4, flameRadius * 4)
-        ctx.beginPath()
-        ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(2, 7)})`
-        ctx.arc(
-          drawableShip.canvasCoordCenter.x + randomInt(-5, 5),
-          drawableShip.canvasCoordCenter.y + randomInt(-5, 5),
-          tFlameRadius,
-          0,
-          2 * Math.PI,
-        )
-        ctx.fill()
-      }
-      const sparkCount = randomInt(0, 4)
-      const sparkSize = Math.max(5, flameRadius)
-      for(let i=0; i<sparkCount; i++) {
-        let sparkAngle = randomInt(0, 359)
-        let sparkDistance = flameRadius * randomInt(1, 3)
-        let sparkPoint = this._camera.getCanvasPointAtLocation(
-          drawableShip.canvasCoordCenter,
-          sparkAngle,
-          sparkDistance
-        )
-        ctx.beginPath()
-        ctx.fillStyle = 'rgb(255, 0, 0, 1)'
-        ctx.arc(
-          sparkPoint.x,
-          sparkPoint.y,
-          sparkSize,
-          0,
-          2 * Math.PI,
-        )
-        ctx.fill()
-      }
+      this.drawAflameEffect(
+        ctx,
+        drawableShip.canvasCoordCenter,
+        flameRadiusCanvasPx,
+      )
     }
     if(drawableShip.explosionFrame && drawableShip.explosionFrame < 150) {
       /* Explosion schedule
@@ -551,81 +631,12 @@ export class DrawingService {
           + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
         ) * 10
       )
-      if(drawableShip.explosionFrame < 8) {
-        let fbSize = (drawableShip.explosionFrame / 7) * maxFireBallRadius
-        ctx.beginPath()
-        ctx.fillStyle = 'rgb(255, 0, 0, 1)'
-        ctx.arc(
-          drawableShip.canvasCoordCenter.x + randomInt(-3, 3),
-          drawableShip.canvasCoordCenter.y + randomInt(-3, 3),
-          fbSize,
-          0,
-          2 * Math.PI,
-        )
-        ctx.fill()
-      } else if (drawableShip.explosionFrame < 76) {
-        // Main fireball
-        let fbSize = maxFireBallRadius * (randomInt(5, 8) / 7)
-        ctx.beginPath()
-        ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(5, 9)})`
-        ctx.arc(
-          drawableShip.canvasCoordCenter.x + randomInt(-3, 3),
-          drawableShip.canvasCoordCenter.y + randomInt(-3, 3),
-          fbSize,
-          0,
-          2 * Math.PI,
-        )
-        ctx.fill()
-        // Inner sub fireballs
-        const subFireBallsCount = randomInt(2, 4)
-        for(let i=0; i<subFireBallsCount; i++) {
-          let subFBSize = Math.floor(fbSize / randomInt(2, 4))
-          ctx.beginPath()
-          ctx.fillStyle = `rgb(255, ${randomInt(20, 65)}, 0, 0.${randomInt(7, 9)})`
-          ctx.arc(
-            drawableShip.canvasCoordCenter.x + randomInt(-8, 8),
-            drawableShip.canvasCoordCenter.y + randomInt(-8, 8),
-            subFBSize,
-            0,
-            2 * Math.PI,
-          )
-          ctx.fill()
-        }
-        // Deris Lines
-        const debrisLineCount = randomInt(-6, 3)
-        for(let i=0; i<debrisLineCount; i++) {
-          let lineLength = maxFireBallRadius * randomInt(2, 4)
-          let angle = randomInt(0, 359)
-          let linep1 = this._camera.getCanvasPointAtLocation(
-            drawableShip.canvasCoordCenter,
-            angle,
-            randomInt(0, 50),
-          )
-          let linep2 = this._camera.getCanvasPointAtLocation(
-            drawableShip.canvasCoordCenter,
-            angle,
-            lineLength,
-          )
-          ctx.beginPath()
-          ctx.strokeStyle = "rgb(255, 220, 220, 0.90)"
-          ctx.moveTo(linep1.x, linep1.y)
-          ctx.lineTo(linep2.x, linep2.y)
-          ctx.stroke()
-        }
-      } else {
-        let smokePuffSize = Math.floor(maxFireBallRadius / 1.1);
-        let alpha = (1 - ((drawableShip.explosionFrame - 76) / 75)) / 3
-        ctx.beginPath()
-        ctx.fillStyle = `rgb(255, 130, 130, ${alpha})`
-        ctx.arc(
-          drawableShip.canvasCoordCenter.x,
-          drawableShip.canvasCoordCenter.y,
-          smokePuffSize,
-          0,
-          2 * Math.PI,
-        )
-        ctx.fill()
-      }
+      this.drawExplosionFrameEffect(
+        ctx,
+        drawableShip.canvasCoordCenter,
+        drawableShip.explosionFrame,
+        maxFireBallRadius,
+      )
     }
 
     if(drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
@@ -700,11 +711,6 @@ export class DrawingService {
         ctx.stroke()
       }
     }
-
-
-
-
-
   }
 
 }

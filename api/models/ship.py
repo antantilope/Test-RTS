@@ -247,10 +247,10 @@ class Ship(BaseModel):
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 1)
-        self.explode_immediately = random.randint(0, 4) == 1
+        self.explode_immediately = False # random.randint(0, 4) == 1
         self.explosion_frame = None
         self.explosion_point = None
-        self._seconds_to_explode = random.randint(2, 4)
+        self._seconds_to_explode = 10 # random.randint(2, 4)
 
 
         # Arbitrary ship state data
