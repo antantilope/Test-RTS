@@ -170,6 +170,13 @@ export class QuoteService {
     },
     {
       lines: [
+        "You cannot commit murder in space",
+        "no matter how hard you try.",
+      ],
+      author: this.legalBotName,
+    },
+    {
+      lines: [
         "Earth's legal jurisdiction ends",
         "at an altitude of 2 million meters.",
       ],
@@ -219,9 +226,7 @@ export class QuoteService {
     },
     {
       lines: [
-        `Vote for ${this.presidentName}.`,
-        "That was a command. You must vote",
-        `for ${this.presidentName}.`,
+        `You must vote for ${this.presidentName}.`,
       ],
       author: this.tvAnchorBotName,
     },

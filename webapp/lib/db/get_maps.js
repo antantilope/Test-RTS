@@ -2,21 +2,33 @@
 
 exports.get_maps = async (db) => {
     let maps = await db.all("SELECT * FROM api_battlemap");
-    let features = await db.all("SELECT * FROM api_battlemapfeature");
+    let mapMines = await db.all("SELECT * FROM api_mapmininglocation");
+    let mapStations = await db.all("SELECT * FROM api_mapspacestation");
     let spawnPoints = await db.all("SELECT * FROM api_battlemapspawnpoint");
 
-    let featuresByMap = {}
-    for(let i in features){
-        if((features[i].battle_map_id in featuresByMap)) {
-            featuresByMap[features[i].battle_map_id].push(features[i]);
+    let minesByMap = {};
+    for(let i in mapMines){
+        if((mapMines[i].battle_map_id in minesByMap)) {
+            minesByMap[mapMines[i].battle_map_id].push(mapMines[i]);
         } else {
-            featuresByMap[features[i].battle_map_id] = [
-                features[i]
+            minesByMap[mapMines[i].battle_map_id] = [
+                mapMines[i]
             ];
         }
     }
 
-    let spawnPointsByMap = {}
+    let stationsByMap = {};
+    for(let i in mapStations){
+        if((mapStations[i].battle_map_id in stationsByMap)) {
+            stationsByMap[mapStations[i].battle_map_id].push(mapStations[i]);
+        } else {
+            stationsByMap[mapStations[i].battle_map_id] = [
+                mapStations[i]
+            ];
+        }
+    }
+
+    let spawnPointsByMap = {};
     for(let i in spawnPoints){
         if((spawnPoints[i].battle_map_id in spawnPointsByMap)) {
             spawnPointsByMap[spawnPoints[i].battle_map_id].push(spawnPoints[i]);
@@ -28,11 +40,12 @@ exports.get_maps = async (db) => {
     }
 
     for(let i in maps) {
-        maps[i].features = featuresByMap[maps[i].uuid] || []
-        maps[i].spawn_points = spawnPointsByMap[maps[i].uuid] || []
+        maps[i].miningLocations = minesByMap[maps[i].uuid] || [];
+        maps[i].spaceStations = stationsByMap[maps[i].uuid] || [];
+        maps[i].spawnPoints = spawnPointsByMap[maps[i].uuid] || [];
     }
-    return maps
-}
+    return maps;
+};
 
 exports.get_map_details = async (db, mapUUID) => {
     let sql, statement;
@@ -41,18 +54,22 @@ exports.get_map_details = async (db, mapUUID) => {
     const mapData = await statement.get(mapUUID);
     await statement.finalize();
     if(!mapData) {
-        return null
+        return null;
     }
 
-    sql = 'SELECT * FROM api_battlemapfeature WHERE battle_map_id = ?'
-    const features = await db.all(sql, [mapUUID]);
+    sql = 'SELECT * FROM api_mapmininglocation WHERE battle_map_id = ?';
+    const miningLocations = await db.all(sql, [mapUUID]);
 
-    sql = 'SELECT * FROM api_battlemapspawnpoint WHERE battle_map_id = ?'
+    sql = 'SELECT * FROM api_mapspacestation WHERE battle_map_id = ?';
+    const spaceStations = await db.all(sql, [mapUUID]);
+
+    sql = 'SELECT * FROM api_battlemapspawnpoint WHERE battle_map_id = ?';
     const spawnPoints = await db.all(sql, [mapUUID]);
 
     return {
         mapData,
-        features,
+        miningLocations,
+        spaceStations,
         spawnPoints,
-    }
-}
+    };
+};

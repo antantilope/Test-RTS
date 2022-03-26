@@ -71,7 +71,7 @@ const setGameMapData = async (port, mapDetails) => {
 }
 
 
-const addPlayerToGameServer = (port, playerName, playerId, teamId, roomUUID, mapDetails) => {
+const sendPlayerAndMapDetailsToGameServer = (port, playerName, playerId, teamId, mapDetails) => {
     const client = new net.Socket();
     client.on("error", (err) => {
         client.destroy();
@@ -182,12 +182,11 @@ exports.adminCreateRoomController = async (req, res) => {
 
     // Write data to game server
     setTimeout(() => {
-        addPlayerToGameServer(
+        sendPlayerAndMapDetailsToGameServer(
             port,
             playerDetails.handle,
             playerDetails.uuid,
             teamUUID,
-            roomUUID,
             mapDetails,
         );
     }, 750);

@@ -3,13 +3,15 @@ from django.contrib import admin
 
 from .models import (
     BattleMap,
-    BattleMapFeature,
+    MapSpaceStation,
+    MapMiningLocation,
     BattleMapSpawnPoint,
 )
 
 admin.site.register([
     BattleMap,
-    BattleMapFeature,
+    MapSpaceStation,
+    MapMiningLocation,
     BattleMapSpawnPoint,
 ])
 

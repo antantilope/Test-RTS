@@ -42,24 +42,23 @@ class BattleMapSpawnPoint(BaseModel):
     def __str__(self):
         return f"SPAWN {self.battle_map.name} ({self.position_meters_x}, {self.position_meters_y})"
 
-class BattleMapFeature(BaseModel):
+class BaseBattleMapFeature(BaseModel):
     battle_map = models.ForeignKey(BattleMap, on_delete=models.CASCADE)
     position_meters_x = models.PositiveBigIntegerField()
     position_meters_y = models.PositiveBigIntegerField()
-    width_meters_x = models.PositiveSmallIntegerField()
-    width_meters_y = models.PositiveSmallIntegerField()
+    service_radius_meters = models.PositiveIntegerField()
     name = models.CharField(max_length=100, blank=True, null=True, default=None)
 
-    TYPE_FUEL_DEPOT = 'fuel'
-    TYPE_ORE_MINE = 'ore'
-    BATTLE_MAP_TYPES = (
-        (TYPE_FUEL_DEPOT, "Fuel",),
-        (TYPE_ORE_MINE, "Ore",),
-    )
-    type = models.CharField(max_length=12, choices=BATTLE_MAP_TYPES)
+    class Meta:
+        abstract = True
 
+class MapSpaceStation(BaseBattleMapFeature):
     def __str__(self):
-        return f"{self.type} - {self.battle_map.name}"
+        return f"Space Station ({self.position_meters_x}, {self.position_meters_y}) on {self.battle_map.name}"
+
+class MapMiningLocation(BaseBattleMapFeature):
+    def __str__(self):
+        return f"Mining location ({self.position_meters_x}, {self.position_meters_y}) on {self.battle_map.name}"
 
 
 class Room(BaseModel):
