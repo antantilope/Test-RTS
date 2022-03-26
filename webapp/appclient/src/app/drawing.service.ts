@@ -510,7 +510,7 @@ export class DrawingService {
       }
     } else {
       let smokePuffSize = maxFireBallRadiusCanvasPx * 0.9 + (explosionFrame * 1.5);
-      let alpha = (1 - ((explosionFrame - 76) / 75)) / 3
+      let alpha = (1 - ((explosionFrame - 76) / 75)) / 3.75
       ctx.beginPath()
       ctx.fillStyle = `rgb(255, 0, 0, ${alpha})`
       ctx.arc(
