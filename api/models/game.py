@@ -213,6 +213,8 @@ class Game(BaseModel):
             'ebeam_rays': self._ebeam_rays,
             "winning_team": self._winning_team,
             "killfeed": self._killfeed,
+            "space_stations": self._space_stations,
+            "ore_mines": self._ore_mines,
         }
 
 

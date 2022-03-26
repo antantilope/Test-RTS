@@ -139,6 +139,8 @@ const runGameLoop = (room_id, port, app, io) => {
                         ebeam_rays: respData.ebeam_rays,
                         winning_team: respData.winning_team,
                         killfeed: respData.killfeed,
+                        space_stations: respData.space_stations,
+                        ore_mines: respData.ore_mines,
                     },
                 );
             }

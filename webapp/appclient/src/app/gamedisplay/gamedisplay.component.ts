@@ -25,7 +25,7 @@ import {
 import { FormattingService } from '../formatting.service'
 import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
-
+import { DrawingService } from '../drawing.service'
 
 
 const randomInt = function (min: number, max: number): number  {
@@ -48,7 +48,7 @@ export class GamedisplayComponent implements OnInit {
   public scannerTargetIDCursor: string | null = null
 
 
-  private ctx: any | null = null
+  private ctx: CanvasRenderingContext2D | null = null
 
   /* Props to track the user's mouse */
   private mouseInCanvas = false
@@ -84,6 +84,7 @@ export class GamedisplayComponent implements OnInit {
     public _pane: PaneService,
     public _allchat: AllchatService,
     private _quote: QuoteService,
+    private _draw: DrawingService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
@@ -282,31 +283,10 @@ export class GamedisplayComponent implements OnInit {
     this.drawableObjects = drawableObjects
 
     // Vision circles
-    for(let i in drawableObjects.visionCircles) {
-      let vs = drawableObjects.visionCircles[i]
-      this.ctx.beginPath()
-      this.ctx.fillStyle = vs.color
-      this.ctx.arc(
-        vs.canvasCoord.x,
-        vs.canvasCoord.y,
-        vs.radius,
-        0,
-        2 * Math.PI,
-      )
-      this.ctx.fill()
-    }
+    this._draw.drawVisionCircles(this.ctx, drawableObjects.visionCircles)
 
     // Draw Map boundary
-    this.ctx.beginPath()
-    this.ctx.strokeStyle ="#636300"
-    this.ctx.lineWidth = Math.max(1, 500 / this._camera.getZoom())
-    this.ctx.rect(
-      drawableObjects.mapWall.x1,
-      drawableObjects.mapWall.y1,
-      drawableObjects.mapWall.x2 - drawableObjects.mapWall.x1,
-      drawableObjects.mapWall.y2 - drawableObjects.mapWall.y1,
-    )
-    this.ctx.stroke()
+    this._draw.drawMapBoundary(this.ctx, drawableObjects.mapWall);
 
     // draw ships
     for(let i in drawableObjects.ships) {
@@ -594,16 +574,7 @@ export class GamedisplayComponent implements OnInit {
     }
 
     // E-Beams
-    const ebeamThickness = this._camera.getEBeamLineThickness()
-    for(let i in drawableObjects.ebeamRays) {
-      let ray = drawableObjects.ebeamRays[i]
-      this.ctx.beginPath()
-      this.ctx.strokeStyle = ray.color
-      this.ctx.lineWidth = ebeamThickness
-      this.ctx.moveTo(ray.startPoint.x, ray.startPoint.y)
-      this.ctx.lineTo(ray.endPoint.x, ray.endPoint.y)
-      this.ctx.stroke()
-    }
+    this._draw.drawEbeams(this.ctx, drawableObjects.ebeamRays)
 
     // lower right corner
     let lrcYOffset = this._camera.canvasHeight - 30
@@ -724,180 +695,12 @@ export class GamedisplayComponent implements OnInit {
       deathTextYOffset += deathQuoteOffset * 0.5
       this.ctx.beginPath()
       this.ctx.fillText("- " + (this.deathQuote.author || "Unknown"), 100, deathTextYOffset)
-
-    }
-    // Resources (TOP LEFT)
-    const tlcYInterval = 34
-    const tlcKFYInterval = 28
-    let tlcYOffset = 25
-    const tlcXOffset = 15
-    if(this._api.frameData.ship.alive){
-      this.ctx.beginPath()
-      this.ctx.font = '24px Courier New'
-      this.ctx.fillStyle = '#fcb8b8'
-      this.ctx.textAlign = 'left'
-      this.ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
-
-      this.ctx.beginPath()
-      this.ctx.fillStyle = '#fcf9b8'
-      this.ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
-
-      this.ctx.beginPath()
-      this.ctx.fillStyle = '#ffffff'
-      this.ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
-    }
-    // Killfeed (TOP LEFT)
-    tlcYOffset += tlcYInterval
-    this.ctx.font = '20px Courier New'
-    this.ctx.fillStyle = '#ffffff'
-    this.ctx.textAlign = 'left'
-    for(let i in this._api.frameData.killfeed) {
-      const kfe = this._api.frameData.killfeed[i]
-      this.ctx.beginPath()
-      this.ctx.fillText("💀 " + kfe.victim_name, tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcKFYInterval
     }
 
-    // Timers (BOTTOM RIGHT)
-    const brcYInterval = 45
-    let brcYOffset = 30
-    const brcXOffset = 15
-    const timerBarLength = Math.round(this._camera.canvasWidth / 8)
-    const textRAlignXOffset = brcXOffset + timerBarLength + 10
-    const barRAlignXOffset = brcXOffset + timerBarLength
-
-    this.ctx.strokeStyle = '#ffffff'
-    this.ctx.fillStyle = '#ffffff'
-    this.ctx.lineWidth = 1
-    this.ctx.textAlign = 'right'
-    this.ctx.font = 'bold 24px Courier New'
-    this.ctx.beginPath()
-    this.ctx.fillText(
-      this._api.frameData.elapsed_time,
-      this._camera.canvasWidth - 15,
-      this._camera.canvasHeight - brcYOffset,
-    )
-    this.ctx.font = '20px Courier New'
-    this.ctx.strokeStyle = '#00ff00'
-    this.ctx.fillStyle = '#00ff00'
-    brcYOffset += brcYInterval
-    if(this._api.frameData.ship.alive){
-      for(let i in this._api.frameData.ship.timers) {
-        const timer: TimerItem = this._api.frameData.ship.timers[i]
-        const fillLength = Math.round((timer.percent / 100) * timerBarLength)
-        this.ctx.beginPath()
-        this.ctx.fillText(
-          timer.name,
-          this._camera.canvasWidth - textRAlignXOffset,
-          this._camera.canvasHeight - brcYOffset,
-        )
-        this.ctx.beginPath()
-        this.ctx.rect(
-          this._camera.canvasWidth - barRAlignXOffset, //    top left x
-          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
-          timerBarLength, // width
-          30,             // height
-        )
-        this.ctx.stroke()
-        this.ctx.beginPath()
-        this.ctx.rect(
-          this._camera.canvasWidth - barRAlignXOffset, //    top left x
-          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
-          fillLength, // width
-          30,         // height
-        )
-        this.ctx.fill()
-        brcYOffset += brcYInterval
-      }
-    }
-    // Gyroscope
+    this._draw.drawTopLeftOverlay(this.ctx);
+    this._draw.drawBottomRightOverlay(this.ctx)
     if(!this.isDebug && this._api.frameData.ship.alive) {
-      // Circle
-      const buffer = 3;
-      const gryroscopeRadius = Math.floor(this._camera.canvasHalfHeight / 8)
-      const gryroscopeX = this._camera.canvasWidth - (gryroscopeRadius + buffer)
-      const gryroscopeY = gryroscopeRadius + buffer
-      this.ctx.beginPath()
-      this.ctx.fillStyle = "rgb(255, 255, 255, 0.65)"
-      this.ctx.arc(
-        gryroscopeX,
-        gryroscopeY,
-        gryroscopeRadius,
-        0,
-        2 * Math.PI,
-      )
-      this.ctx.fill()
-      // Velocity Line
-      if(
-        this._api.frameData.ship.velocity_x_meters_per_second
-        || this._api.frameData.ship.velocity_y_meters_per_second
-      ) {
-        const angleRads = this._camera.getCanvasAngleBetween(
-          {x:0, y:0},
-          {
-            x: gryroscopeX + this._api.frameData.ship.velocity_x_meters_per_second * 1000,
-            y: gryroscopeY + this._api.frameData.ship.velocity_y_meters_per_second * 1000,
-          }
-        ) * (Math.PI / 180)
-        const gyroLinePointB = {
-          x: gryroscopeX + Math.round(gryroscopeRadius * Math.sin(angleRads)),
-          y: gryroscopeY + Math.round(gryroscopeRadius * Math.cos(angleRads)),
-        }
-        this.ctx.beginPath()
-        this.ctx.strokeStyle = '#000000'
-        this.ctx.lineWidth = 4
-        this.ctx.moveTo(gryroscopeX, gryroscopeY)
-        this.ctx.lineTo(gyroLinePointB.x, gyroLinePointB.y)
-        this.ctx.stroke()
-      }
-      // Scanner Traversal Crosshairs
-      if(this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
-        const crossOffset = gryroscopeRadius * this._api.frameData.ship.scanner_lock_traversal_slack
-        this.ctx.beginPath()
-        this.ctx.strokeStyle = 'rgb(255, 0, 0, 0.75)'
-        this.ctx.lineWidth = 4
-        // Verticle hairs
-        this.ctx.moveTo(gryroscopeX - crossOffset, gryroscopeY - gryroscopeRadius)
-        this.ctx.lineTo(gryroscopeX - crossOffset, gryroscopeY + gryroscopeRadius)
-        this.ctx.stroke()
-        this.ctx.beginPath()
-        this.ctx.moveTo(gryroscopeX + crossOffset, gryroscopeY - gryroscopeRadius)
-        this.ctx.lineTo(gryroscopeX + crossOffset, gryroscopeY + gryroscopeRadius)
-        this.ctx.stroke()
-
-        // Horizontal hairs
-        this.ctx.beginPath()
-        this.ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY - crossOffset)
-        this.ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY - crossOffset)
-        this.ctx.stroke()
-        this.ctx.beginPath()
-        this.ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY + crossOffset)
-        this.ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY + crossOffset)
-        this.ctx.stroke()
-      }
-      // Velocity Text
-      const velocity = Math.sqrt(
-        Math.pow(this._api.frameData.ship.velocity_x_meters_per_second, 2)
-        + Math.pow(this._api.frameData.ship.velocity_y_meters_per_second, 2)
-      ).toFixed(1)
-      this.ctx.beginPath()
-      this.ctx.font = 'bold 22px Courier New'
-      this.ctx.fillStyle = 'rgb(255, 181, 43,  0.95)'
-      this.ctx.textAlign = 'right'
-      this.ctx.fillText(
-        velocity + " M/S",
-        this._camera.canvasWidth - 3,
-        gryroscopeY + gryroscopeRadius + 18,
-      )
-      // Thermal Signature Text
-      this.ctx.fillText(
-        this._api.frameData.ship.scanner_thermal_signature + " IR ",
-        this._camera.canvasWidth - 3,
-        gryroscopeY + gryroscopeRadius + 40,
-      )
+      this._draw.drawTopRightOverlay(this.ctx)
     }
 
     // Click feedback

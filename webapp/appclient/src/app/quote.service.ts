@@ -78,7 +78,7 @@ export class QuoteService {
     {
       lines: [
         "We have always been at space war",
-        "with Eastasia.",
+        "with EastSpaceAsia.",
       ],
       author: this.presidentName,
     },
@@ -170,8 +170,8 @@ export class QuoteService {
     },
     {
       lines: [
-        "You cannot commit murder in space",
-        "no matter how hard you try.",
+        "Legally, you cannot commit murder in",
+        "space. It's not possible, legally speaking.",
       ],
       author: this.legalBotName,
     },
@@ -260,7 +260,7 @@ export class QuoteService {
     },
     {
       lines: [
-        "If the ship is aflame then abandon ship.",
+        "If the ship is aflame: abandon ship.",
       ],
       author: this.instructionManualName,
     },

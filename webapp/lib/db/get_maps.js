@@ -1,7 +1,7 @@
 
 
 exports.get_maps = async (db) => {
-    let maps = await db.all("SELECT * FROM api_battlemap");
+    let maps = await db.all("SELECT * FROM api_battlemap ORDER BY meters_x ASC");
     let mapMines = await db.all("SELECT * FROM api_mapmininglocation");
     let mapStations = await db.all("SELECT * FROM api_mapspacestation");
     let spawnPoints = await db.all("SELECT * FROM api_battlemapspawnpoint");
