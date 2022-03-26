@@ -45,12 +45,6 @@ function drawMapPreview(mapData, canvas) {
         let fCx = mapData.spaceStations[i].position_meters_x / metersPerCanvasPxX;
         let fCy = mapData.spaceStations[i].position_meters_y / metersPerCanvasPxY;
         let icon = "🛰️";
-        // if(mapData.features[i].type == 'station') {
-        //     icon = "🛰️"
-        // }
-        // else if (mapData.features[i].type == 'ore') {
-        //     icon = "💎"
-        // }
         ctx.beginPath();
         ctx.font = "20px Courier New";
         ctx.fillStyle = "#ffffff";
