@@ -46,7 +46,8 @@ class TestEBeamAndDamage(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=self.upm)
         assert self.game.map_is_configured
         self.game.advance_to_phase_1_starting()
