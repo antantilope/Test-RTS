@@ -267,9 +267,11 @@ class Ship(BaseModel):
 
         # Mining interactions
         self.parked_at_ore_mine = None
-        self.cargo_mass_capacity_kg = None
-        self.cargo_mass_kg = 0
-
+        self.cargo_ore_mass_capacity_kg = None
+        self.cargo_ore_mass_kg = 0
+        self.mining_ore = False
+        self.mining_ore_power_usage_per_second = None
+        self.mining_ore_kg_collected_per_second = None
 
         # Arbitrary ship state data
         self._state = {}
@@ -371,6 +373,7 @@ class Ship(BaseModel):
         return self._state.get(ShipStateKey.MASS, (
             self.battery_mass
             + self.engine_mass
+            + self.cargo_ore_mass_kg
             + int(self.fuel_level / constants.FUEL_MASS_UNITS_PER_KG)
             + constants.HULL_BASE_MASS
             + constants.PILOT_MASS
@@ -457,6 +460,9 @@ class Ship(BaseModel):
             'gravity_brake_deployed': self.gravity_brake_deployed,
 
             'parked_at_ore_mine': self.parked_at_ore_mine,
+            'mining_ore': self.mining_ore,
+            'cargo_ore_mass_kg': self.cargo_ore_mass_kg,
+            'cargo_ore_mass_capacity_kg': self.cargo_ore_mass_capacity_kg,
 
             'alive': self.died_on_frame is None,
             'aflame': self.aflame_since_frame is not None,
@@ -568,6 +574,10 @@ class Ship(BaseModel):
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
 
+        instance.cargo_ore_mass_capacity_kg = constants.ORE_CAPACITY_KG
+        instance.mining_ore_power_usage_per_second = constants.MINING_ORE_POWER_USAGE_PER_SECOND
+        instance.mining_ore_kg_collected_per_second = constants.MINING_ORE_KG_COLLECTED_PER_SECOND
+
         instance.gravity_brake_traversal_per_second = constants.GRAVITY_BRAKE_TRAVERSAL_PER_SECOND
 
         return instance
@@ -622,6 +632,14 @@ class Ship(BaseModel):
                 'name': 'Brake Retract',
                 'percent': round(
                     (self.gravity_brake_deployed_position - self.gravity_brake_position) / self.gravity_brake_deployed_position * 100
+                ),
+            }
+
+        if self.mining_ore:
+            yield {
+                'name': 'Mining',
+                'percent': round(
+                   self.cargo_ore_mass_kg / self.cargo_ore_mass_capacity_kg * 100
                 ),
             }
 
