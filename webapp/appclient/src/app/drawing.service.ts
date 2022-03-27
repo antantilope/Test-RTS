@@ -801,7 +801,7 @@ export class DrawingService {
   ) {
     // Draw station body
     const halfLength = Math.floor(sideLengthCanvasPx / 2)
-    const lightRadius = Math.floor(sideLengthCanvasPx / 14)
+    const lightRadius = Math.max(1, Math.floor(sideLengthCanvasPx / 14))
     ctx.beginPath()
     ctx.fillStyle = "#789096"; // Dark gray blue
     ctx.rect(
@@ -865,9 +865,12 @@ export class DrawingService {
     )
     ctx.fill()
 
+    console.log({lightRadius: lightRadius})
+
     // Draw light on effects
     if(lightOn) {
       const effectRadius = lightRadius * 30
+      console.log({effectRadius: effectRadius})
       ctx.beginPath()
       ctx.fillStyle = "rgb(255, 255, 120, 0.05)"
       ctx.arc(
