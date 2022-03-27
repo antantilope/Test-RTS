@@ -57,7 +57,7 @@ class TopLevelMapDetails(TypedDict):
 
 class MapFeatureType:
     ORE = "ore"
-    FUEL = "fuel"
+    SPACE_STATION = "station"
 
 class MapFeature(TypedDict):
     id: str
@@ -68,18 +68,25 @@ class MapFeature(TypedDict):
     width_meters_y: int
     type: str
 
-class EnrichedMapFeature(TypedDict):
+class MapMiningLocationDetails(TypedDict):
     id: str
     name: Optional[str]
     position_meters_x: int
     position_meters_y: int
-    width_meters_x: int
-    width_meters_y: int
-    type: str
+    service_radius_meters: int
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
-    width_map_units_x: int    #
-    width_map_units_y: int    #
+    service_radius_map_units: int #
+
+class MapSpaceStation(TypedDict):
+    id: str
+    name: Optional[str]
+    position_meters_x: int
+    position_meters_y: int
+    service_radius_meters: int
+    position_map_units_x: int # Perform map unit version up front
+    position_map_units_y: int #
+    service_radius_map_units: int #
 
 class MapSpawnPoint(TypedDict):
     id: str
@@ -135,8 +142,8 @@ class Game(BaseModel):
         self._ships: Dict[str, Ship] = {}
         self._ebeam_rays: List[EBeamRayDetails] = []
         self._killfeed: List[KillFeedElement] = []
-        self._fuel_depots: List[EnrichedMapFeature] = []
-        self._ore_mines: List[EnrichedMapFeature] = []
+        self._space_stations: List[MapSpaceStation] = []
+        self._ore_mines: List[MapMiningLocationDetails] = []
 
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
@@ -206,6 +213,8 @@ class Game(BaseModel):
             'ebeam_rays': self._ebeam_rays,
             "winning_team": self._winning_team,
             "killfeed": self._killfeed,
+            "space_stations": self._space_stations,
+            "ore_mines": self._ore_mines,
         }
 
 
@@ -238,25 +247,23 @@ class Game(BaseModel):
         self._map_y_unit_length = request['mapData']['meters_y'] * self._map_units_per_meter
         self._map_name = request['mapData']['name']
         self._spawn_points = request['spawnPoints']
-        self._fuel_depots = [
+        self._space_stations = [
             {
                "position_map_units_x": f['position_meters_x'] * self._map_units_per_meter,
                "position_map_units_y": f['position_meters_y'] * self._map_units_per_meter,
-               "width_map_units_x": f['width_meters_x'] * self._map_units_per_meter,
-               "width_map_units_y": f['width_meters_y'] * self._map_units_per_meter,
+               "service_radius_map_units": f['service_radius_meters'] * self._map_units_per_meter,
                 **f,
             }
-            for f in request['features'] if f['type'] == MapFeatureType.FUEL
+            for f in request['spaceStations']
         ]
         self._ore_mines = [
             {
-               "position_map_units_x": f['position_meters_x'] * self._map_units_per_meter,
-               "position_map_units_y": f['position_meters_y'] * self._map_units_per_meter,
-               "width_map_units_x": f['width_meters_x'] * self._map_units_per_meter,
-               "width_map_units_y": f['width_meters_y'] * self._map_units_per_meter,
+                "position_map_units_x": f['position_meters_x'] * self._map_units_per_meter,
+                "position_map_units_y": f['position_meters_y'] * self._map_units_per_meter,
+                "service_radius_map_units": f['service_radius_meters'] * self._map_units_per_meter,
                 **f,
             }
-            for f in request['features'] if f['type'] == MapFeatureType.ORE
+            for f in request['miningLocations']
         ]
 
     def _validate_can_set_map(self):
@@ -272,8 +279,8 @@ class Game(BaseModel):
         if self._ore_mines:
             raise GameError("Ore mines already set")
 
-        if self._fuel_depots:
-            raise GameError("Fuel depots already set")
+        if self._space_stations:
+            raise GameError("space stations already set")
 
     @property
     def map_is_configured(self) -> bool:
@@ -399,8 +406,10 @@ class Game(BaseModel):
             self._process_ship_command(command)
 
         self._ebeam_rays.clear()
+        check_for_gravity_brake_catches = self._game_frame % 4 == 0
 
         for ship_id, ship in self._ships.items():
+            ship.advance_gravity_brake_position(self._fps)
             ship.adjust_resources(self._fps, self._game_frame)
             ship.calculate_physics(self._fps)
             ship.advance_thermal_signature(self._fps)
@@ -410,8 +419,11 @@ class Game(BaseModel):
             ship.run_autopilot()
             self.calculate_weapons_and_damage(ship_id)
 
+            if check_for_gravity_brake_catches:
+                self.check_for_gravity_brake_catch(ship_id)
+
         # Post frame checks
-        if self._game_frame % 30 == 0:
+        if self._game_frame % 45 == 0:
             if not self._winning_team:
                 self.check_for_winning_team()
             self.check_for_empty_game()
@@ -496,6 +508,9 @@ class Game(BaseModel):
                         'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
                         'visual_ebeam_color': self._ships[other_id].ebeam_color,
                         'visual_fill_color': '#ffffff',
+                        'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
+                        'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
+                        'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,
                     })
                 if is_scannable:
                     exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
@@ -633,6 +648,26 @@ class Game(BaseModel):
             k for k in self._killfeed
             if k['created_at_frame'] >= oldest_frame
         ]
+
+    def check_for_gravity_brake_catch(self, ship_id: str) -> True:
+        if (
+            self._ships[ship_id].gravity_brake_active
+            or not self._ships[ship_id].gravity_brake_deployed
+            or self._ships[ship_id].docked_at_station
+        ):
+            return
+
+        for st in self._space_stations:
+            dist = utils2d.calculate_point_distance(
+                (st['position_map_units_x'], st['position_map_units_y']),
+                self._ships[ship_id].coords,
+            )
+            if dist <= st['service_radius_map_units']:
+                # Gravity Brake Catches
+                self._ships[ship_id].engine_lit = False
+                self._ships[ship_id].gravity_brake_active = True
+                self._ships[ship_id].docking_at_station = st['uuid']
+
 
     def _process_ship_command(self, command: FrameCommand):
         ship_command = command['ship_command']

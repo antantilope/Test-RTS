@@ -83,6 +83,7 @@ def hitboxes_intercept_ray_factory(
     """ params
             point: a location on a grid
             heading: a direction (as degrees)
+            map dimensions: as tuple-pair of ints
         returna tuple with
             0) function that when called will check if an array of hitbox lines falls on the ray.
             1) the point where the ray intercepts with the map's boundary

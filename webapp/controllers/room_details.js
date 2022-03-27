@@ -1,7 +1,6 @@
 
 const { get_db_connection } = require("../lib/db/get_db_connection");
 const { get_room_and_player_details } = require("../lib/db/get_rooms");
-const { get_map_details } = require ("../lib/db/get_maps");
 const { logger } = require("../lib/logger");
 
 exports.roomDetailsController = async (req, res) => {

@@ -1,6 +1,10 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { PaneService } from '../pane.service';
 import { Subscription } from 'rxjs'
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+
+import { PaneService } from '../pane.service';
+import { ApiService } from '../api.service';
+
+
 
 @Component({
   selector: 'app-shippane',
@@ -17,9 +21,11 @@ export class ShippaneComponent implements OnInit {
   public selectedSubPane: string
   public subPaneNameEngineering = "engineering"
   public subPaneNameUpgrades = "upgrades"
+  public subPaneNameStation = "station"
 
   constructor(
     public _pane: PaneService,
+    public _api: ApiService,
   ) {
     this.paneName = this._pane.PANE_SHIP
   }
@@ -70,13 +76,21 @@ export class ShippaneComponent implements OnInit {
 
   selectEngineeringSubPane() {
     this.selectedSubPane = this.subPaneNameEngineering
-    this._pane.lastShipPaneSubPane = this.subPaneNameEngineering
+    this._pane.lastShipPaneSubPane = this.subPaneNameEngineering // Remeber pane so ship pane reopens to same pane.
   }
-
 
   selectUpgradesSubPane() {
     this.selectedSubPane = this.subPaneNameUpgrades
-    this._pane.lastShipPaneSubPane = this.subPaneNameUpgrades
+    this._pane.lastShipPaneSubPane = this.subPaneNameUpgrades // Remeber pane so ship pane reopens to same pane.
   }
 
+  selectStationSubPane() {
+      if(this._api.frameData.ship.docked_at_station !== null) {
+        this.selectedSubPane = this.subPaneNameStation
+        this._pane.lastShipPaneSubPane = this.subPaneNameStation // Remeber pane so ship pane reopens to same pane.
+      } else {
+        console.warn("could not open station sub pane")
+        this.selectEngineeringSubPane()
+      }
+  }
 }

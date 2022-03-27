@@ -70,6 +70,10 @@
     background-color: #747dff;
 }
 
+.gray-btn {
+    background-color: #3a3a3a;
+}
+
 .yellow-btn {
     background-color: #ffef60;
 }
@@ -126,4 +130,21 @@
     padding-left: 2px;
     padding-right: 2px;
     border-radius: 3px;
+}
+
+.vertical-switch {
+    width: 22px;
+    height: 70px;
+}
+
+#grav-brake-switch-container {
+    width: 25px;
+    height: 82px;
+    color: #00ff00;
+}
+
+#utility-switch-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
 }

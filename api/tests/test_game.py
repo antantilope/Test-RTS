@@ -107,7 +107,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         assert game.map_is_configured
         assert game._map_units_per_meter == 10
@@ -136,7 +137,8 @@ class TestGame(TestCase):
                         'position_meters_x': 200,
                         'position_meters_y': 200,
                     }],
-                    'features': [],
+                    'spaceStations': [],
+                    'miningLocations': [],
                 }, map_units_per_meter=10)
             )
             assert not game.map_is_configured
@@ -168,7 +170,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         assert game._phase == GamePhase.STARTING
@@ -200,7 +203,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         for phase in GamePhase.NON_LOBBY_PHASES:
             game._phase = phase
@@ -232,7 +236,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         game._phase = GamePhase.LOBBY
         self.assertRaises(
@@ -286,7 +291,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         assert game._phase == GamePhase.STARTING
@@ -321,7 +327,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
 
@@ -362,7 +369,8 @@ class TestGame(TestCase):
                     'position_meters_x': 200,
                     'position_meters_y': 300,
                 }],
-                'features': [],
+                'spaceStations': [],
+                'miningLocations': [],
             }, map_units_per_meter=10)
             game.advance_to_phase_1_starting()
 
@@ -398,7 +406,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 300,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
 
@@ -433,7 +442,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 300,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         game._game_start_countdown = 1
@@ -472,7 +482,8 @@ class TestGame(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 300,
             }],
-            'features': [],
+            'spaceStations': [],
+            'miningLocations': [],
         }, map_units_per_meter=10)
         game.advance_to_phase_1_starting()
         assert game._phase == GamePhase.STARTING
@@ -487,3 +498,99 @@ class TestGame(TestCase):
 
         game.check_for_winning_team()
         assert game._winning_team == '06786785' # Player2's team is the winner
+
+    def test_set_map_loads_space_stations(self):
+        game = Game()
+        game._phase = GamePhase.LOBBY
+
+        game._players['666777888'] = {
+            'player_name': 'foobar1',
+            'player_id': '666777888',
+            'team_id': '3546235',
+        }
+        game._players['1112223333'] = {
+            'player_name': 'foobar2',
+            'player_id': '1112223333',
+            'team_id': '06786785',
+        }
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 150,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 300,
+            }],
+            'spaceStations': [{
+                "position_meters_x": 800,
+                "position_meters_y": 1100,
+                "service_radius_meters": 200,
+                "name": "derpson's station"
+            }],
+            'miningLocations': [],
+        }, map_units_per_meter=10)
+
+        assert game._space_stations == [
+            {
+                'position_map_units_x': 8000,
+                'position_map_units_y': 11000,
+                'service_radius_map_units': 2000,
+                'position_meters_x': 800,
+                'position_meters_y': 1100,
+                'service_radius_meters': 200,
+                "name": "derpson's station",
+            }
+        ]
+
+    def test_set_map_loads_mining_locations(self):
+        game = Game()
+        game._phase = GamePhase.LOBBY
+
+        game._players['666777888'] = {
+            'player_name': 'foobar1',
+            'player_id': '666777888',
+            'team_id': '3546235',
+        }
+        game._players['1112223333'] = {
+            'player_name': 'foobar2',
+            'player_id': '1112223333',
+            'team_id': '06786785',
+        }
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 150,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 300,
+            }],
+            'spaceStations': [],
+            'miningLocations': [{
+                "position_meters_x": 800,
+                "position_meters_y": 1100,
+                "service_radius_meters": 200,
+                "name": "derpson's mine",
+            }],
+        }, map_units_per_meter=10)
+
+        assert game._ore_mines == [
+            {
+                'position_map_units_x': 8000,
+                'position_map_units_y': 11000,
+                'service_radius_map_units': 2000,
+                'position_meters_x': 800,
+                'position_meters_y': 1100,
+                'service_radius_meters': 200,
+                "name": "derpson's mine",
+            }
+        ]

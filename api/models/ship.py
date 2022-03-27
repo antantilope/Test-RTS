@@ -48,6 +48,9 @@ class ShipCommands:
     PAUSE_CHARGE_EBEAM = 'pause_charge_ebeam'
     FIRE_EBEAM = 'fire_ebeam'
 
+    EXTEND_GRAVITY_BRAKE = "extend_gravity_brake"
+    RETRACT_GRAVITY_BRAKE = "retract_gravity_brake"
+
 class ShipStateKey:
     MASS = 'mass'
 
@@ -247,11 +250,20 @@ class Ship(BaseModel):
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 1)
-        self.explode_immediately = random.randint(0, 4) == 1
+        self.explode_immediately = False # random.randint(0, 4) == 1
         self.explosion_frame = None
         self.explosion_point = None
-        self._seconds_to_explode = random.randint(2, 4)
+        self._seconds_to_explode = 10 # random.randint(2, 4)
 
+        # Space station interactions
+        self.docked_at_station = None
+        self.docking_at_station = None
+        self.gravity_brake_position = 0
+        self.gravity_brake_deployed_position = 100
+        self.gravity_brake_traversal_per_second = None
+        self.gravity_brake_retracting = False
+        self.gravity_brake_extending = False
+        self.gravity_brake_active = False # flipped to true, the ship rapidly slows down.
 
         # Arbitrary ship state data
         self._state = {}
@@ -359,12 +371,21 @@ class Ship(BaseModel):
         ))
 
     @property
+    def is_stationary(self) -> bool:
+        return self.velocity_x_meters_per_second == 0 and self.velocity_y_meters_per_second == 0
+
+    @property
     def engine_heading(self) -> int:
         return (self.heading - 180) if self.heading >= 180 else (self.heading + 180)
 
     @property
     def scanner_range(self):
         return self.scanner_radar_range if self.scanner_mode == ShipScannerMode.RADAR else self.scanner_ir_range
+
+    @property
+    def gravity_brake_deployed(self) -> bool:
+        return self.gravity_brake_position == self.gravity_brake_deployed_position
+
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
@@ -420,6 +441,14 @@ class Ship(BaseModel):
             'ebeam_color': self.ebeam_color,
             'ebeam_charge': self.ebeam_charge,
             'ebeam_can_fire': self.ebeam_charge >= self.ebeam_charge_fire_minimum and not self.ebeam_firing,
+
+            'docked_at_station': self.docked_at_station,
+            'gravity_brake_position': self.gravity_brake_position,
+            'gravity_brake_deployed_position': self.gravity_brake_deployed_position,
+            'gravity_brake_retracting': self.gravity_brake_retracting,
+            'gravity_brake_extending': self.gravity_brake_extending,
+            'gravity_brake_active': self.gravity_brake_active,
+            'gravity_brake_deployed': self.gravity_brake_deployed,
 
             'alive': self.died_on_frame is None,
             'aflame': self.aflame_since_frame is not None,
@@ -531,6 +560,8 @@ class Ship(BaseModel):
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
 
+        instance.gravity_brake_traversal_per_second = constants.GRAVITY_BRAKE_TRAVERSAL_PER_SECOND
+
         return instance
 
 
@@ -568,6 +599,21 @@ class Ship(BaseModel):
                 'name': 'APU Startup',
                 'percent': round(
                     self.apu_startup_power_used / self.apu_activation_power_required_total * 100
+                ),
+            }
+
+        if self.gravity_brake_extending:
+            yield {
+                'name': 'Brake Deploy',
+                'percent': round(
+                    self.gravity_brake_position / self.gravity_brake_deployed_position * 100
+                ),
+            }
+        elif self.gravity_brake_retracting:
+            yield {
+                'name': 'Brake Retract',
+                'percent': round(
+                    (self.gravity_brake_deployed_position - self.gravity_brake_position) / self.gravity_brake_deployed_position * 100
                 ),
             }
 
@@ -816,7 +862,48 @@ class Ship(BaseModel):
 
 
     def calculate_physics(self, fps: int) -> None:
-        if self.engine_lit:
+        ## apply gravity brake
+        if self.gravity_brake_active:
+            if self.velocity_x_meters_per_second != 0:
+                magX = abs(self.velocity_x_meters_per_second)
+                if magX > 150:
+                     # If more than 150M/S immediatly drop to 100M/S
+                    delta = magX - 100
+                else:
+                    # reduce X by half 6 times per second.
+                    delta = min(
+                        magX,
+                        max(5, magX / 2 / (fps / 6))
+                    )
+                direction = 1 if self.velocity_x_meters_per_second < 0 else -1
+                self.velocity_x_meters_per_second += delta * direction
+                if abs(self.velocity_x_meters_per_second) < 5:
+                    self.velocity_x_meters_per_second = 0
+
+
+            if self.velocity_y_meters_per_second != 0:
+                magY = abs(self.velocity_y_meters_per_second)
+                if magY > 150:
+                    # If more than 150M/S immediatly drop to 100M/S
+                    delta = magY - 100
+                else:
+                    # Otherwise reduce Y by half 6 times per second.
+                    delta = min(
+                        magY,
+                        max(5, magY / 2 / (fps / 6))
+                    )
+                direction = 1 if self.velocity_y_meters_per_second < 0 else -1
+                self.velocity_y_meters_per_second += delta * direction
+                if abs(self.velocity_y_meters_per_second) < 5:
+                    self.velocity_y_meters_per_second = 0
+
+            if self.is_stationary:
+                self.gravity_brake_active = False
+                self.docked_at_station = self.docking_at_station
+                self.docking_at_station = None
+                return
+
+        elif self.engine_lit and self.docked_at_station is None:
             force = self.engine_newtons * (self.engine_boost_multiple if self.engine_boosted else 1)
             adj_meters_per_second = float(force / self.mass)
             adj_meters_per_frame = float(adj_meters_per_second / fps)
@@ -828,7 +915,7 @@ class Ship(BaseModel):
             self.velocity_x_meters_per_second += delta_x
             self.velocity_y_meters_per_second += delta_y
 
-        if self.velocity_x_meters_per_second == 0 and self.velocity_y_meters_per_second == 0:
+        if self.is_stationary:
             # No velocity: coordinates are unchanges
             return
 
@@ -905,6 +992,10 @@ class Ship(BaseModel):
         self.ebeam_firing = False
         self.ebeam_charging = False
         self.autopilot_program = None
+        self.gravity_brake_active = False
+        self.gravity_brake_position = 0
+        self.gravity_brake_extending = False
+        self.gravity_brake_retracting = False
 
     def advance_thermal_signature(self, fps: int) -> None:
         delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps
@@ -970,6 +1061,35 @@ class Ship(BaseModel):
         if not self.engine_lit:
             self.engine_lit = True
 
+    def advance_gravity_brake_position(self, fps: int) -> None:
+        if not self.gravity_brake_retracting and not self.gravity_brake_extending:
+            return
+
+        if self.gravity_brake_extending:
+            if self.gravity_brake_deployed:
+                self.gravity_brake_extending = False
+                return
+            delta = min(
+                max(1, round(self.gravity_brake_traversal_per_second / fps)),
+                self.gravity_brake_deployed_position - self.gravity_brake_position,
+            )
+            self.gravity_brake_position += delta
+            return
+
+        elif self.gravity_brake_retracting:
+            if self.gravity_brake_position == 0:
+                self.gravity_brake_retracting = False
+                return
+            delta = min(
+                max(1, round(self.gravity_brake_traversal_per_second / fps)),
+                self.gravity_brake_position
+            )
+            self.gravity_brake_position -= delta
+            return
+
+        else:
+            raise NotImplementedError
+
     def process_command(self, command: str, *args, **kwargs):
         if self.died_on_frame:
             return
@@ -1016,6 +1136,11 @@ class Ship(BaseModel):
 
         elif command == ShipCommands.DISABLE_AUTO_PILOT:
             self.cmd_disable_autopilot()
+
+        elif command == ShipCommands.EXTEND_GRAVITY_BRAKE:
+            self.cmd_extend_gravity_brake()
+        elif command == ShipCommands.RETRACT_GRAVITY_BRAKE:
+            self.cmd_retract_gravity_brake()
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1192,3 +1317,15 @@ class Ship(BaseModel):
     def cmd_deactivate_apu(self):
         if self.apu_online:
             self.apu_online = False
+
+    def cmd_extend_gravity_brake(self):
+        if self.gravity_brake_extending or self.gravity_brake_retracting:
+            return
+        self.gravity_brake_extending = True
+
+    def cmd_retract_gravity_brake(self):
+        if self.gravity_brake_extending or self.gravity_brake_retracting:
+            return
+        self.gravity_brake_retracting = True
+        self.docked_at_station = None
+        self.docking_at_station = None

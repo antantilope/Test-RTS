@@ -6,6 +6,7 @@ export class QuoteDetails {
   lines: string[]
   author?: string
   use?: boolean
+  shrinkFactor?: number // todo
 }
 
 
@@ -78,7 +79,7 @@ export class QuoteService {
     {
       lines: [
         "We have always been at space war",
-        "with Eastasia.",
+        "with EastSpaceAsia.",
       ],
       author: this.presidentName,
     },
@@ -112,6 +113,24 @@ export class QuoteService {
     },
     {
       lines: [
+        "I would live a pauper's life",
+        "if it meant secure ore-coin futures",
+        "for my people."
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "If you short ore-coin in the market",
+        "I will immediatly detect it and",
+        "I will use public funds to bury you",
+        "and take all your assets.",
+      ],
+      author: this.presidentName,
+      shrinkFactor: 10,
+    },
+    {
+      lines: [
         "Only the dead have seen",
         "the end of the space war.",
       ],
@@ -120,6 +139,13 @@ export class QuoteService {
     {
       lines: [
         "Space war is hell.",
+      ],
+      author: this.generalName,
+    },
+    {
+      lines: [
+        "Fighting in space is",
+        "preposterously dangerous.",
       ],
       author: this.generalName,
     },
@@ -170,6 +196,13 @@ export class QuoteService {
     },
     {
       lines: [
+        "Legally, you cannot commit murder in",
+        "space. It's not possible, legally speaking.",
+      ],
+      author: this.legalBotName,
+    },
+    {
+      lines: [
         "Earth's legal jurisdiction ends",
         "at an altitude of 2 million meters.",
       ],
@@ -198,6 +231,15 @@ export class QuoteService {
     },
     {
       lines: [
+        "Try as they might, organic humans",
+        "lack the survival traits needed",
+        "for theaters of warfare in space."
+      ],
+      author: this.mathLovingBotName,
+      use: true,
+    },
+    {
+      lines: [
         "No space war is over",
         "until the enemy is melted.",
       ],
@@ -213,15 +255,19 @@ export class QuoteService {
     },
     {
       lines: [
+        "I wouldn't want to fight me.",
+      ],
+      author: this.topGunBotName,
+    },
+    {
+      lines: [
         "Ore coin is worth dieing over.",
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        `Vote for ${this.presidentName}.`,
-        "That was a command. You must vote",
-        `for ${this.presidentName}.`,
+        `You must vote for ${this.presidentName}.`,
       ],
       author: this.tvAnchorBotName,
     },
@@ -255,7 +301,7 @@ export class QuoteService {
     },
     {
       lines: [
-        "If the ship is aflame then abandon ship.",
+        "If the ship is aflame: abandon ship.",
       ],
       author: this.instructionManualName,
     },

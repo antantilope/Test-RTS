@@ -22,34 +22,29 @@ function drawMapPreview(mapData, canvas) {
     ctx.rect(0, yOffset, canvas.width, canvas.height);
     ctx.fill();
 
-    for(let i=0; i<mapData.spawn_points.length; i++) {
-        let spCx = mapData.spawn_points[i].position_meters_x / metersPerCanvasPxX;
-        let spCy = mapData.spawn_points[i].position_meters_y / metersPerCanvasPxY;
+    for(let i=0; i<mapData.spawnPoints.length; i++) {
+        let spCx = mapData.spawnPoints[i].position_meters_x / metersPerCanvasPxX;
+        let spCy = mapData.spawnPoints[i].position_meters_y / metersPerCanvasPxY;
         console.log({
-            sp: mapData.spawn_points[i],
+            sp: mapData.spawnPoints[i],
             ch: canvas.height,
             spCx,
             spCy,
             metersPerCanvasPxY,
         })
         ctx.beginPath();
-        ctx.fillStyle = "#00ff00";
+        ctx.strokeStyle = "#00ff00"
+        ctx.lineWidth = 3
         ctx.arc(
-            spCx, (canvas.height - spCy), 5, 0, 2 * Math.PI
+            spCx, (canvas.height - spCy), 7, 0, 2 * Math.PI
         );
-        ctx.fill();
+        ctx.stroke();
     }
 
-    for(let i=0; i<mapData.features.length; i++) {
-        let fCx = mapData.features[i].position_meters_x / metersPerCanvasPxX;
-        let fCy = mapData.features[i].position_meters_y / metersPerCanvasPxY;
-        let icon = "?";
-        if(mapData.features[i].type == 'fuel') {
-            icon = "⛽"
-        }
-        else if (mapData.features[i].type == 'ore') {
-            icon = "💎"
-        }
+    for(let i=0; i<mapData.spaceStations.length; i++) {
+        let fCx = mapData.spaceStations[i].position_meters_x / metersPerCanvasPxX;
+        let fCy = mapData.spaceStations[i].position_meters_y / metersPerCanvasPxY;
+        let icon = "🛰️";
         ctx.beginPath();
         ctx.font = "20px Courier New";
         ctx.fillStyle = "#ffffff";
@@ -61,4 +56,33 @@ function drawMapPreview(mapData, canvas) {
             (canvas.height - fCy),
         );
     }
+
+    ctx.font = "20px Courier New";
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = "middle";
+    for(let i=0; i<mapData.spaceStations.length; i++) {
+        let fCx = mapData.spaceStations[i].position_meters_x / metersPerCanvasPxX;
+        let fCy = mapData.spaceStations[i].position_meters_y / metersPerCanvasPxY;
+        let icon = "🛰️";
+        ctx.beginPath();
+        ctx.fillText(
+            icon,
+            fCx,
+            (canvas.height - fCy),
+        );
+    }
+
+    for(let i=0; i<mapData.miningLocations.length; i++) {
+        let fCx = mapData.miningLocations[i].position_meters_x / metersPerCanvasPxX;
+        let fCy = mapData.miningLocations[i].position_meters_y / metersPerCanvasPxY;
+        let icon = "💎";
+        ctx.beginPath();
+        ctx.fillText(
+            icon,
+            fCx,
+            (canvas.height - fCy),
+        );
+    }
+
 }

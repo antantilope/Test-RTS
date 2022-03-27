@@ -152,6 +152,18 @@ const commandHandlers = {
             ship_command: 'disable_autopilot',
         });
     },
+    extend_gravity_brake: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'extend_gravity_brake',
+        });
+    },
+    retract_gravity_brake: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'retract_gravity_brake',
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {
