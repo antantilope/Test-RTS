@@ -59,21 +59,6 @@ function drawMapPreview(mapData, canvas) {
         );
     }
 
-    ctx.font = "20px Courier New";
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = "middle";
-    for(let i=0; i<mapData.spaceStations.length; i++) {
-        let fCx = mapData.spaceStations[i].position_meters_x / metersPerCanvasPxX;
-        let fCy = mapData.spaceStations[i].position_meters_y / metersPerCanvasPxY;
-        let icon = "🛰️";
-        ctx.beginPath();
-        ctx.fillText(
-            icon,
-            fCx,
-            (canvas.height - fCy),
-        );
-    }
 
     for(let i=0; i<mapData.miningLocations.length; i++) {
         let fCx = mapData.miningLocations[i].position_meters_x / metersPerCanvasPxX;

@@ -265,6 +265,12 @@ class Ship(BaseModel):
         self.gravity_brake_extending = False
         self.gravity_brake_active = False # flipped to true, the ship rapidly slows down.
 
+        # Mining interactions
+        self.parked_at_ore_mine = None
+        self.cargo_mass_capacity_kg = None
+        self.cargo_mass_kg = 0
+
+
         # Arbitrary ship state data
         self._state = {}
 
@@ -449,6 +455,8 @@ class Ship(BaseModel):
             'gravity_brake_extending': self.gravity_brake_extending,
             'gravity_brake_active': self.gravity_brake_active,
             'gravity_brake_deployed': self.gravity_brake_deployed,
+
+            'parked_at_ore_mine': self.parked_at_ore_mine,
 
             'alive': self.died_on_frame is None,
             'aflame': self.aflame_since_frame is not None,
@@ -902,6 +910,12 @@ class Ship(BaseModel):
                 self.docked_at_station = self.docking_at_station
                 self.docking_at_station = None
                 return
+
+            else:
+                # spin effect
+                new_heading = utils2d.signed_angle_to_unsigned_angle(self.heading + 2)
+                self._set_heading(new_heading)
+
 
         elif self.engine_lit and self.docked_at_station is None:
             force = self.engine_newtons * (self.engine_boost_multiple if self.engine_boosted else 1)

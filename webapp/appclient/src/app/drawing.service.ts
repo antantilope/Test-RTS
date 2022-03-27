@@ -429,16 +429,36 @@ export class DrawingService {
       ctx.beginPath()
       ctx.font = 'bold 32px courier new'
       ctx.fillStyle = '#00ff00'
-      ctx.textAlign = 'center'
+      ctx.textAlign = 'left'
       ctx.fillText(
         "Docked at",
-        this._camera.canvasHalfWidth,
+        this._camera.canvasHalfWidth / 3,
         this._camera.canvasHalfHeight / 2
       )
       ctx.font = 'bold 38px courier new'
       ctx.fillText(
         station.name,
-        this._camera.canvasHalfWidth,
+        this._camera.canvasHalfWidth / 3,
+        this._camera.canvasHalfHeight / 2 + 45
+      )
+    }
+    else if (this._api.frameData.ship.parked_at_ore_mine) {
+      const oreMine = this._api.frameData.ore_mines.find(
+        om => om.uuid == this._api.frameData.ship.parked_at_ore_mine
+      )
+      ctx.beginPath()
+      ctx.font = 'bold 32px courier new'
+      ctx.fillStyle = '#00ff00'
+      ctx.textAlign = 'left'
+      ctx.fillText(
+        "Parked at",
+        this._camera.canvasHalfWidth / 3,
+        this._camera.canvasHalfHeight / 2
+      )
+      ctx.font = 'bold 38px courier new'
+      ctx.fillText(
+        oreMine.name,
+        this._camera.canvasHalfWidth / 3,
         this._camera.canvasHalfHeight / 2 + 45
       )
     }

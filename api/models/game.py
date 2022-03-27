@@ -409,6 +409,7 @@ class Game(BaseModel):
 
         self._ebeam_rays.clear()
         check_for_gravity_brake_catches = self._game_frame % 4 == 0
+        check_for_ore_mine_parking = self._game_frame % 60 == 0
 
         for ship_id, ship in self._ships.items():
             ship.advance_gravity_brake_position(self._fps)
@@ -423,6 +424,9 @@ class Game(BaseModel):
 
             if check_for_gravity_brake_catches:
                 self.check_for_gravity_brake_catch(ship_id)
+
+            if check_for_ore_mine_parking:
+                self.check_for_ore_mine_parking(ship_id)
 
         # Post frame checks
         if self._game_frame % 45 == 0:
@@ -667,9 +671,33 @@ class Game(BaseModel):
             if dist <= st['service_radius_map_units']:
                 # Gravity Brake Catches
                 self._ships[ship_id].engine_lit = False
+                self._ships[ship_id].scanner_locked = False
+                self._ships[ship_id].scanner_locking = False
                 self._ships[ship_id].gravity_brake_active = True
                 self._ships[ship_id].docking_at_station = st['uuid']
                 self._space_stations[ix]['grav_brake_last_caught'] = self._game_frame
+
+    def check_for_ore_mine_parking(self, ship_id: str) -> None:
+        ship = self._ships[ship_id]
+        if not ship.is_stationary:
+            self._ships[ship_id].parked_at_ore_mine = None
+            return
+
+        if ship.parked_at_ore_mine:
+            return
+
+        ship_coords = ship.coords
+        for om in self._ore_mines:
+            dist = utils2d.calculate_point_distance(
+                (om['position_map_units_x'], om['position_map_units_y']),
+                ship_coords,
+            )
+            if dist <= om['service_radius_map_units']:
+                self._ships[ship_id].parked_at_ore_mine = om['uuid']
+                return
+
+        self._ships[ship_id].parked_at_ore_mine = None
+
 
 
     def _process_ship_command(self, command: FrameCommand):
