@@ -360,6 +360,7 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_fin_1_rel_rot_coord_1': (10048, 9940),
                 'visual_gravity_brake_position': 0,
                 'visual_gravity_brake_deployed_position': 100,
+                'visual_gravity_brake_active': False,
                 'aflame': False,
                 'explosion_frame': None,
                 'alive': True
@@ -389,6 +390,7 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_fin_1_rel_rot_coord_1': (5048, 4940),
                 'visual_gravity_brake_position': 0,
                 'visual_gravity_brake_deployed_position': 100,
+                'visual_gravity_brake_active': False,
                 'aflame': False,
                 'explosion_frame': None,
                 'alive': True
@@ -438,6 +440,7 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_fin_1_rel_rot_coord_1': (5048, 4940),
             'visual_gravity_brake_position': 0,
             'visual_gravity_brake_deployed_position': 100,
+            'visual_gravity_brake_active': False,
             'aflame': False,
             'explosion_frame': None,
             'alive': True
