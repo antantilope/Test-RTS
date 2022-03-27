@@ -859,8 +859,8 @@ export class DrawingService {
     ctx.fill()
 
     // Draw service perimeter
+    const servicePerimeterCavasPx = st.service_radius_map_units / this._camera.getZoom()
     if(Math.random() > 0.8) {
-      const servicePerimeterCavasPx = st.service_radius_map_units / this._camera.getZoom()
       ctx.beginPath()
       ctx.strokeStyle = Math.random() > 0.5 ? "rgb(0, 0, 255, 0.3)" : "rgb(0, 0, 255, 0.7)"
       ctx.lineWidth = 4 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
@@ -872,6 +872,16 @@ export class DrawingService {
       )
       ctx.stroke()
     }
+    ctx.beginPath()
+    ctx.strokeStyle = "rgb(0, 0, 255, 0.35)"
+    ctx.lineWidth = 1
+    ctx.arc(
+      centerCanvasCoord.x, centerCanvasCoord.y,
+      servicePerimeterCavasPx,
+      0,
+      2 * Math.PI,
+    )
+    ctx.stroke()
     // Draw lights
     const lightPushoutMultiple = 3
     ctx.beginPath()
