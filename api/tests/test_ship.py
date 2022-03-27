@@ -2346,3 +2346,45 @@ class TestShipAutopilot(TestCase):
         self.ship.calculate_physics(fps=6)
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, 0)
+
+
+''' ADVANCE GRAVITY BRAKE
+'''
+class TestShipAdjustGravityBrake(TestCase):
+    def setUp(self):
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship.gravity_brake_position = 0
+        self.ship.gravity_brake_deployed_position = 100
+        self.ship.gravity_brake_traversal_per_second = 40
+
+    def test_extend_gravity_brake(self):
+        assert not self.ship.gravity_brake_deployed
+        self.ship.gravity_brake_extending = True
+        assert not self.ship.gravity_brake_deployed
+        assert self.ship.gravity_brake_position == 0
+
+        self.ship.advance_gravity_brake_position(fps=1)
+        assert self.ship.gravity_brake_position == 40
+        assert not self.ship.gravity_brake_deployed
+        self.ship.advance_gravity_brake_position(fps=1)
+        assert self.ship.gravity_brake_position == 80
+        assert not self.ship.gravity_brake_deployed
+        self.ship.advance_gravity_brake_position(fps=1)
+        assert self.ship.gravity_brake_position == 100
+        assert self.ship.gravity_brake_deployed
+
+
+    def test_retract_gravity_brake(self):
+        self.ship.gravity_brake_extending = False
+        self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
+        assert self.ship.gravity_brake_deployed
+        self.ship.gravity_brake_retracting = True
+
+        self.ship.advance_gravity_brake_position(fps=1)
+        assert self.ship.gravity_brake_position == 60
+        assert not self.ship.gravity_brake_deployed
+        self.ship.advance_gravity_brake_position(fps=1)
+        assert self.ship.gravity_brake_position == 20
+        self.ship.advance_gravity_brake_position(fps=1)
+        assert self.ship.gravity_brake_position == 0

@@ -34,6 +34,9 @@ export class DrawingService {
   private actionTileImgEngineOnline: any = new Image()
   private actionTileImgScannerOnline: any = new Image()
 
+
+  private spaceStationVisualSideLengthM = 30
+
   constructor(
     private _camera: CameraService,
     private _api: ApiService,
@@ -46,6 +49,8 @@ export class DrawingService {
     this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
     this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
     this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
+
+
   }
 
 
@@ -54,8 +59,11 @@ export class DrawingService {
     mapWallCanvasBoxCoords: BoxCoords,
   ) {
     ctx.beginPath()
-    ctx.strokeStyle ="#636300"
-    ctx.lineWidth = Math.max(1, 500 / this._camera.getZoom())
+    ctx.strokeStyle ="#5e5e00"
+    ctx.lineWidth = Math.max(
+      2,
+      Math.ceil(8 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+    )
     ctx.rect(
       mapWallCanvasBoxCoords.x1,
       mapWallCanvasBoxCoords.y1,
@@ -400,9 +408,9 @@ export class DrawingService {
       }
       deathTextYOffset += (deathQuoteOffset * 2)
       ctx.beginPath()
-      ctx.fillStyle = '#9e9e9e'
+      ctx.fillStyle = '#b8b8b8' // medium light gray
       ctx.textAlign = 'left'
-      ctx.font = 'bold 40px Verdana'
+      ctx.font = `bold 40px Verdana`
       for(let i in this.deathQuote.lines) {
         const prefix = parseInt(i) === 0 ? '"' : ""
         ctx.fillText(prefix + this.deathQuote.lines[i], 100, deathTextYOffset)
@@ -732,6 +740,167 @@ export class DrawingService {
         ctx.lineTo(midX + maxRadius, midY - distance)
         ctx.stroke()
       }
+    }
+  }
+
+  private getIconFontSize() {
+    const zoomIx = this._camera.getZoomIndex()
+    if(zoomIx === null) {
+      return 40
+    }
+    else if(zoomIx <= 6) {
+      return 40
+    }
+    else if (zoomIx == 7) {
+      return 28
+    } else if (zoomIx == 8) {
+      return 22
+    }
+    else {
+      return 18
+    }
+  }
+
+  public drawSpaceStations(ctx: CanvasRenderingContext2D) {
+    const cameraPosition = this._camera.getPosition()
+    for(let i in this._api.frameData.space_stations) {
+      const st: any = this._api.frameData.space_stations[i]
+      const centerCanvasCoord = this._camera.mapCoordToCanvasCoord(
+        {x: st.position_map_units_x, y: st.position_map_units_y},
+        cameraPosition,
+      )
+
+      const sideLengthCanvasPx = Math.floor(
+        (this.spaceStationVisualSideLengthM
+        * this._api.frameData.map_config.units_per_meter)
+        / this._camera.getZoom()
+      )
+      if(sideLengthCanvasPx < 10) {
+        const iconFontSize = this.getIconFontSize()
+        ctx.beginPath()
+        ctx.font = iconFontSize + "px Courier New";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = "middle";
+        ctx.fillText(
+          "🛰️",
+          centerCanvasCoord.x,
+          centerCanvasCoord.y,
+      );
+      }
+      else {
+        this.drawSpaceStation(ctx, st, centerCanvasCoord, sideLengthCanvasPx)
+      }
+    }
+  }
+  private drawSpaceStation(
+    ctx: CanvasRenderingContext2D,
+    st: any,
+    centerCanvasCoord: PointCoord,
+    sideLengthCanvasPx: number,
+  ) {
+    // Draw station body
+    const halfLength = Math.floor(sideLengthCanvasPx / 2)
+    const lightRadius = Math.floor(sideLengthCanvasPx / 14)
+    ctx.beginPath()
+    ctx.fillStyle = "#789096"; // Dark gray blue
+    ctx.rect(
+      centerCanvasCoord.x - halfLength,
+      centerCanvasCoord.y - halfLength,
+      sideLengthCanvasPx, sideLengthCanvasPx,
+    )
+    ctx.fill()
+
+    // Draw service perimeter
+    if(Math.random() > 0.8) {
+      const servicePerimeterCavasPx = st.service_radius_map_units / this._camera.getZoom()
+      ctx.beginPath()
+      ctx.strokeStyle = Math.random() > 0.5 ? "rgb(0, 0, 255, 0.3)" : "rgb(0, 0, 255, 0.7)"
+      ctx.lineWidth = 4 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y,
+        servicePerimeterCavasPx,
+        0,
+        2 * Math.PI,
+      )
+      ctx.stroke()
+    }
+    // Draw lights
+    const lightPushoutMultiple = 3
+    ctx.beginPath()
+    const lightOn = this._api.frameData.game_frame % 125 < 30
+    ctx.fillStyle = lightOn ? "rgb(255, 255, 120, 0.95)" : "#575757"
+    ctx.arc(
+      centerCanvasCoord.x, centerCanvasCoord.y - halfLength * lightPushoutMultiple,
+      lightRadius,
+      0,
+      2 * Math.PI,
+    )
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.arc(
+      centerCanvasCoord.x + halfLength * lightPushoutMultiple, centerCanvasCoord.y,
+      lightRadius,
+      0,
+      2 * Math.PI,
+    )
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.arc(
+      centerCanvasCoord.x, centerCanvasCoord.y + halfLength * lightPushoutMultiple,
+      lightRadius,
+      0,
+      2 * Math.PI,
+    )
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.arc(
+      centerCanvasCoord.x - halfLength * lightPushoutMultiple, centerCanvasCoord.y,
+      lightRadius,
+      0,
+      2 * Math.PI,
+    )
+    ctx.fill()
+
+    // Draw light on effects
+    if(lightOn) {
+      const effectRadius = lightRadius * 30
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 255, 120, 0.05)"
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y - halfLength * lightPushoutMultiple,
+        effectRadius,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(
+        centerCanvasCoord.x + halfLength * lightPushoutMultiple, centerCanvasCoord.y,
+        effectRadius,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y + halfLength * lightPushoutMultiple,
+        effectRadius,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(
+        centerCanvasCoord.x - halfLength * lightPushoutMultiple, centerCanvasCoord.y,
+        effectRadius,
+        0,
+        2 * Math.PI,
+      )
+      ctx.fill()
     }
   }
 

@@ -20,13 +20,6 @@ export const CAMERA_MODE_FREE = 'free'
 
 
 
-const MAX_ZOOM_MANUAL = 10000
-
-const randomInt = function (min: number, max: number): number  {
-  return Math.floor(Math.random() * (max - min) + min)
-}
-
-
 @Injectable({
   providedIn: 'root'
 })
@@ -101,6 +94,14 @@ export class CameraService {
     }
     this.zoom = this.zoomLevels[ix]
     this.zoomIndex = ix
+  }
+
+  public getZoomIndex(): number | null {
+    if (this.getMode() != CAMERA_MODE_SCANNER) {
+      return this.zoomIndex
+    } else {
+      return null;
+    }
   }
 
   public xPan(delta: number): void {

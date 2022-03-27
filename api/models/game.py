@@ -406,8 +406,10 @@ class Game(BaseModel):
             self._process_ship_command(command)
 
         self._ebeam_rays.clear()
+        check_for_gravity_brake_catches = self._game_frame % 4 == 0
 
         for ship_id, ship in self._ships.items():
+            ship.advance_gravity_brake_position(self._fps)
             ship.adjust_resources(self._fps, self._game_frame)
             ship.calculate_physics(self._fps)
             ship.advance_thermal_signature(self._fps)
@@ -417,8 +419,11 @@ class Game(BaseModel):
             ship.run_autopilot()
             self.calculate_weapons_and_damage(ship_id)
 
+            if check_for_gravity_brake_catches:
+                self.check_for_gravity_brake_catch(ship_id)
+
         # Post frame checks
-        if self._game_frame % 30 == 0:
+        if self._game_frame % 45 == 0:
             if not self._winning_team:
                 self.check_for_winning_team()
             self.check_for_empty_game()
@@ -640,6 +645,22 @@ class Game(BaseModel):
             k for k in self._killfeed
             if k['created_at_frame'] >= oldest_frame
         ]
+
+    def check_for_gravity_brake_catch(self, ship_id: str) -> True:
+        if self._ships[ship_id].gravity_brake_active or self._ships[ship_id].is_stationary or not self._ships[ship_id].gravity_brake_deployed:
+            return
+
+        for st in self._space_stations:
+            dist = utils2d.calculate_point_distance(
+                (st['position_map_units_x'], st['position_map_units_y']),
+                self._ships[ship_id].coords,
+            )
+            if dist <= st['service_radius_map_units']:
+                # Gravity Brake Catches
+                self._ships[ship_id].engine_lit = False
+                self._ships[ship_id].gravity_brake_active = True
+                self._ships[ship_id].docking_at_station = st['uuid']
+
 
     def _process_ship_command(self, command: FrameCommand):
         ship_command = command['ship_command']

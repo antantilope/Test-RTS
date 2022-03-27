@@ -158,6 +158,17 @@
                     STOP
                 </button>
             </div>
+
+            <div id="utility-switch-container">
+                <button
+                    id="grav-brake-switch-container"
+                    (click)="btnClickToggleGravBrake()"
+                    [ngStyle]="{'background-color': gravBrakeBtnBkColor, 'color':grabBrakeBtnTxtColor}"
+                    [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.gravity_brake_retracting || _api.frameData.ship.gravity_brake_extending"
+                >
+                    G<br>V<br>B<br>K<br>
+                </button>
+            </div>
         </div>
 
         <div class=command-bar-column>

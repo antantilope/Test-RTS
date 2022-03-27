@@ -127,3 +127,20 @@
     padding-right: 2px;
     border-radius: 3px;
 }
+
+.vertical-switch {
+    width: 22px;
+    height: 70px;
+}
+
+#grav-brake-switch-container {
+    width: 25px;
+    height: 82px;
+    color: #00ff00;
+}
+
+#utility-switch-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+}

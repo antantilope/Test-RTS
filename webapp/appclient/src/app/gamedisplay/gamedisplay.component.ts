@@ -62,6 +62,9 @@ export class GamedisplayComponent implements OnInit {
 
   private drawableObjects: DrawableCanvasItems | null = null
 
+  public gravBrakeBtnBkColor = "#000000"
+  public grabBrakeBtnTxtColor = "#00ff00";
+
 
   constructor(
     public _api: ApiService,
@@ -76,6 +79,12 @@ export class GamedisplayComponent implements OnInit {
 
   ngOnInit(): void {
     console.log("GamedisplayComponent::ngOnInit")
+    setTimeout(()=>{
+      this.paintDisplay()
+      this.registerMouseEventListener()
+    }, 300)
+
+
   }
 
   ngAfterViewInit() {
@@ -84,9 +93,6 @@ export class GamedisplayComponent implements OnInit {
     this.resizeCanvas()
     this.setupCanvasContext()
     this.setCanvasColor()
-    this.paintDisplay()
-
-    this.registerMouseEventListener()
 
   }
 
@@ -168,6 +174,7 @@ export class GamedisplayComponent implements OnInit {
         this.mousePanLastY = event.screenY
       }
     })
+    console.log("Done registering all mouse events!")
   }
 
   public handleMouseClickInCanvas(event: any): void {
@@ -232,6 +239,17 @@ export class GamedisplayComponent implements OnInit {
       return
     }
 
+    if(this._api.frameData.ship.gravity_brake_extending || this._api.frameData.ship.gravity_brake_retracting) {
+      this.gravBrakeBtnBkColor = "#b2b500"
+      this.grabBrakeBtnTxtColor = "#b50000"
+    } else if (this._api.frameData.ship.gravity_brake_deployed) {
+      this.gravBrakeBtnBkColor = "#00b51b"
+      this.grabBrakeBtnTxtColor = "#ffffff"
+    } else if (this._api.frameData.ship.gravity_brake_position == 0) {
+      this.gravBrakeBtnBkColor = "#b50000"
+      this.grabBrakeBtnTxtColor = "#ffffff"
+    }
+
     const camCoords = this._camera.getPosition()
     const camMode = this._camera.getMode()
     if(camCoords.x === null || camCoords.y === null) {
@@ -243,9 +261,6 @@ export class GamedisplayComponent implements OnInit {
     }
 
     this.clearCanvas()
-    if(this.isDebug) {
-      this.paintDebugData()
-    }
 
     if (camMode === CAMERA_MODE_SHIP) {
       this._camera.setPosition(
@@ -268,6 +283,9 @@ export class GamedisplayComponent implements OnInit {
     // Draw Map boundary
     this._draw.drawMapBoundary(this.ctx, drawableObjects.mapWall);
 
+    // Add map features
+    this._draw.drawSpaceStations(this.ctx)
+
     // Ships
     for(let i in drawableObjects.ships) {
       const drawableShip: DrawableShip = drawableObjects.ships[i]
@@ -281,9 +299,6 @@ export class GamedisplayComponent implements OnInit {
     // E-Beams
     this._draw.drawEbeams(this.ctx, drawableObjects.ebeamRays)
 
-    // Front center and alerts
-    this._draw.drawFrontAndCenterAlerts(this.ctx)
-
     // Corner overlays
     this._draw.drawBottomLeftOverlay(this.ctx)
     this._draw.drawTopLeftOverlay(this.ctx);
@@ -291,6 +306,9 @@ export class GamedisplayComponent implements OnInit {
     if(!this.isDebug && this._api.frameData.ship.alive) {
       this._draw.drawTopRightOverlay(this.ctx)
     }
+
+    // Front center and alerts
+    this._draw.drawFrontAndCenterAlerts(this.ctx)
 
     // Click feedback
     if(this.clickAnimationFrame) {
@@ -309,6 +327,10 @@ export class GamedisplayComponent implements OnInit {
       if (this.clickAnimationFrame > 10) {
         this.clickAnimationFrame = null
       }
+    }
+
+    if(this.isDebug) {
+      this.paintDebugData();
     }
 
     if(this._api.frameData.ship.scanner_data.length && !this.scannerTargetIDCursor) {
@@ -369,6 +391,9 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText(`camera zoom: ${this._camera.getZoom()}`, xOffset, yOffset)
     yOffset += yInterval
 
+    this.ctx.fillText(`camera index: ${this._camera.getZoomIndex()}`, xOffset, yOffset)
+    yOffset += yInterval
+
     this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
     yOffset += yInterval
 
@@ -382,6 +407,10 @@ export class GamedisplayComponent implements OnInit {
     ]
     this.ctx.fillText(`ship Velocity: X: ${shipVelX.toFixed(2)} Y: ${shipVelY.toFixed(2)}`, xOffset, yOffset)
     yOffset += yInterval
+
+    this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
+    yOffset += yInterval
+
 
   }
 
@@ -603,6 +632,26 @@ export class GamedisplayComponent implements OnInit {
         "/api/rooms/command",
         {command:'fire_ebeam'},
       )
+    }
+  }
+
+  async btnClickToggleGravBrake() {
+    console.log("btnClickToggleGravBrake()")
+    if (this._api.frameData.ship.gravity_brake_deployed) {
+      return this._api.post(
+        "/api/rooms/command",
+        {command:'retract_gravity_brake'},
+      )
+    }
+    else if (
+      this._api.frameData.ship.gravity_brake_position == 0
+    ) {
+      return this._api.post(
+        "/api/rooms/command",
+        {command:'extend_gravity_brake'},
+      )
+    } else {
+      console.log("gravbrake doing nothing")
     }
   }
 

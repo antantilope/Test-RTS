@@ -6,6 +6,7 @@ export class QuoteDetails {
   lines: string[]
   author?: string
   use?: boolean
+  shrinkFactor?: number // todo
 }
 
 
@@ -112,6 +113,24 @@ export class QuoteService {
     },
     {
       lines: [
+        "I would live a pauper's life",
+        "if it meant secure ore-coin futures",
+        "for my people."
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "If you short ore-coin in the market",
+        "I will immediatly detect it and",
+        "I will use public funds to bury you",
+        "and take all your assets.",
+      ],
+      author: this.presidentName,
+      shrinkFactor: 10,
+    },
+    {
+      lines: [
         "Only the dead have seen",
         "the end of the space war.",
       ],
@@ -120,6 +139,13 @@ export class QuoteService {
     {
       lines: [
         "Space war is hell.",
+      ],
+      author: this.generalName,
+    },
+    {
+      lines: [
+        "Fighting in space is",
+        "preposterously dangerous.",
       ],
       author: this.generalName,
     },
@@ -205,6 +231,15 @@ export class QuoteService {
     },
     {
       lines: [
+        "Try as they might, organic humans",
+        "lack the survival traits needed",
+        "for theaters of warfare in space."
+      ],
+      author: this.mathLovingBotName,
+      use: true,
+    },
+    {
+      lines: [
         "No space war is over",
         "until the enemy is melted.",
       ],
@@ -215,6 +250,12 @@ export class QuoteService {
         "Any problem in space can be solved with",
         "the liberal application of high frequency",
         "electromagnetic radiation.",
+      ],
+      author: this.topGunBotName,
+    },
+    {
+      lines: [
+        "I wouldn't want to fight me.",
       ],
       author: this.topGunBotName,
     },
