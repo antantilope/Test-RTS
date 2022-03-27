@@ -508,6 +508,8 @@ class Game(BaseModel):
                         'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
                         'visual_ebeam_color': self._ships[other_id].ebeam_color,
                         'visual_fill_color': '#ffffff',
+                        'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
+                        'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
                     })
                 if is_scannable:
                     exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)

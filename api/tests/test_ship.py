@@ -936,8 +936,6 @@ class TestShipCMDCalculatePhysics(TestCase):
         self._calculate_physics()
         assert self.ship.velocity_x_meters_per_second == 100
         assert self.ship.velocity_y_meters_per_second == 84
-        # print(self.ship.velocity_x_meters_per_second)
-        # print(self.ship.velocity_y_meters_per_second)
 
     def test_ship_comes_to_a_complete_stop(self):
         self.fps = 10
@@ -996,8 +994,6 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert self.ship.docked_at_station == "test-station-uuid"
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, 0)
-        print(self.ship.velocity_x_meters_per_second)
-        print(self.ship.velocity_y_meters_per_second)
 
     '''
                                         |  \                              |  \    |  \
