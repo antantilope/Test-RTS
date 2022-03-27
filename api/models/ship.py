@@ -992,6 +992,10 @@ class Ship(BaseModel):
         self.ebeam_firing = False
         self.ebeam_charging = False
         self.autopilot_program = None
+        self.gravity_brake_active = False
+        self.gravity_brake_position = 0
+        self.gravity_brake_extending = False
+        self.gravity_brake_retracting = False
 
     def advance_thermal_signature(self, fps: int) -> None:
         delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps

@@ -15,25 +15,32 @@
     <div #paneBodyElement id="card-body">
         <div id="subpane-selector">
             <button
-                [disabled]="selectedSubPane==subPaneNameEngineering"
                 (click)="selectEngineeringSubPane()"
                 class="subpane-selector-btn"
             >
                 Engineering
             </button>
             <button
-                [disabled]="selectedSubPane==subPaneNameUpgrades"
                 (click)="selectUpgradesSubPane()"
                 class="subpane-selector-btn"
             >
                 Upgrades
             </button>
+            <button
+                *ngIf="_api.frameData.ship.docked_at_station !== null"
+                class="subpane-selector-btn"
+                (click)="selectStationSubPane()"
+            >
+                Station
+            </button>
         </div>
         <div id="sub-pane-container">
-            <app-engpane *ngIf="selectedSubPane==subPaneNameEngineering">
+            <app-engpane *ngIf="selectedSubPane==subPaneNameEngineering || (selectedSubPane==subPaneNameStation && _api.frameData.ship.docked_at_station === null)">
             </app-engpane>
             <app-upgradepane *ngIf="selectedSubPane==subPaneNameUpgrades">
             </app-upgradepane>
+            <app-stationpane *ngIf="selectedSubPane==subPaneNameStation && _api.frameData.ship.docked_at_station !== null">
+            </app-stationpane>
         </div>
     </div>
 </div>
