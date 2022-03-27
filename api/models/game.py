@@ -87,6 +87,7 @@ class MapSpaceStation(TypedDict):
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
     service_radius_map_units: int #
+    grav_brake_last_caught: Optional[int] # most recent gameframe the station caught a grav brake
 
 class MapSpawnPoint(TypedDict):
     id: str
@@ -657,7 +658,7 @@ class Game(BaseModel):
         ):
             return
 
-        for st in self._space_stations:
+        for ix, st in enumerate(self._space_stations):
             dist = utils2d.calculate_point_distance(
                 (st['position_map_units_x'], st['position_map_units_y']),
                 self._ships[ship_id].coords,
@@ -667,6 +668,7 @@ class Game(BaseModel):
                 self._ships[ship_id].engine_lit = False
                 self._ships[ship_id].gravity_brake_active = True
                 self._ships[ship_id].docking_at_station = st['uuid']
+                self._space_stations[ix]['grav_brake_last_caught'] = self._game_frame
 
 
     def _process_ship_command(self, command: FrameCommand):
