@@ -76,19 +76,18 @@ export class ShippaneComponent implements OnInit {
 
   selectEngineeringSubPane() {
     this.selectedSubPane = this.subPaneNameEngineering
-    this._pane.lastShipPaneSubPane = this.subPaneNameEngineering
+    this._pane.lastShipPaneSubPane = this.subPaneNameEngineering // Remeber pane so ship pane reopens to same pane.
   }
-
 
   selectUpgradesSubPane() {
     this.selectedSubPane = this.subPaneNameUpgrades
-    this._pane.lastShipPaneSubPane = this.subPaneNameUpgrades
+    this._pane.lastShipPaneSubPane = this.subPaneNameUpgrades // Remeber pane so ship pane reopens to same pane.
   }
 
   selectStationSubPane() {
       if(this._api.frameData.ship.docked_at_station !== null) {
         this.selectedSubPane = this.subPaneNameStation
-        this._pane.lastShipPaneSubPane = this.subPaneNameStation
+        this._pane.lastShipPaneSubPane = this.subPaneNameStation // Remeber pane so ship pane reopens to same pane.
       } else {
         console.warn("could not open station sub pane")
         this.selectEngineeringSubPane()
