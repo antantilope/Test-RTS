@@ -15,6 +15,7 @@ import {
 } from "./models/drawable-objects.model"
 import { TimerItem } from './models/timer-item.model';
 import { PointCoord } from './models/point-coord.model';
+import { TWO_PI } from './constants';
 
 
 
@@ -86,7 +87,7 @@ export class DrawingService {
         vs.canvasCoord.y,
         vs.radius,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
     }
@@ -182,7 +183,7 @@ export class DrawingService {
       gryroscopeY,
       gryroscopeRadius,
       0,
-      2 * Math.PI,
+      TWO_PI,
     )
     ctx.fill()
 
@@ -462,7 +463,7 @@ export class DrawingService {
         canvasCoord.y + randomInt(-1 * quarterFlameRadius, quarterFlameRadius),
         tFlameRadius,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
     }
@@ -505,7 +506,7 @@ export class DrawingService {
         canvasCoord.y + randomInt(-3, 3),
         fbSize,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
     } else if (explosionFrame < 76) {
@@ -518,7 +519,7 @@ export class DrawingService {
         canvasCoord.y + randomInt(-3, 3),
         fbSize,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
       // Inner sub fireballs
@@ -532,7 +533,7 @@ export class DrawingService {
           canvasCoord.y + randomInt(-8, 8),
           subFBSize,
           0,
-          2 * Math.PI,
+          TWO_PI,
         )
         ctx.fill()
       }
@@ -568,7 +569,7 @@ export class DrawingService {
         canvasCoord.y,
         Math.round(smokePuffSize),
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
     }
@@ -588,7 +589,7 @@ export class DrawingService {
         drawableShip.canvasCoordCenter.y,
         this._camera.minSizeForDotPx - 1,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
     }
@@ -637,7 +638,7 @@ export class DrawingService {
           engineFlameY,
           engineOuterFlameRadius,
           0,
-          2 * Math.PI,
+          TWO_PI,
         )
         ctx.fill()
         ctx.beginPath()
@@ -650,7 +651,7 @@ export class DrawingService {
           engineFlameY + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
           engineInnerFlameRadius,
           0,
-          2 * Math.PI,
+          TWO_PI,
         )
         ctx.fill()
       }
@@ -675,10 +676,12 @@ export class DrawingService {
           ctx.fillStyle = Math.random() < 0.7 ? `rgb(0, 0, 255, 0.1)` : `rgb(0, 0, 255, 0.6)`
         }
         ctx.beginPath()
-        ctx.arc(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y, currentRadius, 0, 2 * Math.PI)
+        const arcStart = drawableShip.gravityBrakeActive ? 0 : TWO_PI * Math.random()
+        const arcEnd = drawableShip.gravityBrakeActive ? TWO_PI : TWO_PI * Math.random()
+        ctx.arc(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y, currentRadius, arcStart, arcEnd)
         ctx.fill()
         ctx.beginPath()
-        ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, 0, 2 * Math.PI)
+        ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, arcStart, arcEnd)
         ctx.fill()
       }
     }
@@ -792,18 +795,13 @@ export class DrawingService {
 
   private getIconFontSize() {
     const zoomIx = this._camera.getZoomIndex()
-    if(zoomIx === null) {
-      return 40
-    }
-    else if(zoomIx <= 6) {
-      return 40
-    }
-    else if (zoomIx == 7) {
+    if (zoomIx <= 10) {
       return 28
+    } else if (zoomIx == 9) {
+      return 23
     } else if (zoomIx == 8) {
-      return 22
-    }
-    else {
+      return 20
+    } else {
       return 18
     }
   }
@@ -833,7 +831,7 @@ export class DrawingService {
           "🛰️",
           centerCanvasCoord.x,
           centerCanvasCoord.y,
-      );
+        );
       }
       else {
         this.drawSpaceStation(ctx, st, centerCanvasCoord, sideLengthCanvasPx)
@@ -860,15 +858,16 @@ export class DrawingService {
 
     // Draw service perimeter
     const servicePerimeterCavasPx = st.service_radius_map_units / this._camera.getZoom()
+    const perimeterWidth = Math.ceil(4 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom())
     if(Math.random() > 0.8) {
       ctx.beginPath()
       ctx.strokeStyle = Math.random() > 0.5 ? "rgb(0, 0, 255, 0.3)" : "rgb(0, 0, 255, 0.7)"
-      ctx.lineWidth = 4 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+      ctx.lineWidth = perimeterWidth
       ctx.arc(
         centerCanvasCoord.x, centerCanvasCoord.y,
         servicePerimeterCavasPx,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.stroke()
     }
@@ -879,9 +878,25 @@ export class DrawingService {
       centerCanvasCoord.x, centerCanvasCoord.y,
       servicePerimeterCavasPx,
       0,
-      2 * Math.PI,
+      TWO_PI,
     )
     ctx.stroke()
+    if(st.grav_brake_last_caught + 18 > this._api.frameData.game_frame) {
+      // Draw capture effect
+      const frame = this._api.frameData.game_frame - st.grav_brake_last_caught + 1
+      if(frame < 12 || Math.random() > 0.8) {
+        ctx.beginPath()
+        ctx.strokeStyle = `rgb(${randomInt(0, 255)}, ${randomInt(0, 255)}, ${randomInt(0, 255)}, 0.35)`
+        ctx.lineWidth = Math.max(1, Math.ceil(perimeterWidth * frame))
+        ctx.arc(
+          centerCanvasCoord.x, centerCanvasCoord.y,
+          servicePerimeterCavasPx,
+          0,
+          TWO_PI,
+        )
+        ctx.stroke()
+      }
+    }
     // Draw lights
     const lightPushoutMultiple = 3
     ctx.beginPath()
@@ -891,7 +906,7 @@ export class DrawingService {
       centerCanvasCoord.x, centerCanvasCoord.y - halfLength * lightPushoutMultiple,
       lightRadius,
       0,
-      2 * Math.PI,
+      TWO_PI,
     )
     ctx.fill()
 
@@ -900,7 +915,7 @@ export class DrawingService {
       centerCanvasCoord.x + halfLength * lightPushoutMultiple, centerCanvasCoord.y,
       lightRadius,
       0,
-      2 * Math.PI,
+      TWO_PI,
     )
     ctx.fill()
 
@@ -909,7 +924,7 @@ export class DrawingService {
       centerCanvasCoord.x, centerCanvasCoord.y + halfLength * lightPushoutMultiple,
       lightRadius,
       0,
-      2 * Math.PI,
+      TWO_PI,
     )
     ctx.fill()
 
@@ -918,7 +933,7 @@ export class DrawingService {
       centerCanvasCoord.x - halfLength * lightPushoutMultiple, centerCanvasCoord.y,
       lightRadius,
       0,
-      2 * Math.PI,
+      TWO_PI,
     )
     ctx.fill()
 
@@ -931,7 +946,7 @@ export class DrawingService {
         centerCanvasCoord.x, centerCanvasCoord.y - halfLength * lightPushoutMultiple,
         effectRadius,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
       ctx.beginPath()
@@ -939,7 +954,7 @@ export class DrawingService {
         centerCanvasCoord.x + halfLength * lightPushoutMultiple, centerCanvasCoord.y,
         effectRadius,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
       ctx.beginPath()
@@ -947,7 +962,7 @@ export class DrawingService {
         centerCanvasCoord.x, centerCanvasCoord.y + halfLength * lightPushoutMultiple,
         effectRadius,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
       ctx.beginPath()
@@ -955,10 +970,151 @@ export class DrawingService {
         centerCanvasCoord.x - halfLength * lightPushoutMultiple, centerCanvasCoord.y,
         effectRadius,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       ctx.fill()
     }
+  }
+
+  public drawMiningLocations(ctx: CanvasRenderingContext2D) {
+    const cameraPosition = this._camera.getPosition()
+    const minRockRadius = 10
+    for(let ix in this._api.frameData.ore_mines) {
+      let om = this._api.frameData.ore_mines[ix]
+      let centerCanvasCoord = this._camera.mapCoordToCanvasCoord(
+        {
+          x: om.position_map_units_x,
+          y: om.position_map_units_y,
+        },
+        cameraPosition,
+      )
+      const servicePerimeterRadiusCavasPx = om.service_radius_map_units / this._camera.getZoom()
+      const rockRadiusCavasPx = servicePerimeterRadiusCavasPx / 3
+      if(rockRadiusCavasPx < minRockRadius) {
+        const iconFontSize = this.getIconFontSize()
+        ctx.beginPath()
+        ctx.font = iconFontSize + "px Courier New";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = "middle";
+        ctx.fillText(
+          "💎",
+          centerCanvasCoord.x,
+          centerCanvasCoord.y,
+        );
+      }
+      else {
+        this.drawMiningLocation(ctx, om, centerCanvasCoord, rockRadiusCavasPx, servicePerimeterRadiusCavasPx)
+      }
+    }
+  }
+  private drawMiningLocation(
+    ctx: CanvasRenderingContext2D,
+    om: any, centerCanvasCoord:
+    PointCoord,
+    rockRadiusCavasPx: number,
+    servicePerimeterRadiusCavasPx: number,
+  ) {
+    // Rock body
+    ctx.beginPath()
+    ctx.fillStyle = "#4a1e00" // Dark brown
+    ctx.arc(
+      centerCanvasCoord.x, centerCanvasCoord.y,
+      rockRadiusCavasPx,
+      0, TWO_PI
+    )
+    ctx.fill()
+    // Mining Perimemter
+    ctx.beginPath()
+    ctx.strokeStyle = "rgb(168, 168, 0, 0.5)" // yellow
+    ctx.lineWidth = Math.ceil(
+      Math.max(
+        1,
+        1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      )
+    )
+    ctx.arc(
+      centerCanvasCoord.x, centerCanvasCoord.y,
+      servicePerimeterRadiusCavasPx,
+      0, TWO_PI
+    )
+    ctx.stroke()
+    // Draw remaining amount
+    // Draw lights
+    const lightOn = this._api.frameData.game_frame % 125 < 30
+    if(lightOn) {
+      const bulbRadius = Math.floor(
+        Math.max(
+          1,
+          1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+        )
+      )
+      const effectRadius = Math.floor(
+        Math.max(
+          1,
+          om.service_radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+        )
+      )
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148)"
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx,
+        bulbRadius, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx,
+        effectRadius, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148)"
+      ctx.arc(
+        centerCanvasCoord.x + servicePerimeterRadiusCavasPx, centerCanvasCoord.y,
+        bulbRadius, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
+      ctx.arc(
+        centerCanvasCoord.x +servicePerimeterRadiusCavasPx , centerCanvasCoord.y,
+        effectRadius, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148)"
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx,
+        bulbRadius, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
+      ctx.arc(
+        centerCanvasCoord.x , centerCanvasCoord.y + servicePerimeterRadiusCavasPx,
+        effectRadius, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148)"
+      ctx.arc(
+        centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y,
+        bulbRadius, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
+      ctx.arc(
+        centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y,
+        effectRadius, 0, TWO_PI
+      )
+      ctx.fill()
+
+    }
+
+
   }
 
 }

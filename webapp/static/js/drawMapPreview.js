@@ -1,3 +1,5 @@
+const TWO_PI = 2 * Math.PI
+
 function drawMapPreview(mapData, canvas) {
     const ctx = canvas.getContext("2d");
     const yOffset = 20;
@@ -36,7 +38,7 @@ function drawMapPreview(mapData, canvas) {
         ctx.strokeStyle = "#00ff00"
         ctx.lineWidth = 3
         ctx.arc(
-            spCx, (canvas.height - spCy), 7, 0, 2 * Math.PI
+            spCx, (canvas.height - spCy), 7, 0, TWO_PI
         );
         ctx.stroke();
     }

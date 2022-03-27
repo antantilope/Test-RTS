@@ -23,7 +23,7 @@ import { FormattingService } from '../formatting.service'
 import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
 import { DrawingService } from '../drawing.service'
-
+import { TWO_PI } from '../constants'
 
 @Component({
   selector: 'app-gamedisplay',
@@ -285,6 +285,7 @@ export class GamedisplayComponent implements OnInit {
 
     // Add map features
     this._draw.drawSpaceStations(this.ctx)
+    this._draw.drawMiningLocations(this.ctx)
 
     // Ships
     for(let i in drawableObjects.ships) {
@@ -320,7 +321,7 @@ export class GamedisplayComponent implements OnInit {
         this.clickAnimationCanvasY,
         this.clickAnimationFrame * 2.5,
         0,
-        2 * Math.PI,
+        TWO_PI,
       )
       this.ctx.stroke()
       this.clickAnimationFrame++

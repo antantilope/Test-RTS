@@ -57,6 +57,8 @@ class MapSpaceStation(BaseBattleMapFeature):
         return f"Space Station ({self.position_meters_x}, {self.position_meters_y}) on {self.battle_map.name}"
 
 class MapMiningLocation(BaseBattleMapFeature):
+    starting_ore_amount_kg = models.PositiveIntegerField(default=500)
+
     def __str__(self):
         return f"Mining location ({self.position_meters_x}, {self.position_meters_y}) on {self.battle_map.name}"
 

@@ -262,6 +262,7 @@ class Game(BaseModel):
                 "position_map_units_x": f['position_meters_x'] * self._map_units_per_meter,
                 "position_map_units_y": f['position_meters_y'] * self._map_units_per_meter,
                 "service_radius_map_units": f['service_radius_meters'] * self._map_units_per_meter,
+                "remaining_ore_count_kg": f['starting_ore_amount_kg'],
                 **f,
             }
             for f in request['miningLocations']

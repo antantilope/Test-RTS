@@ -236,7 +236,6 @@ export class QuoteService {
         "for theaters of warfare in space."
       ],
       author: this.mathLovingBotName,
-      use: true,
     },
     {
       lines: [
