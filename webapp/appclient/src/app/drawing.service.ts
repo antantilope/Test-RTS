@@ -421,6 +421,26 @@ export class DrawingService {
       ctx.beginPath()
       ctx.fillText("- " + (this.deathQuote.author || "Unknown"), 100, deathTextYOffset)
     }
+    else if(this._api.frameData.ship.docked_at_station) {
+      const station = this._api.frameData.space_stations.find(
+        s => s.uuid == this._api.frameData.ship.docked_at_station
+      )
+      ctx.beginPath()
+      ctx.font = 'bold 32px courier new'
+      ctx.fillStyle = '#00ff00'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        "Docked at",
+        this._camera.canvasHalfWidth,
+        this._camera.canvasHalfHeight / 2
+      )
+      ctx.font = 'bold 38px courier new'
+      ctx.fillText(
+        station.name,
+        this._camera.canvasHalfWidth,
+        this._camera.canvasHalfHeight / 2 + 45
+      )
+    }
   }
 
   private drawAflameEffect(
@@ -632,6 +652,33 @@ export class DrawingService {
           0,
           2 * Math.PI,
         )
+        ctx.fill()
+      }
+
+      if(drawableShip.gravityBrakePosition > 0) {
+        const fullyDesployedRadius = Math.ceil(
+          Math.sqrt(
+            Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP2.x, 2)
+            + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP2.y, 2)
+          )
+        )
+
+        let currentRadius = Math.ceil(
+          fullyDesployedRadius * (
+            drawableShip.gravityBrakePosition / drawableShip.gravityBrakeDeployedPosition
+          )
+        )
+        if(drawableShip.gravityBrakeActive) {
+          currentRadius += Math.ceil(currentRadius * Math.random() * 2.5)
+          ctx.fillStyle = `rgb(124, 0, 166, 0.75)`
+        } else {
+          ctx.fillStyle = Math.random() < 0.7 ? `rgb(0, 0, 255, 0.1)` : `rgb(0, 0, 255, 0.6)`
+        }
+        ctx.beginPath()
+        ctx.arc(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y, currentRadius, 0, 2 * Math.PI)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, 0, 2 * Math.PI)
         ctx.fill()
       }
     }
@@ -865,12 +912,9 @@ export class DrawingService {
     )
     ctx.fill()
 
-    console.log({lightRadius: lightRadius})
-
     // Draw light on effects
     if(lightOn) {
       const effectRadius = lightRadius * 30
-      console.log({effectRadius: effectRadius})
       ctx.beginPath()
       ctx.fillStyle = "rgb(255, 255, 120, 0.05)"
       ctx.arc(

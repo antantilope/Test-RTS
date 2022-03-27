@@ -865,14 +865,15 @@ class Ship(BaseModel):
         ## apply gravity brake
         if self.gravity_brake_active:
             if self.velocity_x_meters_per_second != 0:
-                if abs(self.velocity_x_meters_per_second) > 150:
+                magX = abs(self.velocity_x_meters_per_second)
+                if magX > 150:
                      # If more than 150M/S immediatly drop to 100M/S
-                    delta = abs(self.velocity_x_meters_per_second) - 100
+                    delta = magX - 100
                 else:
                     # reduce X by half 6 times per second.
                     delta = min(
-                        self.velocity_x_meters_per_second,
-                        max(5, self.velocity_x_meters_per_second / 2 / (fps / 6))
+                        magX,
+                        max(5, magX / 2 / (fps / 6))
                     )
                 direction = 1 if self.velocity_x_meters_per_second < 0 else -1
                 self.velocity_x_meters_per_second += delta * direction
@@ -881,14 +882,15 @@ class Ship(BaseModel):
 
 
             if self.velocity_y_meters_per_second != 0:
-                if abs(self.velocity_y_meters_per_second) > 150:
+                magY = abs(self.velocity_y_meters_per_second)
+                if magY > 150:
                     # If more than 150M/S immediatly drop to 100M/S
-                    delta = abs(self.velocity_y_meters_per_second) - 100
+                    delta = magY - 100
                 else:
                     # Otherwise reduce Y by half 6 times per second.
                     delta = min(
-                        self.velocity_y_meters_per_second,
-                        max(5, self.velocity_y_meters_per_second / 2 / (fps / 6))
+                        magY,
+                        max(5, magY / 2 / (fps / 6))
                     )
                 direction = 1 if self.velocity_y_meters_per_second < 0 else -1
                 self.velocity_y_meters_per_second += delta * direction
@@ -1321,3 +1323,5 @@ class Ship(BaseModel):
         if self.gravity_brake_extending or self.gravity_brake_retracting:
             return
         self.gravity_brake_retracting = True
+        self.docked_at_station = None
+        self.docking_at_station = None

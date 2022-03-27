@@ -33,6 +33,7 @@ export class ScannerDataElement {
     thermal_signature?: number
     visual_gravity_brake_position?: number
     visual_gravity_brake_deployed_position?: number
+    visual_gravity_brake_active?: boolean
 }
 
 export class DrawableShip {
@@ -64,6 +65,7 @@ export class DrawableShip {
     explosionFrame?: number
     gravityBrakePosition?: number
     gravityBrakeDeployedPosition?: number
+    gravityBrakeActive?: boolean
 }
 
 export class EBeamRayDetails {

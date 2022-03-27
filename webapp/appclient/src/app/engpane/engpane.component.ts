@@ -4,6 +4,9 @@ import { ApiService } from '../api.service';
 
 
 export class EngSubPaneData {
+
+  shipMassKG: number
+
   fuelLevel: number
   fuelCapacity: number
   fuelUsagePerSecond: number | null
@@ -49,6 +52,7 @@ export class EngpaneComponent implements OnInit {
     } else {
       const previousData = this.data
       this.data = {
+        shipMassKG: this._api.frameData.ship.mass,
         fuelLevel: this._api.frameData.ship.fuel_level,
         fuelCapacity: this._api.frameData.ship.fuel_capacity,
         fuelUsagePerSecond: null,

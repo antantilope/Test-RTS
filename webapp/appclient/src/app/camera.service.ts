@@ -410,6 +410,7 @@ export class CameraService {
       explosionFrame: ship.explosion_frame,
       gravityBrakePosition: ship.gravity_brake_position,
       gravityBrakeDeployedPosition: ship.gravity_brake_deployed_position,
+      gravityBrakeActive: ship.gravity_brake_active,
     })
     drawableItems.ships[0].canvasBoundingBox = this.rectCoordsToBoxCoords(
       drawableItems.ships[0].canvasCoordP0,
@@ -502,6 +503,7 @@ export class CameraService {
             fillColor: scannerData.visual_fill_color,
             gravityBrakePosition: scannerData.visual_gravity_brake_position,
             gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
+            gravityBrakeActive: scannerData.visual_gravity_brake_active,
             ...drawableShip
           }
         }

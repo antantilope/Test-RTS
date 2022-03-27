@@ -510,6 +510,7 @@ class Game(BaseModel):
                         'visual_fill_color': '#ffffff',
                         'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
                         'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
+                        'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,
                     })
                 if is_scannable:
                     exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
@@ -649,7 +650,11 @@ class Game(BaseModel):
         ]
 
     def check_for_gravity_brake_catch(self, ship_id: str) -> True:
-        if self._ships[ship_id].gravity_brake_active or self._ships[ship_id].is_stationary or not self._ships[ship_id].gravity_brake_deployed:
+        if (
+            self._ships[ship_id].gravity_brake_active
+            or not self._ships[ship_id].gravity_brake_deployed
+            or self._ships[ship_id].docked_at_station
+        ):
             return
 
         for st in self._space_stations:
