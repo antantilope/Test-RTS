@@ -40,8 +40,8 @@
             <div class="btn-gap">
             </div>
             <div>
-                <button class="sidebar-btn blue-btn" (click)="btnToggleShipPane()" title="Ship Menu">
-                    🚀
+                <button class="sidebar-btn gray-btn" (click)="btnToggleShipPane()" title="Ship Menu">
+                    🚀<span *ngIf="_api.frameData.ship.docked_at_station !== null">🛰️</span>
                 </button>
             </div>
             <div class="btn-gap">
