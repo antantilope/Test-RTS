@@ -870,7 +870,10 @@ class Ship(BaseModel):
                     delta = abs(self.velocity_x_meters_per_second) - 100
                 else:
                     # reduce X by half 6 times per second.
-                    delta = max(5, self.velocity_x_meters_per_second / 2 / (fps / 6))
+                    delta = min(
+                        self.velocity_x_meters_per_second,
+                        max(5, self.velocity_x_meters_per_second / 2 / (fps / 6))
+                    )
                 direction = 1 if self.velocity_x_meters_per_second < 0 else -1
                 self.velocity_x_meters_per_second += delta * direction
                 if abs(self.velocity_x_meters_per_second) < 5:
@@ -883,7 +886,10 @@ class Ship(BaseModel):
                     delta = abs(self.velocity_y_meters_per_second) - 100
                 else:
                     # Otherwise reduce Y by half 6 times per second.
-                    delta = max(5, self.velocity_y_meters_per_second / 2 / (fps / 6))
+                    delta = min(
+                        self.velocity_y_meters_per_second,
+                        max(5, self.velocity_y_meters_per_second / 2 / (fps / 6))
+                    )
                 direction = 1 if self.velocity_y_meters_per_second < 0 else -1
                 self.velocity_y_meters_per_second += delta * direction
                 if abs(self.velocity_y_meters_per_second) < 5:
