@@ -50,6 +50,9 @@ class ShipCommands:
 
     EXTEND_GRAVITY_BRAKE = "extend_gravity_brake"
     RETRACT_GRAVITY_BRAKE = "retract_gravity_brake"
+    START_ORE_MINING = 'start_ore_mining'
+    STOP_ORE_MINING = 'stop_ore_mining'
+
 
 class ShipStateKey:
     MASS = 'mass'
@@ -1174,6 +1177,11 @@ class Ship(BaseModel):
         elif command == ShipCommands.RETRACT_GRAVITY_BRAKE:
             self.cmd_retract_gravity_brake()
 
+        elif command == ShipCommands.START_ORE_MINING:
+            self.cmd_start_ore_mining()
+        elif command == ShipCommands.STOP_ORE_MINING:
+            self.cmd_stop_ore_mining()
+
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -1361,3 +1369,11 @@ class Ship(BaseModel):
         self.gravity_brake_retracting = True
         self.docked_at_station = None
         self.docking_at_station = None
+
+    def cmd_start_ore_mining(self):
+        if not self.parked_at_ore_mine:
+            return
+        self.mining_ore = True
+
+    def cmd_stop_ore_mining(self):
+        self.mining_ore = False

@@ -63,8 +63,11 @@ export class GamedisplayComponent implements OnInit {
   private drawableObjects: DrawableCanvasItems | null = null
 
   public gravBrakeBtnBkColor = "#000000"
-  public grabBrakeBtnTxtColor = "#00ff00";
-
+  public grabBrakeBtnTxtColor = "#ff0000"
+  public apuBtnBkColor = "#000000"
+  public apuBtnTxtColor = "#ff0000"
+  public mineBtnBkColor = "#ff0000"
+  public mineBtnTxtColor = "#000000"
 
   constructor(
     public _api: ApiService,
@@ -248,6 +251,27 @@ export class GamedisplayComponent implements OnInit {
     } else if (this._api.frameData.ship.gravity_brake_position == 0) {
       this.gravBrakeBtnBkColor = "#b50000"
       this.grabBrakeBtnTxtColor = "#ffffff"
+    }
+
+    if(this._api.frameData.ship.apu_starting) {
+      this.apuBtnBkColor = "#b2b500"
+      this.apuBtnTxtColor = "#b50000"
+    }
+    else if (this._api.frameData.ship.apu_online) {
+      this.apuBtnBkColor = "#00b51b"
+      this.apuBtnTxtColor = "#ffffff"
+    } else {
+      this.apuBtnBkColor = "#b50000"
+      this.apuBtnTxtColor = "#ffffff"
+    }
+
+    if(this._api.frameData.ship.mining_ore) {
+      this.mineBtnBkColor = "#00b51b"
+      this.mineBtnTxtColor = "#ffffff"
+    }
+    else {
+      this.mineBtnBkColor = "#b50000"
+      this.mineBtnTxtColor = "#ffffff"
     }
 
     const camCoords = this._camera.getPosition()
@@ -460,6 +484,13 @@ export class GamedisplayComponent implements OnInit {
     )
   }
 
+  public async btnToggleAPU() {
+    if(this._api.frameData.ship.apu_online) {
+      this.btnDeactivateAPU()
+    } else {
+      this.btnActivateAPU()
+    }
+  }
   public async btnActivateAPU() {
     await this._api.post(
       "/api/rooms/command",
@@ -632,7 +663,7 @@ export class GamedisplayComponent implements OnInit {
       await this._api.post(
         "/api/rooms/command",
         {command:'fire_ebeam'},
-      )
+    )
     }
   }
 
@@ -653,6 +684,24 @@ export class GamedisplayComponent implements OnInit {
       )
     } else {
       console.log("gravbrake doing nothing")
+    }
+  }
+
+  async btnToggleMineOre() {
+    if(!this._api.frameData.ship.parked_at_ore_mine === null) {
+      console.warn("btn disabled")
+      return
+    }
+    if(!this._api.frameData.ship.mining_ore) {
+      return this._api.post(
+        "/api/rooms/command",
+        {command:'start_ore_mining'},
+      )
+    } else {
+      return this._api.post(
+        "/api/rooms/command",
+        {command:'stop_ore_mining'},
+      )
     }
   }
 

@@ -164,6 +164,18 @@ const commandHandlers = {
             ship_command: 'retract_gravity_brake',
         });
     },
+    start_ore_mining: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'start_ore_mining',
+        });
+    },
+    stop_ore_mining: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'stop_ore_mining',
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {
