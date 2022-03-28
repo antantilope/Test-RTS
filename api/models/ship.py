@@ -939,11 +939,6 @@ class Ship(BaseModel):
                 self.docking_at_station = None
                 return
 
-            else:
-                # spin effect
-                new_heading = utils2d.signed_angle_to_unsigned_angle(self.heading + 2)
-                self._set_heading(new_heading)
-
 
         elif self.engine_lit and self.docked_at_station is None:
             force = self.engine_newtons * (self.engine_boost_multiple if self.engine_boosted else 1)
