@@ -2,4 +2,21 @@
     <div>
         <h2>{{ stationName }}</h2>
     </div>
+    <hr>
+    <div
+        id="trade-ore-for-coin-container"
+    >
+        <div class="section-heading">
+             Trade Ore for Ore-Coin
+        </div>
+        <div *ngIf="_api.frameData.ship.cargo_ore_mass_kg > 0">
+            <button id="trade-ore-btn" (click)="btnClickTradeOreForOreCoin()">
+                💎🔄🪙
+            </button>
+        </div>
+        <div *ngIf="_api.frameData.ship.cargo_ore_mass_kg == 0">
+            <span id="no-ore-notice">You have no ore to trade.</span>
+        </div>
+    </div>
+    <hr>
 </div>

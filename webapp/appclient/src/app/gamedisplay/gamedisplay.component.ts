@@ -663,7 +663,7 @@ export class GamedisplayComponent implements OnInit {
       await this._api.post(
         "/api/rooms/command",
         {command:'fire_ebeam'},
-    )
+      )
     }
   }
 

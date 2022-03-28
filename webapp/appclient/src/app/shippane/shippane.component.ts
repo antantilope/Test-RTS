@@ -51,18 +51,21 @@ export class ShippaneComponent implements OnInit {
   }
 
   ngAfterViewInit() {
-    this.paneElement.nativeElement.addEventListener('mouseenter', ()=>{
-      this._pane.registerMouseEnteringPane(this.paneName)
+    // FIXME: this setTimeout seems super jank but cleans up errors.
+    setTimeout(() =>{
+      this.paneElement.nativeElement.addEventListener('mouseenter', ()=>{
+        this._pane.registerMouseEnteringPane(this.paneName)
+      })
+      this.paneElement.nativeElement.addEventListener('mouseleave', ()=>{
+        this._pane.registerMouseLeavingPane(this.paneName)
+      })
+      this.select()
+      if(this._pane.lastShipPaneSubPane) {
+        this.selectedSubPane = this._pane.lastShipPaneSubPane
+      } else {
+        this.selectEngineeringSubPane()
+      }
     })
-    this.paneElement.nativeElement.addEventListener('mouseleave', ()=>{
-      this._pane.registerMouseLeavingPane(this.paneName)
-    })
-    this.select()
-    if(this._pane.lastShipPaneSubPane) {
-      this.selectedSubPane = this._pane.lastShipPaneSubPane
-    } else {
-      this.selectEngineeringSubPane()
-    }
   }
 
   ngOnDestroy()	{

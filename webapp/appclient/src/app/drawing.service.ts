@@ -280,6 +280,14 @@ export class DrawingService {
       ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
       tlcYOffset += tlcYInterval
 
+      // Ore amount
+      const realOreKg = this._formatting.formatNumber(this._api.frameData.ship.cargo_ore_mass_kg)
+      const virtualOreKg = this._formatting.formatNumber(this._api.frameData.ship.virtual_ore_kg)
+      ctx.beginPath()
+      ctx.fillStyle = '#fce8b8'
+      ctx.fillText(`💎 ${realOreKg} / 🪙 ${virtualOreKg}`, tlcXOffset, tlcYOffset)
+      tlcYOffset += tlcYInterval
+
       // Camera mode
       ctx.beginPath()
       ctx.fillStyle = '#ffffff'

@@ -4,6 +4,7 @@ div {
 }
 .section-heading {
     margin: 6px;
+    font-size: 115%;
 }
 
 #progress-container {
