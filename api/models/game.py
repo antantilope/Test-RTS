@@ -705,7 +705,7 @@ class Game(BaseModel):
             self._ships[ship_id].mining_ore = False
             return
         if ship.mining_ore:
-            adj = min(1, ship.mining_ore_kg_collected_per_second / self._fps)
+            adj = round(ship.mining_ore_kg_collected_per_second / self._fps, 2)
             room_for = min(adj, ship.cargo_ore_mass_capacity_kg - ship.cargo_ore_mass_kg)
             if room_for == 0:
                 self._ships[ship_id].mining_ore = False
@@ -724,8 +724,14 @@ class Game(BaseModel):
             adj = min(avail, adj)
             adj = min(room_for, adj)
             if adj > 0:
-                self._ore_mines[oremine_ix]['remaining_ore_count_kg'] -= adj
-                self._ships[ship_id].cargo_ore_mass_kg += adj
+                self._ore_mines[oremine_ix]['remaining_ore_count_kg'] = max(
+                    0,
+                    self._ore_mines[oremine_ix]['remaining_ore_count_kg'] - adj
+                )
+                self._ships[ship_id].cargo_ore_mass_kg = min(
+                    ship.cargo_ore_mass_capacity_kg,
+                    ship.cargo_ore_mass_kg + adj
+                )
 
 
     def _process_ship_command(self, command: FrameCommand):

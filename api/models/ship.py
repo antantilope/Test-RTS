@@ -271,7 +271,7 @@ class Ship(BaseModel):
         # Mining interactions
         self.parked_at_ore_mine = None
         self.cargo_ore_mass_capacity_kg = None
-        self.cargo_ore_mass_kg = 0
+        self.cargo_ore_mass_kg = 0.0
         self.mining_ore = False
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None
