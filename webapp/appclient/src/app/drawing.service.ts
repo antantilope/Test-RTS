@@ -1016,6 +1016,13 @@ export class DrawingService {
         },
         cameraPosition,
       )
+
+      let percentage: number | null = null
+      const remainingOre = this._api.frameData.ship.scouted_mine_ore_remaining[om.uuid]
+      if(typeof remainingOre !== "undefined") {
+        percentage =  remainingOre / om.starting_ore_amount_kg
+      }
+
       const servicePerimeterRadiusCavasPx = om.service_radius_map_units / this._camera.getZoom()
       const rockRadiusCavasPx = servicePerimeterRadiusCavasPx / 3
       if(rockRadiusCavasPx < minRockRadius) {
@@ -1030,9 +1037,17 @@ export class DrawingService {
           centerCanvasCoord.x,
           centerCanvasCoord.y,
         );
+        if(percentage !== null) {
+          console.log({percentage})
+          ctx.beginPath()
+          ctx.lineWidth = 3
+          ctx.strokeStyle = "#c7a600"
+          ctx.arc(centerCanvasCoord.x, centerCanvasCoord.y - 5, iconFontSize * 0.7, 0, TWO_PI * percentage)
+          ctx.stroke()
+        }
       }
       else {
-        this.drawMiningLocation(ctx, om, centerCanvasCoord, rockRadiusCavasPx, servicePerimeterRadiusCavasPx)
+        this.drawMiningLocation(ctx, om, centerCanvasCoord, rockRadiusCavasPx, servicePerimeterRadiusCavasPx, percentage)
       }
     }
   }
@@ -1042,6 +1057,7 @@ export class DrawingService {
     PointCoord,
     rockRadiusCavasPx: number,
     servicePerimeterRadiusCavasPx: number,
+    minedPercentage: number | null,
   ) {
     // Rock body
     ctx.beginPath()
@@ -1052,9 +1068,21 @@ export class DrawingService {
       0, TWO_PI
     )
     ctx.fill()
+    // Mined out percentage indicator
+    if(minedPercentage !== null) {
+      ctx.beginPath()
+      ctx.strokeStyle = "rgb(255, 255, 0)"
+      ctx.lineWidth = 8
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y,
+        rockRadiusCavasPx - (rockRadiusCavasPx / 7),
+        0, TWO_PI * minedPercentage
+      )
+      ctx.stroke()
+    }
     // Mining Perimemter
     ctx.beginPath()
-    ctx.strokeStyle = "rgb(168, 168, 0, 0.5)" // yellow
+    ctx.strokeStyle = "rgb(168, 168, 0, 0.2)" // yellow
     ctx.lineWidth = Math.ceil(
       Math.max(
         1,

@@ -69,27 +69,29 @@ class TestGameUpdateScoutedMineOreRemaining(TestCase):
         self.game._game_frame = 3
 
     def test_data_is_updated_if_ship_close_by(self):
-        assert self.game._ships[self.player_1_ship_id].scouted_mine_ore_remaining == {}
+        assert self.game._ships[self.player_1_ship_id].scouted_mine_ore_remaining == {
+            self.ore_mine_id: 700, # stale data
+        }
         self.game._ships[self.player_1_ship_id].scanner_online = False
         self.game._ships[self.player_1_ship_id].visual_range = 500
         # Place ship near mine
         self.game._ships[self.player_1_ship_id].coord_x = 570 * self.upm
         self.game._ships[self.player_1_ship_id].coord_y = 570 * self.upm
+        self.game._ore_mines_remaining_ore[self.ore_mine_id] = 250
         self.game.update_scouted_mine_ore_remaining(self.player_1_ship_id)
         assert self.game._ships[self.player_1_ship_id].scouted_mine_ore_remaining == {
-            self.ore_mine_id: 700,
+            self.ore_mine_id: 250, # stale data updated
         }
 
     def test_data_is_not_updated_if_ship_close_by(self):
-        assert self.game._ships[self.player_1_ship_id].scouted_mine_ore_remaining == {}
+        self.game._ships[self.player_1_ship_id].scouted_mine_ore_remaining = {
+            self.ore_mine_id: 1220, # stale data.
+        }
         self.game._ships[self.player_1_ship_id].scanner_online = False
         # Shrink vision so mine cannot be seen.
         self.game._ships[self.player_1_ship_id].visual_range = 20
         self.game._ships[self.player_1_ship_id].coord_x = 570 * self.upm
         self.game._ships[self.player_1_ship_id].coord_y = 570 * self.upm
-        self.game._ships[self.player_1_ship_id].scouted_mine_ore_remaining = {
-            self.ore_mine_id: 1220, # stale data.
-        }
         self.game.update_scouted_mine_ore_remaining(self.player_1_ship_id)
         assert self.game._ships[self.player_1_ship_id].scouted_mine_ore_remaining == {
             self.ore_mine_id: 1220, # Still holds stale data.

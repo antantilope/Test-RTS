@@ -339,6 +339,12 @@ class Game(BaseModel):
 
             self._ships[ship.id] = ship
 
+            # initialize scouted ore values
+            for om in self._ore_mines:
+                self._ships[ship.id].scouted_mine_ore_remaining[
+                    om['uuid']
+                ] = om['starting_ore_amount_kg']
+
 
     def decr_phase_1_starting_countdown(self):
         self._validate_can_decr_phase_1_starting_countdown()
