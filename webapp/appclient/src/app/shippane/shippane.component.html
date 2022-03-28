@@ -17,21 +17,24 @@
             <button
                 (click)="selectEngineeringSubPane()"
                 class="subpane-selector-btn"
+                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameEngineering) ? '#fff784' : '#ebebeb'}"
             >
-                Engineering
+                🔧
             </button>
             <button
                 (click)="selectUpgradesSubPane()"
                 class="subpane-selector-btn"
+                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameUpgrades) ? '#fff784' : '#ebebeb'}"
             >
-                Upgrades
+                🔬
             </button>
             <button
                 *ngIf="_api.frameData.ship.docked_at_station !== null"
-                class="subpane-selector-btn"
+                class="subpane-selector-btn temp-subpane-selector-btn"
                 (click)="selectStationSubPane()"
+                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameStation) ? '#fff784' : '#ebebeb'}"
             >
-                Station
+                🛰️
             </button>
         </div>
         <div id="sub-pane-container">

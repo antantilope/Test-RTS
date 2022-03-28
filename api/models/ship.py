@@ -17,6 +17,9 @@ class InsufficientPowerError(ShipCommandError):
 class InsufficientFuelError(ShipCommandError):
     pass
 
+class InsufficientOreError(ShipCommandError):
+    pass
+
 class ShipCoatType:
     NONE = None
     RADAR_DEFEATING = "radar_defeating"
@@ -53,6 +56,9 @@ class ShipCommands:
     START_ORE_MINING = 'start_ore_mining'
     STOP_ORE_MINING = 'stop_ore_mining'
     TRADE_ORE_FOR_ORE_COIN = 'trade_ore_for_ore_coin'
+
+    START_FUELING = "start_fueling"
+    STOP_FUELING = "start_fueling"
 
 
 class ShipStateKey:
@@ -171,6 +177,7 @@ class Ship(BaseModel):
         # Fuel Tank
         self.fuel_level = 0
         self.fuel_capacity = 0
+        self.fueling_at_station = None
 
         # Engine
         self.engine_mass = 0
@@ -424,6 +431,7 @@ class Ship(BaseModel):
             'battery_capacity': self.battery_capacity,
             'fuel_level': self.fuel_level,
             'fuel_capacity': self.fuel_capacity,
+            'fueling_at_station': self.fueling_at_station,
 
             'engine_newtons': self.engine_newtons,
             'engine_online': self.engine_online,
@@ -666,6 +674,22 @@ class Ship(BaseModel):
             raise InsufficientFuelError
         self.fuel_level -= quantity
 
+    def withdraw_ore(self, quantity: float):
+        if quantity > (self.cargo_ore_mass_kg + self.virtual_ore_kg):
+            raise InsufficientOreError
+
+        # withdraw from physical ore first
+        pool = 0
+        if self.cargo_ore_mass_kg > 0:
+            adj = min(self.cargo_ore_mass_kg, quantity)
+            self.cargo_ore_mass_kg -= adj
+            pool += adj
+
+        # withdraw from virtual ore after
+        if pool < quantity:
+            adj = quantity - pool
+            self.cargo_ore_mass_kg -= adj
+
 
     def adjust_resources(self, fps: int, game_frame: int):
 
@@ -684,6 +708,7 @@ class Ship(BaseModel):
             if self.ebeam_charge >= self.ebeam_charge_capacity:
                 self.ebeam_charging = False
 
+        ''' Mining '''
         if self.mining_ore:
             adj = max(1, round(self.mining_ore_power_usage_per_second / fps))
             try:
@@ -691,6 +716,9 @@ class Ship(BaseModel):
             except InsufficientPowerError:
                 self.mining_ore = False
 
+        ''' REFUELING '''
+        if self.fueling_at_station:
+            pass
 
         ''' Scanner POWER DRAW (RUNNING) '''
         if self.scanner_online:
@@ -899,7 +927,6 @@ class Ship(BaseModel):
                     )
                 )
 
-
     def calculate_physics(self, fps: int) -> None:
         ## apply gravity brake
         if self.gravity_brake_active:
@@ -1036,6 +1063,8 @@ class Ship(BaseModel):
         self.gravity_brake_position = 0
         self.gravity_brake_extending = False
         self.gravity_brake_retracting = False
+        self.mining_ore = False
+        self.parked_at_ore_mine = None
 
     def advance_thermal_signature(self, fps: int) -> None:
         delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps
@@ -1395,3 +1424,15 @@ class Ship(BaseModel):
         deposit_amount = self.cargo_ore_mass_kg * (1 - feeRate)
         self.cargo_ore_mass_kg = 0
         self.virtual_ore_kg += deposit_amount
+
+    def cmd_start_fueling(self):
+        if not self.docked_at_station or not self.gravity_brake_deployed:
+            return
+        if self.fueling_at_station:
+            return
+        self.fueling_at_station = self.docked_at_station
+
+    def cmd_stop_fueling(self):
+        if not self.fueling_at_station:
+            return
+        self.fueling_at_station = None

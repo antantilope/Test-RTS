@@ -528,6 +528,12 @@ class Game(BaseModel):
                         'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
                         'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
                         'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,
+                        'visual_mining_ore_location': (
+                            self._ships[other_id].parked_at_ore_mine
+                            if self._ships[other_id].mining_ore
+                            else None
+                        ),
+                        'visual_fueling_at_station': self._ships[other_id].fueling_at_station,
                     })
                 if is_scannable:
                     exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)

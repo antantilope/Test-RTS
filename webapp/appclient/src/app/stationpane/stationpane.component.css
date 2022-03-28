@@ -23,3 +23,19 @@ div, h2 {
     font-style: italic;
     color: #3d2d2d;
 }
+
+.ore-desk-section {
+    margin-bottom:8px;
+    padding: 4px;
+    border: 1px solid #8b8b8b;
+    border-radius: 5px;
+}
+
+#begin-feuling-btn-container {
+    margin-top: 8px;
+}
+
+#begin-feuling-btn{
+    margin-top: 8px;
+    font-size: 1.25rem;
+}

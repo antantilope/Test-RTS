@@ -712,6 +712,26 @@ export class DrawingService {
         ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, arcStart, arcEnd)
         ctx.fill()
       }
+
+      if(drawableShip.miningOreLocation) {
+        const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
+        if(om) {
+          const p0 = drawableShip.canvasCoordCenter;
+          const p1 = this._camera.mapCoordToCanvasCoord(
+            {x: om.position_map_units_x, y: om.position_map_units_y},
+            this._camera.getPosition(),
+          )
+          const rockRadiusCanvasPx = om.service_radius_map_units / 3 / this._camera.getZoom()
+          p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+          p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+          ctx.beginPath()
+          ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
+          ctx.lineWidth = 4
+          ctx.moveTo(p0.x, p0.y)
+          ctx.lineTo(p1.x, p1.y)
+          ctx.stroke()
+        }
+      }
     }
 
     if(drawableShip.aflame) {
@@ -1038,7 +1058,6 @@ export class DrawingService {
           centerCanvasCoord.y,
         );
         if(percentage !== null) {
-          console.log({percentage})
           ctx.beginPath()
           ctx.lineWidth = 3
           ctx.strokeStyle = "#c7a600"
@@ -1069,9 +1088,9 @@ export class DrawingService {
     )
     ctx.fill()
     // Mined out percentage indicator
-    if(minedPercentage !== null) {
+    if(minedPercentage !== null && Math.random() < 0.3) {
       ctx.beginPath()
-      ctx.strokeStyle = "rgb(255, 255, 0)"
+      ctx.strokeStyle = `rgb(255, 255, 0, 0.${randomInt(20, 50)})`
       ctx.lineWidth = 8
       ctx.arc(
         centerCanvasCoord.x, centerCanvasCoord.y,
