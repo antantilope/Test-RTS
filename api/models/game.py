@@ -429,6 +429,7 @@ class Game(BaseModel):
 
             if check_for_ore_mine_parking:
                 self.check_for_ore_mine_parking(ship_id)
+                self.update_scouted_mine_ore_remaining(ship_id)
 
             self.advance_mining(ship_id)
 
@@ -730,6 +731,22 @@ class Game(BaseModel):
                     ship.cargo_ore_mass_kg + adj
                 )
 
+    def update_scouted_mine_ore_remaining(self, ship_id: str):
+        ship = self._ships[ship_id]
+        ship_coords = ship.coords
+        for om in self._ore_mines:
+            mine_uuid = om['uuid']
+            dist_meters = utils2d.calculate_point_distance(
+                (om['position_map_units_x'], om['position_map_units_y']),
+                ship_coords,
+            ) / self._map_units_per_meter
+            scan_range = ship.scanner_range if ship.scanner_online else 0
+            visual_range = ship.visual_range
+            max_range = max(scan_range, visual_range)
+            if dist_meters <= max_range:
+                self._ships[ship_id].scouted_mine_ore_remaining[
+                    mine_uuid
+                ] = self._ore_mines_remaining_ore[mine_uuid]
 
     def _process_ship_command(self, command: FrameCommand):
         ship_command = command['ship_command']

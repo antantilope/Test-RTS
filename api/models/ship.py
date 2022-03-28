@@ -74,8 +74,6 @@ class VisibleElementShapeType:
 
 class ScannedElementType:
     SHIP = 'ship'
-    FIXTURE = 'fixture'
-    SCRAP = 'scrap'
 
 class ScannedElement(TypedDict):
     id: str
@@ -277,6 +275,7 @@ class Ship(BaseModel):
         self.mining_ore = False
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None
+        self.scouted_mine_ore_remaining: Dict[str, float] = {}
 
         # Arbitrary ship state data
         self._state = {}
@@ -469,6 +468,7 @@ class Ship(BaseModel):
             'cargo_ore_mass_kg': self.cargo_ore_mass_kg,
             'cargo_ore_mass_capacity_kg': self.cargo_ore_mass_capacity_kg,
             'virtual_ore_kg': self.virtual_ore_kg,
+            'scouted_mine_ore_remaining': self.scouted_mine_ore_remaining,
 
             'alive': self.died_on_frame is None,
             'aflame': self.aflame_since_frame is not None,
