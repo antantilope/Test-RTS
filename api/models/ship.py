@@ -684,7 +684,7 @@ class Ship(BaseModel):
         if self.mining_ore:
             adj = max(1, round(self.mining_ore_power_usage_per_second / fps))
             try:
-                self.use_battery_power(round(adj * self.ebeam_charge_power_draw_multiple))
+                self.use_battery_power(round(adj))
             except InsufficientPowerError:
                 self.mining_ore = False
 

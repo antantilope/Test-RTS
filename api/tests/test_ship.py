@@ -687,6 +687,29 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.battery_power == 6000
         assert not self.ship.ebeam_charging
 
+    def test_mining_ore_uses_battery_power(self):
+        self.ship.mining_ore_power_usage_per_second = 50
+        self.ship.battery_power = 500
+        self.ship.mining_ore = True
+        fps = 2
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 475
+        assert self.ship.mining_ore
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 450
+        assert self.ship.mining_ore
+
+    def test_mining_ore_stops_if_not_enough_battery_power(self):
+        self.ship.mining_ore_power_usage_per_second = 50
+        self.ship.battery_power = 30
+        self.ship.mining_ore = True
+        fps = 2
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 5
+        assert self.ship.mining_ore
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 5
+        assert not self.ship.mining_ore
 
 
 '''
