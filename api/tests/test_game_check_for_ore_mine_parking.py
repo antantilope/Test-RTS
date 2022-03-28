@@ -54,7 +54,6 @@ class TestGameCheckForOreMineParking(TestCase):
                 "position_meters_y": 500,
                 "service_radius_meters": 100,
                 "starting_ore_amount_kg": 700,
-                "remaining_ore_count_kg": 700,
                 "name": "test-station",
                 "uuid": self.ore_mine_id,
             }],

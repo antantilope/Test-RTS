@@ -58,7 +58,6 @@ class TestGameCheckForOreMineParking(TestCase):
                 "position_meters_y": 500,
                 "service_radius_meters": 100,
                 "starting_ore_amount_kg": 700,
-                "remaining_ore_count_kg": 700,
                 "name": "test-station",
                 "uuid": self.ore_mine_id,
             }],
@@ -95,7 +94,7 @@ class TestGameCheckForOreMineParking(TestCase):
         self.game._ships[self.player_1_ship_id].mining_ore = True
         self.game.advance_mining(self.player_1_ship_id)
         assert_floats_equal(self.game._ships[self.player_1_ship_id].cargo_ore_mass_kg, 7.5)
-        assert_floats_equal(self.game._ore_mines[0]['remaining_ore_count_kg'], 700 - 7.5)
+        assert_floats_equal(self.game._ore_mines_remaining_ore[self.ore_mine_id], 700 - 7.5)
         assert self.game._ships[self.player_1_ship_id].mining_ore
 
     def test_not_mining_does_not_increases_cargo_ore_mass_kg(self):
@@ -123,22 +122,22 @@ class TestGameCheckForOreMineParking(TestCase):
         assert not self.game._ships[self.player_1_ship_id].mining_ore
 
     def test_mining_stops_if_ore_mine_is_depleted(self):
-        self.game._ore_mines[0]['remaining_ore_count_kg'] = 10
+        self.game._ore_mines_remaining_ore[self.ore_mine_id] = 10
         self.game._ships[self.player_1_ship_id].cargo_ore_mass_capacity_kg = 100
         self.game._ships[self.player_1_ship_id].cargo_ore_mass_kg = 0
         self.game._ships[self.player_1_ship_id].mining_ore = True
         # grab full scope on this frame.
         self.game.advance_mining(self.player_1_ship_id)
         assert_floats_equal(self.game._ships[self.player_1_ship_id].cargo_ore_mass_kg, 7.5)
-        assert_floats_equal(self.game._ore_mines[0]['remaining_ore_count_kg'], 2.5)
+        assert_floats_equal(self.game._ore_mines_remaining_ore[self.ore_mine_id], 2.5)
         assert self.game._ships[self.player_1_ship_id].mining_ore
         # get last bit from the mine
         self.game.advance_mining(self.player_1_ship_id)
         assert_floats_equal(self.game._ships[self.player_1_ship_id].cargo_ore_mass_kg, 10.0)
-        assert_floats_equal(self.game._ore_mines[0]['remaining_ore_count_kg'], 0)
+        assert_floats_equal(self.game._ore_mines_remaining_ore[self.ore_mine_id], 0)
         assert self.game._ships[self.player_1_ship_id].mining_ore
         # Mine depleted
         self.game.advance_mining(self.player_1_ship_id)
         assert_floats_equal(self.game._ships[self.player_1_ship_id].cargo_ore_mass_kg, 10.0)
         assert not self.game._ships[self.player_1_ship_id].mining_ore
-        assert_floats_equal(self.game._ore_mines[0]['remaining_ore_count_kg'], 0)
+        assert_floats_equal(self.game._ore_mines_remaining_ore[self.ore_mine_id], 0)

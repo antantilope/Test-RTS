@@ -1,6 +1,6 @@
 
 import datetime as dt
-from typing import Tuple, TypedDict, Optional, List, Dict, Set
+from typing import Tuple, TypedDict, Optional, List, Dict
 from time import sleep
 import re
 
@@ -144,6 +144,7 @@ class Game(BaseModel):
         self._killfeed: List[KillFeedElement] = []
         self._space_stations: List[MapSpaceStation] = []
         self._ore_mines: List[MapMiningLocationDetails] = []
+        self._ore_mines_remaining_ore: Dict[str, float] = {}
 
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
@@ -261,11 +262,13 @@ class Game(BaseModel):
                 "position_map_units_x": f['position_meters_x'] * self._map_units_per_meter,
                 "position_map_units_y": f['position_meters_y'] * self._map_units_per_meter,
                 "service_radius_map_units": f['service_radius_meters'] * self._map_units_per_meter,
-                "remaining_ore_count_kg": f['starting_ore_amount_kg'],
                 **f,
             }
             for f in request['miningLocations']
         ]
+        for om in self._ore_mines:
+            self._ore_mines_remaining_ore[om['uuid']] = om['starting_ore_amount_kg']
+
 
     def _validate_can_set_map(self):
         if self._phase != GamePhase.LOBBY:
@@ -711,22 +714,16 @@ class Game(BaseModel):
                 self._ships[ship_id].mining_ore = False
                 return
 
-            avail = 0
-            oremine_ix = None
-            for ix, om in enumerate(self._ore_mines):
-                if om['uuid'] == ship.parked_at_ore_mine:
-                    avail = om['remaining_ore_count_kg']
-                    oremine_ix = ix
-                    break
+            avail = self._ore_mines_remaining_ore[ship.parked_at_ore_mine]
             if avail == 0:
                 self._ships[ship_id].mining_ore = False
                 return
             adj = min(avail, adj)
             adj = min(room_for, adj)
             if adj > 0:
-                self._ore_mines[oremine_ix]['remaining_ore_count_kg'] = max(
+                self._ore_mines_remaining_ore[ship.parked_at_ore_mine] = max(
                     0,
-                    self._ore_mines[oremine_ix]['remaining_ore_count_kg'] - adj
+                    self._ore_mines_remaining_ore[ship.parked_at_ore_mine] - adj
                 )
                 self._ships[ship_id].cargo_ore_mass_kg = min(
                     ship.cargo_ore_mass_capacity_kg,
