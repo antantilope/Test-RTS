@@ -681,6 +681,13 @@ class Ship(BaseModel):
             if self.ebeam_charge >= self.ebeam_charge_capacity:
                 self.ebeam_charging = False
 
+        if self.mining_ore:
+            adj = max(1, round(self.mining_ore_power_usage_per_second / fps))
+            try:
+                self.use_battery_power(round(adj * self.ebeam_charge_power_draw_multiple))
+            except InsufficientPowerError:
+                self.mining_ore = False
+
 
         ''' Scanner POWER DRAW (RUNNING) '''
         if self.scanner_online:

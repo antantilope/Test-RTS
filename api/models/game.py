@@ -1,6 +1,5 @@
 
 import datetime as dt
-import random
 from typing import Tuple, TypedDict, Optional, List, Dict, Set
 from time import sleep
 import re
@@ -428,6 +427,8 @@ class Game(BaseModel):
             if check_for_ore_mine_parking:
                 self.check_for_ore_mine_parking(ship_id)
 
+            self.advance_mining(ship_id)
+
         # Post frame checks
         if self._game_frame % 45 == 0:
             if not self._winning_team:
@@ -698,6 +699,33 @@ class Game(BaseModel):
 
         self._ships[ship_id].parked_at_ore_mine = None
 
+    def advance_mining(self, ship_id: str):
+        ship = self._ships[ship_id]
+        if not ship.parked_at_ore_mine:
+            self._ships[ship_id].mining_ore = False
+            return
+        if ship.mining_ore:
+            adj = min(1, ship.mining_ore_kg_collected_per_second / self._fps)
+            room_for = min(adj, ship.cargo_ore_mass_capacity_kg - ship.cargo_ore_mass_kg)
+            if room_for == 0:
+                self._ships[ship_id].mining_ore = False
+                return
+
+            avail = 0
+            oremine_ix = None
+            for ix, om in enumerate(self._ore_mines):
+                if om['uuid'] == ship.parked_at_ore_mine:
+                    avail = om['remaining_ore_count_kg']
+                    oremine_ix = ix
+                    break
+            if avail == 0:
+                self._ships[ship_id].mining_ore = False
+                return
+            adj = min(avail, adj)
+            adj = min(room_for, adj)
+            if adj > 0:
+                self._ore_mines[oremine_ix]['remaining_ore_count_kg'] -= adj
+                self._ships[ship_id].cargo_ore_mass_kg += adj
 
 
     def _process_ship_command(self, command: FrameCommand):

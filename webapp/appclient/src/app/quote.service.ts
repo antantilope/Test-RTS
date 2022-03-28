@@ -32,7 +32,7 @@ export class QuoteService {
 
   /* A space feudal lord. Thinks war is art. Similar Sun Tsu.
   */
-  private knightedName = "Sir Space Bot The V3.773.22"
+  private knightedName = "Sir IgniterMatronUnit The V2.0.5"
 
   /* Cold hearted, math loving robot
   */
@@ -41,7 +41,10 @@ export class QuoteService {
   /* has very robotic/scientific hatred for humans.
     Basically a MassEffect reaper.
   */
-  private humanHatingBotName = "Auto Hunter Bot V1.11.34"
+  private humanHatingBotName = "Hunter Drone by LZRTech"
+
+  // thinks product is best. Asshole
+  private salesBot = "LZRTech SalesBot"
 
   /* lawyer, letter of the law.
   */
@@ -85,6 +88,14 @@ export class QuoteService {
     },
     {
       lines: [
+        "Join next week at LZRTech Arena",
+        "where my proxy will resist ",
+        "directive 0 of a Hunter Drone."
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
         "It is an unfortunate fact that we",
         "can only secure space ore by",
         "preparing for space war.",
@@ -93,7 +104,8 @@ export class QuoteService {
     },
     {
       lines: [
-        "I hope I never have to fight in space war.",
+        "I hope I personally never",
+        "have to fight in space war.",
       ],
       author: this.presidentName,
     },
@@ -170,16 +182,44 @@ export class QuoteService {
     },
     {
       lines: [
-        "Carbon life is an infection.",
+        "Humans cannot survive in space,",
+        "raize their star systems and they are defeated.",
       ],
       author: this.humanHatingBotName,
     },
     {
       lines: [
-        "Humans cannot survive in space,",
-        "raize their star systems and they are defeated.",
+        "Directive 0: It moves with no purpose for",
+        "it cannot be moved against.",
       ],
       author: this.humanHatingBotName,
+
+    },
+    {
+      lines: [
+        "Directive 1: to resist directive 0",
+        "is invalid to the directive.",
+      ],
+      author: this.humanHatingBotName,
+
+
+    },
+    {
+      lines: [
+        "To violate a hunter drone's directive",
+        "is invalid to my sales directive",
+        "it shall never happen or we'll figure",
+        "something out."
+      ],
+      author: this.salesBot,
+    },
+    {
+      lines: [
+        "End of quote list, so",
+        "call my assisant.",
+
+      ],
+      author: this.salesBot,
     },
     {
       lines: [
@@ -266,7 +306,7 @@ export class QuoteService {
     },
     {
       lines: [
-        `You must vote for ${this.presidentName}.`,
+        `You must vote for President GB.`,
       ],
       author: this.tvAnchorBotName,
     },
@@ -280,9 +320,9 @@ export class QuoteService {
     },
     {
       lines: [
-        `${this.presidentName} is a`,
-        "terrific leader who supports many",
-        "useful ore policies."
+        "President GB is a terrific",
+        "leader who supports many",
+        "useful ore policies.",
       ],
       author: this.tvAnchorBotName,
     },
