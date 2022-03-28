@@ -176,6 +176,12 @@ const commandHandlers = {
             ship_command: 'stop_ore_mining',
         });
     },
+    trade_ore_for_ore_coin: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'trade_ore_for_ore_coin',
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {
