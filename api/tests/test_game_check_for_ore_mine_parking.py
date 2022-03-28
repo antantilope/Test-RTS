@@ -2,10 +2,7 @@
 from uuid import uuid4
 from unittest import TestCase
 
-from api.models.game import Game, GamePhase, ShipScannerMode
-from api import utils2d
-from api.models.ship import Ship
-
+from api.models.game import Game, GamePhase
 
 
 class TestGameCheckForOreMineParking(TestCase):
