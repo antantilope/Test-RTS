@@ -34,6 +34,8 @@ export class ScannerDataElement {
     visual_gravity_brake_position?: number
     visual_gravity_brake_deployed_position?: number
     visual_gravity_brake_active?: boolean
+    visual_mining_ore_location?: string
+    visual_fueling_at_station?: string
 }
 
 export class DrawableShip {
@@ -66,6 +68,8 @@ export class DrawableShip {
     gravityBrakePosition?: number
     gravityBrakeDeployedPosition?: number
     gravityBrakeActive?: boolean
+    miningOreLocation?: string
+    fuelingAtStation?:string
 }
 
 export class EBeamRayDetails {

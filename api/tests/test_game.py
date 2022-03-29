@@ -576,21 +576,25 @@ class TestGame(TestCase):
             }],
             'spaceStations': [],
             'miningLocations': [{
+                "uuid":"foooobaaar",
                 "position_meters_x": 800,
                 "position_meters_y": 1100,
                 "service_radius_meters": 200,
+                "starting_ore_amount_kg": 500,
                 "name": "derpson's mine",
             }],
         }, map_units_per_meter=10)
 
         assert game._ore_mines == [
             {
+                "uuid":"foooobaaar",
                 'position_map_units_x': 8000,
                 'position_map_units_y': 11000,
                 'service_radius_map_units': 2000,
                 'position_meters_x': 800,
                 'position_meters_y': 1100,
                 'service_radius_meters': 200,
+                "starting_ore_amount_kg": 500,
                 "name": "derpson's mine",
             }
         ]

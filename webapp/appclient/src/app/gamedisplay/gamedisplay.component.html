@@ -136,44 +136,6 @@
         <div class=command-bar-column>
             <div
                 class="command-bar-column-header"
-                [ngStyle]="{'color': (_api.frameData.ship.apu_online) ? '#00ff00' : '#ffffff'}"
-            >
-                AUXILIARY<br>POWER UNIT
-            </div>
-            <div>
-                <button
-                    class="gd-ctrl-btn"
-                    (click)="btnActivateAPU()"
-                    [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.apu_online || _api.frameData.ship.apu_starting"
-                >
-                    START
-                </button>
-            </div>
-            <div>
-                <button
-                    class="gd-ctrl-btn"
-                    (click)="btnDeactivateAPU()"
-                    [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.apu_online || _api.frameData.ship.apu_starting"
-                >
-                    STOP
-                </button>
-            </div>
-
-            <div id="utility-switch-container">
-                <button
-                    id="grav-brake-switch-container"
-                    (click)="btnClickToggleGravBrake()"
-                    [ngStyle]="{'background-color': gravBrakeBtnBkColor, 'color':grabBrakeBtnTxtColor}"
-                    [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.gravity_brake_retracting || _api.frameData.ship.gravity_brake_extending"
-                >
-                    G<br>V<br>B<br>K<br>
-                </button>
-            </div>
-        </div>
-
-        <div class=command-bar-column>
-            <div
-                class="command-bar-column-header"
                 [ngStyle]="{'color': (_api.frameData.ship.scanner_online) ? '#00ff00' : '#ffffff'}"
             >
                 <br>SCANNER
@@ -361,6 +323,40 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class=command-bar-column>
+            <div
+                class="command-bar-column-header"
+            >
+                UTILITIES
+            </div>
+            <div id="utility-switch-container">
+                <button
+                    class="vertical-switch"
+                    id="grav-brake-switch-container"
+                    (click)="btnClickToggleGravBrake()"
+                    [ngStyle]="{'background-color': gravBrakeBtnBkColor, 'color':grabBrakeBtnTxtColor}"
+                    [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.gravity_brake_retracting || _api.frameData.ship.gravity_brake_extending"
+                >
+                    B<br>R<br>A<br>K<br>E
+                </button>
+                <button
+                    class="vertical-switch"
+                    (click)="btnToggleAPU()"
+                    [ngStyle]="{'background-color': apuBtnBkColor, 'color':apuBtnTxtColor}"
+                    [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.apu_starting"
+                >
+                    A<br>P<br>U
+                </button>
+                <button
+                    class="vertical-switch"
+                    (click)="btnToggleMineOre()"
+                    [ngStyle]="{'background-color': mineBtnBkColor, 'color':mineBtnTxtColor}"
+                    [disabled]="!_api.frameData.ship.parked_at_ore_mine"
+                >
+                    M<br>I<br>N<br>E
+                </button>
             </div>
         </div>
     </div>

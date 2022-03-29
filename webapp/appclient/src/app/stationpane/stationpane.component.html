@@ -2,4 +2,42 @@
     <div>
         <h2>{{ stationName }}</h2>
     </div>
+    <hr>
+    <div
+        id="trade-ore-for-coin-container"
+    >
+        <div class="section-heading">
+            Ore Trade Desk
+        </div>
+        <div class="ore-desk-section">
+            <p><strong>Trade Ore for Virtual Ore Coin</strong></p>
+            <p *ngIf="_api.frameData.ship.cargo_ore_mass_kg == 0" id="no-ore-notice">
+                You have no raw ore to trade.
+            </p>
+            <button
+                id="trade-ore-btn"
+                *ngIf="_api.frameData.ship.cargo_ore_mass_kg > 0"
+                (click)="btnClickTradeOreForOreCoin()"
+                [disabled]="_api.frameData.ship.cargo_ore_mass_kg == 0"
+            >
+                💎🔄🪙
+            </button>
+        </div>
+        <div class="ore-desk-section">
+            <p><strong>Buy fuel</strong></p>
+            <div>
+                <progress
+                    value="{{ _api.frameData.ship.fuel_level }}"
+                    max="{{ _api.frameData.ship.fuel_capacity }}"
+                >
+                </progress>
+            </div>
+            <div id="begin-feuling-btn-container">
+                <button id="begin-feuling-btn">
+                    Begin Feuling
+                </button>
+            </div>
+        </div>
+    </div>
+    <hr>
 </div>

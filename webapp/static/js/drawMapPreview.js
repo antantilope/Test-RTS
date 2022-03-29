@@ -1,3 +1,5 @@
+const TWO_PI = 2 * Math.PI
+
 function drawMapPreview(mapData, canvas) {
     const ctx = canvas.getContext("2d");
     const yOffset = 20;
@@ -36,7 +38,7 @@ function drawMapPreview(mapData, canvas) {
         ctx.strokeStyle = "#00ff00"
         ctx.lineWidth = 3
         ctx.arc(
-            spCx, (canvas.height - spCy), 7, 0, 2 * Math.PI
+            spCx, (canvas.height - spCy), 7, 0, TWO_PI
         );
         ctx.stroke();
     }
@@ -57,21 +59,6 @@ function drawMapPreview(mapData, canvas) {
         );
     }
 
-    ctx.font = "20px Courier New";
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = "middle";
-    for(let i=0; i<mapData.spaceStations.length; i++) {
-        let fCx = mapData.spaceStations[i].position_meters_x / metersPerCanvasPxX;
-        let fCy = mapData.spaceStations[i].position_meters_y / metersPerCanvasPxY;
-        let icon = "🛰️";
-        ctx.beginPath();
-        ctx.fillText(
-            icon,
-            fCx,
-            (canvas.height - fCy),
-        );
-    }
 
     for(let i=0; i<mapData.miningLocations.length; i++) {
         let fCx = mapData.miningLocations[i].position_meters_x / metersPerCanvasPxX;

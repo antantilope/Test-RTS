@@ -17,6 +17,9 @@ class InsufficientPowerError(ShipCommandError):
 class InsufficientFuelError(ShipCommandError):
     pass
 
+class InsufficientOreError(ShipCommandError):
+    pass
+
 class ShipCoatType:
     NONE = None
     RADAR_DEFEATING = "radar_defeating"
@@ -50,6 +53,13 @@ class ShipCommands:
 
     EXTEND_GRAVITY_BRAKE = "extend_gravity_brake"
     RETRACT_GRAVITY_BRAKE = "retract_gravity_brake"
+    START_ORE_MINING = 'start_ore_mining'
+    STOP_ORE_MINING = 'stop_ore_mining'
+    TRADE_ORE_FOR_ORE_COIN = 'trade_ore_for_ore_coin'
+
+    START_FUELING = "start_fueling"
+    STOP_FUELING = "start_fueling"
+
 
 class ShipStateKey:
     MASS = 'mass'
@@ -70,8 +80,6 @@ class VisibleElementShapeType:
 
 class ScannedElementType:
     SHIP = 'ship'
-    FIXTURE = 'fixture'
-    SCRAP = 'scrap'
 
 class ScannedElement(TypedDict):
     id: str
@@ -169,6 +177,7 @@ class Ship(BaseModel):
         # Fuel Tank
         self.fuel_level = 0
         self.fuel_capacity = 0
+        self.fueling_at_station = None
 
         # Engine
         self.engine_mass = 0
@@ -264,6 +273,16 @@ class Ship(BaseModel):
         self.gravity_brake_retracting = False
         self.gravity_brake_extending = False
         self.gravity_brake_active = False # flipped to true, the ship rapidly slows down.
+
+        # Mining interactions
+        self.parked_at_ore_mine = None
+        self.cargo_ore_mass_capacity_kg = None
+        self.cargo_ore_mass_kg = 0.0
+        self.virtual_ore_kg = 0.0
+        self.mining_ore = False
+        self.mining_ore_power_usage_per_second = None
+        self.mining_ore_kg_collected_per_second = None
+        self.scouted_mine_ore_remaining: Dict[str, float] = {}
 
         # Arbitrary ship state data
         self._state = {}
@@ -365,6 +384,7 @@ class Ship(BaseModel):
         return self._state.get(ShipStateKey.MASS, (
             self.battery_mass
             + self.engine_mass
+            + self.cargo_ore_mass_kg
             + int(self.fuel_level / constants.FUEL_MASS_UNITS_PER_KG)
             + constants.HULL_BASE_MASS
             + constants.PILOT_MASS
@@ -411,6 +431,7 @@ class Ship(BaseModel):
             'battery_capacity': self.battery_capacity,
             'fuel_level': self.fuel_level,
             'fuel_capacity': self.fuel_capacity,
+            'fueling_at_station': self.fueling_at_station,
 
             'engine_newtons': self.engine_newtons,
             'engine_online': self.engine_online,
@@ -449,6 +470,13 @@ class Ship(BaseModel):
             'gravity_brake_extending': self.gravity_brake_extending,
             'gravity_brake_active': self.gravity_brake_active,
             'gravity_brake_deployed': self.gravity_brake_deployed,
+
+            'parked_at_ore_mine': self.parked_at_ore_mine,
+            'mining_ore': self.mining_ore,
+            'cargo_ore_mass_kg': self.cargo_ore_mass_kg,
+            'cargo_ore_mass_capacity_kg': self.cargo_ore_mass_capacity_kg,
+            'virtual_ore_kg': self.virtual_ore_kg,
+            'scouted_mine_ore_remaining': self.scouted_mine_ore_remaining,
 
             'alive': self.died_on_frame is None,
             'aflame': self.aflame_since_frame is not None,
@@ -560,6 +588,10 @@ class Ship(BaseModel):
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
 
+        instance.cargo_ore_mass_capacity_kg = constants.ORE_CAPACITY_KG
+        instance.mining_ore_power_usage_per_second = constants.MINING_ORE_POWER_USAGE_PER_SECOND
+        instance.mining_ore_kg_collected_per_second = constants.MINING_ORE_KG_COLLECTED_PER_SECOND
+
         instance.gravity_brake_traversal_per_second = constants.GRAVITY_BRAKE_TRAVERSAL_PER_SECOND
 
         return instance
@@ -617,6 +649,14 @@ class Ship(BaseModel):
                 ),
             }
 
+        if self.mining_ore:
+            yield {
+                'name': 'Mining',
+                'percent': round(
+                   self.cargo_ore_mass_kg / self.cargo_ore_mass_capacity_kg * 100
+                ),
+            }
+
 
     def use_battery_power(self, quantity: int) -> None:
         if quantity > self.battery_power:
@@ -633,6 +673,22 @@ class Ship(BaseModel):
         if quantity > self.fuel_level:
             raise InsufficientFuelError
         self.fuel_level -= quantity
+
+    def withdraw_ore(self, quantity: float):
+        if quantity > (self.cargo_ore_mass_kg + self.virtual_ore_kg):
+            raise InsufficientOreError
+
+        # withdraw from physical ore first
+        pool = 0
+        if self.cargo_ore_mass_kg > 0:
+            adj = min(self.cargo_ore_mass_kg, quantity)
+            self.cargo_ore_mass_kg -= adj
+            pool += adj
+
+        # withdraw from virtual ore after
+        if pool < quantity:
+            adj = quantity - pool
+            self.cargo_ore_mass_kg -= adj
 
 
     def adjust_resources(self, fps: int, game_frame: int):
@@ -652,6 +708,17 @@ class Ship(BaseModel):
             if self.ebeam_charge >= self.ebeam_charge_capacity:
                 self.ebeam_charging = False
 
+        ''' Mining '''
+        if self.mining_ore:
+            adj = max(1, round(self.mining_ore_power_usage_per_second / fps))
+            try:
+                self.use_battery_power(round(adj))
+            except InsufficientPowerError:
+                self.mining_ore = False
+
+        ''' REFUELING '''
+        if self.fueling_at_station:
+            pass
 
         ''' Scanner POWER DRAW (RUNNING) '''
         if self.scanner_online:
@@ -860,7 +927,6 @@ class Ship(BaseModel):
                     )
                 )
 
-
     def calculate_physics(self, fps: int) -> None:
         ## apply gravity brake
         if self.gravity_brake_active:
@@ -902,6 +968,7 @@ class Ship(BaseModel):
                 self.docked_at_station = self.docking_at_station
                 self.docking_at_station = None
                 return
+
 
         elif self.engine_lit and self.docked_at_station is None:
             force = self.engine_newtons * (self.engine_boost_multiple if self.engine_boosted else 1)
@@ -996,6 +1063,8 @@ class Ship(BaseModel):
         self.gravity_brake_position = 0
         self.gravity_brake_extending = False
         self.gravity_brake_retracting = False
+        self.mining_ore = False
+        self.parked_at_ore_mine = None
 
     def advance_thermal_signature(self, fps: int) -> None:
         delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps
@@ -1141,6 +1210,13 @@ class Ship(BaseModel):
             self.cmd_extend_gravity_brake()
         elif command == ShipCommands.RETRACT_GRAVITY_BRAKE:
             self.cmd_retract_gravity_brake()
+
+        elif command == ShipCommands.START_ORE_MINING:
+            self.cmd_start_ore_mining()
+        elif command == ShipCommands.STOP_ORE_MINING:
+            self.cmd_stop_ore_mining()
+        elif command == ShipCommands.TRADE_ORE_FOR_ORE_COIN:
+            self.cmd_trade_ore_for_ore_coin()
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1329,3 +1405,34 @@ class Ship(BaseModel):
         self.gravity_brake_retracting = True
         self.docked_at_station = None
         self.docking_at_station = None
+
+    def cmd_start_ore_mining(self):
+        if not self.parked_at_ore_mine:
+            return
+        self.mining_ore = True
+
+    def cmd_stop_ore_mining(self):
+        self.mining_ore = False
+
+    def cmd_trade_ore_for_ore_coin(self, feeRate: float = 0):
+        if feeRate < 0 or feeRate > 1:
+            raise Exception("invalid feeRate")
+        if not self.docked_at_station:
+            return
+        if not self.cargo_ore_mass_kg > 0:
+            return
+        deposit_amount = self.cargo_ore_mass_kg * (1 - feeRate)
+        self.cargo_ore_mass_kg = 0
+        self.virtual_ore_kg += deposit_amount
+
+    def cmd_start_fueling(self):
+        if not self.docked_at_station or not self.gravity_brake_deployed:
+            return
+        if self.fueling_at_station:
+            return
+        self.fueling_at_station = self.docked_at_station
+
+    def cmd_stop_fueling(self):
+        if not self.fueling_at_station:
+            return
+        self.fueling_at_station = None

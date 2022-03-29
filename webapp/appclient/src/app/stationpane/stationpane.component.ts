@@ -20,4 +20,10 @@ export class StationpaneComponent implements OnInit {
     ).name
   }
 
+  public async btnClickTradeOreForOreCoin() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'trade_ore_for_ore_coin'},
+    )
+  }
 }

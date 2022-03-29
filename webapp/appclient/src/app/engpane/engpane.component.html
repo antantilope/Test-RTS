@@ -7,7 +7,13 @@
             <strong>Mass</strong>
         </div>
         <div>
-            {{ data.shipMassKG }} Kilograms
+            <strong>TOTAL</strong> {{ data.shipMassKG }} KG
+        </div>
+        <div>
+            <strong>ORE</strong> {{ data.oreCargoMassKg }} KG
+        </div>
+        <div>
+            <strong>FUEL</strong> {{data.fuelLevel / 75 }} KG
         </div>
     </div>
     <hr>
@@ -61,5 +67,17 @@
         </div>
     </div>
     <hr>
+    <div>
+        <div class="section-heading">
+            <strong>Ore</strong>
+        </div>
+        <div>
+            {{ data.oreCargoMassKg }} / {{ data.oreCargoCapacityMassKg }}
+        </div>
+        <div id="progress-container">
+            <progress value="{{ data.oreCargoMassKg }}" max="{{ data.oreCargoCapacityMassKg }}">
+            </progress>
+        </div>
+    </div>
 </div>
 

@@ -65,6 +65,7 @@ class TestGravityBrakeCatchingLogic(TestCase):
         self.game._game_start_countdown = 1
         self.game.decr_phase_1_starting_countdown()
         assert self.game._phase == GamePhase.LIVE
+        self.game._game_frame = 3
 
 
     def get_ship_id_at_coords(self, coords: Tuple[int]):
@@ -79,6 +80,7 @@ class TestGravityBrakeCatchingLogic(TestCase):
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 30
         self.game.check_for_gravity_brake_catch(self.player_1_ship_id)
         assert self.game._ships[self.player_1_ship_id].gravity_brake_active is False
+        assert self.game._space_stations[0].get('grav_brake_last_caught') is None
         # Move ship into service radius and the brake catches.
         self.game._ships[self.player_1_ship_id].coord_x = 5500
         self.game._ships[self.player_1_ship_id].coord_y = 5500
@@ -86,6 +88,7 @@ class TestGravityBrakeCatchingLogic(TestCase):
         assert self.game._ships[self.player_1_ship_id].gravity_brake_active is True
         assert self.game._ships[self.player_1_ship_id].docking_at_station == self.station_id
         assert self.game._ships[self.player_1_ship_id].docked_at_station is None
+        assert self.game._space_stations[0]['grav_brake_last_caught'] == self.game._game_frame
 
     def test_grav_brake_does_not_activates_when_ship_with_retracted_brake_flies_through_service_radius(self):
         # brake not fully deployed.

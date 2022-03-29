@@ -2,3 +2,40 @@
 div, h2 {
     font-family: 'Courier New', Courier, monospace;
 }
+
+.section-heading {
+    font-size: 120%;
+    font-weight: bold;
+    margin-left:5px;
+    margin-bottom: 10px;
+}
+
+#trade-ore-btn {
+    background-color: #494949;
+    font-size: 150%;
+    border-radius: 8px;
+    cursor: pointer;
+    padding:5px;
+    margin-left: 14px;
+}
+
+#no-ore-notice {
+    font-style: italic;
+    color: #3d2d2d;
+}
+
+.ore-desk-section {
+    margin-bottom:8px;
+    padding: 4px;
+    border: 1px solid #8b8b8b;
+    border-radius: 5px;
+}
+
+#begin-feuling-btn-container {
+    margin-top: 8px;
+}
+
+#begin-feuling-btn{
+    margin-top: 8px;
+    font-size: 1.25rem;
+}

@@ -1,7 +1,6 @@
 
 import datetime as dt
-import random
-from typing import Tuple, TypedDict, Optional, List, Dict, Set
+from typing import Tuple, TypedDict, Optional, List, Dict
 from time import sleep
 import re
 
@@ -87,6 +86,7 @@ class MapSpaceStation(TypedDict):
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
     service_radius_map_units: int #
+    grav_brake_last_caught: Optional[int] # most recent gameframe the station caught a grav brake
 
 class MapSpawnPoint(TypedDict):
     id: str
@@ -144,6 +144,7 @@ class Game(BaseModel):
         self._killfeed: List[KillFeedElement] = []
         self._space_stations: List[MapSpaceStation] = []
         self._ore_mines: List[MapMiningLocationDetails] = []
+        self._ore_mines_remaining_ore: Dict[str, float] = {}
 
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
@@ -265,6 +266,9 @@ class Game(BaseModel):
             }
             for f in request['miningLocations']
         ]
+        for om in self._ore_mines:
+            self._ore_mines_remaining_ore[om['uuid']] = om['starting_ore_amount_kg']
+
 
     def _validate_can_set_map(self):
         if self._phase != GamePhase.LOBBY:
@@ -334,6 +338,12 @@ class Game(BaseModel):
             self._ship_id_to_team_id_map[ship.id] = team_id
 
             self._ships[ship.id] = ship
+
+            # initialize scouted ore values
+            for om in self._ore_mines:
+                self._ships[ship.id].scouted_mine_ore_remaining[
+                    om['uuid']
+                ] = om['starting_ore_amount_kg']
 
 
     def decr_phase_1_starting_countdown(self):
@@ -407,6 +417,7 @@ class Game(BaseModel):
 
         self._ebeam_rays.clear()
         check_for_gravity_brake_catches = self._game_frame % 4 == 0
+        check_for_ore_mine_parking = self._game_frame % 60 == 0
 
         for ship_id, ship in self._ships.items():
             ship.advance_gravity_brake_position(self._fps)
@@ -421,6 +432,12 @@ class Game(BaseModel):
 
             if check_for_gravity_brake_catches:
                 self.check_for_gravity_brake_catch(ship_id)
+
+            if check_for_ore_mine_parking:
+                self.check_for_ore_mine_parking(ship_id)
+                self.update_scouted_mine_ore_remaining(ship_id)
+
+            self.advance_mining(ship_id)
 
         # Post frame checks
         if self._game_frame % 45 == 0:
@@ -511,6 +528,12 @@ class Game(BaseModel):
                         'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
                         'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
                         'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,
+                        'visual_mining_ore_location': (
+                            self._ships[other_id].parked_at_ore_mine
+                            if self._ships[other_id].mining_ore
+                            else None
+                        ),
+                        'visual_fueling_at_station': self._ships[other_id].fueling_at_station,
                     })
                 if is_scannable:
                     exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
@@ -657,7 +680,7 @@ class Game(BaseModel):
         ):
             return
 
-        for st in self._space_stations:
+        for ix, st in enumerate(self._space_stations):
             dist = utils2d.calculate_point_distance(
                 (st['position_map_units_x'], st['position_map_units_y']),
                 self._ships[ship_id].coords,
@@ -665,9 +688,82 @@ class Game(BaseModel):
             if dist <= st['service_radius_map_units']:
                 # Gravity Brake Catches
                 self._ships[ship_id].engine_lit = False
+                self._ships[ship_id].scanner_locked = False
+                self._ships[ship_id].scanner_locking = False
+                self._ships[ship_id].scanner_lock_traversal_slack = None
+                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = None
+                self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].gravity_brake_active = True
                 self._ships[ship_id].docking_at_station = st['uuid']
+                self._space_stations[ix]['grav_brake_last_caught'] = self._game_frame
 
+    def check_for_ore_mine_parking(self, ship_id: str) -> None:
+        ship = self._ships[ship_id]
+        if not ship.is_stationary:
+            self._ships[ship_id].parked_at_ore_mine = None
+            return
+
+        if ship.parked_at_ore_mine:
+            return
+
+        ship_coords = ship.coords
+        for om in self._ore_mines:
+            dist = utils2d.calculate_point_distance(
+                (om['position_map_units_x'], om['position_map_units_y']),
+                ship_coords,
+            )
+            if dist <= om['service_radius_map_units']:
+                self._ships[ship_id].parked_at_ore_mine = om['uuid']
+                return
+
+        self._ships[ship_id].parked_at_ore_mine = None
+
+    def advance_mining(self, ship_id: str):
+        ship = self._ships[ship_id]
+        if not ship.parked_at_ore_mine:
+            self._ships[ship_id].mining_ore = False
+            return
+        if ship.mining_ore:
+            adj = round(ship.mining_ore_kg_collected_per_second / self._fps, 2)
+            room_for = min(adj, ship.cargo_ore_mass_capacity_kg - ship.cargo_ore_mass_kg)
+            if room_for == 0:
+                self._ships[ship_id].mining_ore = False
+                return
+
+            avail = self._ore_mines_remaining_ore[ship.parked_at_ore_mine]
+            if avail == 0:
+                self._ships[ship_id].mining_ore = False
+                return
+            adj = min(avail, adj)
+            adj = min(room_for, adj)
+            if adj > 0:
+                self._ore_mines_remaining_ore[ship.parked_at_ore_mine] = max(
+                    0,
+                    self._ore_mines_remaining_ore[ship.parked_at_ore_mine] - adj
+                )
+                self._ships[ship_id].cargo_ore_mass_kg = min(
+                    ship.cargo_ore_mass_capacity_kg,
+                    ship.cargo_ore_mass_kg + adj
+                )
+            else:
+                self._ships[ship_id].mining_ore = False
+
+    def update_scouted_mine_ore_remaining(self, ship_id: str):
+        ship = self._ships[ship_id]
+        ship_coords = ship.coords
+        for om in self._ore_mines:
+            mine_uuid = om['uuid']
+            dist_meters = utils2d.calculate_point_distance(
+                (om['position_map_units_x'], om['position_map_units_y']),
+                ship_coords,
+            ) / self._map_units_per_meter
+            scan_range = ship.scanner_range if ship.scanner_online else 0
+            visual_range = ship.visual_range
+            max_range = max(scan_range, visual_range)
+            if dist_meters <= max_range:
+                self._ships[ship_id].scouted_mine_ore_remaining[
+                    mine_uuid
+                ] = self._ore_mines_remaining_ore[mine_uuid]
 
     def _process_ship_command(self, command: FrameCommand):
         ship_command = command['ship_command']

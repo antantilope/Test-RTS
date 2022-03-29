@@ -411,6 +411,8 @@ export class CameraService {
       gravityBrakePosition: ship.gravity_brake_position,
       gravityBrakeDeployedPosition: ship.gravity_brake_deployed_position,
       gravityBrakeActive: ship.gravity_brake_active,
+      miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
+      fuelingAtStation: ship.fueling_at_station,
     })
     drawableItems.ships[0].canvasBoundingBox = this.rectCoordsToBoxCoords(
       drawableItems.ships[0].canvasCoordP0,
@@ -504,6 +506,8 @@ export class CameraService {
             gravityBrakePosition: scannerData.visual_gravity_brake_position,
             gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
             gravityBrakeActive: scannerData.visual_gravity_brake_active,
+            miningOreLocation: scannerData.visual_mining_ore_location,
+            fuelingAtStation: scannerData.visual_fueling_at_station,
             ...drawableShip
           }
         }

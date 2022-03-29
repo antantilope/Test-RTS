@@ -687,6 +687,29 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.battery_power == 6000
         assert not self.ship.ebeam_charging
 
+    def test_mining_ore_uses_battery_power(self):
+        self.ship.mining_ore_power_usage_per_second = 50
+        self.ship.battery_power = 500
+        self.ship.mining_ore = True
+        fps = 2
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 475
+        assert self.ship.mining_ore
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 450
+        assert self.ship.mining_ore
+
+    def test_mining_ore_stops_if_not_enough_battery_power(self):
+        self.ship.mining_ore_power_usage_per_second = 50
+        self.ship.battery_power = 30
+        self.ship.mining_ore = True
+        fps = 2
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 5
+        assert self.ship.mining_ore
+        self.ship.adjust_resources(fps=fps, game_frame=1)
+        assert self.ship.battery_power == 5
+        assert not self.ship.mining_ore
 
 
 '''
@@ -2171,6 +2194,28 @@ class TestShipCMDActivateDeactivateLightEngine(TestCase):
         self.ship.cmd_unlight_engine()
         assert self.ship.engine_online
         assert not self.ship.engine_lit
+
+
+''' Trading ore for ore coin
+'''
+
+class TestShipCMDTradeOreForOreCoin(TestCase):
+    def setUp(self):
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+
+    def test_command_does_not_work_if_not_docked_at_station(self):
+        self.ship.cargo_ore_mass_kg = 10
+        self.ship.cmd_trade_ore_for_ore_coin()
+        assert self.ship.cargo_ore_mass_kg == 10
+        assert self.ship.virtual_ore_kg == 0
+
+    def test_command_does_work_if_docked_at_station(self):
+        self.ship.cargo_ore_mass_kg = 10
+        self.ship.docked_at_station = "fooobaaaar"
+        self.ship.cmd_trade_ore_for_ore_coin()
+        assert self.ship.cargo_ore_mass_kg == 0
+        assert self.ship.virtual_ore_kg == 10
 
 
 """ ADVANCE DAMAGE PROPERTIES

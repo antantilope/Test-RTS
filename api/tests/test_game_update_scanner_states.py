@@ -361,6 +361,8 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_gravity_brake_position': 0,
                 'visual_gravity_brake_deployed_position': 100,
                 'visual_gravity_brake_active': False,
+                'visual_mining_ore_location': None,
+                'visual_fueling_at_station': None,
                 'aflame': False,
                 'explosion_frame': None,
                 'alive': True
@@ -391,6 +393,8 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_gravity_brake_position': 0,
                 'visual_gravity_brake_deployed_position': 100,
                 'visual_gravity_brake_active': False,
+                'visual_fueling_at_station': None,
+                'visual_mining_ore_location': None,
                 'aflame': False,
                 'explosion_frame': None,
                 'alive': True
@@ -441,6 +445,8 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_gravity_brake_position': 0,
             'visual_gravity_brake_deployed_position': 100,
             'visual_gravity_brake_active': False,
+            'visual_fueling_at_station': None,
+            'visual_mining_ore_location': None,
             'aflame': False,
             'explosion_frame': None,
             'alive': True

@@ -132,19 +132,27 @@
     border-radius: 3px;
 }
 
+
+
 .vertical-switch {
-    width: 22px;
-    height: 70px;
+    width: 36px;
+    height: 110px;
+    margin-left:5px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 8px solid #202020;
+    border-radius: 7px;
+    padding-left: 5px;
+    padding-right: 5px;
+    size:110%;
 }
 
 #grav-brake-switch-container {
-    width: 25px;
-    height: 82px;
     color: #00ff00;
 }
 
 #utility-switch-container {
     display: flex;
-    flex-direction: column;
+    /* flex-direction: column; */
     margin-top: 6px;
 }

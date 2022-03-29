@@ -10,9 +10,9 @@
     cursor: grab;
     overflow-y: clip;
     border-radius: 8px;
-    max-width:500px;
+    max-width:700px;
     min-width: 100px;
-    max-height: 500px;
+    max-height: 700px;
     min-height:100px;
 }
 
@@ -51,7 +51,11 @@
 
 .subpane-selector-btn {
     margin-right: 3px;
-    background-color: #00410e;
-    color: #ffffff;
     border-radius: 5px;
+    padding: 4px;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.temp-subpane-selector-btn {
 }
