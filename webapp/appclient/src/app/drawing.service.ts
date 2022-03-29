@@ -15,7 +15,7 @@ import {
 } from "./models/drawable-objects.model"
 import { TimerItem } from './models/timer-item.model';
 import { PointCoord } from './models/point-coord.model';
-import { TWO_PI } from './constants';
+import { TWO_PI, PI_OVER_180 } from './constants';
 
 
 
@@ -137,39 +137,59 @@ export class DrawingService {
     ctx.fill()
   }
 
-  public drawVelocityLine(
+  public drawVelocityAndHeadingLine(
     ctx: CanvasRenderingContext2D,
     visionCircle: VisionCircle
   ) {
     const ship = this._api.frameData.ship
-    if(
-      ship.velocity_x_meters_per_second == 0
-      && ship.velocity_y_meters_per_second == 0
-    ) {
+    if(!ship.alive) {
       return
     }
-    const angleRads = this._camera.getCanvasAngleBetween(
-      {x:0, y:0},
-      {
-        x: visionCircle.canvasCoord.x + ship.velocity_x_meters_per_second * 1000,
-        y: visionCircle.canvasCoord.y + ship.velocity_y_meters_per_second * 1000,
+    // Draw Velocity line if there is any velocity
+    if(
+      ship.velocity_x_meters_per_second !== 0
+      || ship.velocity_y_meters_per_second !== 0
+    ) {
+      const vAngleRads = this._camera.getCanvasAngleBetween(
+        {x:0, y:0},
+        {
+          x: visionCircle.canvasCoord.x + ship.velocity_x_meters_per_second * 1000,
+          y: visionCircle.canvasCoord.y + ship.velocity_y_meters_per_second * 1000,
+        }
+      ) * (Math.PI / 180)
+      const velocityLinePointB = {
+        x: visionCircle.canvasCoord.x + (visionCircle.radius * Math.sin(vAngleRads)),
+        y: visionCircle.canvasCoord.y + (visionCircle.radius * Math.cos(vAngleRads)),
       }
-    ) * (Math.PI / 180)
-    const velocityLinePointB = {
-      x: visionCircle.canvasCoord.x + Math.round(visionCircle.radius * Math.sin(angleRads)),
-      y: visionCircle.canvasCoord.y + Math.round(visionCircle.radius * Math.cos(angleRads)),
+      ctx.beginPath()
+      ctx.lineWidth = 2
+      ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+      ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
+      ctx.lineTo(velocityLinePointB.x, velocityLinePointB.y)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(144, 0, 173, 0.50)"
+      ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 4, 0, TWO_PI)
+      ctx.fill()
+    }
+
+    // Draw heading line
+    const hAngleRads = (180 - ship.heading) * PI_OVER_180 // why -180? because it works.
+    const halfVisionRadius = Math.min(
+      visionCircle.radius / 2,
+      this._camera.canvasHalfHeight,
+    )
+    const headingLinePointB = {
+      x: visionCircle.canvasCoord.x + (halfVisionRadius * Math.sin(hAngleRads)),
+      y: visionCircle.canvasCoord.y + (halfVisionRadius * Math.cos(hAngleRads)),
     }
     ctx.beginPath()
     ctx.lineWidth = 2
-    ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+    ctx.strokeStyle = "rgb(255, 255, 255, 0.15)"
     ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
-    ctx.lineTo(velocityLinePointB.x, velocityLinePointB.y)
+    ctx.lineTo(headingLinePointB.x, headingLinePointB.y)
     ctx.stroke()
-
-    ctx.beginPath()
-    ctx.fillStyle = "rgb(144, 0, 173, 0.50)"
-    ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 4, 0, TWO_PI)
-    ctx.fill()
   }
 
   public drawEbeams(

@@ -27,6 +27,10 @@
     /* display: none; */
 }
 
+#graphics-2d-canvas:hover {
+    cursor: crosshair;
+}
+
 #command-bar-container {
     height: 25vh;
     max-height: 400px;

@@ -44,7 +44,7 @@ export class GamedisplayComponent implements OnInit {
   private ctx: CanvasRenderingContext2D | null = null
 
   /* Props to track the user's mouse */
-  private mouseInCanvas = false
+  private mouseInCanvas = true
   private mouseClickDownInCanvas = false
   private mousePanLastX: number | null = null
   private mousePanLastY: number | null = null
@@ -122,6 +122,8 @@ export class GamedisplayComponent implements OnInit {
     console.log({gameKeystroke: key})
     if (key === 'm') {
       this._camera.toggleMap()
+    } else if (key === 'n') {
+      this._camera.cycleMode()
     }
   }
 
@@ -377,7 +379,6 @@ export class GamedisplayComponent implements OnInit {
     const camCoords = this._camera.getPosition()
     const camMode = this._camera.getMode()
     if(camCoords.x === null || camCoords.y === null) {
-      this._api.frameData
       this._camera.setPosition(
         this._api.frameData.ship.coord_x,
         this._api.frameData.ship.coord_y,
@@ -419,7 +420,7 @@ export class GamedisplayComponent implements OnInit {
     // expect smallest vision circle at end of array
     const lastIx = drawableObjects.visionCircles.length - 1
     if(lastIx > -1) {
-      this._draw.drawVelocityLine(
+      this._draw.drawVelocityAndHeadingLine(
         this.ctx,
         drawableObjects.visionCircles[lastIx],
       )
@@ -548,9 +549,6 @@ export class GamedisplayComponent implements OnInit {
     yOffset += yInterval
 
     this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
-    yOffset += yInterval
-
-    this.ctx.fillText(`mouseInCanvas: ${this.mouseInCanvas}`, xOffset, yOffset)
     yOffset += yInterval
 
   }

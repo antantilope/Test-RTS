@@ -39,13 +39,13 @@ export class CameraService {
     "Zooming out" increases this value
   */
   private zoom: number = 10;
-  private zoomLevels = [1, 5, 10, 17, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000]
+  private zoomLevels = [1, 5, 10, 15, 20, 25, 30, 35, 40]
   private zoomIndex = this.zoomLevels.indexOf(this.zoom)
   private finalZoomIndex = this.zoomLevels.length - 1
 
   private xPosition: number = null;
   private yPosition: number = null;
-  private mode = CAMERA_MODE_FREE;
+  private mode = CAMERA_MODE_SHIP;
 
   public minSizeForDotPx = 6;
 
@@ -132,9 +132,31 @@ export class CameraService {
   public getMode(): string {
     return this.mode
   }
+
+  public cycleMode(): void {
+    // Mode cycle: "ship" -> "scanner" -> "ship" etc
+    const mode = this.getMode()
+    if (mode === CAMERA_MODE_SHIP) {
+      this.previousZoomIndex = this.getZoomIndex()
+      this.previousMode = CAMERA_MODE_SHIP
+      this.setModeScanner()
+    }
+    else if(mode === CAMERA_MODE_SCANNER) {
+      this.setModeShip()
+    }
+    else if (mode === CAMERA_MODE_MAP) {
+      this.closeMap()
+    }
+  }
+
   public setModeShip(): void {
     this.mode = CAMERA_MODE_SHIP
     this.setZoomToNearestLevel()
+    if(this.previousZoomIndex !== null && this.previousMode === CAMERA_MODE_SHIP) {
+      this.setZoomIndex(this.previousZoomIndex)
+    } else {
+      this.setZoomToNearestLevel()
+    }
   }
   public setModeScanner(): void {
     this.mode = CAMERA_MODE_SCANNER
