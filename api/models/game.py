@@ -745,6 +745,8 @@ class Game(BaseModel):
                     ship.cargo_ore_mass_capacity_kg,
                     ship.cargo_ore_mass_kg + adj
                 )
+            else:
+                self._ships[ship_id].mining_ore = False
 
     def update_scouted_mine_ore_remaining(self, ship_id: str):
         ship = self._ships[ship_id]
