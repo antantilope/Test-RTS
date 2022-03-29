@@ -690,6 +690,9 @@ class Game(BaseModel):
                 self._ships[ship_id].engine_lit = False
                 self._ships[ship_id].scanner_locked = False
                 self._ships[ship_id].scanner_locking = False
+                self._ships[ship_id].scanner_lock_traversal_slack = None
+                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = None
+                self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].gravity_brake_active = True
                 self._ships[ship_id].docking_at_station = st['uuid']
                 self._space_stations[ix]['grav_brake_last_caught'] = self._game_frame
