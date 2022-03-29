@@ -770,6 +770,7 @@ class Game(BaseModel):
         player_id = command['player_id']
         args = command.get('args', [])
         kwargs = command.get('kwargs', {})
+        kwargs['game_frame'] = self._game_frame
         ship_id = self._player_id_to_ship_id_map[player_id]
 
         # Handle game level commands.

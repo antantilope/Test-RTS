@@ -283,6 +283,7 @@ class Ship(BaseModel):
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None
         self.scouted_mine_ore_remaining: Dict[str, float] = {}
+        self.last_ore_deposit_frame = None
 
         # Arbitrary ship state data
         self._state = {}
@@ -477,6 +478,7 @@ class Ship(BaseModel):
             'cargo_ore_mass_capacity_kg': self.cargo_ore_mass_capacity_kg,
             'virtual_ore_kg': self.virtual_ore_kg,
             'scouted_mine_ore_remaining': self.scouted_mine_ore_remaining,
+            'last_ore_deposit_frame': self.last_ore_deposit_frame,
 
             'alive': self.died_on_frame is None,
             'aflame': self.aflame_since_frame is not None,
@@ -1216,7 +1218,7 @@ class Ship(BaseModel):
         elif command == ShipCommands.STOP_ORE_MINING:
             self.cmd_stop_ore_mining()
         elif command == ShipCommands.TRADE_ORE_FOR_ORE_COIN:
-            self.cmd_trade_ore_for_ore_coin()
+            self.cmd_trade_ore_for_ore_coin(kwargs['game_frame'])
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1414,16 +1416,15 @@ class Ship(BaseModel):
     def cmd_stop_ore_mining(self):
         self.mining_ore = False
 
-    def cmd_trade_ore_for_ore_coin(self, feeRate: float = 0):
-        if feeRate < 0 or feeRate > 1:
-            raise Exception("invalid feeRate")
+    def cmd_trade_ore_for_ore_coin(self, game_frame: int):
         if not self.docked_at_station:
             return
         if not self.cargo_ore_mass_kg > 0:
             return
-        deposit_amount = self.cargo_ore_mass_kg * (1 - feeRate)
+        deposit_amount = self.cargo_ore_mass_kg
         self.cargo_ore_mass_kg = 0
         self.virtual_ore_kg += deposit_amount
+        self.last_ore_deposit_frame = game_frame
 
     def cmd_start_fueling(self):
         if not self.docked_at_station or not self.gravity_brake_deployed:
