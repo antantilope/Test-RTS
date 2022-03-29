@@ -22,6 +22,8 @@ export class PaneService {
   // Array of panes that the mouse is currently inside of.
   private _mouseInPane: string[] = []
 
+  private inputIsFocused = false
+
   constructor(
   ) {
     this.zIndexes = [
@@ -29,6 +31,15 @@ export class PaneService {
       this.PANE_MAIN_MENU,
       this.PANE_SHIP,
     ]
+  }
+
+  setInputIsFocused(value: boolean, from: string) {
+    console.log(`marking input as focused:${value}, from ${from}`)
+    this.inputIsFocused = value
+  }
+
+  getInputIsFocused() {
+    return this.inputIsFocused
   }
 
   toggleAllChatPane() {

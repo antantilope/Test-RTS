@@ -15,6 +15,9 @@ export const CAMERA_MODE_SHIP = 'ship'
 /* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner data. */
 export const CAMERA_MODE_SCANNER = 'scanner'
 
+/* CAMERA_MODE_MAP */
+export const CAMERA_MODE_MAP = 'map'
+
 /* CAMERA_MODE_FREE Camera Position AND zoom are manually adjusted by the user. */
 export const CAMERA_MODE_FREE = 'free'
 
@@ -48,6 +51,10 @@ export class CameraService {
 
   private framesToShowBoostedEngine = 5
 
+  private previousMode: null | string = null
+  private previousPosition: null | PointCoord = null
+  private previousZoomIndex: null | number = null
+
   constructor(
     private _api: ApiService,
   ) {
@@ -65,7 +72,7 @@ export class CameraService {
   }
 
   public canManualZoom(): boolean {
-    return this.mode !== CAMERA_MODE_SCANNER
+    return this.mode !== CAMERA_MODE_SCANNER && this.mode !== CAMERA_MODE_MAP
   }
 
   public canManualPan(): boolean {
@@ -97,7 +104,8 @@ export class CameraService {
   }
 
   public getZoomIndex(): number | null {
-    if (this.getMode() != CAMERA_MODE_SCANNER) {
+    const mode = this.getMode()
+    if (mode != CAMERA_MODE_SCANNER && mode != CAMERA_MODE_MAP) {
       return this.zoomIndex
     } else {
       return null;
@@ -131,6 +139,56 @@ export class CameraService {
   public setModeScanner(): void {
     this.mode = CAMERA_MODE_SCANNER
   }
+
+  public toggleMap() {
+    if (this.getMode() == CAMERA_MODE_MAP) {
+      this.closeMap()
+    } else {
+      this.setModeMap()
+    }
+  }
+
+  public setModeMap(): void {
+    // Save previous camera info for when map closes.
+    this.previousMode = this.getMode()
+    this.previousPosition = this.getPosition()
+    this.previousZoomIndex = this.getZoomIndex()
+
+    // Calculate position
+    this.mode = CAMERA_MODE_MAP
+    const mapCenterX = Math.floor(this._api.frameData.map_config.x_unit_length / 2)
+    const mapCenterY = Math.floor(this._api.frameData.map_config.y_unit_length / 2)
+    this.setPosition(mapCenterX, mapCenterY)
+
+    // Calculate zoom to show full map
+    const mapUnitsPerPxW = Math.floor(mapCenterX / (this.canvasHalfWidth - 40))
+    const mapUnitsPerPxH = Math.floor(mapCenterY / (this.canvasHalfHeight - 40))
+    const mapUnitsPerPxX = Math.max(mapUnitsPerPxW, mapUnitsPerPxH)
+    this.zoom = mapUnitsPerPxX
+  }
+
+  public closeMap() {
+    if (this.getMode() != CAMERA_MODE_MAP) {
+      return
+    }
+    else if (this.previousMode == CAMERA_MODE_SCANNER) {
+      this.setModeScanner()
+      return
+    }
+    else if (this.previousMode == CAMERA_MODE_SHIP) {
+      this.mode = CAMERA_MODE_SHIP
+      this.setZoomIndex(this.previousZoomIndex)
+    }
+    else if(this.previousMode == CAMERA_MODE_FREE) {
+      this.mode = CAMERA_MODE_FREE
+      this.setPosition(this.previousPosition.x, this.previousPosition.y)
+      this.setZoomIndex(this.previousZoomIndex)
+    }
+    else {
+      console.warn("could not select a camera profile after closing map.")
+    }
+  }
+
   public setModeFree(): void {
     this.mode = CAMERA_MODE_FREE
     this.setZoomToNearestLevel()
@@ -226,6 +284,10 @@ export class CameraService {
       */
       y: this.canvasHeight - (camDy + this.canvasHalfHeight),
     }
+  }
+
+  public canvasCoordToMapCoord(canvasCoord: PointCoord, origin: PointCoord) {
+
   }
 
   public setCameraPositionAndZoomForScannerMode(scannerTargetIDCursor: string | null) {

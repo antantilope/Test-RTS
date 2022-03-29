@@ -18,6 +18,7 @@ import {
   CAMERA_MODE_SHIP,
   CAMERA_MODE_SCANNER,
   CAMERA_MODE_FREE,
+  CAMERA_MODE_MAP,
 } from '../camera.service'
 import { FormattingService } from '../formatting.service'
 import { AllchatService } from "../allchat.service"
@@ -109,6 +110,18 @@ export class GamedisplayComponent implements OnInit {
     location.reload() // TODO: This is shit. Need a better solution.
   }
 
+  @HostListener('document:keypress', ['$event'])
+  private handleKeyboardEvent(event: KeyboardEvent) {
+    if(this._pane.getInputIsFocused()) {
+      return
+    }
+    const key = event.key.toLocaleLowerCase()
+    console.log({gameKeystroke: key})
+    if (key === 'm') {
+      this._camera.toggleMap()
+    }
+  }
+
   private registerMouseEventListener(): void {
     // Zoom camera
     window.addEventListener('wheel', event => {
@@ -193,11 +206,17 @@ export class GamedisplayComponent implements OnInit {
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
     ) {
-      this.clickAnimationFrame = 1
-      this.clickAnimationCanvasX = mouseCanvasX
-      this.clickAnimationCanvasY = mouseCanvasY
+      const mode = this._camera.getMode()
+      if(mode == CAMERA_MODE_SHIP) {
+        this.clickAnimationFrame = 1
+        this.clickAnimationCanvasX = mouseCanvasX
+        this.clickAnimationCanvasY = mouseCanvasY
+        this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
+      }
+      else if (mode == CAMERA_MODE_MAP) {
+        this.handleMouseClickInCanvasDropWaypoint(mouseCanvasX, mouseCanvasY)
+      }
 
-      this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
     }
   }
 
@@ -213,6 +232,13 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command: "set_heading", heading},
     )
+  }
+
+  private async handleMouseClickInCanvasDropWaypoint(
+    canvasClickX: number,
+    canvasClickY: number,
+  ) {
+    console.log({canvasClickX, canvasClickY})
   }
 
   private setupCanvasContext(): void {

@@ -22,19 +22,24 @@
             </div>
             <div class="btn-gap">
             </div>
-            <div *ngIf="_camera.getMode() !== 'ship'">
+            <div>
                 <button class="sidebar-btn" (click)="_camera.setModeShip()" title="Camera: Ship">
                     🚀🎥
                 </button>
             </div>
-            <div  *ngIf="_camera.getMode() !== 'scanner'">
+            <div>
                 <button class="sidebar-btn" (click)="_camera.setModeScanner()" title="Camera: Scanner">
                     📡🎥
                 </button>
             </div>
-            <div  *ngIf="_camera.getMode() !== 'free'">
+            <div *ngIf="!_api.frameData.ship.alive">
                 <button class="sidebar-btn" (click)="_camera.setModeFree()" title="Camera: Free">
                     💠🎥
+                </button>
+            </div>
+            <div>
+                <button class="sidebar-btn" (click)="_camera.toggleMap()" title="Camera: Map">
+                    🗺️🎥
                 </button>
             </div>
             <div class="btn-gap">
