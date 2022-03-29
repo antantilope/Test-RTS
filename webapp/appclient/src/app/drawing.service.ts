@@ -93,6 +93,85 @@ export class DrawingService {
     }
   }
 
+  public drawWaypoint(
+    ctx: CanvasRenderingContext2D,
+    wayPointMapCoord: PointCoord
+  ) {
+    const ship = this._api.frameData.ship
+    if(!ship.alive) {
+      return
+    }
+
+    const cameraPosition = this._camera.getPosition()
+    let wpCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      wayPointMapCoord, cameraPosition
+    )
+    let shipCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      {x: ship.coord_x, y: ship.coord_y}, cameraPosition
+    )
+
+    // Draw line
+    ctx.beginPath()
+    ctx.strokeStyle = "rgb(144, 0, 173, 0.5)"
+    ctx.lineWidth = 2
+    ctx.setLineDash([5, 10]);
+    ctx.moveTo(shipCanvasCoord.x, shipCanvasCoord.y)
+    ctx.lineTo(wpCanvasCoord.x, wpCanvasCoord.y)
+    ctx.stroke()
+    ctx.setLineDash([]);
+    // Draw flag pole
+    const poleHeight = 38
+    const flagHeight = 10
+    const flagWidth = 12
+    ctx.beginPath()
+    ctx.fillStyle = "rgb(144, 0, 173, 0.75)"
+    ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+    ctx.moveTo(wpCanvasCoord.x, wpCanvasCoord.y)
+    ctx.lineTo(wpCanvasCoord.x, wpCanvasCoord.y - poleHeight)
+    ctx.stroke()
+    // Draw flag
+    ctx.moveTo(wpCanvasCoord.x, wpCanvasCoord.y - poleHeight)
+    ctx.lineTo(wpCanvasCoord.x + flagWidth, wpCanvasCoord.y - (poleHeight - flagHeight / 2))
+    ctx.lineTo(wpCanvasCoord.x, wpCanvasCoord.y - (poleHeight - flagHeight))
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  public drawVelocityLine(
+    ctx: CanvasRenderingContext2D,
+    visionCircle: VisionCircle
+  ) {
+    const ship = this._api.frameData.ship
+    if(
+      ship.velocity_x_meters_per_second == 0
+      && ship.velocity_y_meters_per_second == 0
+    ) {
+      return
+    }
+    const angleRads = this._camera.getCanvasAngleBetween(
+      {x:0, y:0},
+      {
+        x: visionCircle.canvasCoord.x + ship.velocity_x_meters_per_second * 1000,
+        y: visionCircle.canvasCoord.y + ship.velocity_y_meters_per_second * 1000,
+      }
+    ) * (Math.PI / 180)
+    const velocityLinePointB = {
+      x: visionCircle.canvasCoord.x + Math.round(visionCircle.radius * Math.sin(angleRads)),
+      y: visionCircle.canvasCoord.y + Math.round(visionCircle.radius * Math.cos(angleRads)),
+    }
+    ctx.beginPath()
+    ctx.lineWidth = 2
+    ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+    ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
+    ctx.lineTo(velocityLinePointB.x, velocityLinePointB.y)
+    ctx.stroke()
+
+    ctx.beginPath()
+    ctx.fillStyle = "rgb(144, 0, 173, 0.50)"
+    ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 4, 0, TWO_PI)
+    ctx.fill()
+  }
+
   public drawEbeams(
     ctx: CanvasRenderingContext2D,
     rays: EBeamRayDetails[],

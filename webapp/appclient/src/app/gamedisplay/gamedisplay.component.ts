@@ -70,6 +70,9 @@ export class GamedisplayComponent implements OnInit {
   public mineBtnBkColor = "#ff0000"
   public mineBtnTxtColor = "#000000"
 
+  private wayPoint: PointCoord | null = null
+  private wayPointUUID: string | null = null
+
   constructor(
     public _api: ApiService,
     public _camera: CameraService,
@@ -84,8 +87,8 @@ export class GamedisplayComponent implements OnInit {
   ngOnInit(): void {
     console.log("GamedisplayComponent::ngOnInit")
     setTimeout(()=>{
-      this.paintDisplay()
       this.registerMouseEventListener()
+      this.paintDisplay()
     }, 300)
 
 
@@ -123,6 +126,7 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private registerMouseEventListener(): void {
+
     // Zoom camera
     window.addEventListener('wheel', event => {
       if(this._pane.mouseInPane()) {
@@ -132,6 +136,10 @@ export class GamedisplayComponent implements OnInit {
         const zoomIn = event.deltaY < 0
         this._camera.adjustZoom(zoomIn)
       }
+    })
+
+    this.canvas.nativeElement.addEventListener('mouseover', () => {
+      this.mouseInCanvas = true
     })
 
     // Pan camera
@@ -165,6 +173,13 @@ export class GamedisplayComponent implements OnInit {
     window.addEventListener('mouseup', (event) => {
       if(!this.mouseMovedWhileDown && this.mouseInCanvas && !this._pane.mouseInPane()) {
         this.handleMouseClickInCanvas(event)
+      } else {
+        console.log("no click")
+        console.log({
+          "!this.mouseMovedWhileDown": !this.mouseMovedWhileDown,
+          "this.mouseInCanvas": this.mouseInCanvas,
+          "!this._pane.mouseInPane()": !this._pane.mouseInPane(),
+        })
       }
       this.mouseClickDownInCanvas = false
       this.mouseMovedWhileDown = false
@@ -195,6 +210,7 @@ export class GamedisplayComponent implements OnInit {
 
   public handleMouseClickInCanvas(event: any): void {
     console.log("handleMouseClickInCanvas")
+
     if(this._api.frameData === null) {
       return
     }
@@ -207,14 +223,14 @@ export class GamedisplayComponent implements OnInit {
       && this.drawableObjects.ships[0].isSelf
     ) {
       const mode = this._camera.getMode()
-      if(mode == CAMERA_MODE_SHIP) {
+      if(mode == CAMERA_MODE_SHIP || mode == CAMERA_MODE_SCANNER) {
         this.clickAnimationFrame = 1
         this.clickAnimationCanvasX = mouseCanvasX
         this.clickAnimationCanvasY = mouseCanvasY
         this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
       }
       else if (mode == CAMERA_MODE_MAP) {
-        this.handleMouseClickInCanvasDropWaypoint(mouseCanvasX, mouseCanvasY)
+        this.handleMouseClickInCanvasDropWaypoint(mode, mouseCanvasX, mouseCanvasY)
       }
 
     }
@@ -235,10 +251,68 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private async handleMouseClickInCanvasDropWaypoint(
+    mode: string,
     canvasClickX: number,
     canvasClickY: number,
   ) {
-    console.log({canvasClickX, canvasClickY})
+    if (mode !== CAMERA_MODE_MAP) {
+      return console.warn("handleMouseClickInCanvasDropWaypoint only runs in map mode")
+    }
+    const getCanvasDistanceBetweenCanvasCoords = (
+      p1: PointCoord,
+      p2: PointCoord
+    ): number => {
+      return Math.sqrt(
+        Math.pow(p1.x - p2.x, 2)
+        + Math.pow(p1.y - p2.y, 2)
+      )
+    }
+    let minDist: number
+    let minDistData: any
+    const cameraPosition = this._camera.getPosition()
+    for(let i in this._api.frameData.ore_mines) {
+      let om = this._api.frameData.ore_mines[i]
+      let omCanvasCoord = this._camera.mapCoordToCanvasCoord(
+        {x: om.position_map_units_x, y: om.position_map_units_y},
+        cameraPosition,
+      )
+      let canvasDistance = getCanvasDistanceBetweenCanvasCoords(
+        omCanvasCoord, {x: canvasClickX, y: canvasClickY}
+      )
+      if(typeof minDist === 'undefined' || minDist > canvasDistance) {
+        minDist = canvasDistance
+        minDistData = om
+      }
+    }
+    for(let i in this._api.frameData.space_stations) {
+      let st = this._api.frameData.space_stations[i]
+      let stCanvasCoord = this._camera.mapCoordToCanvasCoord(
+        {x: st.position_map_units_x, y: st.position_map_units_y},
+        cameraPosition,
+      )
+      let canvasDistance = getCanvasDistanceBetweenCanvasCoords(
+        stCanvasCoord, {x: canvasClickX, y: canvasClickY}
+      )
+      if(typeof minDist === 'undefined' || minDist > canvasDistance) {
+        minDist = canvasDistance
+        minDistData = st
+      }
+    }
+    if (minDist <  20) {
+      if(this.wayPointUUID !== null && this.wayPointUUID === minDistData.uuid) {
+        console.log("clearing waypoint")
+        this.wayPointUUID = null
+        this.wayPoint = null
+        return
+      } else {
+        console.log("setting new waypoint")
+        this.wayPointUUID = minDistData.uuid
+        this.wayPoint = {
+          x: minDistData.position_map_units_x,
+          y: minDistData.position_map_units_y,
+        }
+      }
+    }
   }
 
   private setupCanvasContext(): void {
@@ -336,6 +410,20 @@ export class GamedisplayComponent implements OnInit {
     // Add map features
     this._draw.drawSpaceStations(this.ctx)
     this._draw.drawMiningLocations(this.ctx)
+
+    // Waypoint, if one is set
+    if(this.wayPoint !== null) {
+      this._draw.drawWaypoint(this.ctx, this.wayPoint)
+    }
+
+    // expect smallest vision circle at end of array
+    const lastIx = drawableObjects.visionCircles.length - 1
+    if(lastIx > -1) {
+      this._draw.drawVelocityLine(
+        this.ctx,
+        drawableObjects.visionCircles[lastIx],
+      )
+    }
 
     // Ships
     for(let i in drawableObjects.ships) {
@@ -462,6 +550,8 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
     yOffset += yInterval
 
+    this.ctx.fillText(`mouseInCanvas: ${this.mouseInCanvas}`, xOffset, yOffset)
+    yOffset += yInterval
 
   }
 
