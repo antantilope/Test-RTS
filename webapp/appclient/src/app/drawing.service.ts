@@ -15,7 +15,7 @@ import {
 } from "./models/drawable-objects.model"
 import { TimerItem } from './models/timer-item.model';
 import { PointCoord } from './models/point-coord.model';
-import { TWO_PI } from './constants';
+import { TWO_PI, PI_OVER_180 } from './constants';
 
 
 
@@ -91,6 +91,149 @@ export class DrawingService {
       )
       ctx.fill()
     }
+  }
+
+  public drawOreDepositEffect(ctx: CanvasRenderingContext2D) {
+    const effectLengthFrames = 30
+    if (
+      (
+        (this._api.frameData.ship.last_ore_deposit_frame + effectLengthFrames)
+        < this._api.frameData.game_frame
+      )
+      || this._api.frameData.game_frame < 100
+    ) {
+      return
+    }
+    const ship = this._api.frameData.ship
+    const effectFrame = (
+      this._api.frameData.game_frame
+      - ship.last_ore_deposit_frame
+    )
+
+    const shipCanvasCoords = this._camera.mapCoordToCanvasCoord(
+      {x: ship.coord_x, y: ship.coord_y},
+      this._camera.getPosition(),
+    )
+
+    const effectRadius = (15 + effectFrame) * 3.5
+    const alpha = 0.5 - (effectFrame * 0.015)
+    ctx.beginPath()
+    ctx.fillStyle = `rgb(255, 255, 0, ${alpha})`
+    ctx.arc(
+      shipCanvasCoords.x,
+      shipCanvasCoords.y,
+      effectRadius, 0, TWO_PI,
+    )
+    ctx.fill()
+
+    const offset = effectLengthFrames - (effectFrame + 1)
+    let textCoord = {
+      x:shipCanvasCoords.x + 40 + offset,
+      y:shipCanvasCoords.y - 40 - offset
+    }
+    ctx.beginPath()
+    ctx.font = '30px Courier New'
+    ctx.fillStyle = `rgb(255, 255, 0, ${alpha * 1.25})`
+    ctx.fillText("🪙", textCoord.x, textCoord.y)
+  }
+
+  public drawWaypoint(
+    ctx: CanvasRenderingContext2D,
+    wayPointMapCoord: PointCoord
+  ) {
+    const ship = this._api.frameData.ship
+    if(!ship.alive) {
+      return
+    }
+
+    const cameraPosition = this._camera.getPosition()
+    let wpCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      wayPointMapCoord, cameraPosition
+    )
+    let shipCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      {x: ship.coord_x, y: ship.coord_y}, cameraPosition
+    )
+
+    // Draw line
+    ctx.beginPath()
+    ctx.strokeStyle = "rgb(144, 0, 173, 0.5)"
+    ctx.lineWidth = 2
+    ctx.setLineDash([5, 10]);
+    ctx.moveTo(shipCanvasCoord.x, shipCanvasCoord.y)
+    ctx.lineTo(wpCanvasCoord.x, wpCanvasCoord.y)
+    ctx.stroke()
+    ctx.setLineDash([]);
+    // Draw flag pole
+    const poleHeight = 38
+    const flagHeight = 10
+    const flagWidth = 12
+    ctx.beginPath()
+    ctx.fillStyle = "rgb(144, 0, 173, 0.75)"
+    ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+    ctx.moveTo(wpCanvasCoord.x, wpCanvasCoord.y)
+    ctx.lineTo(wpCanvasCoord.x, wpCanvasCoord.y - poleHeight)
+    ctx.stroke()
+    // Draw flag
+    ctx.moveTo(wpCanvasCoord.x, wpCanvasCoord.y - poleHeight)
+    ctx.lineTo(wpCanvasCoord.x + flagWidth, wpCanvasCoord.y - (poleHeight - flagHeight / 2))
+    ctx.lineTo(wpCanvasCoord.x, wpCanvasCoord.y - (poleHeight - flagHeight))
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  public drawVelocityAndHeadingLine(
+    ctx: CanvasRenderingContext2D,
+    visionCircle: VisionCircle
+  ) {
+    const ship = this._api.frameData.ship
+    if(!ship.alive) {
+      return
+    }
+    // Draw Velocity line if there is any velocity
+    if(
+      ship.velocity_x_meters_per_second !== 0
+      || ship.velocity_y_meters_per_second !== 0
+    ) {
+      const vAngleRads = this._camera.getCanvasAngleBetween(
+        {x:0, y:0},
+        {
+          x: visionCircle.canvasCoord.x + ship.velocity_x_meters_per_second * 1000,
+          y: visionCircle.canvasCoord.y + ship.velocity_y_meters_per_second * 1000,
+        }
+      ) * (Math.PI / 180)
+      const velocityLinePointB = {
+        x: visionCircle.canvasCoord.x + (visionCircle.radius * Math.sin(vAngleRads)),
+        y: visionCircle.canvasCoord.y + (visionCircle.radius * Math.cos(vAngleRads)),
+      }
+      ctx.beginPath()
+      ctx.lineWidth = 2
+      ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+      ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
+      ctx.lineTo(velocityLinePointB.x, velocityLinePointB.y)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(144, 0, 173, 0.50)"
+      ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 4, 0, TWO_PI)
+      ctx.fill()
+    }
+
+    // Draw heading line
+    const hAngleRads = (180 - ship.heading) * PI_OVER_180 // why -180? because it works.
+    const halfVisionRadius = Math.min(
+      visionCircle.radius / 2,
+      this._camera.canvasHalfHeight,
+    )
+    const headingLinePointB = {
+      x: visionCircle.canvasCoord.x + (halfVisionRadius * Math.sin(hAngleRads)),
+      y: visionCircle.canvasCoord.y + (halfVisionRadius * Math.cos(hAngleRads)),
+    }
+    ctx.beginPath()
+    ctx.lineWidth = 2
+    ctx.strokeStyle = "rgb(255, 255, 255, 0.15)"
+    ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
+    ctx.lineTo(headingLinePointB.x, headingLinePointB.y)
+    ctx.stroke()
   }
 
   public drawEbeams(
@@ -170,6 +313,7 @@ export class DrawingService {
 
   public drawTopRightOverlay(
     ctx: CanvasRenderingContext2D,
+    waypointMapCoord: PointCoord | null,
   ) {
     // Gyroscope circle
     const buffer = 3;
@@ -258,6 +402,26 @@ export class DrawingService {
       this._camera.canvasWidth - 3,
       gryroscopeY + gryroscopeRadius + 40,
     )
+
+    // Waypoint distance test
+    if (waypointMapCoord !== null) {
+      const ship = this._api.frameData.ship
+      const shipMapCoord = {x:ship.coord_x, y: ship.coord_y}
+      const metersDist = Math.floor(
+        Math.sqrt(
+          Math.pow(shipMapCoord.x - waypointMapCoord.x, 2)
+          + Math.pow(shipMapCoord.y - waypointMapCoord.y, 2)
+        )
+        / this._api.frameData.map_config.units_per_meter
+      )
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(193, 113, 209, 0.95)"
+      ctx.fillText(
+        `WP ${metersDist} M`,
+        this._camera.canvasWidth - 3,
+        gryroscopeY + gryroscopeRadius + 65,
+      )
+    }
   }
 
   public drawTopLeftOverlay(ctx: CanvasRenderingContext2D) {
@@ -934,7 +1098,7 @@ export class DrawingService {
       const frame = this._api.frameData.game_frame - st.grav_brake_last_caught + 1
       if(frame < 12 || Math.random() > 0.8) {
         ctx.beginPath()
-        ctx.strokeStyle = `rgb(${randomInt(0, 255)}, ${randomInt(0, 255)}, ${randomInt(0, 255)}, 0.35)`
+        ctx.strokeStyle = `rgb(124, 0, 166, 0.${randomInt(20, 80)})`
         ctx.lineWidth = Math.max(1, Math.ceil(perimeterWidth * frame))
         ctx.arc(
           centerCanvasCoord.x, centerCanvasCoord.y,

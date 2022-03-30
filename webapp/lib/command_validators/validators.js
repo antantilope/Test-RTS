@@ -38,6 +38,25 @@ const validateRunAutoPilotProgram = (data) => {
     return { autopilot_program };
 }
 
+const validateRunAutopilotHeadingToWaypoint = (data) => {
+    const waypointUUID = data.waypoint_uuid
+    if(!waypointUUID) {
+        throw new CommandValidationError("waypoint_uuid required");
+    }
+    const waypointType = data.waypoint_type
+    if(!waypointType) {
+        throw new CommandValidationError("waypoint_type required");
+    }
+    if (waypointType !== "ore" && waypointType !== "station") {
+        throw new CommandValidationError("invalid waypoint_type");
+    }
+    return {
+        waypointType,
+        waypointUUID,
+    }
+}
+
 exports.validateSetHeadingCommand = validateSetHeadingCommand;
 exports.validateSetScannerLockTargetCommand = validateSetScannerLockTargetCommand;
 exports.validateRunAutoPilotProgram = validateRunAutoPilotProgram;
+exports.validateRunAutopilotHeadingToWaypoint = validateRunAutopilotHeadingToWaypoint;

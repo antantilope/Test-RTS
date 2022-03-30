@@ -95,4 +95,12 @@ export class AllchatComponent implements OnInit {
     this._pane.addToTopOfZIndexes(this.paneName)
   }
 
+  textInputFocus() {
+    this._pane.setInputIsFocused(true, "all-chat")
+  }
+  textInputBlur() {
+    this._pane.setInputIsFocused(false, "all-chat")
+  }
+
+
 }

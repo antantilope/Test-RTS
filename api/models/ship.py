@@ -11,6 +11,9 @@ from api import constants
 class ShipCommandError(Exception):
     pass
 
+class AutopilotError(Exception):
+    pass
+
 class InsufficientPowerError(ShipCommandError):
     pass
 
@@ -20,9 +23,35 @@ class InsufficientFuelError(ShipCommandError):
 class InsufficientOreError(ShipCommandError):
     pass
 
+
+class MapFeatureType:
+    ORE = "ore"
+    SPACE_STATION = "station"
+
 class ShipCoatType:
     NONE = None
     RADAR_DEFEATING = "radar_defeating"
+
+class MapMiningLocationDetails(TypedDict):
+    id: str
+    name: Optional[str]
+    position_meters_x: int
+    position_meters_y: int
+    service_radius_meters: int
+    position_map_units_x: int # Perform map unit version up front
+    position_map_units_y: int #
+    service_radius_map_units: int #
+
+class MapSpaceStation(TypedDict):
+    id: str
+    name: Optional[str]
+    position_meters_x: int
+    position_meters_y: int
+    service_radius_meters: int
+    position_map_units_x: int # Perform map unit version up front
+    position_map_units_y: int #
+    service_radius_map_units: int #
+    grav_brake_last_caught: Optional[int] # most recent gameframe the station caught a grav brake
 
 class ShipCommands:
     LEAVE_GAME = 'leave_game'
@@ -45,6 +74,7 @@ class ShipCommands:
     SET_SCANNER_LOCK_TARGET = 'set_scanner_lock_target'
 
     RUN_AUTOPILOT_PROGRAM = 'run_autopilot'
+    RUN_AUTOPILOT_HEADING_TO_WAYPOINT = "run_autopilot_heading_to_waypoint"
     DISABLE_AUTO_PILOT = 'disable_autopilot'
 
     CHARGE_EBEAM = 'charge_ebeam'
@@ -117,6 +147,7 @@ class AutoPilotPrograms:
     HEADING_LOCK_ON_TARGET = 'lock_target'
     HEADING_LOCK_PROGRADE = 'lock_prograde'
     HEADING_LOCK_RETROGRADE = 'lock_retrograde'
+    HEADING_LOCK_WAYPOINT = 'lock_waypoint'
 
 
 class Ship(BaseModel):
@@ -254,15 +285,17 @@ class Ship(BaseModel):
         self.ebeam_color = None
 
         self.autopilot_program = None
+        self.autopilot_waypoint_uuid = None
+        self.autopilot_waypoint_type = None
 
         # Damage
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 1)
-        self.explode_immediately = False # random.randint(0, 4) == 1
+        self.explode_immediately = random.randint(0, 5) == 1
         self.explosion_frame = None
         self.explosion_point = None
-        self._seconds_to_explode = 10 # random.randint(2, 4)
+        self._seconds_to_explode = random.randint(2, 5)
 
         # Space station interactions
         self.docked_at_station = None
@@ -283,6 +316,11 @@ class Ship(BaseModel):
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None
         self.scouted_mine_ore_remaining: Dict[str, float] = {}
+        self.last_ore_deposit_frame = None
+
+        # cached map data
+        self._ore_mines: Dict[str, MapMiningLocationDetails] = {}
+        self._space_stations: Dict[str, MapSpaceStation] = {}
 
         # Arbitrary ship state data
         self._state = {}
@@ -477,6 +515,7 @@ class Ship(BaseModel):
             'cargo_ore_mass_capacity_kg': self.cargo_ore_mass_capacity_kg,
             'virtual_ore_kg': self.virtual_ore_kg,
             'scouted_mine_ore_remaining': self.scouted_mine_ore_remaining,
+            'last_ore_deposit_frame': self.last_ore_deposit_frame,
 
             'alive': self.died_on_frame is None,
             'aflame': self.aflame_since_frame is not None,
@@ -1105,6 +1144,31 @@ class Ship(BaseModel):
         elif self.autopilot_program == AutoPilotPrograms.POSITION_HOLD:
             self._autopilot_hold_position()
 
+        elif self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_WAYPOINT:
+            self._autopilot_heading_to_waypoint()
+
+    def _autopilot_heading_to_waypoint(self):
+        wp_uuid = self.autopilot_waypoint_uuid
+        wp_type = self.autopilot_waypoint_type
+        if(wp_uuid is None or wp_type is None):
+            return
+        if wp_type == MapFeatureType.ORE:
+            feature = self._ore_mines[wp_uuid]
+        elif wp_type == MapFeatureType.SPACE_STATION:
+            feature = self._space_stations[wp_uuid]
+        else:
+            raise AutopilotError(f"unknown waypoint type {wp_type}")
+
+        new_heading = utils2d.calculate_heading_to_point(
+            self.coords,
+            (
+                feature['position_map_units_x'],
+                feature['position_map_units_y'],
+            ),
+        )
+        if new_heading != self.heading:
+            self._set_heading(new_heading)
+
 
     def _autopilot_hold_position(self):
         if round(abs(self.velocity_x_meters_per_second)) <= 3 and round(abs(self.velocity_y_meters_per_second)) <= 3:
@@ -1202,7 +1266,10 @@ class Ship(BaseModel):
 
         elif command == ShipCommands.RUN_AUTOPILOT_PROGRAM:
             self.cmd_run_autopilot_program(args[0])
-
+        elif command == ShipCommands.RUN_AUTOPILOT_HEADING_TO_WAYPOINT:
+            self.cmd_run_autopilot_program_heading_to_waypoint(
+                kwargs['waypointUUID'], kwargs['waypointType']
+            )
         elif command == ShipCommands.DISABLE_AUTO_PILOT:
             self.cmd_disable_autopilot()
 
@@ -1216,7 +1283,7 @@ class Ship(BaseModel):
         elif command == ShipCommands.STOP_ORE_MINING:
             self.cmd_stop_ore_mining()
         elif command == ShipCommands.TRADE_ORE_FOR_ORE_COIN:
-            self.cmd_trade_ore_for_ore_coin()
+            self.cmd_trade_ore_for_ore_coin(kwargs['game_frame'])
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1379,11 +1446,22 @@ class Ship(BaseModel):
             if self.scanner_locked:
                 self.autopilot_program = program_name
 
+    def cmd_run_autopilot_program_heading_to_waypoint(
+        self,
+        waypoint_uuid: str,
+        waypoint_type: str,
+    ):
+        self.autopilot_program = AutoPilotPrograms.HEADING_LOCK_WAYPOINT
+        self.autopilot_waypoint_uuid = waypoint_uuid
+        self.autopilot_waypoint_type = waypoint_type
+
     def cmd_disable_autopilot(self):
         if self.autopilot_program:
             if self.autopilot_program == AutoPilotPrograms.POSITION_HOLD:
                 self.engine_lit = False
             self.autopilot_program = None
+            self.autopilot_waypoint_uuid = None
+            self.autopilot_waypoint_type = None
 
     def cmd_activate_apu(self):
         if not self.apu_online and not self.apu_starting:
@@ -1414,16 +1492,15 @@ class Ship(BaseModel):
     def cmd_stop_ore_mining(self):
         self.mining_ore = False
 
-    def cmd_trade_ore_for_ore_coin(self, feeRate: float = 0):
-        if feeRate < 0 or feeRate > 1:
-            raise Exception("invalid feeRate")
+    def cmd_trade_ore_for_ore_coin(self, game_frame: int):
         if not self.docked_at_station:
             return
         if not self.cargo_ore_mass_kg > 0:
             return
-        deposit_amount = self.cargo_ore_mass_kg * (1 - feeRate)
+        deposit_amount = self.cargo_ore_mass_kg
         self.cargo_ore_mass_kg = 0
         self.virtual_ore_kg += deposit_amount
+        self.last_ore_deposit_frame = game_frame
 
     def cmd_start_fueling(self):
         if not self.docked_at_station or not self.gravity_brake_deployed:

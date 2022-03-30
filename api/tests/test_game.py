@@ -379,6 +379,59 @@ class TestGame(TestCase):
                 assert ship.coord_y in {150*10, 300*10}
 
 
+    def test_ore_mines_and_space_stations_are_cached_on_each_spawned_ship(self):
+        game = Game()
+        game._phase = GamePhase.LOBBY
+
+        game._players['666777888'] = {
+            'player_name': 'foobar1',
+            'player_id': '666777888',
+            'team_id': '3546235',
+        }
+        game._players['1112223333'] = {
+            'player_name': 'foobar2',
+            'player_id': '1112223333',
+            'team_id': '06786785',
+        }
+        game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 150,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 300,
+            }],
+            'spaceStations': [{
+                "uuid":"0876c6a3-66b4-4292-89a7-37c8a09e2c95",
+                "position_meters_x": 800,
+                "position_meters_y": 1100,
+                "service_radius_meters": 200,
+                "name": "derpson's station",
+            }],
+            'miningLocations': [{
+                "uuid":"eb624687-62db-49b4-a0a0-8e43b37e2ea1",
+                "position_meters_x": 800,
+                "position_meters_y": 1100,
+                "service_radius_meters": 200,
+                "name": "derpson's mine",
+                "starting_ore_amount_kg": 500,
+            }],
+        }, map_units_per_meter=10)
+        game.advance_to_phase_1_starting()
+
+        for ship in game._ships.values():
+            assert len(ship._ore_mines) == 1
+            assert ship._ore_mines["eb624687-62db-49b4-a0a0-8e43b37e2ea1"]
+            assert len(ship._space_stations) == 1
+            assert ship._space_stations["0876c6a3-66b4-4292-89a7-37c8a09e2c95"]
+
+
+
     def test_can_decr_phase_1_starting_countdown(self):
         game = Game()
         game._phase = GamePhase.LOBBY

@@ -26,6 +26,8 @@
                 [(ngModel)]="msgInput"
                 (keydown.enter)="enterKeyDown($event)"
                 autocomplete="off"
+                (focus)="textInputFocus()"
+                (blur)="textInputBlur()"
             >
         </div>
     </div>

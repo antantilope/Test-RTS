@@ -2203,19 +2203,22 @@ class TestShipCMDTradeOreForOreCoin(TestCase):
     def setUp(self):
         team_id = str(uuid4())
         self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship.last_ore_deposit_frame = None
 
     def test_command_does_not_work_if_not_docked_at_station(self):
         self.ship.cargo_ore_mass_kg = 10
-        self.ship.cmd_trade_ore_for_ore_coin()
+        self.ship.cmd_trade_ore_for_ore_coin(game_frame=12)
         assert self.ship.cargo_ore_mass_kg == 10
         assert self.ship.virtual_ore_kg == 0
+        assert self.ship.last_ore_deposit_frame is None
 
     def test_command_does_work_if_docked_at_station(self):
         self.ship.cargo_ore_mass_kg = 10
         self.ship.docked_at_station = "fooobaaaar"
-        self.ship.cmd_trade_ore_for_ore_coin()
+        self.ship.cmd_trade_ore_for_ore_coin(game_frame=12)
         assert self.ship.cargo_ore_mass_kg == 0
         assert self.ship.virtual_ore_kg == 10
+        assert self.ship.last_ore_deposit_frame == 12
 
 
 """ ADVANCE DAMAGE PROPERTIES

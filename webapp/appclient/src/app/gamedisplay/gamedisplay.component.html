@@ -22,19 +22,19 @@
             </div>
             <div class="btn-gap">
             </div>
-            <div *ngIf="_camera.getMode() !== 'ship'">
+            <div>
                 <button class="sidebar-btn" (click)="_camera.setModeShip()" title="Camera: Ship">
                     🚀🎥
                 </button>
             </div>
-            <div  *ngIf="_camera.getMode() !== 'scanner'">
+            <div>
                 <button class="sidebar-btn" (click)="_camera.setModeScanner()" title="Camera: Scanner">
                     📡🎥
                 </button>
             </div>
-            <div  *ngIf="_camera.getMode() !== 'free'">
-                <button class="sidebar-btn" (click)="_camera.setModeFree()" title="Camera: Free">
-                    💠🎥
+            <div>
+                <button class="sidebar-btn" (click)="_camera.toggleMap()" title="Camera: Map">
+                    🗺️🎥
                 </button>
             </div>
             <div class="btn-gap">
@@ -301,7 +301,16 @@
                             T-TARGET
                         </button>
                     </div>
-
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_waypoint' || !wayPointUUID"
+                            (click)="btnAutoPilotHeadingLockWaypoint()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_waypoint') ? '#00ff00' : '#000000'}"
+                        >
+                            T-WAYPNT
+                        </button>
+                    </div>
                     <div>
                         <button
                             class="gd-ctrl-btn"

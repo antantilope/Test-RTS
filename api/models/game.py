@@ -1,11 +1,23 @@
 
+import json
 import datetime as dt
 from typing import Tuple, TypedDict, Optional, List, Dict
 from time import sleep
 import re
+import traceback
 
 from .base import BaseModel
-from .ship import Ship, ShipCommands, ShipScannerMode, ScannedElement, ScannedElementType,VisibleElementShapeType, ShipDeathType
+from .ship import (
+    Ship,
+    ShipCommands,
+    ShipScannerMode,
+    ScannedElement,
+    ScannedElementType,
+    VisibleElementShapeType,
+    MapMiningLocationDetails,
+    MapSpaceStation,
+    AutopilotError,
+)
 from .ship_designator import get_designations
 from api import utils2d
 from api.constants import (
@@ -54,9 +66,7 @@ class TopLevelMapDetails(TypedDict):
     meters_y: int
 
 
-class MapFeatureType:
-    ORE = "ore"
-    SPACE_STATION = "station"
+
 
 class MapFeature(TypedDict):
     id: str
@@ -66,27 +76,6 @@ class MapFeature(TypedDict):
     width_meters_x: int
     width_meters_y: int
     type: str
-
-class MapMiningLocationDetails(TypedDict):
-    id: str
-    name: Optional[str]
-    position_meters_x: int
-    position_meters_y: int
-    service_radius_meters: int
-    position_map_units_x: int # Perform map unit version up front
-    position_map_units_y: int #
-    service_radius_map_units: int #
-
-class MapSpaceStation(TypedDict):
-    id: str
-    name: Optional[str]
-    position_meters_x: int
-    position_meters_y: int
-    service_radius_meters: int
-    position_map_units_x: int # Perform map unit version up front
-    position_map_units_y: int #
-    service_radius_map_units: int #
-    grav_brake_last_caught: Optional[int] # most recent gameframe the station caught a grav brake
 
 class MapSpawnPoint(TypedDict):
     id: str
@@ -345,6 +334,13 @@ class Game(BaseModel):
                     om['uuid']
                 ] = om['starting_ore_amount_kg']
 
+            # initialize cached map data
+            self._ships[ship.id]._ore_mines = {
+                om['uuid']: om for om in self._ore_mines
+            }
+            self._ships[ship.id]._space_stations = {
+                st['uuid']: st for st in self._space_stations
+            }
 
     def decr_phase_1_starting_countdown(self):
         self._validate_can_decr_phase_1_starting_countdown()
@@ -413,7 +409,13 @@ class Game(BaseModel):
 
         # Process user commands.
         for command in request['commands']:
-            self._process_ship_command(command)
+            try:
+                self._process_ship_command(command)
+            except Exception as e:
+                self.logger.error("error running ship command")
+                self.logger.error(json.dumps(command))
+                tb = traceback.format_exc()
+                self.logger.error(tb)
 
         self._ebeam_rays.clear()
         check_for_gravity_brake_catches = self._game_frame % 4 == 0
@@ -427,7 +429,10 @@ class Game(BaseModel):
             self.reset_and_update_scanner_states(ship_id)
 
             # Autopilot/weapons updates must run after scanner/physics updates
-            ship.run_autopilot()
+            try:
+                ship.run_autopilot()
+            except AutopilotError as e:
+                self.logger.error(f"autopilot error (ship {ship_id}) {e}")
             self.calculate_weapons_and_damage(ship_id)
 
             if check_for_gravity_brake_catches:
@@ -770,6 +775,7 @@ class Game(BaseModel):
         player_id = command['player_id']
         args = command.get('args', [])
         kwargs = command.get('kwargs', {})
+        kwargs['game_frame'] = self._game_frame
         ship_id = self._player_id_to_ship_id_map[player_id]
 
         # Handle game level commands.
