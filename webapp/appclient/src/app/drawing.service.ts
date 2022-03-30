@@ -93,6 +93,46 @@ export class DrawingService {
     }
   }
 
+  public drawOreDepositEffect(ctx: CanvasRenderingContext2D) {
+    if (
+      (this._api.frameData.ship.last_ore_deposit_frame + 30)
+      < this._api.frameData.game_frame
+    ) {
+      return
+    }
+    const ship = this._api.frameData.ship
+    const effectFrame = (
+      this._api.frameData.game_frame
+      - ship.last_ore_deposit_frame
+    )
+
+    const shipCanvasCoords = this._camera.mapCoordToCanvasCoord(
+      {x: ship.coord_x, y: ship.coord_y},
+      this._camera.getPosition(),
+    )
+
+    const effectRadius = (15 + effectFrame) * 3.5
+    const alpha = 0.9 - (effectFrame * 0.03)
+    ctx.beginPath()
+    ctx.fillStyle = `rgb(255, 255, 0, ${alpha})`
+    ctx.arc(
+      shipCanvasCoords.x,
+      shipCanvasCoords.y,
+      effectRadius, 0, TWO_PI,
+    )
+    ctx.fill()
+
+    const offset = effectFrame + 1
+    let textCoord = {
+      x:shipCanvasCoords.x + 40 + offset,
+      y:shipCanvasCoords.y - 40 - offset
+    }
+    ctx.beginPath()
+    ctx.font = '30px Courier New'
+    ctx.fillStyle = `rgb(255, 255, 0, ${alpha * 1.25})`
+    ctx.fillText("🪙", textCoord.x, textCoord.y)
+  }
+
   public drawWaypoint(
     ctx: CanvasRenderingContext2D,
     wayPointMapCoord: PointCoord
@@ -1033,7 +1073,7 @@ export class DrawingService {
       const frame = this._api.frameData.game_frame - st.grav_brake_last_caught + 1
       if(frame < 12 || Math.random() > 0.8) {
         ctx.beginPath()
-        ctx.strokeStyle = `rgb(${randomInt(0, 255)}, ${randomInt(0, 255)}, ${randomInt(0, 255)}, 0.35)`
+        ctx.strokeStyle = `rgb(124, 0, 166, 0.${randomInt(20, 80)})`
         ctx.lineWidth = Math.max(1, Math.ceil(perimeterWidth * frame))
         ctx.arc(
           centerCanvasCoord.x, centerCanvasCoord.y,

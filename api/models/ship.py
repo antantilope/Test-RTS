@@ -117,6 +117,7 @@ class AutoPilotPrograms:
     HEADING_LOCK_ON_TARGET = 'lock_target'
     HEADING_LOCK_PROGRADE = 'lock_prograde'
     HEADING_LOCK_RETROGRADE = 'lock_retrograde'
+    HEADING_LOCK_WAYPOINT = 'lock_waypoint'
 
 
 class Ship(BaseModel):

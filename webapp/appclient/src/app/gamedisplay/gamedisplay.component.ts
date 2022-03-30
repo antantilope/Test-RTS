@@ -436,6 +436,8 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+    this._draw.drawOreDepositEffect(this.ctx)
+
     // E-Beams
     this._draw.drawEbeams(this.ctx, drawableObjects.ebeamRays)
 

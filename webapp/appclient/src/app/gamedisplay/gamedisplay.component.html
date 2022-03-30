@@ -301,7 +301,16 @@
                             T-TARGET
                         </button>
                     </div>
-
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            [disabled]="!_api.frameData.ship.alive || _api.frameData.ship.autopilot_program == 'lock_waypoint'"
+                            (click)="btnAutoPilotHeadingLockTarget()"
+                            [ngStyle]="{'color': (_api.frameData.ship.autopilot_program == 'lock_waypoint') ? '#00ff00' : '#000000'}"
+                        >
+                            T-WAYPNT
+                        </button>
+                    </div>
                     <div>
                         <button
                             class="gd-ctrl-btn"
