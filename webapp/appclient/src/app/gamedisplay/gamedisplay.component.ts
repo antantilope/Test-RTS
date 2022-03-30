@@ -24,7 +24,7 @@ import { FormattingService } from '../formatting.service'
 import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
 import { DrawingService } from '../drawing.service'
-import { TWO_PI } from '../constants'
+import { TWO_PI, FEATURE_ORE, FEATURE_STATION } from '../constants'
 
 @Component({
   selector: 'app-gamedisplay',
@@ -70,8 +70,8 @@ export class GamedisplayComponent implements OnInit {
   public mineBtnBkColor = "#ff0000"
   public mineBtnTxtColor = "#000000"
 
-  private wayPoint: PointCoord | null = null
-  private wayPointUUID: string | null = null
+  public wayPoint: PointCoord | null = null
+  public wayPointUUID: string | null = null
 
   constructor(
     public _api: ApiService,
@@ -219,13 +219,15 @@ export class GamedisplayComponent implements OnInit {
     const mouseCanvasX = event.clientX - this.canvas.nativeElement.offsetLeft
     const mouseCanvasY = event.clientY - this.canvas.nativeElement.offsetTop
     if(
-      !this._api.frameData.ship.autopilot_program
-      && this.drawableObjects !== null
+      this.drawableObjects !== null
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
     ) {
       const mode = this._camera.getMode()
-      if(mode == CAMERA_MODE_SHIP || mode == CAMERA_MODE_SCANNER) {
+      if(
+        (mode == CAMERA_MODE_SHIP || mode == CAMERA_MODE_SCANNER)
+        && !this._api.frameData.ship.autopilot_program
+      ) {
         this.clickAnimationFrame = 1
         this.clickAnimationCanvasX = mouseCanvasX
         this.clickAnimationCanvasY = mouseCanvasY
@@ -233,6 +235,12 @@ export class GamedisplayComponent implements OnInit {
       }
       else if (mode == CAMERA_MODE_MAP) {
         this.handleMouseClickInCanvasDropWaypoint(mode, mouseCanvasX, mouseCanvasY)
+        if(this._api.frameData.ship.autopilot_program == 'lock_waypoint') {
+          console.log("reclicking to lock heading to waypoint")
+          setTimeout(() => {
+            this.btnAutoPilotHeadingLockWaypoint()
+          }, 15)
+        }
       }
 
     }
@@ -680,6 +688,36 @@ export class GamedisplayComponent implements OnInit {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_retrograde'},
+    )
+  }
+  private getWaypointType(uuid: string): string | null {
+    for(let i in this._api.frameData.ore_mines) {
+      const om = this._api.frameData.ore_mines[i]
+      if (om.uuid === uuid) {
+        return FEATURE_ORE
+      }
+    }
+    for(let i in this._api.frameData.space_stations) {
+      const st = this._api.frameData.space_stations[i]
+      if (st.uuid === uuid) {
+        return FEATURE_STATION
+      }
+    }
+    console.warn("could not calculate waypoint type")
+    return null
+  }
+  public async btnAutoPilotHeadingLockWaypoint() {
+    const wpType = this.getWaypointType(this.wayPointUUID)
+    if(!wpType){
+      return
+    }
+    await this._api.post(
+      "/api/rooms/command",
+      {
+        command:'run_autopilot_heading_to_waypoint',
+        waypoint_uuid: this.wayPointUUID,
+        waypoint_type: wpType,
+      },
     )
   }
 

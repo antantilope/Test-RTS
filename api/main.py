@@ -5,7 +5,6 @@ import json
 from typing import Dict
 import socketserver
 import traceback
-import uuid
 
 from api.models.game import Game
 from api.logger import get_logger

@@ -11,6 +11,7 @@ const {
     validateSetHeadingCommand,
     validateSetScannerLockTargetCommand,
     validateRunAutoPilotProgram,
+    validateRunAutopilotHeadingToWaypoint,
 } = require("../lib/command_validators/validators");
 
 
@@ -139,11 +140,19 @@ const commandHandlers = {
         });
     },
     run_autopilot: (req, queueName) => {
-        data = validateRunAutoPilotProgram(req.body);
+        const data = validateRunAutoPilotProgram(req.body);
         req.app.get(queueName).push({
             player_id: req.session.player_id,
             ship_command: 'run_autopilot',
             args:[data.autopilot_program],
+        });
+    },
+    run_autopilot_heading_to_waypoint: (req, queueName) => {
+        const kwargs = validateRunAutopilotHeadingToWaypoint(req.body)
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'run_autopilot_heading_to_waypoint',
+            kwargs,
         });
     },
     disable_autopilot: (req, queueName) => {
@@ -239,7 +248,7 @@ exports.RunCommandController = async (req, res) => {
         handler(req, queueName);
     } catch (e) {
         if(e instanceof CommandValidationError) {
-            return res.sendStatus(400);
+            return res.status(400).json({error: "CommandValidationError"});
         }
         else {
             logger.error(e);
