@@ -309,6 +309,7 @@ export class DrawingService {
 
   public drawTopRightOverlay(
     ctx: CanvasRenderingContext2D,
+    waypointMapCoord: PointCoord | null,
   ) {
     // Gyroscope circle
     const buffer = 3;
@@ -397,6 +398,26 @@ export class DrawingService {
       this._camera.canvasWidth - 3,
       gryroscopeY + gryroscopeRadius + 40,
     )
+
+    // Waypoint distance test
+    if (waypointMapCoord !== null) {
+      const ship = this._api.frameData.ship
+      const shipMapCoord = {x:ship.coord_x, y: ship.coord_y}
+      const metersDist = Math.floor(
+        Math.sqrt(
+          Math.pow(shipMapCoord.x - waypointMapCoord.x, 2)
+          + Math.pow(shipMapCoord.y - waypointMapCoord.y, 2)
+        )
+        / this._api.frameData.map_config.units_per_meter
+      )
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(193, 113, 209, 0.95)"
+      ctx.fillText(
+        `WP ${metersDist} M`,
+        this._camera.canvasWidth - 3,
+        gryroscopeY + gryroscopeRadius + 65,
+      )
+    }
   }
 
   public drawTopLeftOverlay(ctx: CanvasRenderingContext2D) {

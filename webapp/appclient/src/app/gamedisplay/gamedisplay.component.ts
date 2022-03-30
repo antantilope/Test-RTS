@@ -454,7 +454,7 @@ export class GamedisplayComponent implements OnInit {
     this._draw.drawTopLeftOverlay(this.ctx);
     this._draw.drawBottomRightOverlay(this.ctx)
     if(!this.isDebug && this._api.frameData.ship.alive) {
-      this._draw.drawTopRightOverlay(this.ctx)
+      this._draw.drawTopRightOverlay(this.ctx, this.wayPoint)
     }
 
     // Front center and alerts
