@@ -94,9 +94,13 @@ export class DrawingService {
   }
 
   public drawOreDepositEffect(ctx: CanvasRenderingContext2D) {
+    const effectLengthFrames = 30
     if (
-      (this._api.frameData.ship.last_ore_deposit_frame + 30)
-      < this._api.frameData.game_frame
+      (
+        (this._api.frameData.ship.last_ore_deposit_frame + effectLengthFrames)
+        < this._api.frameData.game_frame
+      )
+      || this._api.frameData.game_frame < 100
     ) {
       return
     }
@@ -112,7 +116,7 @@ export class DrawingService {
     )
 
     const effectRadius = (15 + effectFrame) * 3.5
-    const alpha = 0.9 - (effectFrame * 0.03)
+    const alpha = 0.5 - (effectFrame * 0.015)
     ctx.beginPath()
     ctx.fillStyle = `rgb(255, 255, 0, ${alpha})`
     ctx.arc(
@@ -122,7 +126,7 @@ export class DrawingService {
     )
     ctx.fill()
 
-    const offset = effectFrame + 1
+    const offset = effectLengthFrames - (effectFrame + 1)
     let textCoord = {
       x:shipCanvasCoords.x + 40 + offset,
       y:shipCanvasCoords.y - 40 - offset
