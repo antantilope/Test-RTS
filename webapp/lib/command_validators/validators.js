@@ -56,7 +56,37 @@ const validateRunAutopilotHeadingToWaypoint = (data) => {
     }
 }
 
+const validateStartCoreUpgrade = (data) => {
+    const slug = data.slug
+    if (!slug) {
+        throw new CommandValidationError("slug is required");
+    }
+    if (slug !== "advanced_electronics" && slug !== "titanium_alloy_hull") {
+        throw new CommandValidationError("invalid slug");
+    }
+    return slug;
+}
+
+const validateStartShipUpgrade = (data) => {
+    const slug = data.slug;
+    if (!slug) {
+        throw new CommandValidationError("slug is required");
+    }
+    const upgrades = [
+        'scanner_range',
+        'radar_sensitivity',
+        'scanner_lock_traversal',
+        'engine_newtons',
+    ];
+    if (upgrades.indexOf(slug) === -1) {
+        throw new CommandValidationError("invalid slug");
+    }
+    return slug;
+}
+
 exports.validateSetHeadingCommand = validateSetHeadingCommand;
 exports.validateSetScannerLockTargetCommand = validateSetScannerLockTargetCommand;
 exports.validateRunAutoPilotProgram = validateRunAutoPilotProgram;
 exports.validateRunAutopilotHeadingToWaypoint = validateRunAutopilotHeadingToWaypoint;
+exports.validateStartCoreUpgrade = validateStartCoreUpgrade;
+exports.validateStartShipUpgrade = validateStartShipUpgrade;

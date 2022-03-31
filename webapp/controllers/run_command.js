@@ -12,6 +12,8 @@ const {
     validateSetScannerLockTargetCommand,
     validateRunAutoPilotProgram,
     validateRunAutopilotHeadingToWaypoint,
+    validateStartCoreUpgrade,
+    validateStartShipUpgrade,
 } = require("../lib/command_validators/validators");
 
 
@@ -189,6 +191,22 @@ const commandHandlers = {
         req.app.get(queueName).push({
             player_id: req.session.player_id,
             ship_command: 'trade_ore_for_ore_coin',
+        });
+    },
+    start_core_upgrade: (req, queueName) => {
+        const slug = validateStartCoreUpgrade(req.body);
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'start_core_upgrade',
+            args: [slug],
+        });
+    },
+    start_ship_upgrade: (req, queueName) => {
+        const slug = validateStartShipUpgrade(req.body);
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'start_ship_upgrade',
+            args: [slug],
         });
     },
 };
