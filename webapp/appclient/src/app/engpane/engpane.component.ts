@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../api.service';
+import { FormattingService } from '../formatting.service';
 
 
 
@@ -34,7 +35,8 @@ export class EngpaneComponent implements OnInit {
   private destroyed = false
 
   constructor(
-    private _api: ApiService
+    private _api: ApiService,
+    private _formatting: FormattingService
   ) { }
 
   ngOnInit(): void {

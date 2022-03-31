@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { CameraService } from './camera.service';
+import { CameraService, CAMERA_MODE_MAP } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
 import { UserService } from "./user.service";
@@ -510,6 +510,9 @@ export class DrawingService {
     ctx.fillStyle = this._api.frameData.ship.alive ? '#ffffff' : "#ff0000";
     ctx.textAlign = 'left'
     ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
+    if(this._camera.getMode() === CAMERA_MODE_MAP) {
+      return
+    }
     lrcYOffset -= lrcYInterval
     ctx.beginPath()
     ctx.font = '20px Courier New'
@@ -786,20 +789,74 @@ export class DrawingService {
       ctx.fill()
     }
 
+    if(drawableShip.visualEbeamCharging) {
+      const chargePoint: PointCoord = {
+        x: Math.floor((drawableShip.canvasCoordP1.x + drawableShip.canvasCoordP2.x) / 2),
+        y: Math.floor((drawableShip.canvasCoordP1.y + drawableShip.canvasCoordP2.y) / 2)
+      }
+      if(Math.random() < 0.80) {
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(255, 0, 0, 0.0${randomInt(5, 7)})`
+        ctx.arc(
+          drawableShip.canvasCoordCenter.x,
+          drawableShip.canvasCoordCenter.y,
+          Math.ceil(randomInt(35, 50) * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          0, TWO_PI,
+        )
+        ctx.fill()
+      }
+      if(Math.random() < 0.5) {
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(255, 0, 0, 0.3${randomInt(2, 9)})`
+        ctx.arc(
+          drawableShip.canvasCoordCenter.x,
+          drawableShip.canvasCoordCenter.y,
+          Math.ceil(randomInt(20, 25) * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          0, TWO_PI,
+        )
+        ctx.fill()
+      }
+      if(Math.random() < 0.3) {
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(255, 0, ${randomInt(0, 255)}, 0.${randomInt(4, 7)})`
+        ctx.arc(
+          drawableShip.canvasCoordCenter.x,
+          drawableShip.canvasCoordCenter.y,
+          Math.ceil(randomInt(5, 10) * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          0, TWO_PI,
+        )
+        ctx.fill()
+      }
+      if(Math.random() < 0.5) {
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(255, 0, ${randomInt(0, 255)}, 0.${randomInt(6, 8)})`
+        ctx.arc(
+          drawableShip.canvasCoordP1.x,
+          drawableShip.canvasCoordP1.y,
+          Math.ceil(1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          0, TWO_PI,
+        )
+        ctx.fill()
+      }
+      if(Math.random() < 0.5) {
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(255, 0, ${randomInt(0, 255)}, 0.${randomInt(6, 8)})`
+        ctx.arc(
+          drawableShip.canvasCoordP2.x,
+          drawableShip.canvasCoordP2.y,
+          Math.ceil(1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          0, TWO_PI,
+        )
+        ctx.fill()
+      }
+    }
+
+
     if(drawableShip.isVisual && !drawableShip.explosionFrame) {
       // Ship is within visual range
-      ctx.beginPath()
-      ctx.fillStyle = drawableShip.fillColor
-      ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
-      ctx.lineTo(drawableShip.canvasCoordP1.x, drawableShip.canvasCoordP1.y)
-      ctx.lineTo(drawableShip.canvasCoordP2.x, drawableShip.canvasCoordP2.y)
-      ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
-      ctx.closePath()
-      ctx.fill()
-
-
       // fin 0
       ctx.beginPath()
+      ctx.fillStyle = drawableShip.fillColor
       ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
       ctx.lineTo(drawableShip.canvasCoordFin0P0.x, drawableShip.canvasCoordFin0P0.y)
       ctx.lineTo(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y)
@@ -812,7 +869,18 @@ export class DrawingService {
       ctx.lineTo(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y)
       ctx.closePath()
       ctx.fill()
-
+      ctx.beginPath()
+      ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
+      ctx.lineTo(drawableShip.canvasCoordP1.x, drawableShip.canvasCoordP1.y)
+      ctx.lineTo(drawableShip.canvasCoordP2.x, drawableShip.canvasCoordP2.y)
+      ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+      ctx.closePath()
+      ctx.fill()
+      if(drawableShip.visualEbeamCharging) {
+        ctx.strokeStyle = "#ff0000"
+        ctx.lineWidth = randomInt(1, 4)
+        ctx.stroke()
+      }
       if(drawableShip.engineLit) {
         const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
         const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
@@ -896,6 +964,7 @@ export class DrawingService {
           ctx.stroke()
         }
       }
+
     }
 
     if(drawableShip.aflame) {

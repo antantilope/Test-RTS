@@ -173,7 +173,7 @@ export class GamedisplayComponent implements OnInit {
       }
     })
     window.addEventListener('mouseup', (event) => {
-      if(!this.mouseMovedWhileDown && this.mouseInCanvas && !this._pane.mouseInPane()) {
+      if(/*!this.mouseMovedWhileDown &&*/ this.mouseInCanvas && !this._pane.mouseInPane()) {
         this.handleMouseClickInCanvas(event)
       } else {
         console.log("no click")
@@ -451,12 +451,13 @@ export class GamedisplayComponent implements OnInit {
 
     // Corner overlays
     this._draw.drawBottomLeftOverlay(this.ctx)
-    this._draw.drawTopLeftOverlay(this.ctx);
-    this._draw.drawBottomRightOverlay(this.ctx)
-    if(!this.isDebug && this._api.frameData.ship.alive) {
-      this._draw.drawTopRightOverlay(this.ctx, this.wayPoint)
+    if(this._camera.getMode() !== CAMERA_MODE_MAP) {
+      this._draw.drawTopLeftOverlay(this.ctx);
+      this._draw.drawBottomRightOverlay(this.ctx)
+      if(!this.isDebug && this._api.frameData.ship.alive) {
+        this._draw.drawTopRightOverlay(this.ctx, this.wayPoint)
+      }
     }
-
     // Front center and alerts
     this._draw.drawFrontAndCenterAlerts(this.ctx)
 

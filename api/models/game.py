@@ -422,6 +422,7 @@ class Game(BaseModel):
         check_for_ore_mine_parking = self._game_frame % 60 == 0
 
         for ship_id, ship in self._ships.items():
+            ship.advance_upgrades(self._fps)
             ship.advance_gravity_brake_position(self._fps)
             ship.adjust_resources(self._fps, self._game_frame)
             ship.calculate_physics(self._fps)
@@ -516,6 +517,7 @@ class Game(BaseModel):
                     'visual_p1': self._ships[other_id].map_p1,
                     'visual_p2': self._ships[other_id].map_p2,
                     'visual_p3': self._ships[other_id].map_p3,
+                    'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
                 }
                 if is_visual:
                     scanner_data.update({
