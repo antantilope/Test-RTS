@@ -1,0 +1,45 @@
+
+div, h2 {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.upgrade-type-section {
+    margin-bottom:8px;
+    padding: 4px;
+    border: 1px solid #8b8b8b;
+    border-radius: 5px;
+}
+.section-heading {
+    font-size: 120%;
+    font-weight: bold;
+    margin-left:5px;
+    margin-bottom: 10px;
+}
+#not-docked-at-station {
+    font-style: italic;
+    color: #3d2d2d;
+}
+
+#core-upgrade-container {
+    margin-bottom: 9px;
+}
+
+.core-upgrade-header{
+    margin-bottom: 5px;
+}
+
+.start-research-btn {
+    font-size: 110%;
+    cursor: pointer;
+    color: #ffffff;
+    background-color: #00410e;
+    border-radius: 5px;
+}
+
+.cancel-research-btn {
+    font-size: 110%;
+    cursor: pointer;
+    color: #ffffff;
+    background-color: #410000;
+    border-radius: 5px;
+}

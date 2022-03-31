@@ -2205,6 +2205,8 @@ class TestShipCMDTradeOreForOreCoin(TestCase):
         team_id = str(uuid4())
         self.ship = Ship.spawn(team_id, map_units_per_meter=10)
         self.ship.last_ore_deposit_frame = None
+        self.ship.virtual_ore_kg = 0
+        self.ship.cargo_ore_mass_kg = 0
 
     def test_command_does_not_work_if_not_docked_at_station(self):
         self.ship.cargo_ore_mass_kg = 10
@@ -2594,6 +2596,8 @@ class TestShipUpgrades(TestCase):
                 'seconds_researched'
             ] == 0
         assert self.ship._core_upgrade_active_indexes == [0]
+
+        # test resources drop
 
     # SHIP UPGRADES # # # #
     def test_ship_upgrade_does_not_start_if_its_already_researching(self):

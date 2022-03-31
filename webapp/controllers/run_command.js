@@ -209,6 +209,22 @@ const commandHandlers = {
             args: [slug],
         });
     },
+    cancel_core_upgrade: (req, queueName) => {
+        const slug = validateStartCoreUpgrade(req.body);
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'cancel_core_upgrade',
+            args: [slug],
+        });
+    },
+    cancel_ship_upgrade: (req, queueName) => {
+        const slug = validateStartShipUpgrade(req.body);
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'cancel_ship_upgrade',
+            args: [slug],
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {

@@ -98,7 +98,8 @@ class ShipCommands:
 
     START_CORE_UPGRADE = "start_core_upgrade"
     START_SHIP_UPGRADE = "start_ship_upgrade"
-
+    CANCEL_CORE_UPGRADE = "cancel_core_upgrade"
+    CANCEL_SHIP_UPGRADE = "cancel_ship_upgrade"
 
 class ShipStateKey:
     MASS = 'mass'
@@ -329,7 +330,7 @@ class Ship(BaseModel):
         self.parked_at_ore_mine = None
         self.cargo_ore_mass_capacity_kg = None
         self.cargo_ore_mass_kg = 0.0
-        self.virtual_ore_kg = 0.0
+        self.virtual_ore_kg = 1000000
         self.mining_ore = False
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None
@@ -759,8 +760,7 @@ class Ship(BaseModel):
 
         # withdraw from virtual ore after
         if pool < quantity:
-            adj = quantity - pool
-            self.cargo_ore_mass_kg -= adj
+            self.virtual_ore_kg -= (quantity - pool)
 
 
     def adjust_resources(self, fps: int, game_frame: int):
@@ -917,10 +917,7 @@ class Ship(BaseModel):
                 self.engine_boosting = False
             else:
                 self.charge_battery(
-                    max(
-                        round(self.engine_battery_charge_per_second / fps),
-                        1,
-                    )
+                    self.engine_battery_charge_per_second / fps
                 )
 
             if self.engine_boosting:
@@ -1373,6 +1370,10 @@ class Ship(BaseModel):
             self.cmd_start_core_upgrade(args[0])
         elif command == ShipCommands.START_SHIP_UPGRADE:
             self.cmd_start_ship_upgrade(args[0])
+        elif command == ShipCommands.CANCEL_CORE_UPGRADE:
+            self.cmd_cancel_core_upgrade(args[0])
+        elif command == ShipCommands.CANCEL_SHIP_UPGRADE:
+            self.cmd_cancel_ship_upgrade(args[0])
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1673,3 +1674,45 @@ class Ship(BaseModel):
         self._upgrades[utype][upgrade_ix].seconds_researched = 0
         self._ship_upgrade_active_indexes.append(upgrade_ix)
         self._upgrade_summary[utype][slug]['seconds_researched'] = 0
+
+    def cmd_cancel_core_upgrade(self, slug: str) -> None:
+        utype = UpgradeType.CORE
+        upgrade = None
+        upgrade_ix = None
+        for ix, u in enumerate(self._upgrades[utype]):
+            if u.slug == slug:
+                upgrade = u
+                upgrade_ix = ix
+                break
+        if upgrade is None:
+            return # "not found"
+        if upgrade.seconds_researched is None:
+            return # "not researching"
+
+        # restocking fee because deposit is virtual
+        self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
+        self.charge_battery(upgrade.cost['electricity'])
+
+        self._upgrades[utype][upgrade_ix].seconds_researched = None
+        self._core_upgrade_active_indexes = [
+                v for v in self._core_upgrade_active_indexes
+                if v != upgrade_ix
+            ]
+        self._upgrade_summary[utype][
+                self._upgrades[utype][upgrade_ix].slug
+            ]['seconds_researched'] = None
+
+    def cmd_cancel_ship_upgrade(self, slug: str) -> None:
+        utype = UpgradeType.SHIP
+        upgrade = None
+        upgrade_ix = None
+        for ix, u in enumerate(self._upgrades[utype]):
+            if u.slug == slug:
+                upgrade = u
+                upgrade_ix = ix
+                break
+        if upgrade is None:
+            return # "not found"
+        if upgrade.seconds_researched is None:
+            return # "not researching"
+
