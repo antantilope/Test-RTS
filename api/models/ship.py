@@ -209,7 +209,7 @@ class Ship(BaseModel):
 
         self._upgrades = None
         # Internal bookkeeping data to track
-        # upgrades.
+        # actively researching upgrades.
         # Data is being duplicated for performace.
         self._ship_upgrade_active_indexes: List[int] = []
         self._core_upgrade_active_indexes: List[int] = []
@@ -1289,7 +1289,7 @@ class Ship(BaseModel):
                     ]['current_cost'] = None if next_level is None else self._upgrades[utype][ix].cost_progression[
                         next_level
                     ]
-
+                # Apply effects to ship.
                 for effect in self._upgrades[utype][ix].effect_progression[new_level]:
                     current_stat = getattr(self, effect['field'])
                     setattr(self, effect['field'], current_stat + effect['delta'])

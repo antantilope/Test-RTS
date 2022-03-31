@@ -2702,6 +2702,7 @@ class TestShipUpgrades(TestCase):
 
     def test_ship_upgrade_completes(self):
         assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        start_engine_newtons = self.ship.engine_newtons
         self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
         self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
         self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
@@ -2733,6 +2734,7 @@ class TestShipUpgrades(TestCase):
             ][
                 'current_level'
             ] == 1
+        assert self.ship.engine_newtons > start_engine_newtons
 
     def test_core_upgrade_can_advance_in_progress(self):
         assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
