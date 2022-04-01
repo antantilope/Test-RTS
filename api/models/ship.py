@@ -515,6 +515,7 @@ class Ship(BaseModel):
             'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
+            'scanner_radar_sensitivity': self.scanner_radar_sensitivity,
 
             'ebeam_firing': self.ebeam_firing,
             'ebeam_charging': self.ebeam_charging,

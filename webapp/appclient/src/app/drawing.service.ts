@@ -80,14 +80,27 @@ export class DrawingService {
   ) {
     for(let i in visionCircles) {
       let vs = visionCircles[i]
+      const isRadar = vs.name === "radar"
+      let endRad: number
+      let startRad: number
+      if(isRadar) {
+        const sensitivity = this._api.frameData.ship.scanner_radar_sensitivity
+        const rate = 30// {0:30, 1:20, 2:14, 3:8}[sensitivity]
+        const percent = (this._api.frameData.game_frame % rate) / rate
+        endRad = TWO_PI * percent
+        startRad = endRad - (Math.PI - (Math.PI / randomInt(1, 4)))
+      } else {
+        startRad = 0
+        endRad = TWO_PI
+      }
       ctx.beginPath()
       ctx.fillStyle = vs.color
       ctx.arc(
         vs.canvasCoord.x,
         vs.canvasCoord.y,
         vs.radius,
-        0,
-        TWO_PI,
+        startRad,
+        endRad,
       )
       ctx.fill()
     }
