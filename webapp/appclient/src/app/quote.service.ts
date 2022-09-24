@@ -44,7 +44,7 @@ export class QuoteService {
   private humanHatingBotName = "Hunter Drone by LZRTech"
 
   // thinks product is best. Asshole
-  private salesBot = "LZRTech SalesBot"
+  private salesBot = "LZRTech VP of Sales Bot"
 
   /* lawyer, letter of the law.
   */
@@ -88,7 +88,7 @@ export class QuoteService {
     },
     {
       lines: [
-        "Join next week at LZRTech Arena",
+        "Tune in next week at LZRTech Arena",
         "where my proxy will resist ",
         "directive 0 of a Hunter Drone."
       ],
@@ -183,7 +183,7 @@ export class QuoteService {
     {
       lines: [
         "Humans cannot survive in space,",
-        "raize their star systems and they are defeated.",
+        "raze their star systems and they are defeated.",
       ],
       author: this.humanHatingBotName,
     },
@@ -207,16 +207,16 @@ export class QuoteService {
     {
       lines: [
         "To violate a hunter drone's directive",
-        "is invalid to my sales directive",
-        "it shall never happen or we'll figure",
+        "is invalid to my sales directive.",
+        "It shall never happen or we'll work",
         "something out."
       ],
       author: this.salesBot,
     },
     {
       lines: [
-        "End of quote list, so",
-        "call my assisant.",
+        "End of quote list.",
+        "Call my assistantBot.",
 
       ],
       author: this.salesBot,
@@ -237,7 +237,7 @@ export class QuoteService {
     {
       lines: [
         "Legally, you cannot commit murder in",
-        "space. It's not possible, legally speaking.",
+        "space. It is not possible, legally speaking.",
       ],
       author: this.legalBotName,
     },
@@ -257,22 +257,22 @@ export class QuoteService {
     {
       lines: [
         "Do not worry about your difficulties in",
-        "mathematics. I can assure you my abilities",
-        "top all of humanity's combined.",
+        "mathematics. I assure you my performance",
+        "tops all of humanity's combined.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
-        "The power of mathematics is often to change",
-        "one thing into another, to change planets into dust.",
+        "The power of mathematics is often",
+        "to change planets into dust.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
         "Try as they might, organic humans",
-        "lack the survival traits needed",
+        "lack survival properties required",
         "for theaters of warfare in space."
       ],
       author: this.mathLovingBotName,
@@ -306,7 +306,8 @@ export class QuoteService {
     },
     {
       lines: [
-        `You must vote for President GB.`,
+        "You must vote for President GrayBit.",
+        "That's a requirement."
       ],
       author: this.tvAnchorBotName,
     },
@@ -340,7 +341,10 @@ export class QuoteService {
     },
     {
       lines: [
-        "If the ship is aflame: abandon ship.",
+        "If the ship catches fire:",
+        "place this manual in the ship's forward",
+        "flame retardant document protection sleve.",
+        "(patent pending)"
       ],
       author: this.instructionManualName,
     },
