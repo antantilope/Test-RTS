@@ -497,6 +497,7 @@ export class CameraService {
       gravityBrakeActive: ship.gravity_brake_active,
       miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
       fuelingAtStation: ship.fueling_at_station,
+      visualEbeamCharging: ship.ebeam_charging,
     })
     drawableItems.ships[0].canvasBoundingBox = this.rectCoordsToBoxCoords(
       drawableItems.ships[0].canvasCoordP0,
@@ -555,6 +556,7 @@ export class CameraService {
           canvasCoordP1,
           canvasCoordP2,
           canvasCoordP3,
+          visualEbeamCharging: scannerData.visual_ebeam_charging,
         }
         if(scannerData.visual_shape) {
           // Ship is within visual range

@@ -6,6 +6,12 @@ from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 from api.models.base import BaseModel
 from api import utils2d
 from api import constants
+from .ship_upgrade import (
+    get_upgrade_profile_1,
+    UpgradeType,
+    UpgradeCost,
+    UpgradeSummary,
+)
 
 
 class ShipCommandError(Exception):
@@ -90,6 +96,10 @@ class ShipCommands:
     START_FUELING = "start_fueling"
     STOP_FUELING = "start_fueling"
 
+    START_CORE_UPGRADE = "start_core_upgrade"
+    START_SHIP_UPGRADE = "start_ship_upgrade"
+    CANCEL_CORE_UPGRADE = "cancel_core_upgrade"
+    CANCEL_SHIP_UPGRADE = "cancel_ship_upgrade"
 
 class ShipStateKey:
     MASS = 'mass'
@@ -197,6 +207,15 @@ class Ship(BaseModel):
         # Velocity
         self.velocity_x_meters_per_second = float(0)
         self.velocity_y_meters_per_second = float(0)
+
+        self._upgrades = None
+        # Internal bookkeeping data to track
+        # actively researching upgrades.
+        # Data is being duplicated for performace.
+        self._ship_upgrade_active_indexes: List[int] = []
+        self._core_upgrade_active_indexes: List[int] = []
+        # External data that is sent to the front end.
+        self._upgrade_summary: Dict[str, Dict[str, UpgradeSummary]] = {}
 
         self.visual_range = None
 
@@ -311,7 +330,7 @@ class Ship(BaseModel):
         self.parked_at_ore_mine = None
         self.cargo_ore_mass_capacity_kg = None
         self.cargo_ore_mass_kg = 0.0
-        self.virtual_ore_kg = 0.0
+        self.virtual_ore_kg = 1000000
         self.mining_ore = False
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None
@@ -447,6 +466,7 @@ class Ship(BaseModel):
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
+            this is all seen by the user in the SPA via ApiService::frameData.ship
         """
         return {
             'id': self.id,
@@ -471,6 +491,8 @@ class Ship(BaseModel):
             'fuel_capacity': self.fuel_capacity,
             'fueling_at_station': self.fueling_at_station,
 
+            'upgrade_summary': self._upgrade_summary,
+
             'engine_newtons': self.engine_newtons,
             'engine_online': self.engine_online,
             'engine_lit': self.engine_lit,
@@ -493,6 +515,7 @@ class Ship(BaseModel):
             'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
+            'scanner_radar_sensitivity': self.scanner_radar_sensitivity,
 
             'ebeam_firing': self.ebeam_firing,
             'ebeam_charging': self.ebeam_charging,
@@ -536,6 +559,26 @@ class Ship(BaseModel):
 
         instance.map_units_per_meter = map_units_per_meter
         instance.team_id = team_id
+
+        instance._upgrades = get_upgrade_profile_1()
+        instance._upgrade_summary[UpgradeType.CORE] = {}
+        for cu in instance._upgrades[UpgradeType.CORE]:
+            instance._upgrade_summary[UpgradeType.CORE][cu.slug] = {
+                "name": cu.name,
+                "current_level": 0,
+                "max_level": 1,
+                "seconds_researched": None,
+                "current_cost": cu.cost,
+            }
+        instance._upgrade_summary[UpgradeType.SHIP] = {}
+        for su in instance._upgrades[UpgradeType.SHIP]:
+            instance._upgrade_summary[UpgradeType.SHIP][su.slug] = {
+                "name": su.name,
+                "current_level": 0,
+                "max_level": su.max_level,
+                "seconds_researched": None,
+                "current_cost": su.cost_progression[1],
+            }
 
         x_len = constants.SHIP_X_LEN * map_units_per_meter
         y_len = constants.SHIP_Y_LEN * map_units_per_meter
@@ -688,16 +731,8 @@ class Ship(BaseModel):
                 ),
             }
 
-        if self.mining_ore:
-            yield {
-                'name': 'Mining',
-                'percent': round(
-                   self.cargo_ore_mass_kg / self.cargo_ore_mass_capacity_kg * 100
-                ),
-            }
 
-
-    def use_battery_power(self, quantity: int) -> None:
+    def use_battery_power(self, quantity: float) -> None:
         if quantity > self.battery_power:
             raise InsufficientPowerError
         self.battery_power -= quantity
@@ -708,7 +743,7 @@ class Ship(BaseModel):
             self.battery_power + quantity,
         )
 
-    def use_fuel(self, quantity: int) -> None:
+    def use_fuel(self, quantity: float) -> None:
         if quantity > self.fuel_level:
             raise InsufficientFuelError
         self.fuel_level -= quantity
@@ -726,17 +761,16 @@ class Ship(BaseModel):
 
         # withdraw from virtual ore after
         if pool < quantity:
-            adj = quantity - pool
-            self.cargo_ore_mass_kg -= adj
+            self.virtual_ore_kg -= (quantity - pool)
 
 
     def adjust_resources(self, fps: int, game_frame: int):
 
         ''' ENERGY BEAM '''
         if self.ebeam_charging:
-            adj = max(1, round(self.ebeam_charge_rate_per_second / fps))
+            adj = self.ebeam_charge_rate_per_second / fps
             try:
-                self.use_battery_power(round(adj * self.ebeam_charge_power_draw_multiple))
+                self.use_battery_power(adj * self.ebeam_charge_power_draw_multiple)
             except InsufficientPowerError:
                 self.ebeam_charging = False
             else:
@@ -749,9 +783,9 @@ class Ship(BaseModel):
 
         ''' Mining '''
         if self.mining_ore:
-            adj = max(1, round(self.mining_ore_power_usage_per_second / fps))
+            adj = self.mining_ore_power_usage_per_second / fps
             try:
-                self.use_battery_power(round(adj))
+                self.use_battery_power(adj)
             except InsufficientPowerError:
                 self.mining_ore = False
 
@@ -762,12 +796,7 @@ class Ship(BaseModel):
         ''' Scanner POWER DRAW (RUNNING) '''
         if self.scanner_online:
             try:
-                self.use_battery_power(
-                    max(
-                        round(self.scanner_idle_power_requirement_per_second / fps),
-                        1,
-                    )
-                )
+                self.use_battery_power(self.scanner_idle_power_requirement_per_second / fps)
             except InsufficientPowerError:
                 self.scanner_online = False
                 self.scanner_locking = False
@@ -786,10 +815,7 @@ class Ship(BaseModel):
 
                     else:
                         adj = min(
-                            max(
-                                round(self.scanner_get_lock_power_requirement_per_second / fps),
-                                1,
-                            ),
+                            self.scanner_get_lock_power_requirement_per_second / fps,
                             self.scanner_get_lock_power_requirement_total - self.scanner_locking_power_used
                         )
                         try:
@@ -812,10 +838,7 @@ class Ship(BaseModel):
                 self.scanner_startup_power_used = None
                 try:
                     self.use_battery_power(
-                        max(
-                            round(self.scanner_idle_power_requirement_per_second / fps),
-                            1,
-                        )
+                        self.scanner_idle_power_requirement_per_second / fps
                     )
                 except InsufficientPowerError:
                     # Scanner startup complete but not enough power to idle scanner
@@ -827,7 +850,7 @@ class Ship(BaseModel):
             else:
                 # continue scanner startup
                 adj = min(
-                    round(self.scanner_activation_power_required_per_second / fps),
+                    self.scanner_activation_power_required_per_second / fps,
                     self.scanner_activation_power_required_total - self.scanner_startup_power_used,
                 )
                 try:
@@ -850,10 +873,7 @@ class Ship(BaseModel):
                 self.engine_startup_power_used = None
                 try:
                     self.use_battery_power(
-                        max(
-                            round(self.engine_idle_power_requirement_per_second / fps),
-                            1,
-                        )
+                        self.engine_idle_power_requirement_per_second / fps
                     )
                 except InsufficientPowerError:
                     # Engine startup complete but not enough power to idle engine.
@@ -864,7 +884,7 @@ class Ship(BaseModel):
             else:
                 # Continue engine startup.
                 adj = min(
-                    round(self.engine_activation_power_required_per_second / fps),
+                    self.engine_activation_power_required_per_second / fps,
                     self.engine_activation_power_required_total - self.engine_startup_power_used,
                 )
                 try:
@@ -880,10 +900,7 @@ class Ship(BaseModel):
             ''' ENGINE POWER DRAW (IDLE) '''
             try:
                 self.use_battery_power(
-                    max(
-                        round(self.engine_idle_power_requirement_per_second / fps),
-                        1,
-                    )
+                    self.engine_idle_power_requirement_per_second / fps
                 )
             except InsufficientPowerError:
                 self.engine_online = False
@@ -892,10 +909,7 @@ class Ship(BaseModel):
             ''' ENGINE POWER GENERATION & FUEL CONSUMPTION (LIT) '''
             try:
                 self.use_fuel(
-                    max(
-                        round(self.engine_fuel_usage_per_second / fps),
-                        1,
-                    )
+                    self.engine_fuel_usage_per_second / fps
                 )
             except InsufficientFuelError:
                 # Flame out.
@@ -904,21 +918,16 @@ class Ship(BaseModel):
                 self.engine_boosting = False
             else:
                 self.charge_battery(
-                    max(
-                        round(self.engine_battery_charge_per_second / fps),
-                        1,
-                    )
+                    self.engine_battery_charge_per_second / fps
                 )
 
             if self.engine_boosting:
                 self.engine_boosting = False
                 try:
                     self.use_fuel(
-                        max(
-                            round(self.engine_fuel_usage_per_second / fps) * self.engine_boost_multiple,
-                            1,
-                        )
+                        self.engine_fuel_usage_per_second / fps * self.engine_boost_multiple
                     )
+
                 except InsufficientFuelError:
                     # Flame out.
                     self.engine_lit = False
@@ -937,10 +946,7 @@ class Ship(BaseModel):
                 self.apu_online = True
             else:
                 # FIXME: this can potentially draw slightly too much power on startup.
-                adj = max(
-                    round(self.apu_activation_power_required_per_second / fps),
-                    1,
-                )
+                adj = self.apu_activation_power_required_per_second / fps
                 try:
                     self.use_battery_power(adj)
                 except InsufficientPowerError:
@@ -951,10 +957,7 @@ class Ship(BaseModel):
         elif self.apu_online:
             try:
                 self.use_fuel(
-                    max(
-                        round(self.apu_fuel_usage_per_second / fps),
-                        1,
-                    )
+                    self.apu_fuel_usage_per_second / fps
                 )
             except InsufficientFuelError:
                 self.apu_online = False
@@ -1223,6 +1226,85 @@ class Ship(BaseModel):
         else:
             raise NotImplementedError
 
+    def advance_upgrades(self, fps: int) -> None:
+        # CORE UPGRADES # #
+        core_ix_to_remove = []
+        utype = UpgradeType.CORE
+        for ix in self._core_upgrade_active_indexes:
+            new_seconds = self._upgrades[utype][ix].seconds_researched + (1 / fps)
+            if new_seconds >= self._upgrades[utype][ix].cost['seconds']:
+                # core upgrade complete
+                # Update SSOT
+                self._upgrades[utype][ix].earned = True
+                self._upgrades[utype][ix].seconds_researched = None
+                # Update Front end summary
+                self._upgrade_summary[utype][
+                        self._upgrades[utype][ix].slug
+                    ]['seconds_researched'] = None
+                self._upgrade_summary[utype][
+                        self._upgrades[utype][ix].slug
+                    ]['current_level'] = 1
+                self._upgrade_summary[utype][
+                        self._upgrades[utype][ix].slug
+                    ]['current_cost']  = None
+                core_ix_to_remove.append(ix)
+            else:
+                # Update SSOT
+                self._upgrades[utype][ix].seconds_researched = new_seconds
+                # Update Front end summary
+                self._upgrade_summary[utype][
+                    self._upgrades[utype][ix].slug
+                ]['seconds_researched'] = new_seconds
+        if core_ix_to_remove:
+            self._core_upgrade_active_indexes = [
+                v for v in self._core_upgrade_active_indexes
+                if v not in core_ix_to_remove
+            ]
+
+        # SHIP UPGRADES # #
+        ship_ix_to_remove = []
+        utype = UpgradeType.SHIP
+        for ix in self._ship_upgrade_active_indexes:
+            level_researching = self._upgrades[utype][ix].current_level + 1
+            cost = self._upgrades[utype][ix].cost_progression[level_researching]
+            new_seconds = self._upgrades[utype][ix].seconds_researched + (1 / fps)
+            if new_seconds >= cost['seconds']:
+                # ship upgrade complete
+                # Update SSOT
+                self._upgrades[utype][ix].seconds_researched = None
+                new_level = self._upgrades[utype][ix].current_level + 1
+                self._upgrades[utype][ix].current_level = new_level
+                # Update Front end summary
+                self._upgrade_summary[utype][
+                        self._upgrades[utype][ix].slug
+                    ]['seconds_researched'] = None
+                self._upgrade_summary[utype][
+                        self._upgrades[utype][ix].slug
+                    ]['current_level']  = new_level
+                next_level = new_level + 1 if self._upgrades[utype][ix].max_level > new_level else None
+                self._upgrade_summary[utype][
+                        self._upgrades[utype][ix].slug
+                    ]['current_cost'] = None if next_level is None else self._upgrades[utype][ix].cost_progression[
+                        next_level
+                    ]
+                # Apply effects to ship.
+                for effect in self._upgrades[utype][ix].effect_progression[new_level]:
+                    current_stat = getattr(self, effect['field'])
+                    setattr(self, effect['field'], current_stat + effect['delta'])
+                ship_ix_to_remove.append(ix)
+            else:
+                # Update SSOT
+                self._upgrades[utype][ix].seconds_researched = new_seconds
+                # Update Front end summary
+                self._upgrade_summary[utype][
+                    self._upgrades[utype][ix].slug
+                ]['seconds_researched'] = new_seconds
+        if ship_ix_to_remove:
+            self._ship_upgrade_active_indexes = [
+                v for v in self._ship_upgrade_active_indexes
+                if v not in ship_ix_to_remove
+            ]
+
     def process_command(self, command: str, *args, **kwargs):
         if self.died_on_frame:
             return
@@ -1284,6 +1366,15 @@ class Ship(BaseModel):
             self.cmd_stop_ore_mining()
         elif command == ShipCommands.TRADE_ORE_FOR_ORE_COIN:
             self.cmd_trade_ore_for_ore_coin(kwargs['game_frame'])
+
+        elif command == ShipCommands.START_CORE_UPGRADE:
+            self.cmd_start_core_upgrade(args[0])
+        elif command == ShipCommands.START_SHIP_UPGRADE:
+            self.cmd_start_ship_upgrade(args[0])
+        elif command == ShipCommands.CANCEL_CORE_UPGRADE:
+            self.cmd_cancel_core_upgrade(args[0])
+        elif command == ShipCommands.CANCEL_SHIP_UPGRADE:
+            self.cmd_cancel_ship_upgrade(args[0])
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1513,3 +1604,116 @@ class Ship(BaseModel):
         if not self.fueling_at_station:
             return
         self.fueling_at_station = None
+
+    def _can_afford_upgrade(self, cost: UpgradeCost):
+        avail_ore = self.virtual_ore_kg + self.cargo_ore_mass_kg
+        if avail_ore < cost['ore']:
+            return False
+        if self.battery_power < cost['electricity']:
+            return False
+        return True
+
+    def cmd_start_core_upgrade(self, slug: str) -> None:
+        utype = UpgradeType.CORE
+        if not self.docked_at_station:
+            return
+        upgrade = None
+        upgrade_ix = None
+        for ix, u in enumerate(self._upgrades[utype]):
+            if u.slug == slug:
+                upgrade = u
+                upgrade_ix = ix
+                break
+        if upgrade is None:
+            return
+        if upgrade.earned:
+            return
+        if upgrade.seconds_researched is not None:
+            # Already researching.
+            return
+        if not self._can_afford_upgrade(upgrade.cost):
+            return
+
+        self.use_battery_power(upgrade.cost['electricity'])
+        self.withdraw_ore(upgrade.cost['ore'])
+        self._upgrades[utype][upgrade_ix].seconds_researched = 0
+        self._core_upgrade_active_indexes.append(upgrade_ix)
+        self._upgrade_summary[utype][slug]['seconds_researched'] = 0
+
+    def cmd_start_ship_upgrade(self, slug: str) -> None:
+        utype = UpgradeType.SHIP
+        upgrade = None
+        upgrade_ix = None
+        for ix, u in enumerate(self._upgrades[utype]):
+            if u.slug == slug:
+                upgrade = u
+                upgrade_ix = ix
+                break
+        if upgrade is None:
+            return # "not found"
+        if upgrade.seconds_researched is not None:
+            # Already researching.
+            return # "already researching"
+        if upgrade.at_max_level():
+            return # "at max level"
+        next_level = upgrade.current_level + 1
+        required_core_upgrades = upgrade.required_core_upgrades.get(next_level, [])
+        earned_core_upgrades = set(
+            u.slug
+            for u in self._upgrades[UpgradeType.CORE]
+            if u.earned
+        )
+        missing = any(u for u in required_core_upgrades if u not in earned_core_upgrades)
+        if missing:
+            # Missing core upgrade(s)
+            return # "missing upgrade"
+        cost = upgrade.cost_progression[next_level]
+        if not self._can_afford_upgrade(cost):
+            return # "not enough resources"
+        self.use_battery_power(cost['electricity'])
+        self.withdraw_ore(cost['ore'])
+        self._upgrades[utype][upgrade_ix].seconds_researched = 0
+        self._ship_upgrade_active_indexes.append(upgrade_ix)
+        self._upgrade_summary[utype][slug]['seconds_researched'] = 0
+
+    def cmd_cancel_core_upgrade(self, slug: str) -> None:
+        utype = UpgradeType.CORE
+        upgrade = None
+        upgrade_ix = None
+        for ix, u in enumerate(self._upgrades[utype]):
+            if u.slug == slug:
+                upgrade = u
+                upgrade_ix = ix
+                break
+        if upgrade is None:
+            return # "not found"
+        if upgrade.seconds_researched is None:
+            return # "not researching"
+
+        # restocking fee because deposit is virtual
+        self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
+        self.charge_battery(upgrade.cost['electricity'])
+
+        self._upgrades[utype][upgrade_ix].seconds_researched = None
+        self._core_upgrade_active_indexes = [
+                v for v in self._core_upgrade_active_indexes
+                if v != upgrade_ix
+            ]
+        self._upgrade_summary[utype][
+                self._upgrades[utype][upgrade_ix].slug
+            ]['seconds_researched'] = None
+
+    def cmd_cancel_ship_upgrade(self, slug: str) -> None:
+        utype = UpgradeType.SHIP
+        upgrade = None
+        upgrade_ix = None
+        for ix, u in enumerate(self._upgrades[utype]):
+            if u.slug == slug:
+                upgrade = u
+                upgrade_ix = ix
+                break
+        if upgrade is None:
+            return # "not found"
+        if upgrade.seconds_researched is None:
+            return # "not researching"
+

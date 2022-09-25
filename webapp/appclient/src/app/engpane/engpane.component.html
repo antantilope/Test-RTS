@@ -13,7 +13,7 @@
             <strong>ORE</strong> {{ data.oreCargoMassKg }} KG
         </div>
         <div>
-            <strong>FUEL</strong> {{data.fuelLevel / 75 }} KG
+            <strong>FUEL</strong> {{ data.fuelLevel / 75 }} KG
         </div>
     </div>
     <hr>
@@ -22,7 +22,7 @@
             <strong>Fuel</strong>
         </div>
         <div>
-            {{ data.fuelLevel }} / {{ data.fuelCapacity }}
+            {{ data.fuelLevel|number: "1.0-0" }} / {{ data.fuelCapacity|number: "1.0-0" }}
         </div>
         <div id="progress-container">
             <progress value="{{ data.fuelLevel }}" max="{{ data.fuelCapacity }}">
@@ -32,12 +32,12 @@
             <div>
                 <span *ngIf="data.fuelUsagePerSecond < 0" class="usage-label">Use/Sec</span>
                 <span *ngIf="data.fuelUsagePerSecond > 0" class="supply-label">Inc/Sec</span>
-                {{ data.fuelUsagePerSecond }}
+                {{ data.fuelUsagePerSecond|number: "1.2-2" }}
             </div>
             <div>
                 <span *ngIf="data.fuelUsagePerSecond < 0" class="usage-label">Use/Sec</span>
                 <span *ngIf="data.fuelUsagePerSecond > 0" class="supply-label">Inc/Sec</span>
-                {{ data.fuelUsagePerMinute }}
+                {{ data.fuelUsagePerMinute|number: "1.2-2" }}
             </div>
         </div>
     </div>
@@ -47,7 +47,7 @@
             <strong>Battery</strong>
         </div>
         <div>
-            {{ data.batteryPower }} / {{ data.batteryCapacity }}
+            {{ data.batteryPower|number: "1.0-0" }} / {{ data.batteryCapacity|number: "1.0-0" }}
         </div>
         <div id="progress-container">
             <progress value="{{ data.batteryPower }}" max="{{ data.batteryCapacity }}">
@@ -57,12 +57,12 @@
             <div>
                 <span *ngIf="data.batteryUsagePerSecond < 0" class="usage-label">Use/Sec</span>
                 <span *ngIf="data.batteryUsagePerSecond > 0" class="supply-label">Inc/Sec</span>
-                {{ data.batteryUsagePerSecond }}
+                {{ data.batteryUsagePerSecond|number: "1.2-2" }}
             </div>
             <div>
                 <span *ngIf="data.batteryUsagePerSecond < 0" class="usage-label">Use/Min</span>
                 <span *ngIf="data.batteryUsagePerSecond > 0" class="supply-label">Inc/Min</span>
-                {{ data.batteryUsagePerMinute }}
+                {{ data.batteryUsagePerMinute|number: "1.2-2" }}
             </div>
         </div>
     </div>

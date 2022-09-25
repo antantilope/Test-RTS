@@ -12,6 +12,6 @@ export class FormattingService {
   constructor() {}
 
   public formatNumber(n: number) : string {
-    return this.numberFormat.format(n)
+    return this.numberFormat.format(Math.round(n))
   }
 }

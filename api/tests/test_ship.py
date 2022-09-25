@@ -3,6 +3,7 @@ from unittest import TestCase
 from uuid import uuid4
 
 from api.models.ship import AutoPilotPrograms, ShipStateKey
+from api.models.ship_upgrade import UpgradeType
 from api import constants
 from .utils import (
     DebugShip as Ship,
@@ -2204,6 +2205,8 @@ class TestShipCMDTradeOreForOreCoin(TestCase):
         team_id = str(uuid4())
         self.ship = Ship.spawn(team_id, map_units_per_meter=10)
         self.ship.last_ore_deposit_frame = None
+        self.ship.virtual_ore_kg = 0
+        self.ship.cargo_ore_mass_kg = 0
 
     def test_command_does_not_work_if_not_docked_at_station(self):
         self.ship.cargo_ore_mass_kg = 10
@@ -2504,3 +2507,306 @@ class TestShipAdjustGravityBrake(TestCase):
         assert self.ship.gravity_brake_position == 20
         self.ship.advance_gravity_brake_position(fps=1)
         assert self.ship.gravity_brake_position == 0
+
+
+
+''' UPGRADES
+'''
+class TestShipUpgrades(TestCase):
+    def setUp(self):
+        team_id = str(uuid4())
+        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship.battery_power = 1_000_000
+        self.ship.virtual_ore_kg = 1_000
+        self.ship.cargo_ore_mass_kg = 0
+
+    # CORE UPGRADES # # # #
+    def test_core_upgrade_does_not_start_if_not_docked_at_station(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched is None
+        assert self.ship._upgrades[UpgradeType.CORE][0].earned is False
+        self.ship.docked_at_station = None
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched is None
+        assert self.ship.virtual_ore_kg == 1_000
+        assert self.ship.battery_power == 1_000_000
+        assert self.ship._core_upgrade_active_indexes == []
+
+    def test_core_upgrade_does_not_start_if_its_already_researching(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        assert self.ship._upgrades[UpgradeType.CORE][0].earned is False
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = 1 # already researching
+        self.ship.docked_at_station = "foobar"
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 1
+        assert self.ship.virtual_ore_kg == 1_000
+        assert self.ship.battery_power == 1_000_000
+        assert self.ship._core_upgrade_active_indexes == []
+
+    def test_core_upgrade_does_not_start_if_it_is_already_earned(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = True
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched is None
+        assert self.ship.virtual_ore_kg == 1_000
+        assert self.ship.battery_power == 1_000_000
+        assert self.ship._core_upgrade_active_indexes == []
+
+    def test_core_upgrade_does_not_start_if_not_enough_ore(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = False
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.virtual_ore_kg = 0
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched is None
+        assert self.ship.battery_power == 1_000_000
+        assert self.ship._core_upgrade_active_indexes == []
+
+    def test_core_upgrade_does_not_start_if_not_enough_battery_power(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = False
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 1000
+        self.ship.battery_power = 0
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched is None
+        assert self.ship.cargo_ore_mass_kg == 1000
+
+    def test_can_start_core_upgrade(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = False
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 1_000_000
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 0
+        assert self.ship._upgrade_summary[
+                UpgradeType.CORE
+            ][
+                'titanium_alloy_hull'
+            ][
+                'seconds_researched'
+            ] == 0
+        assert self.ship._core_upgrade_active_indexes == [0]
+
+        # test resources drop
+
+    # SHIP UPGRADES # # # #
+    def test_ship_upgrade_does_not_start_if_its_already_researching(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = True
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = 1 # already researching
+        self.ship._ship_upgrade_active_indexes = [0]
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 1
+        assert self.ship.virtual_ore_kg == 1_000
+        assert self.ship.battery_power == 1_000_000
+        assert self.ship._ship_upgrade_active_indexes == [0]
+
+    def test_ship_upgrade_does_not_start_if_it_is_already_at_max_level(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 2
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship._upgrades[UpgradeType.CORE][0].earned = True
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched is None
+        assert self.ship.virtual_ore_kg == 1_000
+        assert self.ship.battery_power == 1_000_000
+        assert self.ship._ship_upgrade_active_indexes == []
+        # Double check
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 1
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+
+    def test_ship_upgrade_does_not_start_if_not_enough_ore(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship.virtual_ore_kg = 0
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched is None
+        assert self.ship._ship_upgrade_active_indexes == []
+        # Double check
+        self.ship.virtual_ore_kg = self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['ore'] * 2
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+
+    def test_ship_upgrade_does_not_start_if_not_enough_battery(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 10
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched is None
+        assert self.ship._ship_upgrade_active_indexes == []
+        # Double check
+        self.ship.battery_power = self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['electricity'] * 2
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+
+    def test_ship_upgrade_can_start(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 1_000_000
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+        assert self.ship._upgrade_summary[
+                UpgradeType.SHIP
+            ][
+                'engine_newtons'
+            ][
+                'seconds_researched'
+            ] == 0
+
+    def test_ship_upgrade_advances_in_progress(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 1_000_000
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+        self.ship.advance_upgrades(fps=2)
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0.5
+        self.ship.advance_upgrades(fps=1)
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 1.5
+        assert self.ship._upgrade_summary[
+                UpgradeType.SHIP
+            ][
+                'engine_newtons'
+            ][
+                'seconds_researched'
+            ] == 1.5
+
+    def test_ship_upgrade_completes(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        start_engine_newtons = self.ship.engine_newtons
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 1_000_000
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = (
+            self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['seconds']
+            - 0.5
+        )
+        self.ship.advance_upgrades(fps=1)
+        assert self.ship._ship_upgrade_active_indexes == []
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 1
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched is None
+        assert self.ship._upgrade_summary[
+                UpgradeType.SHIP
+            ][
+                'engine_newtons'
+            ][
+                'seconds_researched'
+            ] is None
+        assert self.ship._upgrade_summary[
+                UpgradeType.SHIP
+            ][
+                'engine_newtons'
+            ][
+                'current_level'
+            ] == 1
+        assert self.ship.engine_newtons > start_engine_newtons
+
+    def test_core_upgrade_can_advance_in_progress(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = False
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 1_000_000
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 0
+        assert self.ship._upgrade_summary[
+                UpgradeType.CORE
+            ][
+                'titanium_alloy_hull'
+            ][
+                'seconds_researched'
+            ] == 0
+        assert self.ship._core_upgrade_active_indexes == [0]
+        self.ship.advance_upgrades(fps=2)
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 0.5
+        self.ship.advance_upgrades(fps=1)
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 1.5
+        assert self.ship._upgrade_summary[
+                UpgradeType.CORE
+            ][
+                'titanium_alloy_hull'
+            ][
+                'seconds_researched'
+            ] == 1.5
+
+    def test_core_upgrade_can_complete(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = False
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 1_000_000
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 0
+        assert self.ship._upgrade_summary[
+                UpgradeType.CORE
+            ][
+                'titanium_alloy_hull'
+            ][
+                'seconds_researched'
+            ] == 0
+        assert self.ship._core_upgrade_active_indexes == [0]
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = (
+            self.ship._upgrades[UpgradeType.CORE][0].cost['seconds']
+            - 0.5
+        )
+        self.ship.advance_upgrades(fps=1)
+        assert self.ship._core_upgrade_active_indexes == []
+        assert self.ship._upgrades[UpgradeType.CORE][0].earned
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched is None
+        assert self.ship._upgrade_summary[
+                UpgradeType.CORE
+            ][
+                'titanium_alloy_hull'
+            ][
+                'seconds_researched'
+            ] is None
+        assert self.ship._upgrade_summary[
+                UpgradeType.CORE
+            ][
+                'titanium_alloy_hull'
+            ][
+                'current_level'
+            ] == 1

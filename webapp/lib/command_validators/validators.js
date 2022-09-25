@@ -56,7 +56,43 @@ const validateRunAutopilotHeadingToWaypoint = (data) => {
     }
 }
 
+const validateStartCoreUpgrade = (data) => {
+    // Also validated cancel_core_upgrade
+    const slug = data.slug
+    if (!slug) {
+        throw new CommandValidationError("slug is required");
+    }
+    if (
+        slug !== "advanced_electronics"
+        && slug !== "titanium_alloy_hull"
+        && slug !== "liquid_nitrogen_cooling"
+    ) {
+        throw new CommandValidationError("invalid slug");
+    }
+    return slug;
+}
+
+const validateStartShipUpgrade = (data) => {
+    // Also validated cancel_ship_upgrade
+    const slug = data.slug;
+    if (!slug) {
+        throw new CommandValidationError("slug is required");
+    }
+    const upgrades = [
+        'scanner_range',
+        'radar_sensitivity',
+        'scanner_lock_traversal',
+        'engine_newtons',
+    ];
+    if (upgrades.indexOf(slug) === -1) {
+        throw new CommandValidationError("invalid slug");
+    }
+    return slug;
+}
+
 exports.validateSetHeadingCommand = validateSetHeadingCommand;
 exports.validateSetScannerLockTargetCommand = validateSetScannerLockTargetCommand;
 exports.validateRunAutoPilotProgram = validateRunAutoPilotProgram;
 exports.validateRunAutopilotHeadingToWaypoint = validateRunAutopilotHeadingToWaypoint;
+exports.validateStartCoreUpgrade = validateStartCoreUpgrade;
+exports.validateStartShipUpgrade = validateStartShipUpgrade;

@@ -36,6 +36,7 @@ export class ScannerDataElement {
     visual_gravity_brake_active?: boolean
     visual_mining_ore_location?: string
     visual_fueling_at_station?: string
+    visual_ebeam_charging: boolean
 }
 
 export class DrawableShip {
@@ -50,6 +51,7 @@ export class DrawableShip {
     canvasCoordP1?: PointCoord
     canvasCoordP2?: PointCoord
     canvasCoordP3?: PointCoord
+    visualEbeamCharging: boolean
     canvasCoordFin0P0?: PointCoord
     canvasCoordFin0P1?: PointCoord
     canvasCoordFin1P0?: PointCoord

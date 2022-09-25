@@ -28,7 +28,7 @@ export class QuoteService {
 
   /* thinks about space war with traditional views (war is bad)
   */
-  private generalName = "Space Lt. General PattonBot"
+  private generalName = "High Space AdmiralBot S/N 45B32E6"
 
   /* A space feudal lord. Thinks war is art. Similar Sun Tsu.
   */
@@ -52,7 +52,7 @@ export class QuoteService {
 
   /* Top-gun type robot
   */
-  private topGunBotName = "Captin Oxhator AutoPilot V1.04.1"
+  private topGunBotName = "LZRTech Combat AutoPilot build 12746"
 
   /* provides very cold and unhelpful advice.
   */
@@ -89,7 +89,7 @@ export class QuoteService {
     {
       lines: [
         "Tune in next week at LZRTech Arena",
-        "where my proxy will resist ",
+        "where my proxy will resist",
         "directive 0 of a Hunter Drone."
       ],
       author: this.presidentName,
@@ -201,8 +201,19 @@ export class QuoteService {
         "is invalid to the directive.",
       ],
       author: this.humanHatingBotName,
-
-
+    },
+    {
+      lines: [
+        "Directive 2: all targets are",
+        "subjected to directives 0 through 1.",
+      ],
+      author: this.humanHatingBotName,
+    },
+    {
+      lines: [
+        "The human has been neutralized.",
+      ],
+      author: this.humanHatingBotName,
     },
     {
       lines: [
