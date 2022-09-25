@@ -39,4 +39,16 @@ export class UpgradepaneComponent implements OnInit {
     await this._api.post("/api/rooms/command", {command, slug});
   }
 
+  public async btnStartLiquidNitrogenCoolingUpgrade() {
+    const command = 'start_core_upgrade';
+    const slug = 'liquid_nitrogen_cooling';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelLiquidNitrogenCoolingUpgrade() {
+    const command = 'cancel_core_upgrade';
+    const slug = 'liquid_nitrogen_cooling';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
 }

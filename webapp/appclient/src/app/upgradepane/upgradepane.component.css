@@ -10,7 +10,7 @@ div, h2 {
     border-radius: 5px;
 }
 .section-heading {
-    font-size: 120%;
+    font-size: 130%;
     font-weight: bold;
     margin-left:5px;
     margin-bottom: 10px;
@@ -22,6 +22,9 @@ div, h2 {
 
 .core-upgrade-container {
     margin-bottom: 15px;
+    padding: 6px;
+    background-color: #befdd1; /* constrasted against #a6ffc1*/
+    border-radius: 5px;
 }
 
 .core-upgrade-header{

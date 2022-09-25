@@ -62,7 +62,11 @@ const validateStartCoreUpgrade = (data) => {
     if (!slug) {
         throw new CommandValidationError("slug is required");
     }
-    if (slug !== "advanced_electronics" && slug !== "titanium_alloy_hull") {
+    if (
+        slug !== "advanced_electronics"
+        && slug !== "titanium_alloy_hull"
+        && slug !== "liquid_nitrogen_cooling"
+    ) {
         throw new CommandValidationError("invalid slug");
     }
     return slug;
