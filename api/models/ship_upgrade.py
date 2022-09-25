@@ -139,8 +139,6 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
                 {'field': 'scanner_ir_range', 'delta': 800}],
             3: [{'field': 'scanner_radar_range', 'delta': 600},
                 {'field': 'scanner_ir_range', 'delta': 800}],
-            4: [{'field': 'scanner_radar_range', 'delta': 600},
-                {'field': 'scanner_ir_range', 'delta': 800}]
         },
     )
     radar_sensitivity = ShipUpgrade(
@@ -200,8 +198,6 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
                 {'field': 'scanner_locked_max_traversal_degrees', 'delta': 0.6}],
             3: [{'field': 'scanner_locking_max_traversal_degrees', 'delta': 0.5},
                 {'field': 'scanner_locked_max_traversal_degrees', 'delta': 0.6}],
-            4: [{'field': 'scanner_locking_max_traversal_degrees', 'delta': 0.5},
-                {'field': 'scanner_locked_max_traversal_degrees', 'delta': 0.6}]
         },
     )
     engine_newtons = ShipUpgrade(
