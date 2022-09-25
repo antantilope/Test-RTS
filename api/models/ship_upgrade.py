@@ -98,6 +98,16 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
             "seconds": 50,
         },
     )
+    liquid_nitrogen_cooling = CoreUpgrade(
+        "Liquid Nitrogen Cooling",
+        "liquid_nitrogen_cooling",
+        {
+            "ore": 175,
+            "electricity": 20_000,
+            "seconds": 65,
+        },
+    )
+
 
     # Ship Upgrades
     scanner_range = ShipUpgrade(
@@ -227,6 +237,7 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
         UpgradeType.CORE: [
             titanium_alloy_hull,
             advanced_electronics,
+            liquid_nitrogen_cooling,
         ]
     }
 
