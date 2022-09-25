@@ -9,10 +9,9 @@
                 You must dock at a station to begin core upgrade research.
             </p>
             <hr *ngIf="!_api.frameData.ship.docked_at_station">
-            <div
-                class="core-upgrade-container"
-                *ngIf="_api.frameData.ship.upgrade_summary.core.advanced_electronics"
-            >
+
+            <!-- Advanced Electionics -->
+            <div class="core-upgrade-container">
                 <div
                     [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_level == 1) ? '#00410e;' : '#000000'}"
                     class="core-upgrade-header"
@@ -28,6 +27,14 @@
                     </strong>
                 </div>
                 <div *ngIf="_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_level == 0">
+                    <div
+                        class="upgrade-cost-label"
+                        *ngIf="_api.frameData.ship.upgrade_summary.core.advanced_electronics.seconds_researched === null"
+                    >
+                        🪙{{ _api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.ore }}
+                        🔋{{ _api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.electricity }}
+                        ⌛{{ _api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.seconds }}
+                    </div>
                     <button
                         *ngIf="_api.frameData.ship.upgrade_summary.core.advanced_electronics.seconds_researched === null"
                         [disabled]="_api.frameData.ship.docked_at_station === null"
@@ -50,14 +57,71 @@
                     </progress>
                     <div style="margin-top: 8px;">
                         <button
-                            *ngIf="_api.frameData.ship.upgrade_summary.core.advanced_electronics.seconds_researched !== null"
                             class="cancel-research-btn"
+                            (click)="btnCancelAdvancedElectronicsUpgrade()"
                         >
                             Cancel
                         </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Titanium Allow Hull -->
+            <div class="core-upgrade-container">
+                <div
+                    [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_level == 1) ? '#00410e;' : '#000000'}"
+                    class="core-upgrade-header"
+                >
+                    <strong>
+                        Titanium Allow Hull
+                        <span *ngIf="_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_level == 1">
+                            ✅
+                        </span>
+                        <span *ngIf="_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.seconds_researched !== null">
+                            ⌛
+                        </span>
+                    </strong>
+                </div>
+                <div *ngIf="_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_level == 0">
+                    <div
+                        class="upgrade-cost-label"
+                        *ngIf="_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.seconds_researched === null"
+                    >
+                        🪙{{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.ore }}
+                        🔋{{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.electricity }}
+                        ⌛{{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.seconds }}
+                    </div>
+                    <button
+                        *ngIf="_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.seconds_researched === null"
+                        [disabled]="_api.frameData.ship.docked_at_station === null"
+                        class="start-research-btn"
+                        (click)="btnStartTitaniumAllowHullUpgrade()"
+                    >
+                        Start Research
+                    </button>
+                </div>
+                <div *ngIf="_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.seconds_researched !== null">
+                    <div>
+                        time:
+                        {{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.seconds_researched|number:"1.0-0" }}
+                        / {{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.seconds|number:"1.0-0" }}
+                    </div>
+                    <progress
+                        value="{{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.seconds_researched }}"
+                        max="{{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.seconds }}"
+                    >
+                    </progress>
+                    <div style="margin-top: 8px;">
+                        <button
+                            class="cancel-research-btn"
+                            (click)="btnCancelTitaniumAllowHullUpgrade()"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

@@ -20,11 +20,12 @@ div, h2 {
     color: #3d2d2d;
 }
 
-#core-upgrade-container {
-    margin-bottom: 9px;
+.core-upgrade-container {
+    margin-bottom: 15px;
 }
 
 .core-upgrade-header{
+    font-size: 110%;
     margin-bottom: 5px;
 }
 
@@ -36,10 +37,21 @@ div, h2 {
     border-radius: 5px;
 }
 
+.start-research-btn:disabled {
+    background-color: #d9d9d9;
+    font-style: italic;
+    color: #3a3a3a;
+    cursor: not-allowed;
+}
+
 .cancel-research-btn {
     font-size: 110%;
     cursor: pointer;
     color: #ffffff;
     background-color: #410000;
     border-radius: 5px;
+}
+
+.upgrade-cost-label {
+    margin-bottom: 5px;
 }

@@ -57,6 +57,7 @@ const validateRunAutopilotHeadingToWaypoint = (data) => {
 }
 
 const validateStartCoreUpgrade = (data) => {
+    // Also validated cancel_core_upgrade
     const slug = data.slug
     if (!slug) {
         throw new CommandValidationError("slug is required");
@@ -68,6 +69,7 @@ const validateStartCoreUpgrade = (data) => {
 }
 
 const validateStartShipUpgrade = (data) => {
+    // Also validated cancel_ship_upgrade
     const slug = data.slug;
     if (!slug) {
         throw new CommandValidationError("slug is required");

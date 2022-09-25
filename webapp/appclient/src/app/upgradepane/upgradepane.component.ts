@@ -16,13 +16,27 @@ export class UpgradepaneComponent implements OnInit {
   }
 
   public async btnStartAdvancedElectronicsUpgrade() {
-    await this._api.post(
-      "/api/rooms/command",
-      {
-        command:'start_core_upgrade',
-        slug: 'advanced_electronics',
-      },
-    )
+    const command = 'start_core_upgrade';
+    const slug = 'advanced_electronics';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelAdvancedElectronicsUpgrade() {
+    const command = 'cancel_core_upgrade';
+    const slug = 'advanced_electronics';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnStartTitaniumAllowHullUpgrade() {
+    const command = 'start_core_upgrade';
+    const slug = 'titanium_alloy_hull';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelTitaniumAllowHullUpgrade() {
+    const command = 'cancel_core_upgrade';
+    const slug = 'titanium_alloy_hull';
+    await this._api.post("/api/rooms/command", {command, slug});
   }
 
 }
