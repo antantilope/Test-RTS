@@ -90,18 +90,22 @@ const runGameLoop = (room_id, port, app, io) => {
         logger.error("game loop has died on the vine.");
     })
     client.connect(port, 'localhost', () => {
-        logger.info("connected to GameAPI on port " + port);
+        logger.silly("connected to GameAPI on port " + port);
 
         const queueName = getQueueName(room_id)
         const commands = app.get(queueName) || [];
         app.set(queueName, []);
         const payload = JSON.stringify({run_frame:{commands}});
 
-        logger.info("writing data to GameAPI: " + payload);
+        if(commands.length) {
+            logger.info("writing data to GameAPI: " + payload);
+        } else {
+            logger.silly("writing data to GameAPI: " + payload);
+        }
         client.write((payload + "\n"));
     });
     client.on("data", async (data) => {
-        logger.info("received response from GameAPI, disconnecting...");
+        logger.silly("received response from GameAPI, disconnecting...");
         client.destroy();
         let respData;
         try {
@@ -112,7 +116,6 @@ const runGameLoop = (room_id, port, app, io) => {
             logger.error(data);
             throw err;
         }
-
         if (respData.phase == PHASE_2_LIVE) {
             // For fairness, randomize the order in which a ship's state is emitted as an event.
             const range = shuffledRange(0, respData.ships.length - 1);
@@ -125,7 +128,7 @@ const runGameLoop = (room_id, port, app, io) => {
                     continue
                 }
                 const roomName = get_team_room_name(room_id, ship.team_id);
-                logger.info("emmiting ship state to room " + roomName);
+                logger.silly("emmiting ship state to room " + roomName);
                 io.to(roomName).emit(
                     EVENT_FRAMEDATA,
                     {
