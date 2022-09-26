@@ -3,10 +3,42 @@ import { ApiService } from './api.service';
 import { PointCoord } from './models/point-coord.model';
 
 
+const randomInt = function (min: number, max: number): number  {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class SoundService {
+
+  // Music Engine Properties
+  private musicEngineInterval = 1000 / 5
+
+  // Ambient Music
+  private ambientMusicChoices = [
+    "ambient-music-1.mp3",
+    "ambient-music-2.mp3",
+    "ambient-music-4.mp3",
+    "ambient-music-5.mp3",
+    "ambient-music-6.mp3",
+    "ambient-music-7.mp3",
+    "ambient-music-8.mp3",
+  ];
+  private currentTrackIx: number;
+
+  // Death music
+  private deathMusicPlaying = false
+  private deathMusicChoices = [
+    "death-music-1.mp3",
+    "death-music-2.mp3",
+    "death-music-3.mp3",
+    "death-music-4.mp3",
+    "death-music-5.mp3",
+  ]
+  private deathMusicSound: HTMLAudioElement
+
+  // Sound Effects Engine Properties
 
   // Auto Pilot
   private copilotAutopilotActiveSound: HTMLAudioElement
@@ -63,23 +95,30 @@ export class SoundService {
   private copilotMiningBeamOfflineSound: HTMLAudioElement
   private miningBeamActiveLastFrame = false
 
-  // Ambient Music
-  private ambientTracks = [
-    "ambient-music-1.mp3",
-    "ambient-music-2.mp3",
-    "ambient-music-4.mp3",
-    "ambient-music-5.mp3",
-    "ambient-music-6.mp3",
-    "ambient-music-7.mp3",
-    "ambient-music-8.mp3",
-  ];
-  private currentTrackIx: number;
+  private copilotDeathSound: HTMLAudioElement
+  private copilotDeathChoices = [
+    "copilot-death-1.mp3",
+    "copilot-death-2.mp3",
+    "copilot-death-3.mp3",
+    "copilot-death-4.mp3",
+    "copilot-death-5.mp3",
+  ]
+  private copilotDeathSoundPlaying = false
 
 
   constructor(
     private _api: ApiService
   ) {
     console.log("SoundService::constructor()")
+
+    // Setup music engine
+    const deathMusicFile = this.deathMusicChoices[randomInt(0, this.deathMusicChoices.length)]
+    this.deathMusicSound = new Audio("/static/sound/" + deathMusicFile)
+    setTimeout(this.runMusicEngine.bind(this), this.musicEngineInterval)
+
+    // Setup sound effects engine
+    const copilotDeathFile = this.copilotDeathChoices[randomInt(0, this.copilotDeathChoices.length)]
+    this.copilotDeathSound = new Audio("/static/sound/" + copilotDeathFile)
 
     // Autopilot
     this.copilotAutopilotActiveSound = new Audio("/static/sound/copilot-autopilot-active.mp3")
@@ -94,10 +133,6 @@ export class SoundService {
     // Gravity Brake
     this.copilotBrakeDeployedSound = new Audio("/static/sound/copilot-brake-deployed.mp3")
     this.copilotBrakeRetractedSound = new Audio("/static/sound/copilot-brake-retracted.mp3")
-
-    // Ambient Music Player
-    this.ambientTracks = this.ambientTracks.map(value=>({value,sort:Math.random()})).sort((a,b)=>a.sort-b.sort).map(({value})=>value)
-    this.currentTrackIx =  Math.floor(Math.random()*(this.ambientTracks.length-0)+0);
 
     // Scanner
     this.enemySpottedSound = new Audio("/static/sound/alert-ship-spotted.mp3")
@@ -137,23 +172,21 @@ export class SoundService {
     const ship = this._api.frameData.ship;
 
     // Copilot Autopilot alerts
-    if(!this.autoPilotActiveLastFrame && ship.autopilot_program){
+    if(ship.alive && !this.autoPilotActiveLastFrame && ship.autopilot_program){
       this.autoPilotActiveLastFrame = true;
       this.copilotAutopilotActiveSound.play();
-    } else if(this.autoPilotActiveLastFrame && !ship.autopilot_program) {
+    } else if(ship.alive && this.autoPilotActiveLastFrame && !ship.autopilot_program) {
       this.autoPilotActiveLastFrame = false;
       this.copilotAutopilotOfflineSound.play();
     }
 
     // Engine
-    if(!this.engineActiveLastFrame && ship.engine_online) {
+    if(ship.alive && !this.engineActiveLastFrame && ship.engine_online) {
       this.engineActiveLastFrame = true
       this.copilotEngineActiveSound.play()
-    } else if (this.engineActiveLastFrame && !ship.engine_online) {
+    } else if (ship.alive && this.engineActiveLastFrame && !ship.engine_online) {
       this.engineActiveLastFrame = false
-      if(ship.alive) {
-        this.copilotEngineOfflineSound.play()
-      }
+      this.copilotEngineOfflineSound.play()
     }
     // TODO: there is a large gap in sound when looping :(
     if(!this.engineFiringLastFrame && ship.engine_lit) {
@@ -164,29 +197,29 @@ export class SoundService {
     }
 
     // Copilot gravity break alerts
-    if(!this.brakeDeployedLastFrame && ship.gravity_brake_deployed) {
+    if(ship.alive && !this.brakeDeployedLastFrame && ship.gravity_brake_deployed) {
       this.brakeDeployedLastFrame = true
       this.copilotBrakeDeployedSound.play()
-    } else if(this.brakeDeployedLastFrame && !ship.gravity_brake_deployed) {
+    } else if(ship.alive && this.brakeDeployedLastFrame && !ship.gravity_brake_deployed) {
       this.brakeDeployedLastFrame = false;
       this.copilotBrakeRetractedSound.play()
     }
 
     // Ebeam sound
-    if(!this.eBeamFiringLastFrame && ship.ebeam_firing) {
+    if(ship.alive && !this.eBeamFiringLastFrame && ship.ebeam_firing) {
       this.eBeamFiringLastFrame = true;
       this.eBeamSound.play();
     } else if(this.eBeamFiringLastFrame && !ship.ebeam_firing) {
       this.eBeamFiringLastFrame = false;
     }
     // Copilot ebeam alerts
-    if(!this.ebeamChargingLastFrame && ship.ebeam_charging){
+    if(ship.alive && !this.ebeamChargingLastFrame && ship.ebeam_charging){
       this.ebeamChargingLastFrame = true;
       this.copilotEbeamChargingSound.play();
     } else if(this.ebeamChargingLastFrame && !ship.ebeam_charging) {
       this.ebeamChargingLastFrame = false;
     }
-    if(!this.ebeamReadyLastFrame && ship.ebeam_can_fire){
+    if(ship.alive && !this.ebeamReadyLastFrame && ship.ebeam_can_fire){
       this.ebeamReadyLastFrame = true;
       this.copilotEbeamReadySound.play();
     } else if(this.ebeamReadyLastFrame && !ship.ebeam_can_fire) {
@@ -194,16 +227,16 @@ export class SoundService {
     }
 
     // Mining laser
-    if(!this.miningBeamActiveLastFrame && ship.mining_ore) {
+    if(ship.alive && !this.miningBeamActiveLastFrame && ship.mining_ore) {
       this.miningBeamActiveLastFrame = true
       this.copilotMiningBeamActiveSound.play()
-    } else if (this.miningBeamActiveLastFrame && !ship.mining_ore) {
+    } else if (ship.alive && this.miningBeamActiveLastFrame && !ship.mining_ore) {
       this.miningBeamActiveLastFrame = false
       this.copilotMiningBeamOfflineSound.play()
     }
 
     // Ship spotted Alert
-    if(ship.scanner_data.length > this.spottedEnemiesCount) {
+    if(ship.alive && ship.scanner_data.length > this.spottedEnemiesCount) {
       this.spottedEnemiesCount = ship.scanner_data.length;
       this.enemySpottedSound.play()
     }
@@ -213,14 +246,12 @@ export class SoundService {
     // Scanner State Alerts
     if (!this.scannerOnlineLastFrame && ship.scanner_online) {
       this.scannerOnlineLastFrame = true
-      if(ship.scanner_mode == 'radar') {
+      if(ship.alive && ship.scanner_mode == 'radar') {
         this.scannerPreviousMode = 'radar'
         this.copilotRadarOnlineSound.play()
-      } else if (ship.scanner_mode == 'ir') {
+      } else if (ship.alive && ship.scanner_mode == 'ir') {
         this.scannerPreviousMode = 'ir'
         this.copilotIROnlineSound.play()
-      } else {
-        console.warn("unknown scanner mode")
       }
     } else if (
       this.scannerOnlineLastFrame
@@ -228,30 +259,29 @@ export class SoundService {
       && ship.scanner_mode != this.scannerPreviousMode
     ) {
       this.scannerPreviousMode = ship.scanner_mode
-      if(ship.scanner_mode == 'radar') {
+      if(ship.alive && ship.scanner_mode == 'radar') {
         this.copilotRadarOnlineSound.play()
-      } else if (ship.scanner_mode == 'ir') {
+      } else if (ship.alive && ship.scanner_mode == 'ir') {
         this.copilotIROnlineSound.play()
-      } else {
-        console.warn("unknown scanner mode")
       }
-    } else if(this.scannerOnlineLastFrame && !ship.scanner_online) {
+    } else if(ship.alive && this.scannerOnlineLastFrame && !ship.scanner_online) {
       this.scannerOnlineLastFrame = false
       this.copilotScannerOfflineSound.play()
     }
 
     // Scanner Lock state
-    if(!this.targetLockedLastFrame && ship.scanner_locked) {
+    if(ship.alive && !this.targetLockedLastFrame && ship.scanner_locked) {
       this.targetLockedLastFrame = true
       this.copilotTargetLockedSound.play()
-    } else if(this.targetLockedLastFrame && !ship.scanner_locked) {
+    } else if(ship.alive && this.targetLockedLastFrame && !ship.scanner_locked) {
       this.targetLockedLastFrame = false
       this.scannerLockLostSound.play()
     }
 
     // Target Destoyed Copilot Alert
     if(
-      ship.ebeam_last_hit_frame
+      ship.alive
+      && ship.ebeam_last_hit_frame
       && this._api.frameData.game_frame < (ship.ebeam_last_hit_frame + 30)
       && this.seenTargetDestroyedFrames.indexOf(ship.ebeam_last_hit_frame) == -1
     ) {
@@ -263,7 +293,7 @@ export class SoundService {
       this.playedSelfExplosionSound = true
       this.explosionSound.play()
     }
-    else {
+    else if(!this.playedSelfExplosionSound) {
       for(let i in this._api.frameData.explosion_shockwaves) {
         let esw: {
           id: string,
@@ -296,10 +326,27 @@ export class SoundService {
         }
       }
     }
+
+    if (!this.copilotDeathSoundPlaying && !ship.alive && !ship.explosion_frame) {
+      this.copilotDeathSoundPlaying = true
+      this.copilotDeathSound.play()
+    }
+    else if (this.copilotDeathSoundPlaying && ship.explosion_frame) {
+      this.copilotDeathSound.pause()
+    }
+
   }
 
   public runMusicEngine() {
 
+    if(!this.deathMusicPlaying && !this._api.frameData.ship.alive) {
+      this.deathMusicPlaying = true
+      setTimeout(() => {
+        this.deathMusicSound.play()
+      }, 1000)
+    }
+
+    setTimeout(this.runMusicEngine.bind(this), this.musicEngineInterval)
   }
 
 }

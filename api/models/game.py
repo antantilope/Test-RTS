@@ -679,7 +679,6 @@ class Game(BaseModel):
                         "victim_name": self._ships[hit_ship_id].scanner_designator,
                     })
 
-
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
         # gets starting point of EBeam ray
         p1_x, p1_y = ship.map_p1
