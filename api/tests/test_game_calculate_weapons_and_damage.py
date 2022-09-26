@@ -90,6 +90,23 @@ class TestEBeamAndDamage(TestCase):
         # Assert
         assert len(self.game._killfeed) == 1
 
+    def test_hitting_a_target_updates_the_shooters_ebeam_last_hit_frame_property(self):
+        # Arrange
+        self.game._game_frame = 1337
+        self.game._ships[self.player_1_ship_id].ebeam_charge = 8000
+        self.game._ships[self.player_1_ship_id].coord_x = 1000
+        self.game._ships[self.player_1_ship_id].coord_y = 1000
+        self.game._ships[self.player_1_ship_id].heading = constants.DEGREES_NORTH
+        self.game._ships[self.player_1_ship_id].ebeam_firing = True
+        self.game._ships[self.player_2_ship_id].coord_x = 1000
+        self.game._ships[self.player_2_ship_id].coord_y = 6000
+        assert self.game._ships[self.player_2_ship_id].died_on_frame is None
+        assert self.game._ships[self.player_1_ship_id].ebeam_last_hit_frame is None
+        # Act
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        # Assert
+        assert self.game._ships[self.player_1_ship_id].ebeam_last_hit_frame == 1337
+
     def test_killfeed_row_is_purged_after_8_seconds(self):
         self.game._game_frame = 1
         self.game._killfeed = [
