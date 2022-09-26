@@ -19,13 +19,16 @@ export class SoundService {
   private ambientMusicChoices = [
     "ambient-music-1.mp3",
     "ambient-music-2.mp3",
+    "ambient-music-3.mp3",
     "ambient-music-4.mp3",
     "ambient-music-5.mp3",
     "ambient-music-6.mp3",
     "ambient-music-7.mp3",
-    "ambient-music-8.mp3",
   ];
-  private currentTrackIx: number;
+  private activeTrack: HTMLAudioElement | null = null
+  private currentTrackIx: number | null = null
+  private ambientMusicFadeOutVolume = 1.0
+  private musicVolume = 1.0
 
   // Death music
   private deathMusicPlaying = false
@@ -339,14 +342,77 @@ export class SoundService {
 
   public runMusicEngine() {
 
+    // Pause ambient music and play death music.
     if(!this.deathMusicPlaying && !this._api.frameData.ship.alive) {
+      if(this.activeTrack !== null) {
+        this.fadeOutAmbientMusic()
+      }
       this.deathMusicPlaying = true
       setTimeout(() => {
         this.deathMusicSound.play()
       }, 1000)
     }
 
+    // Initialize Ambient Music of not yet initialized
+    if(!this.deathMusicPlaying && this.activeTrack === null) {
+      this.restartAmbientMusic()
+      setTimeout(this.runMusicEngine.bind(this), this.musicEngineInterval)
+      return
+    }
+
+    if(this.activeTrack && this.activeTrack.ended) {
+      this.playNext()
+    }
+
     setTimeout(this.runMusicEngine.bind(this), this.musicEngineInterval)
+    return
+  }
+
+  private fadeOutAmbientMusic() {
+    this.ambientMusicFadeOutVolume = this.ambientMusicFadeOutVolume - 0.05
+    console.log("fading out ambient music " + this.ambientMusicFadeOutVolume)
+    if(this.ambientMusicFadeOutVolume > 0) {
+      this.activeTrack.volume = this.musicVolume * this.ambientMusicFadeOutVolume
+      setTimeout(this.fadeOutAmbientMusic.bind(this), 50)
+      return
+    } else {
+      this.activeTrack.pause()
+    }
+  }
+
+  private restartAmbientMusic() {
+      console.log("restarting ambient music track")
+      this.shuffleTracks()
+      this.playNext()
+  }
+
+  private playNext(incr: boolean = true) {
+    if(incr) {
+      this.currentTrackIx++
+    }
+    if(this.currentTrackIx < this.ambientMusicChoices.length) {
+      console.log("initializing next ambient music track")
+      const fileName = this.ambientMusicChoices[this.currentTrackIx]
+      this.activeTrack = new Audio("/static/sound/" + fileName)
+      this.activeTrack.volume = this.musicVolume
+      this.activeTrack.oncanplay = () => {
+        this.activeTrack.play().catch(() => {
+          // Browser may block sound if user has not interacted with the document yet.
+          console.warn("failed to play music track, will retry...")
+          setTimeout(()=>{
+            this.playNext(false)
+          }, 1000)
+        })
+      }
+    } else {
+      this.restartAmbientMusic()
+    }
+  }
+
+  private shuffleTracks() {
+    console.log("shuffling music tracks")
+    this.currentTrackIx = -1 // when we call playNext() this gets incremented to 0 (first track)
+    this.ambientMusicChoices = this.ambientMusicChoices.map(value=>({value,sort:Math.random()})).sort((a,b)=>a.sort-b.sort).map(({value})=>value)
   }
 
 }
