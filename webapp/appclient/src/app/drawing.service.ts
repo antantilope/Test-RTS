@@ -783,6 +783,51 @@ export class DrawingService {
     }
   }
 
+  public drawExplosionShockwaves(ctx: CanvasRenderingContext2D) {
+    if (!this._api.frameData.explosion_shockwaves.length) {
+      return
+    }
+    this._api.frameData.explosion_shockwaves.forEach(esw => {
+      this.drawExplosionShockwave(ctx, esw)
+    })
+  }
+
+  public drawExplosionShockwave(
+    ctx: CanvasRenderingContext2D,
+    esw: {id: string, origin_point: Array<number>, radius_meters: number}
+  ) {
+    // primary arc
+    ctx.beginPath()
+    ctx.strokeStyle = `rgb(127, 127, 127, 0.4)`
+    ctx.lineWidth = Math.max(
+      2,
+      Math.ceil(10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+    )
+    const swCenterCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      {x: esw.origin_point[0], y: esw.origin_point[1]},
+      this._camera.getPosition()
+    )
+    let radiusCanvasPx = esw.radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
+    ctx.stroke()
+
+    // Suplementary arcs
+    ctx.beginPath()
+    radiusCanvasPx += randomInt(
+      -10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+    )
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
+    ctx.stroke()
+    ctx.beginPath()
+    radiusCanvasPx += randomInt(
+      -10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+    )
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
+    ctx.stroke()
+  }
+
   public drawShip(
     ctx: CanvasRenderingContext2D,
     drawableShip: DrawableShip,

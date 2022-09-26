@@ -415,6 +415,8 @@ export class GamedisplayComponent implements OnInit {
     // Vision circles
     this._draw.drawVisionCircles(this.ctx, drawableObjects.visionCircles)
 
+    this._draw.drawExplosionShockwaves(this.ctx)
+
     // Draw Map boundary
     this._draw.drawMapBoundary(this.ctx, drawableObjects.mapWall);
 

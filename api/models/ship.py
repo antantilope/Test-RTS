@@ -106,6 +106,7 @@ class ShipStateKey:
 
 class ShipDeathType:
     EXPLOSION = 'explosion'
+    EXPLOSION_NEW = 'new_explosion'
     AFLAME = 'aflame'
     ADRIFT = 'adrift'
 
@@ -1058,7 +1059,7 @@ class Ship(BaseModel):
             if self.coord_x < 0 or self.coord_y < 0 or self.coord_x > map_x or self.coord_y > map_y:
                 self.die(game_frame)
                 self.explode()
-                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+                return ShipDeathType.EXPLOSION_NEW, game_frame - self.died_on_frame
 
         elif self.explosion_frame:
             if self.explosion_frame < 200:
@@ -1069,7 +1070,7 @@ class Ship(BaseModel):
 
         elif self.explode_immediately:
             self.explode()
-            return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+            return ShipDeathType.EXPLOSION_NEW, game_frame - self.died_on_frame
 
         elif self.aflame_since_frame is None:
             # Ship not aflame yet and has not yet exploded
@@ -1083,7 +1084,7 @@ class Ship(BaseModel):
             seconds_aflame = (game_frame - self.aflame_since_frame) / fps
             if seconds_aflame > self._seconds_to_explode:
                 self.explode()
-                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+                return ShipDeathType.EXPLOSION_NEW, game_frame - self.died_on_frame
             return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
     def explode(self):

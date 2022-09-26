@@ -5,11 +5,15 @@ from typing import Tuple, TypedDict, Optional, List, Dict
 from time import sleep
 import re
 import traceback
+from uuid import uuid4
+
+from api import constants
 
 from .base import BaseModel
 from .ship import (
     Ship,
     ShipCommands,
+    ShipDeathType,
     ShipScannerMode,
     ScannedElement,
     ScannedElementType,
@@ -116,6 +120,11 @@ class KillFeedElement(TypedDict):
     victim_name: str
     created_at_frame: int
 
+class ExplosionShockwave(TypedDict):
+    id: str
+    origin_point: Tuple[int]
+    radius_meters: int
+
 class Game(BaseModel):
 
     BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players',)
@@ -131,6 +140,8 @@ class Game(BaseModel):
         self._ships: Dict[str, Ship] = {}
         self._ebeam_rays: List[EBeamRayDetails] = []
         self._killfeed: List[KillFeedElement] = []
+        self._explosion_shockwaves: List[ExplosionShockwave] = []
+        self._explosion_shockwave_max_radius_meters = None
         self._space_stations: List[MapSpaceStation] = []
         self._ore_mines: List[MapMiningLocationDetails] = []
         self._ore_mines_remaining_ore: Dict[str, float] = {}
@@ -201,6 +212,7 @@ class Game(BaseModel):
             'elapsed_time': LEADING_ZEROS_TIME.sub("", str(dt.datetime.now() - self._game_start_time)).split(".")[0],
             'ships': [ship.to_dict() for ship in self._ships.values()],
             'ebeam_rays': self._ebeam_rays,
+            'explosion_shockwaves': self._explosion_shockwaves,
             "winning_team": self._winning_team,
             "killfeed": self._killfeed,
             "space_stations": self._space_stations,
@@ -258,6 +270,10 @@ class Game(BaseModel):
         for om in self._ore_mines:
             self._ore_mines_remaining_ore[om['uuid']] = om['starting_ore_amount_kg']
 
+        self._explosion_shockwave_max_radius_meters = max(
+            request['mapData']['meters_x'],
+            request['mapData']['meters_y'],
+        )
 
     def _validate_can_set_map(self):
         if self._phase != GamePhase.LOBBY:
@@ -445,6 +461,9 @@ class Game(BaseModel):
 
             self.advance_mining(ship_id)
 
+        if any(self._explosion_shockwaves):
+            self.advance_explosion_shockwaves()
+
         # Post frame checks
         if self._game_frame % 45 == 0:
             if not self._winning_team:
@@ -452,10 +471,26 @@ class Game(BaseModel):
             self.check_for_empty_game()
             self.purge_killfeed(MAX_SERVER_FPS)
 
-
         # Increment the game frame for the next frame.
         self.incr_game_frame()
 
+
+    def advance_explosion_shockwaves(self):
+        delta_radius = constants.SPEED_OF_SOUND_METERS_PER_SECOND / self._fps
+        ix_to_remove = set()
+        for ix, esw in enumerate(self._explosion_shockwaves):
+            new_radius = esw['radius_meters'] + delta_radius
+            if new_radius > self._explosion_shockwave_max_radius_meters:
+                ix_to_remove.add(ix)
+            else:
+                self._explosion_shockwaves[ix]['radius_meters'] = new_radius
+
+        if ix_to_remove:
+            self._explosion_shockwaves = [
+                esw
+                for ix, esw in enumerate(self._explosion_shockwaves)
+                if ix not in ix_to_remove
+            ]
 
     def reset_and_update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
@@ -612,6 +647,13 @@ class Game(BaseModel):
             self._killfeed.append({
                 "created_at_frame": self._game_frame,
                 "victim_name": self._ships[ship_id].scanner_designator,
+            })
+
+        if death_data and death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
+            self._explosion_shockwaves.append({
+                "id": str(uuid4()),
+                "origin_point": self._ships[ship_id].coords,
+                "radius_meters": 1,
             })
 
         if death_data:

@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
+import { PointCoord } from './models/point-coord.model';
+
 
 @Injectable({
   providedIn: 'root'
@@ -50,6 +52,11 @@ export class SoundService {
 
   private playedSelfExplosionSound = false
   private explosionSound: HTMLAudioElement
+  private fastenSeatbeltSound: HTMLAudioElement
+  private shipRattlingSound: HTMLAudioElement
+
+  private heardExplosionShockwaveIds: Array<string> = []
+  private heardFastenSeatbeltShockwaveIds: Array<string> = []
 
   // Mining Laser
   private copilotMiningBeamActiveSound: HTMLAudioElement
@@ -108,12 +115,23 @@ export class SoundService {
     this.copilotEbeamReadySound = new Audio("/static/sound/copilot-weapon-ready.mp3")
 
     this.explosionSound = new Audio("/static/sound/explosion.mp3")
+    this.fastenSeatbeltSound = new Audio("/static/sound/fasten-seatbelt-chime.mp3")
+    this.shipRattlingSound = new Audio("/static/sound/ship-rattle.mp3")
 
     // Mining laser
     this.copilotMiningBeamActiveSound = new Audio("/static/sound/copilot-mining-beam-active.mp3")
     this.copilotMiningBeamOfflineSound = new Audio("/static/sound/copilot-mining-beam-offline.mp3")
   }
 
+  public getDistanceBetweenCoords(
+    p1: PointCoord,
+    p2: PointCoord
+  ): number {
+    return Math.sqrt(
+      Math.pow(p1.x - p2.x, 2)
+      + Math.pow(p1.y - p2.y, 2)
+    )
+  }
 
   public runSoundFXEngine() {
     const ship = this._api.frameData.ship;
@@ -245,7 +263,39 @@ export class SoundService {
       this.playedSelfExplosionSound = true
       this.explosionSound.play()
     }
+    else {
+      for(let i in this._api.frameData.explosion_shockwaves) {
+        let esw: {
+          id: string,
+          origin_point: Array<number>,
+          radius_meters: number
+        } = this._api.frameData.explosion_shockwaves[i]
 
+        // check if ship has been hit by this shockwave already
+        if(this.heardExplosionShockwaveIds.indexOf(esw.id) != -1) {
+          continue
+        }
+        // check if ship has been hit by shockwave yet
+        const metersDistanceFromCenter = this.getDistanceBetweenCoords(
+          {x: ship.coord_x, y:ship.coord_y},
+          {x: esw.origin_point[0], y: esw.origin_point[0]}
+        ) / this._api.frameData.map_config.units_per_meter
+        if(metersDistanceFromCenter <= esw.radius_meters) {
+          this.heardExplosionShockwaveIds.push(esw.id)
+          this.explosionSound.play()
+          setTimeout(() =>{
+            this.shipRattlingSound.play()
+          }, Math.floor(Math.random() * 50))
+        }
+        if (
+          metersDistanceFromCenter <= (esw.radius_meters + 750)
+          && this.heardFastenSeatbeltShockwaveIds.indexOf(esw.id) == -1
+        ) {
+          this.heardFastenSeatbeltShockwaveIds.push(esw.id)
+          this.fastenSeatbeltSound.play()
+        }
+      }
+    }
   }
 
   public runMusicEngine() {
