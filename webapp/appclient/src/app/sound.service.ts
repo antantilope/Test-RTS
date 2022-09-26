@@ -33,6 +33,11 @@ export class SoundService {
   private scannerOnlineLastFrame = false
   private scannerPreviousMode: string | null = null
 
+  private copilotTargetLockedSound: HTMLAudioElement
+  private targetLockedLastFrame = false
+  private copilotTargeDestroyedSound: HTMLAudioElement
+  private seenTargetDestroyedFrames: Array<number> = []
+
   // Ebeam
   private eBeamSound: HTMLAudioElement;
   private eBeamFiringLastFrame = false;
@@ -88,6 +93,8 @@ export class SoundService {
     this.copilotRadarOnlineSound = new Audio("/static/sound/copilot-radar-imaging-active.mp3")
     this.copilotIROnlineSound = new Audio("/static/sound/copilot-thermal-imaging-active.mp3")
     this.copilotScannerOfflineSound = new Audio("/static/sound/copilot-scanner-offline.mp3")
+    this.copilotTargetLockedSound = new Audio("/static/sound/copilot-target-locked.mp3")
+    this.copilotTargeDestroyedSound = new Audio("/static/sound/copilot-target-destroyed.mp3")
 
     // Ebeam
     this.eBeamSound = new Audio("/static/sound/ebeam.mp3");
@@ -204,6 +211,25 @@ export class SoundService {
       this.scannerOnlineLastFrame = false
       this.copilotScannerOfflineSound.play()
     }
+
+    // Scanner Lock state
+    if(!this.targetLockedLastFrame && ship.scanner_locked) {
+      this.targetLockedLastFrame = true
+      this.copilotTargetLockedSound.play()
+    } else if(this.targetLockedLastFrame && !ship.scanner_locked) {
+      this.targetLockedLastFrame = false
+    }
+
+    // Target Destoyed Copilot Alert
+    if(
+      ship.ebeam_last_hit_frame
+      && this._api.frameData.game_frame < (ship.ebeam_last_hit_frame + 30)
+      && this.seenTargetDestroyedFrames.indexOf(ship.ebeam_last_hit_frame) == -1
+    ) {
+      this.seenTargetDestroyedFrames.push(ship.ebeam_last_hit_frame)
+      this.copilotTargeDestroyedSound.play()
+    }
+
   }
 
   public runMusicEngine() {

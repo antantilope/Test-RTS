@@ -626,6 +626,10 @@ class Game(BaseModel):
                     "end_point": line[1],
                     "color": self._ships[ship_id].ebeam_color,
                 })
+
+                if any(hits):
+                    self._ships[ship_id].ebeam_last_hit_frame = self._game_frame
+
                 for hit_ship_id in hits:
                     self._ships[hit_ship_id].die(self._game_frame)
                     self._killfeed.append({

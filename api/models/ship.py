@@ -302,6 +302,7 @@ class Ship(BaseModel):
         self.ebeam_discharge_rate_per_second = None
         self.ebeam_charge_fire_minimum = None
         self.ebeam_color = None
+        self.ebeam_last_hit_frame = None
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -523,6 +524,7 @@ class Ship(BaseModel):
             'ebeam_color': self.ebeam_color,
             'ebeam_charge': self.ebeam_charge,
             'ebeam_can_fire': self.ebeam_charge >= self.ebeam_charge_fire_minimum and not self.ebeam_firing,
+            'ebeam_last_hit_frame': self.ebeam_last_hit_frame,
 
             'docked_at_station': self.docked_at_station,
             'gravity_brake_position': self.gravity_brake_position,
