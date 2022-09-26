@@ -544,6 +544,7 @@ class Ship(BaseModel):
             'last_ore_deposit_frame': self.last_ore_deposit_frame,
 
             'alive': self.died_on_frame is None,
+            'died_on_frame': self.died_on_frame,
             'aflame': self.aflame_since_frame is not None,
             'explosion_frame': self.explosion_frame,
 

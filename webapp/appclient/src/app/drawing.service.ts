@@ -585,6 +585,7 @@ export class DrawingService {
   }
 
   public drawFrontAndCenterAlerts(ctx: CanvasRenderingContext2D) {
+    // This function executes 1 if block and NOTHING MORE. (some have return statements.)
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       ctx.beginPath()
       ctx.font = 'bold 65px courier new'
@@ -593,6 +594,10 @@ export class DrawingService {
       ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
     else if(!this._api.frameData.ship.alive) {
+      if((this._api.frameData.ship.died_on_frame + 100) > this._api.frameData.game_frame) {
+        // delay showing death quote
+        return;
+      }
       ctx.beginPath()
       ctx.font = 'bold 56px courier new'
       ctx.fillStyle = '#ff0000'
