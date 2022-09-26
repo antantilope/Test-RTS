@@ -35,6 +35,11 @@ export class SoundService {
   private copilotEbeamReadySound: HTMLAudioElement;
   private ebeamReadyLastFrame = false;
 
+  // Mining Laser
+  private copilotMiningBeamActiveSound: HTMLAudioElement
+  private copilotMiningBeamOfflineSound: HTMLAudioElement
+  private miningBeamActiveLastFrame = false
+
   // Ambient Music
   private ambientTracks = [
     "ambient-music-1.mp3",
@@ -79,6 +84,10 @@ export class SoundService {
     this.eBeamSound = new Audio("/static/sound/ebeam.mp3");
     this.copilotEbeamChargingSound = new Audio("/static/sound/copilot-weapon-charging.mp3")
     this.copilotEbeamReadySound = new Audio("/static/sound/copilot-weapon-ready.mp3")
+
+    // Mining laser
+    this.copilotMiningBeamActiveSound = new Audio("/static/sound/copilot-mining-beam-active.mp3")
+    this.copilotMiningBeamOfflineSound = new Audio("/static/sound/copilot-mining-beam-offline.mp3")
   }
 
 
@@ -102,12 +111,13 @@ export class SoundService {
       this.engineActiveLastFrame = false
       this.copilotEngineOfflineSound.play()
     }
-    // if(!this.engineFiringLastFrame && ship.engine_lit) {
-    //   this.engineFiringLastFrame = true
-    //   this.engineFiringSound.play()
-    // } else if (this.engineFiringLastFrame && !ship.engine_lit) {
-    //   this.engineFiringSound.pause()
-    // }
+    // TODO: there is a large gap in sound when looping :(
+    if(!this.engineFiringLastFrame && ship.engine_lit) {
+      this.engineFiringLastFrame = true
+      // this.engineFiringSound.play()
+    } else if (this.engineFiringLastFrame && !ship.engine_lit) {
+      // this.engineFiringSound.pause()
+    }
 
     // Copilot gravity break alerts
     if(!this.brakeDeployedLastFrame && ship.gravity_brake_deployed) {
@@ -139,7 +149,16 @@ export class SoundService {
       this.ebeamReadyLastFrame = false;
     }
 
-    // Ship spotted
+    // Mining laser
+    if(!this.miningBeamActiveLastFrame && ship.mining_ore) {
+      this.miningBeamActiveLastFrame = true
+      this.copilotMiningBeamActiveSound.play()
+    } else if (this.miningBeamActiveLastFrame && !ship.mining_ore) {
+      this.miningBeamActiveLastFrame = false
+      this.copilotMiningBeamOfflineSound.play()
+    }
+
+    // Ship spotted Alert
     if(ship.scanner_data.length > this.spottedEnemiesCount) {
       this.spottedEnemiesCount = ship.scanner_data.length;
       this.enemySpottedSound.play()
