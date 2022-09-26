@@ -27,6 +27,12 @@ export class SoundService {
   private enemySpottedSound: HTMLAudioElement
   private spottedEnemiesCount: number
 
+  private copilotRadarOnlineSound: HTMLAudioElement
+  private copilotIROnlineSound: HTMLAudioElement
+  private copilotScannerOfflineSound: HTMLAudioElement
+  private scannerOnlineLastFrame = false
+  private scannerPreviousMode: string | null = null
+
   // Ebeam
   private eBeamSound: HTMLAudioElement;
   private eBeamFiringLastFrame = false;
@@ -79,6 +85,9 @@ export class SoundService {
     // Scanner
     this.enemySpottedSound = new Audio("/static/sound/alert-ship-spotted.mp3")
     this.spottedEnemiesCount = 0
+    this.copilotRadarOnlineSound = new Audio("/static/sound/copilot-radar-imaging-active.mp3")
+    this.copilotIROnlineSound = new Audio("/static/sound/copilot-thermal-imaging-active.mp3")
+    this.copilotScannerOfflineSound = new Audio("/static/sound/copilot-scanner-offline.mp3")
 
     // Ebeam
     this.eBeamSound = new Audio("/static/sound/ebeam.mp3");
@@ -165,6 +174,35 @@ export class SoundService {
     }
     else if(ship.scanner_data.length < this.spottedEnemiesCount) {
       this.spottedEnemiesCount = ship.scanner_data.length;
+    }
+    // Scanner State Alerts
+    if (!this.scannerOnlineLastFrame && ship.scanner_online) {
+      this.scannerOnlineLastFrame = true
+      if(ship.scanner_mode == 'radar') {
+        this.scannerPreviousMode = 'radar'
+        this.copilotRadarOnlineSound.play()
+      } else if (ship.scanner_mode == 'ir') {
+        this.scannerPreviousMode = 'ir'
+        this.copilotIROnlineSound.play()
+      } else {
+        console.warn("unknown scanner mode")
+      }
+    } else if (
+      this.scannerOnlineLastFrame
+      && ship.scanner_online
+      && ship.scanner_mode != this.scannerPreviousMode
+    ) {
+      this.scannerPreviousMode = ship.scanner_mode
+      if(ship.scanner_mode == 'radar') {
+        this.copilotRadarOnlineSound.play()
+      } else if (ship.scanner_mode == 'ir') {
+        this.copilotIROnlineSound.play()
+      } else {
+        console.warn("unknown scanner mode")
+      }
+    } else if(this.scannerOnlineLastFrame && !ship.scanner_online) {
+      this.scannerOnlineLastFrame = false
+      this.copilotScannerOfflineSound.play()
     }
   }
 
