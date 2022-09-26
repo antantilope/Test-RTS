@@ -931,27 +931,43 @@ export class DrawingService {
 
 
     if(drawableShip.isVisual && !drawableShip.explosionFrame) {
+      // Visual Shake x/y offsets
+      let vsxo = 0, vsyo = 0;
+      if(
+        drawableShip.isSelf
+        // && !drawableShip.isDot
+        && this._api.lastShockwaveFrame !== null
+        && (this._api.lastShockwaveFrame + 75) > this._api.frameData.game_frame
+      ) {
+        const percentThroughShake = (this._api.frameData.game_frame - this._api.lastShockwaveFrame) / 75
+        const shakeReduction = 1 - percentThroughShake
+        const xOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+        const yOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+        vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+        vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+      }
       // Ship is within visual range
       // fin 0
       ctx.beginPath()
       ctx.fillStyle = drawableShip.fillColor
-      ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
-      ctx.lineTo(drawableShip.canvasCoordFin0P0.x, drawableShip.canvasCoordFin0P0.y)
-      ctx.lineTo(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y)
+      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin0P0.x + vsxo, drawableShip.canvasCoordFin0P0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin0P1.x + vsxo, drawableShip.canvasCoordFin0P1.y + vsyo)
       ctx.closePath()
       ctx.fill()
       // fin 1
       ctx.beginPath()
-      ctx.moveTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
-      ctx.lineTo(drawableShip.canvasCoordFin1P0.x, drawableShip.canvasCoordFin1P0.y)
-      ctx.lineTo(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y)
+      ctx.moveTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin1P0.x + vsxo, drawableShip.canvasCoordFin1P0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin1P1.x + vsxo, drawableShip.canvasCoordFin1P1.y + vsyo)
       ctx.closePath()
       ctx.fill()
+      // body
       ctx.beginPath()
-      ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
-      ctx.lineTo(drawableShip.canvasCoordP1.x, drawableShip.canvasCoordP1.y)
-      ctx.lineTo(drawableShip.canvasCoordP2.x, drawableShip.canvasCoordP2.y)
-      ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP1.x + vsxo, drawableShip.canvasCoordP1.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP2.x + vsxo, drawableShip.canvasCoordP2.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
       ctx.closePath()
       ctx.fill()
       if(drawableShip.visualEbeamCharging) {

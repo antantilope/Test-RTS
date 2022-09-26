@@ -347,6 +347,7 @@ export class SoundService {
         if(metersDistanceFromCenter <= esw.radius_meters) {
           this.heardExplosionShockwaveIds.push(esw.id)
           this.explosionSound.play()
+          this._api.lastShockwaveFrame = this._api.frameData.game_frame
           setTimeout(() =>{
             this.shipRattlingSound.play()
           }, Math.floor(Math.random() * 50))
