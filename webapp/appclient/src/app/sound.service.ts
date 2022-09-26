@@ -41,12 +41,15 @@ export class SoundService {
   private scannerLockLostSound: HTMLAudioElement
 
   // Ebeam
-  private eBeamSound: HTMLAudioElement;
-  private eBeamFiringLastFrame = false;
-  private copilotEbeamChargingSound: HTMLAudioElement;
-  private ebeamChargingLastFrame = false;
-  private copilotEbeamReadySound: HTMLAudioElement;
-  private ebeamReadyLastFrame = false;
+  private eBeamSound: HTMLAudioElement
+  private eBeamFiringLastFrame = false
+  private copilotEbeamChargingSound: HTMLAudioElement
+  private ebeamChargingLastFrame = false
+  private copilotEbeamReadySound: HTMLAudioElement
+  private ebeamReadyLastFrame = false
+
+  private playedSelfExplosionSound = false
+  private explosionSound: HTMLAudioElement
 
   // Mining Laser
   private copilotMiningBeamActiveSound: HTMLAudioElement
@@ -103,6 +106,8 @@ export class SoundService {
     this.eBeamSound = new Audio("/static/sound/ebeam.mp3");
     this.copilotEbeamChargingSound = new Audio("/static/sound/copilot-weapon-charging.mp3")
     this.copilotEbeamReadySound = new Audio("/static/sound/copilot-weapon-ready.mp3")
+
+    this.explosionSound = new Audio("/static/sound/explosion.mp3")
 
     // Mining laser
     this.copilotMiningBeamActiveSound = new Audio("/static/sound/copilot-mining-beam-active.mp3")
@@ -234,6 +239,11 @@ export class SoundService {
     ) {
       this.seenTargetDestroyedFrames.push(ship.ebeam_last_hit_frame)
       this.copilotTargeDestroyedSound.play()
+    }
+
+    if(ship.explosion_frame && !this.playedSelfExplosionSound) {
+      this.playedSelfExplosionSound = true
+      this.explosionSound.play()
     }
 
   }
