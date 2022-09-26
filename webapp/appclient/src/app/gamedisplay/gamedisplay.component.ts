@@ -24,6 +24,7 @@ import { FormattingService } from '../formatting.service'
 import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
 import { DrawingService } from '../drawing.service'
+import { SoundService } from '../sound.service'
 import { TWO_PI, FEATURE_ORE, FEATURE_STATION } from '../constants'
 
 @Component({
@@ -75,6 +76,7 @@ export class GamedisplayComponent implements OnInit {
 
   constructor(
     public _api: ApiService,
+    private _sound: SoundService,
     public _camera: CameraService,
     private _formatting: FormattingService,
     public _pane: PaneService,
@@ -483,13 +485,8 @@ export class GamedisplayComponent implements OnInit {
     if(this.isDebug) {
       this.paintDebugData();
     }
-
-    if(this._api.frameData.ship.scanner_data.length && !this.scannerTargetIDCursor) {
-      this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
-    }
-
+    this._sound.runSoundEngine();
     window.requestAnimationFrame(this.paintDisplay.bind(this))
-
   }
 
   private clearCanvas(): void {
