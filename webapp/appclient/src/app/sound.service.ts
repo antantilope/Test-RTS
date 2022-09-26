@@ -38,6 +38,8 @@ export class SoundService {
   private copilotTargeDestroyedSound: HTMLAudioElement
   private seenTargetDestroyedFrames: Array<number> = []
 
+  private scannerLockLostSound: HTMLAudioElement
+
   // Ebeam
   private eBeamSound: HTMLAudioElement;
   private eBeamFiringLastFrame = false;
@@ -95,6 +97,7 @@ export class SoundService {
     this.copilotScannerOfflineSound = new Audio("/static/sound/copilot-scanner-offline.mp3")
     this.copilotTargetLockedSound = new Audio("/static/sound/copilot-target-locked.mp3")
     this.copilotTargeDestroyedSound = new Audio("/static/sound/copilot-target-destroyed.mp3")
+    this.scannerLockLostSound = new Audio("/static/sound/scanner-lock-loss.mp3")
 
     // Ebeam
     this.eBeamSound = new Audio("/static/sound/ebeam.mp3");
@@ -125,7 +128,9 @@ export class SoundService {
       this.copilotEngineActiveSound.play()
     } else if (this.engineActiveLastFrame && !ship.engine_online) {
       this.engineActiveLastFrame = false
-      this.copilotEngineOfflineSound.play()
+      if(ship.alive) {
+        this.copilotEngineOfflineSound.play()
+      }
     }
     // TODO: there is a large gap in sound when looping :(
     if(!this.engineFiringLastFrame && ship.engine_lit) {
@@ -218,6 +223,7 @@ export class SoundService {
       this.copilotTargetLockedSound.play()
     } else if(this.targetLockedLastFrame && !ship.scanner_locked) {
       this.targetLockedLastFrame = false
+      this.scannerLockLostSound.play()
     }
 
     // Target Destoyed Copilot Alert
