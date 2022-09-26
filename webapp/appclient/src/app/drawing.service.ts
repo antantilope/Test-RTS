@@ -15,7 +15,12 @@ import {
 } from "./models/drawable-objects.model"
 import { TimerItem } from './models/timer-item.model';
 import { PointCoord } from './models/point-coord.model';
-import { TWO_PI, PI_OVER_180 } from './constants';
+import {
+  TWO_PI,
+  PI_OVER_180,
+  LOW_FUEL_THRESHOLD,
+  LOW_POWER_THRESHOLD
+} from './constants';
 
 
 
@@ -23,6 +28,9 @@ const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
 }
 
+function getRandomFloat(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -50,7 +58,6 @@ export class DrawingService {
     this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
     this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
     this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
-
 
   }
 
@@ -537,12 +544,12 @@ export class DrawingService {
       ctx.font = 'bold 22px courier new'
       const redalertColorAlpha = this._api.frameData.game_frame % 70 > 35 ? "1" : "0.65"
       ctx.fillStyle = `rgb(255, 2, 2, ${redalertColorAlpha})`
-      if(this._api.frameData.ship.fuel_level < 1200) {
+      if(this._api.frameData.ship.fuel_level < LOW_FUEL_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
         lrcYOffset -= lrcYInterval
       }
-      if(this._api.frameData.ship.battery_power < 45000) {
+      if(this._api.frameData.ship.battery_power < LOW_POWER_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
         lrcYOffset -= lrcYInterval
@@ -796,9 +803,20 @@ export class DrawingService {
     ctx: CanvasRenderingContext2D,
     esw: {id: string, origin_point: Array<number>, radius_meters: number}
   ) {
-    // primary arc
+
+    const maxRadiusMeters = Math.max(
+      this._api.frameData.map_config.x_unit_length / this._api.frameData.map_config.units_per_meter,
+      this._api.frameData.map_config.y_unit_length / this._api.frameData.map_config.units_per_meter,
+    )
+    const startFadeOutAtMeters = maxRadiusMeters * 0.92;
+    let alphaMultiplier = 1
+    if(esw.radius_meters > startFadeOutAtMeters) {
+      alphaMultiplier = 1 - ((esw.radius_meters - startFadeOutAtMeters) / (maxRadiusMeters - startFadeOutAtMeters))
+    }
+
+    // Primary arc
     ctx.beginPath()
-    ctx.strokeStyle = `rgb(127, 127, 127, 0.4)`
+    ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
     ctx.lineWidth = Math.max(
       2,
       Math.ceil(10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
@@ -807,24 +825,26 @@ export class DrawingService {
       {x: esw.origin_point[0], y: esw.origin_point[1]},
       this._camera.getPosition()
     )
-    let radiusCanvasPx = esw.radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+    const radiusCanvasPx = esw.radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
     ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
     ctx.stroke()
 
     // Suplementary arcs
     ctx.beginPath()
-    radiusCanvasPx += randomInt(
-      -10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
-      10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
-    )
-    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
+    ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
+    const radiusCanvasPx1 = Math.max(1, radiusCanvasPx + randomInt(
+      -30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+    ))
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx1, 0, TWO_PI)
     ctx.stroke()
     ctx.beginPath()
-    radiusCanvasPx += randomInt(
-      -10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
-      10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
-    )
-    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
+    ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
+    const radiusCanvasPx2 = Math.max(1, radiusCanvasPx + randomInt(
+      -30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+    ))
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx2, 0, TWO_PI)
     ctx.stroke()
   }
 

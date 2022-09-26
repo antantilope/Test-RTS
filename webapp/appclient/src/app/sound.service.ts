@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { PointCoord } from './models/point-coord.model';
-
+import {
+  LOW_FUEL_THRESHOLD,
+  LOW_POWER_THRESHOLD
+} from './constants';
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -41,7 +44,12 @@ export class SoundService {
   ]
   private deathMusicSound: HTMLAudioElement
 
-  // Sound Effects Engine Properties
+  // Sound Effects
+
+  private lowFuelWarningSound: HTMLAudioElement;
+  private lowPowerWarningSound: HTMLAudioElement;
+  private lowFuelWarningPlayed = false
+  private lowPowerWarningPlayed = false
 
   // Auto Pilot
   private copilotAutopilotActiveSound: HTMLAudioElement
@@ -120,6 +128,9 @@ export class SoundService {
     setTimeout(this.runMusicEngine.bind(this), this.musicEngineInterval)
 
     // Setup sound effects engine
+    this.lowFuelWarningSound = new Audio("/static/sound/copilot-danger-low-fuel.mp3");
+    this.lowPowerWarningSound = new Audio("/static/sound/copilot-danger-low-power.mp3");
+
     const copilotDeathFile = this.copilotDeathChoices[randomInt(0, this.copilotDeathChoices.length)]
     this.copilotDeathSound = new Audio("/static/sound/" + copilotDeathFile)
 
@@ -173,6 +184,20 @@ export class SoundService {
 
   public runSoundFXEngine() {
     const ship = this._api.frameData.ship;
+
+    // Copilot low fuel/power warnings
+    if(ship.fuel_level < LOW_FUEL_THRESHOLD && !this.lowFuelWarningPlayed) {
+      this.lowFuelWarningPlayed = true
+      this.lowFuelWarningSound.play()
+    } else if (ship.fuel_level > LOW_FUEL_THRESHOLD && this.lowFuelWarningPlayed) {
+      this.lowFuelWarningPlayed = false;
+    }
+    if(ship.battery_power < LOW_POWER_THRESHOLD && !this.lowPowerWarningPlayed) {
+      this.lowPowerWarningPlayed = true
+      this.lowPowerWarningSound.play()
+    } else if (ship.battery_power > LOW_POWER_THRESHOLD && this.lowPowerWarningPlayed) {
+      this.lowPowerWarningPlayed = false
+    }
 
     // Copilot Autopilot alerts
     if(ship.alive && !this.autoPilotActiveLastFrame && ship.autopilot_program){
@@ -292,6 +317,12 @@ export class SoundService {
       this.copilotTargeDestroyedSound.play()
     }
 
+    /*
+      Explosion related sound effects
+       - explosion
+       - ship rattle
+       - fasten seatbelt sign
+    */
     if(ship.explosion_frame && !this.playedSelfExplosionSound) {
       this.playedSelfExplosionSound = true
       this.explosionSound.play()
@@ -311,7 +342,7 @@ export class SoundService {
         // check if ship has been hit by shockwave yet
         const metersDistanceFromCenter = this.getDistanceBetweenCoords(
           {x: ship.coord_x, y:ship.coord_y},
-          {x: esw.origin_point[0], y: esw.origin_point[0]}
+          {x: esw.origin_point[0], y: esw.origin_point[1]}
         ) / this._api.frameData.map_config.units_per_meter
         if(metersDistanceFromCenter <= esw.radius_meters) {
           this.heardExplosionShockwaveIds.push(esw.id)
