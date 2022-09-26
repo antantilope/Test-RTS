@@ -485,7 +485,7 @@ export class GamedisplayComponent implements OnInit {
     if(this.isDebug) {
       this.paintDebugData();
     }
-    this._sound.runSoundEngine();
+    this._sound.runSoundFXEngine();
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
 

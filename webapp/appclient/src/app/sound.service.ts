@@ -11,6 +11,18 @@ export class SoundService {
   private copilotAutopilotOfflineSound: HTMLAudioElement
   private autoPilotActiveLastFrame = false;
 
+  // Engine
+  private copilotEngineActiveSound: HTMLAudioElement
+  private copilotEngineOfflineSound: HTMLAudioElement
+  private engineActiveLastFrame = false;
+  private engineFiringSound: HTMLAudioElement
+  private engineFiringLastFrame = false;
+
+  // gravity break
+  private copilotBrakeDeployedSound: HTMLAudioElement
+  private copilotBrakeRetractedSound: HTMLAudioElement
+  private brakeDeployedLastFrame = false
+
   // Scanner
   private enemySpottedSound: HTMLAudioElement
   private spottedEnemiesCount: number
@@ -41,8 +53,19 @@ export class SoundService {
   ) {
     console.log("SoundService::constructor()")
 
+    // Autopilot
     this.copilotAutopilotActiveSound = new Audio("/static/sound/copilot-autopilot-active.mp3")
     this.copilotAutopilotOfflineSound = new Audio("/static/sound/copilot-autopilot-offline.mp3")
+
+    // Engine
+    this.copilotEngineActiveSound = new Audio("/static/sound/copilot-engine-active.mp3")
+    this.copilotEngineOfflineSound = new Audio("/static/sound/copilot-engine-offline.mp3")
+    this.engineFiringSound = new Audio("/static/sound/engine-firing.mp3")
+    this.engineFiringSound.loop = true;
+
+    // Gravity Brake
+    this.copilotBrakeDeployedSound = new Audio("/static/sound/copilot-brake-deployed.mp3")
+    this.copilotBrakeRetractedSound = new Audio("/static/sound/copilot-brake-retracted.mp3")
 
     // Ambient Music Player
     this.ambientTracks = this.ambientTracks.map(value=>({value,sort:Math.random()})).sort((a,b)=>a.sort-b.sort).map(({value})=>value)
@@ -56,12 +79,10 @@ export class SoundService {
     this.eBeamSound = new Audio("/static/sound/ebeam.mp3");
     this.copilotEbeamChargingSound = new Audio("/static/sound/copilot-weapon-charging.mp3")
     this.copilotEbeamReadySound = new Audio("/static/sound/copilot-weapon-ready.mp3")
-
-    // setTimeout(this.runSoundEngine.bind(this), 1000);
   }
 
 
-  public runSoundEngine() {
+  public runSoundFXEngine() {
     const ship = this._api.frameData.ship;
 
     // Copilot Autopilot alerts
@@ -71,6 +92,30 @@ export class SoundService {
     } else if(this.autoPilotActiveLastFrame && !ship.autopilot_program) {
       this.autoPilotActiveLastFrame = false;
       this.copilotAutopilotOfflineSound.play();
+    }
+
+    // Engine
+    if(!this.engineActiveLastFrame && ship.engine_online) {
+      this.engineActiveLastFrame = true
+      this.copilotEngineActiveSound.play()
+    } else if (this.engineActiveLastFrame && !ship.engine_online) {
+      this.engineActiveLastFrame = false
+      this.copilotEngineOfflineSound.play()
+    }
+    // if(!this.engineFiringLastFrame && ship.engine_lit) {
+    //   this.engineFiringLastFrame = true
+    //   this.engineFiringSound.play()
+    // } else if (this.engineFiringLastFrame && !ship.engine_lit) {
+    //   this.engineFiringSound.pause()
+    // }
+
+    // Copilot gravity break alerts
+    if(!this.brakeDeployedLastFrame && ship.gravity_brake_deployed) {
+      this.brakeDeployedLastFrame = true
+      this.copilotBrakeDeployedSound.play()
+    } else if(this.brakeDeployedLastFrame && !ship.gravity_brake_deployed) {
+      this.brakeDeployedLastFrame = false;
+      this.copilotBrakeRetractedSound.play()
     }
 
     // Ebeam sound
@@ -102,13 +147,10 @@ export class SoundService {
     else if(ship.scanner_data.length < this.spottedEnemiesCount) {
       this.spottedEnemiesCount = ship.scanner_data.length;
     }
+  }
 
+  public runMusicEngine() {
 
-
-    // setTimeout(
-    //   this.runSoundEngine.bind(this),
-    //   this.soundEngineIntervalMS
-    // );
   }
 
 }
