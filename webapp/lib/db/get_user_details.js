@@ -13,8 +13,8 @@ exports.get_user_details = async (db, player_uuid) => {
             api_room.room_owner AS room_owner,
             api_room.phase AS room_phase
         FROM api_player
-        LEFT JOIN api_team on api_player.team_id = api_team.uuid
-        LEFT JOIN api_room on api_team.room_id = api_room.uuid
+        LEFT JOIN api_team ON api_player.team_id = api_team.uuid
+        LEFT JOIN api_room ON api_team.room_id = api_room.uuid
         WHERE api_player.uuid = ?
     `
     const statement = await db.prepare(sql);
