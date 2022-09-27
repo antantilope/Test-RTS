@@ -591,7 +591,7 @@ export class DrawingService {
       ctx.font = 'bold 65px courier new'
       ctx.fillStyle = '#ffffff'
       ctx.textAlign = 'center'
-      ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
+      ctx.fillText("🏆VICTORY", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
     else if(!this._api.frameData.ship.alive) {
       if((this._api.frameData.ship.died_on_frame + 100) > this._api.frameData.game_frame) {

@@ -113,6 +113,16 @@ export class SoundService {
     "copilot-death-3.mp3",
     "copilot-death-4.mp3",
     "copilot-death-5.mp3",
+    "copilot-death-6.mp3",
+    "copilot-death-7.mp3",
+    "copilot-death-8.mp3",
+    "copilot-death-9.mp3",
+    "copilot-death-10.mp3",
+    "copilot-death-11.mp3",
+    "copilot-death-12.mp3",
+    "copilot-death-13.mp3",
+    "copilot-death-14.mp3",
+    "copilot-death-15.mp3",
   ]
   private copilotDeathSoundPlaying = false
 
@@ -159,7 +169,7 @@ export class SoundService {
     this.scannerLockLostSound = new Audio("/static/sound/scanner-lock-loss.mp3")
 
     // Ebeam
-    this.eBeamSound = new Audio("/static/sound/ebeam.mp3");
+    this.eBeamSound = new Audio("/static/sound/ebeam-firing.mp3");
     this.copilotEbeamChargingSound = new Audio("/static/sound/copilot-weapon-charging.mp3")
     this.copilotEbeamReadySound = new Audio("/static/sound/copilot-weapon-ready.mp3")
 
