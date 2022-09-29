@@ -339,6 +339,7 @@ class TestShipAdjustResources(TestCase):
         self.ship.battery_power = 200_000
         self.ship.apu_fuel_usage_per_second = 125
         self.ship.apu_battery_charge_per_second = 200
+        self.ship.battery_capacity = 500_000
 
         self.ship.adjust_resources(fps=1, game_frame=1)
         assert self.ship.apu_online
