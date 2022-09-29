@@ -577,6 +577,7 @@ export class GamedisplayComponent implements OnInit {
       {command:'activate_engine'},
     )
     setTimeout(()=>{this.setCameraToPilotMode()})
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnDeactivateEngine() {
@@ -584,6 +585,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'deactivate_engine'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnLightEngine() {
@@ -592,6 +594,7 @@ export class GamedisplayComponent implements OnInit {
       {command:'light_engine'},
     )
     setTimeout(()=>{this.setCameraToPilotMode()})
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnBoostEngine() {
@@ -599,6 +602,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'boost_engine'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnUnlightEngine() {
@@ -606,6 +610,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'unlight_engine'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnToggleAPU() {
@@ -620,6 +625,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'activate_apu'},
     )
+    this._sound.playUtilityButtonClickSound()
   }
 
   public async btnDeactivateAPU() {
@@ -627,6 +633,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'deactivate_apu'},
     )
+    this._sound.playUtilityButtonClickSound()
   }
 
   public async btnSetScannerModeRadar() {
@@ -634,6 +641,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'set_scanner_mode_radar'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnSetScannerModeIR() {
@@ -641,6 +649,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'set_scanner_mode_ir'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnActivateScanner() {
@@ -649,6 +658,7 @@ export class GamedisplayComponent implements OnInit {
       {command:'activate_scanner'},
     )
     setTimeout(()=>{this._camera.setModeScanner()})
+    this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnDeactivateScanner() {
@@ -657,6 +667,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'deactivate_scanner'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   // Autopilot button handlers.
@@ -665,30 +676,35 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'disable_autopilot'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
   public async btnAutoPilotHaltPosition() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'position_hold'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
   public async btnAutoPilotHeadingLockTarget() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_target'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
   public async btnAutoPilotHeadingLockPrograde() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_prograde'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
   public async btnAutoPilotHeadingLockRetrograde() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_retrograde'},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
   private getWaypointType(uuid: string): string | null {
     for(let i in this._api.frameData.ore_mines) {
@@ -719,6 +735,7 @@ export class GamedisplayComponent implements OnInit {
         waypoint_type: wpType,
       },
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   btnClickScannerCursorUp() {
@@ -743,6 +760,7 @@ export class GamedisplayComponent implements OnInit {
         this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
       }
     }
+    this._sound.playPrimaryButtonClickSound()
   }
 
   btnClickScannerCursorDown() {
@@ -767,6 +785,7 @@ export class GamedisplayComponent implements OnInit {
         this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
       }
     }
+    this._sound.playPrimaryButtonClickSound()
   }
 
   async btnClickScannerCursorLock () {
@@ -792,6 +811,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command: 'set_scanner_lock_target', target: this.scannerTargetIDCursor},
     )
+    this._sound.playPrimaryButtonClickSound()
   }
 
   async btnClickChargeEBeam() {
@@ -801,6 +821,7 @@ export class GamedisplayComponent implements OnInit {
         {command:'charge_ebeam'},
       )
     }
+    this._sound.playPrimaryButtonClickSound()
   }
 
   async btnClickPauseChargeEBeam() {
@@ -809,6 +830,7 @@ export class GamedisplayComponent implements OnInit {
         "/api/rooms/command",
         {command:'pause_charge_ebeam'},
       )
+      this._sound.playPrimaryButtonClickSound()
     }
   }
 
@@ -818,24 +840,29 @@ export class GamedisplayComponent implements OnInit {
         "/api/rooms/command",
         {command:'fire_ebeam'},
       )
+      this._sound.playPrimaryButtonClickSound()
     }
   }
 
   async btnClickToggleGravBrake() {
     console.log("btnClickToggleGravBrake()")
     if (this._api.frameData.ship.gravity_brake_deployed) {
-      return this._api.post(
+      this._api.post(
         "/api/rooms/command",
         {command:'retract_gravity_brake'},
       )
+      this._sound.playUtilityButtonClickSound()
+      return
     }
     else if (
       this._api.frameData.ship.gravity_brake_position == 0
     ) {
-      return this._api.post(
+      this._api.post(
         "/api/rooms/command",
         {command:'extend_gravity_brake'},
       )
+      this._sound.playUtilityButtonClickSound()
+      return
     } else {
       console.log("gravbrake doing nothing")
     }
@@ -847,15 +874,19 @@ export class GamedisplayComponent implements OnInit {
       return
     }
     if(!this._api.frameData.ship.mining_ore) {
-      return this._api.post(
+      this._api.post(
         "/api/rooms/command",
         {command:'start_ore_mining'},
       )
+      this._sound.playUtilityButtonClickSound()
+      return
     } else {
-      return this._api.post(
+      this._api.post(
         "/api/rooms/command",
         {command:'stop_ore_mining'},
       )
+      this._sound.playUtilityButtonClickSound()
+      return
     }
   }
 
