@@ -813,6 +813,7 @@ export class DrawingService {
       this._api.frameData.map_config.x_unit_length / this._api.frameData.map_config.units_per_meter,
       this._api.frameData.map_config.y_unit_length / this._api.frameData.map_config.units_per_meter,
     )
+    const fillAlpha = 0.12 * (1 - esw.radius_meters / maxRadiusMeters)
     const startFadeOutAtMeters = maxRadiusMeters * 0.92;
     let alphaMultiplier = 1
     if(esw.radius_meters > startFadeOutAtMeters) {
@@ -822,6 +823,7 @@ export class DrawingService {
     // Primary arc
     ctx.beginPath()
     ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
+    ctx.fillStyle = `rgb(255, 255, 255, ${fillAlpha})`
     ctx.lineWidth = Math.max(
       2,
       Math.ceil(10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
@@ -833,6 +835,7 @@ export class DrawingService {
     const radiusCanvasPx = esw.radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
     ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
     ctx.stroke()
+    ctx.fill()
 
     // Suplementary arcs
     ctx.beginPath()
