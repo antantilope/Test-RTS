@@ -364,7 +364,7 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
             1: [
                 {'field': 'apu_fuel_usage_per_second', 'delta': -20},
                 {'field': 'apu_battery_charge_per_second', 'delta': 100},
-                {'field': 'apu_online_thermal_signature_rate_per_second', 'delta': -40},
+                {'field': 'apu_online_thermal_signature_rate_per_second', 'delta': -25},
             ],
         },
     )

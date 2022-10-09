@@ -108,6 +108,34 @@
                     {{ (_api.frameData.ship.engine_newtons / _api.frameData.ship.mass)|number: "1.0-0" }} Newtons
                 </td>
             </tr>
+            <tr>
+                <strong>HEAT OUTPUT</strong>
+                <td class="content-td">
+                    {{ (_api.frameData.ship.engine_lit_thermal_signature_rate_per_second)|number: "1.0-0" }} / sec.
+                </td>
+            </tr>
+        </table>
+    </div>
+    <hr>
+    <div class="section">
+        <div class="section-heading">
+            <strong>Auxilary Power Unit</strong>
+        </div>
+        <table>
+            <tr>
+                <td><strong>BATTERY CHARGE</strong></td>
+                <td class="content-td">{{ _api.frameData.ship.apu_battery_charge_per_second|number: "1.0-0" }} / sec.</td>
+            </tr>
+            <tr>
+                <td><strong>FUEL DRAW</strong></td>
+                <td class="content-td">{{ _api.frameData.ship.apu_fuel_usage_per_second|number: "1.0-0" }} / sec.</td>
+            </tr>
+            <tr>
+                <strong>HEAT OUTPUT</strong>
+                <td class="content-td">
+                    {{ (_api.frameData.ship.apu_online_thermal_signature_rate_per_second)|number: "1.0-0" }} / sec.
+                </td>
+            </tr>
         </table>
     </div>
     <hr>
@@ -145,7 +173,7 @@
                 </td>
             </tr>
             <tr>
-                <td class="title-indent-td">MINIMUM SIGNATURE</td>
+                <td class="title-indent-td">MIN. HEAT SIGNATURE</td>
                 <td class="content-td">
                     {{ _api.frameData.ship.scanner_ir_minimum_thermal_signature|number: "1.0-0" }}
                 </td>
@@ -175,6 +203,39 @@
                 </td>
                 <td class="content-td">
                     {{ _api.frameData.ship.scanner_locked_max_traversal_degrees }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <hr>
+    <div class="section">
+        <div class="section-heading">
+            <strong>Energy Beam</strong>
+        </div>
+        <table>
+            <tr>
+                <td><strong>CHARGING POWER DRAW</strong></td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.ebeam_charge_power_usage_per_second|number: "1.0-0" }} / sec.
+                </td>
+            </tr>
+            <tr>
+                <strong>CHARGING RATE</strong>
+                <td class="content-td">
+                    {{ (_api.frameData.ship.ebeam_charge_rate_per_second)|number: "1.0-0" }} / sec.
+                </td>
+            </tr>
+            <tr>
+                <td><strong>CHARGING HEAT OUTPUT</strong></td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.ebeam_charge_thermal_signature_rate_per_second|number: "1.0-0" }} / sec.
+                </td>
+            </tr>
+            <tr>
+                <strong>MIN. FIRING CHARGE</strong>
+                <td class="content-td">
+                    {{ (_api.frameData.ship.ebeam_charge_fire_minimum)|number: "1.0-0" }}
                 </td>
             </tr>
         </table>

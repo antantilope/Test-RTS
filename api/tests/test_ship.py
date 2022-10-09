@@ -623,11 +623,11 @@ class TestShipAdjustResources(TestCase):
     def test_ship_charging_ebeam_uses_resources(self):
         ''' EBEAM Charge '''
         self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge_power_usage_per_second = 4000
         self.ship.ebeam_charge = 0
         self.ship.ebeam_charge_capacity = 10000
         self.ship.ebeam_firing = False
         self.ship.ebeam_charging = True
-        self.ship.ebeam_charge_power_draw_multiple = 4
         self.ship.battery_power = 10000
         fps = 2
 
@@ -645,11 +645,11 @@ class TestShipAdjustResources(TestCase):
     def test_ship_charging_ebeam_is_interrupted_if_not_enogh_battery_power(self):
         ''' EBEAM Charge '''
         self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge_power_usage_per_second = 4000
         self.ship.ebeam_charge = 0
         self.ship.ebeam_charge_capacity = 10000
         self.ship.ebeam_firing = False
         self.ship.ebeam_charging = True
-        self.ship.ebeam_charge_power_draw_multiple = 4
         self.ship.battery_power = 3000
         fps = 2
 
@@ -667,11 +667,11 @@ class TestShipAdjustResources(TestCase):
     def test_ship_charging_ebeam_is_interrupted_if_at_ebeam_charge_capacity(self):
         ''' EBEAM Charge '''
         self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge_power_usage_per_second = 4000
         self.ship.ebeam_charge = 0
         self.ship.ebeam_charge_capacity = 750
         self.ship.ebeam_firing = False
         self.ship.ebeam_charging = True
-        self.ship.ebeam_charge_power_draw_multiple = 4
         self.ship.battery_power = 10000
         fps = 2
 

@@ -294,12 +294,12 @@ class Ship(BaseModel):
 
         # Ship Energy Beam
         self.ebeam_charge_rate_per_second = None
+        self.ebeam_charge_power_usage_per_second = None
         self.ebeam_charge_thermal_signature_rate_per_second = None
         self.ebeam_charge = None
         self.ebeam_charge_capacity = None
         self.ebeam_charging = False
         self.ebeam_firing = False
-        self.ebeam_charge_power_draw_multiple = None
         self.ebeam_discharge_rate_per_second = None
         self.ebeam_charge_fire_minimum = None
         self.ebeam_color = None
@@ -501,9 +501,13 @@ class Ship(BaseModel):
             'engine_starting': self.engine_starting,
             'engine_boosted': self.engine_boosted,
             'engine_boosted_last_frame': self.engine_boosted_last_frame,
+            'engine_lit_thermal_signature_rate_per_second': self.engine_lit_thermal_signature_rate_per_second,
 
             'apu_starting': self.apu_starting,
             'apu_online': self.apu_online,
+            'apu_battery_charge_per_second': self.apu_battery_charge_per_second,
+            'apu_fuel_usage_per_second': self.apu_fuel_usage_per_second,
+            'apu_online_thermal_signature_rate_per_second': self.apu_online_thermal_signature_rate_per_second,
 
             'scanner_online': self.scanner_online,
             'scanner_locking': self.scanner_locking,
@@ -529,6 +533,10 @@ class Ship(BaseModel):
             'ebeam_charge': self.ebeam_charge,
             'ebeam_can_fire': self.ebeam_charge >= self.ebeam_charge_fire_minimum and not self.ebeam_firing,
             'ebeam_last_hit_frame': self.ebeam_last_hit_frame,
+            'ebeam_charge_rate_per_second': self.ebeam_charge_rate_per_second,
+            'ebeam_charge_power_usage_per_second': self.ebeam_charge_power_usage_per_second,
+            'ebeam_charge_thermal_signature_rate_per_second': self.ebeam_charge_thermal_signature_rate_per_second,
+            'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
 
             'docked_at_station': self.docked_at_station,
             'gravity_brake_position': self.gravity_brake_position,
@@ -669,10 +677,10 @@ class Ship(BaseModel):
         instance.scanner_locked_max_traversal_degrees = constants.SCANNER_LOCKED_MAX_TRAVERSAL_DEGREES
 
         instance.ebeam_charge_rate_per_second = constants.EBEAM_CHARGE_RATE_PER_SECOND
+        instance.ebeam_charge_power_usage_per_second = constants.EBEAM_CHARGE_POWER_USAGE_PER_SECOND
         instance.ebeam_charge_thermal_signature_rate_per_second = constants.EBEAM_CHARGE_THERMAL_SIGNATURE_RATE_PER_SECOND
         instance.ebeam_charge = 0
         instance.ebeam_charge_capacity = constants.EBEAM_CHARGE_CAPACITY
-        instance.ebeam_charge_power_draw_multiple = constants.EBEAM_CHARGE_BATTERY_POWER_DRAW_MULTIPLE
         instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
@@ -775,14 +783,15 @@ class Ship(BaseModel):
 
         ''' ENERGY BEAM '''
         if self.ebeam_charging:
-            adj = self.ebeam_charge_rate_per_second / fps
+            battery_adj = self.ebeam_charge_power_usage_per_second / fps
             try:
-                self.use_battery_power(adj * self.ebeam_charge_power_draw_multiple)
+                self.use_battery_power(battery_adj)
             except InsufficientPowerError:
                 self.ebeam_charging = False
             else:
+                charge_adj = self.ebeam_charge_rate_per_second / fps
                 self.ebeam_charge = min(
-                    self.ebeam_charge + adj,
+                    self.ebeam_charge + charge_adj,
                     self.ebeam_charge_capacity,
                 )
             if self.ebeam_charge >= self.ebeam_charge_capacity:
