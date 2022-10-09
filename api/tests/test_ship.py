@@ -1,5 +1,5 @@
 
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 from uuid import uuid4
 
 from api.models.ship import AutoPilotPrograms, ShipStateKey
@@ -2812,6 +2812,20 @@ class TestShipUpgrades(TestCase):
                 'current_level'
             ] == 1
 
-    @expectedFailure
     def test_ship_upgrade_does_not_start_if_core_upgrade_is_missing(self):
-        raise AssertionError("write this test")
+        assert self.ship.cargo_ore_mass_kg == 0
+        assert len(self.ship._ship_upgrade_active_indexes) == 0
+        # Try to start upgrade.
+        self.ship.cmd_start_ship_upgrade("ore_capacity")
+        # It doesnt start because missing core upgrade.
+        assert len(self.ship._ship_upgrade_active_indexes) == 0
+
+        # Mark required core upgrade as complete.
+        for ix, upgrade in enumerate(self.ship._upgrades[UpgradeType.CORE]):
+            if upgrade.slug == "titanium_alloy_hull":
+                self.ship._upgrades[UpgradeType.CORE][ix].earned = True
+
+        # Try to start upgrade.
+        self.ship.cmd_start_ship_upgrade("ore_capacity")
+        # It does start because required core upgrade is earned.
+        assert len(self.ship._ship_upgrade_active_indexes) == 1
