@@ -332,7 +332,7 @@ class Ship(BaseModel):
         self.parked_at_ore_mine = None
         self.cargo_ore_mass_capacity_kg = None
         self.cargo_ore_mass_kg = 0.0
-        self.virtual_ore_kg = 1000000
+        self.virtual_ore_kg = 100_000
         self.mining_ore = False
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None

@@ -15,6 +15,9 @@ export class UpgradepaneComponent implements OnInit {
   public scannerRangeMissingCoreUpgrades: string[] = []
   public scannerLockTraversalMissingCoreUpgrades: string[] = []
   public scannerRadarSensitivityMissingCoreUpgrades: string[] = []
+  public antiRadarCoatingMissingCoreUpgrades: string[] = []
+  public batteryCapacityMissingCoreUpgrades: string[] = []
+  public fuelCapacityMissingCoreUpgrades: string[] = []
 
   constructor(
     public _api: ApiService,
@@ -42,6 +45,15 @@ export class UpgradepaneComponent implements OnInit {
     if(this._api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost) {
       this.refreshScannerRadarSensitivityMissingCoreUpgrades()
     }
+    if(this._api.frameData.ship.upgrade_summary.ship.anti_radar_coating.current_cost) {
+      this.refreshAntiRadarCoatingMissingCoreUpgrades()
+    }
+    if(this._api.frameData.ship.upgrade_summary.ship.battery_capacity.current_cost) {
+      this.refreshBatteryCapacityMissingCoreUpgrades()
+    }
+    if(this._api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost) {
+      this.refreshFuelCapacityMissingCoreUpgrades()
+    }
     setTimeout(()=>{
       this.refreshMissingCoreUpgrades()
     }, this.refreshMissingCoreUpgradesInterval)
@@ -52,7 +64,7 @@ export class UpgradepaneComponent implements OnInit {
       this._api.frameData.ship.upgrade_summary.ship[shipUpgradeSlug].current_cost.core_upgrade_slugs.filter(coreUpgrdeSlug => {
         return this._api.frameData.ship.upgrade_summary.core[coreUpgrdeSlug].current_level == 0
       })
-    ).map(missingSlug => this._api.frameData.ship.upgrade_summary.core[missingSlug].name)
+    ).map(missingCoreUpgradeSlug => this._api.frameData.ship.upgrade_summary.core[missingCoreUpgradeSlug].name)
   }
   private refreshEngineNewtonsMissingCoreUpgrades() {
     this.engineNewtonsMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("engine_newtons")
@@ -68,6 +80,15 @@ export class UpgradepaneComponent implements OnInit {
   }
   private refreshScannerRadarSensitivityMissingCoreUpgrades() {
     this.scannerRadarSensitivityMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("radar_sensitivity")
+  }
+  private refreshAntiRadarCoatingMissingCoreUpgrades() {
+    this.antiRadarCoatingMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("anti_radar_coating")
+  }
+  private refreshBatteryCapacityMissingCoreUpgrades() {
+    this.batteryCapacityMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("battery_capacity")
+  }
+  private refreshFuelCapacityMissingCoreUpgrades() {
+    this.fuelCapacityMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("fuel_capacity")
   }
 
   // Core Upgrades
@@ -168,5 +189,40 @@ export class UpgradepaneComponent implements OnInit {
     await this._api.post("/api/rooms/command", {command, slug});
   }
 
+  public async btnStartAntiRadarCoatingUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'anti_radar_coating';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelAntiRadarCoatingUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'anti_radar_coating';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnStartBatteryCapacityUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'battery_capacity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelBatteryCapacityUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'battery_capacity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnStartFuelCapacityUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'fuel_capacity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelFuelCapacityUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'fuel_capacity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
 
 }
