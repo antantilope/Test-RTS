@@ -1,5 +1,5 @@
 
-from unittest import TestCase
+from unittest import TestCase, expectedFailure
 from uuid import uuid4
 
 from api.models.ship import AutoPilotPrograms, ShipStateKey
@@ -2811,3 +2811,7 @@ class TestShipUpgrades(TestCase):
             ][
                 'current_level'
             ] == 1
+
+    @expectedFailure
+    def test_ship_upgrade_does_not_start_if_core_upgrade_is_missing(self):
+        raise AssertionError("write this test")
