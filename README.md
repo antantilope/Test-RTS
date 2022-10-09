@@ -230,6 +230,10 @@ $(document).ready(() => {
        - players do not see opponent's handle's. They only see this random designation.
      - utils2d.py
        - defines math intensive operations for managing objects on a 2-dimensional plane
+         - trigonometry
+         - geometry
+         - physics
+         - hitboxes
    - tests/
      - Holds unit tests for python application
 
