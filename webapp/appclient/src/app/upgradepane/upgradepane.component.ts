@@ -18,6 +18,7 @@ export class UpgradepaneComponent implements OnInit {
   public antiRadarCoatingMissingCoreUpgrades: string[] = []
   public batteryCapacityMissingCoreUpgrades: string[] = []
   public fuelCapacityMissingCoreUpgrades: string[] = []
+  public APUEfficiencyMissingCoreUpgrades: string[] = []
 
   constructor(
     public _api: ApiService,
@@ -53,6 +54,9 @@ export class UpgradepaneComponent implements OnInit {
     }
     if(this._api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost) {
       this.refreshFuelCapacityMissingCoreUpgrades()
+    }
+    if(this._api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost) {
+      this.refreshAPUEfficiencyMissingCoreUpgrades()
     }
     setTimeout(()=>{
       this.refreshMissingCoreUpgrades()
@@ -90,6 +94,10 @@ export class UpgradepaneComponent implements OnInit {
   private refreshFuelCapacityMissingCoreUpgrades() {
     this.fuelCapacityMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("fuel_capacity")
   }
+  private refreshAPUEfficiencyMissingCoreUpgrades() {
+    this.fuelCapacityMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("apu_efficiency")
+  }
+
 
   // Core Upgrades
   public async btnStartAdvancedElectronicsUpgrade() {
@@ -222,6 +230,18 @@ export class UpgradepaneComponent implements OnInit {
   public async btnCancelFuelCapacityUpgrade() {
     const command = 'cancel_ship_upgrade';
     const slug = 'fuel_capacity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnStartAPUEfficiencyUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'apu_efficiency';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelAPUEfficiencyUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'apu_efficiency';
     await this._api.post("/api/rooms/command", {command, slug});
   }
 

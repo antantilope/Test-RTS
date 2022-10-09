@@ -707,5 +707,68 @@
             </div>
         </div>
 
+        <!-- APU Efficiency -->
+        <div
+            class="ship-upgrade-container"
+            *ngIf="_api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_level < _api.frameData.ship.upgrade_summary.ship.apu_efficiency.max_level"
+        >
+            <div
+                class="upgrade-header"
+            >
+                <strong>
+                    Auxilary Power Unit Efficiency
+                </strong>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.apu_efficiency.seconds_researched === null">
+                <div class="upgrade-cost-label">
+                    <span
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                    >
+                        🪙{{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.ore }}
+                    </span>
+                    <span
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                    >
+                        🔋{{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.electricity|number:"1.0-0" }}
+                    </span>
+                    ⌛{{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.seconds }}
+                </div>
+                <div
+                    *ngFor="let mcun of APUEfficiencyMissingCoreUpgrades"
+                    class="upgrade-cost-label missing-core-upgrade-label"
+                >
+                    🔬 requires <strong>{{ mcun }}</strong>
+                </div>
+                <button
+                    *ngIf="_api.frameData.ship.upgrade_summary.ship.apu_efficiency.seconds_researched === null"
+                    class="start-research-btn"
+                    (click)="btnStartAPUEfficiencyUpgrade()"
+                >
+                    Research Level {{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_level + 1 }}
+                </button>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.apu_efficiency.seconds_researched !== null">
+                <div>
+                    time:
+                    {{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.seconds_researched|number:"1.0-0" }}
+                    / {{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.seconds|number:"1.0-0" }}
+                </div>
+                <progress
+                    value="{{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.seconds_researched }}"
+                    max="{{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.seconds }}"
+                >
+                </progress>
+                <div style="margin-top: 8px;">
+                    <button
+                        class="cancel-research-btn"
+                        (click)="btnCancelAPUEfficiencyUpgrade()"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 </div>

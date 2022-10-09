@@ -79,15 +79,15 @@ const validateStartShipUpgrade = (data) => {
         throw new CommandValidationError("slug is required");
     }
     const upgrades = [
-        'scanner_range', //
-        'radar_sensitivity', //
-        'anti_radar_coating', //
-        'scanner_lock_traversal', //
-        'engine_newtons', //
-        'ore_capacity', //
+        'scanner_range',
+        'radar_sensitivity',
+        'anti_radar_coating',
+        'scanner_lock_traversal',
+        'engine_newtons',
+        'ore_capacity',
         'apu_efficiency',
         'fuel_capacity',
-        'battery_capacity', //
+        'battery_capacity',
 
     ];
     if (upgrades.indexOf(slug) === -1) {
