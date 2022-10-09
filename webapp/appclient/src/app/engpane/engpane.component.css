@@ -27,6 +27,10 @@ div {
 }
 
 .content-td {
-    padding-left: 8px;
+    padding-left: 6px;
     text-align: right;
+}
+
+.title-indent-td {
+    padding-left: 15px;
 }

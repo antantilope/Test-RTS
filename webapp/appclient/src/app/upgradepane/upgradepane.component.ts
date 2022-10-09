@@ -13,6 +13,7 @@ export class UpgradepaneComponent implements OnInit {
   public engineNewtonsMissingCoreUpgrades: string[] = []
   public oreCapacityMissingCoreUpgrades: string[] = []
   public scannerRangeMissingCoreUpgrades: string[] = []
+  public scannerLockTraversalMissingCoreUpgrades: string[] = []
 
   constructor(
     public _api: ApiService,
@@ -34,6 +35,9 @@ export class UpgradepaneComponent implements OnInit {
     if(this._api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost) {
       this.refreshScannerRangeMissingCoreUpgrades()
     }
+    if(this._api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost) {
+      this.refreshScannerLockTraversalMissingCoreUpgrades()
+    }
     setTimeout(()=>{
       this.refreshMissingCoreUpgrades()
     }, this.refreshMissingCoreUpgradesInterval)
@@ -54,6 +58,9 @@ export class UpgradepaneComponent implements OnInit {
   }
   private refreshScannerRangeMissingCoreUpgrades() {
     this.scannerRangeMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("scanner_range")
+  }
+  private refreshScannerLockTraversalMissingCoreUpgrades() {
+    this.scannerLockTraversalMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("scanner_lock_traversal")
   }
 
   // Core Upgrades
@@ -127,6 +134,18 @@ export class UpgradepaneComponent implements OnInit {
   public async btnCancelScannerRangeUpgrade() {
     const command = 'cancel_ship_upgrade';
     const slug = 'scanner_range';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnStartScannerLockTraversalUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'scanner_lock_traversal';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelScannerLockTraversalUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'scanner_lock_traversal';
     await this._api.post("/api/rooms/command", {command, slug});
   }
 

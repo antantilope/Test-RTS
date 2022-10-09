@@ -79,7 +79,7 @@ const validateStartShipUpgrade = (data) => {
         throw new CommandValidationError("slug is required");
     }
     const upgrades = [
-        'scanner_range',
+        'scanner_range', //
         'radar_sensitivity',
         'anti_radar_coating',
         'scanner_lock_traversal',

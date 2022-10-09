@@ -1,25 +1,46 @@
+
+<!-- Engineering Pane -->
 <div *ngIf="data === null">
     <h2><i>OFFLINE</i></h2>
 </div>
 <div *ngIf="data !== null">
     <div class="section">
         <div class="section-heading">
-            <strong>Mass</strong>
+            <strong>Hull</strong>
         </div>
         <table>
             <tr>
-                <td><strong>TOTAL</strong></td>
+                <td><strong>TOTAL MASS</strong></td>
                 <td class="content-td">{{ data.shipMassKG }} KG</td>
             </tr>
             <tr>
-                <td><strong>ORE</strong></td>
-                <td class="content-td">{{ data.oreCargoMassKg }} KG</td>
+                <td><strong>VISUAL MAXIMUM RANGE</strong></td>
+                <td class="content-td">{{ _api.frameData.ship.visual_range }} M</td>
             </tr>
             <tr>
-                <td><strong>FUEL</strong></td>
-                <td class="content-td">{{ data.fuelLevel / 75 }} KG</td> <!-- TODO: repalce magic number -->
+                <td><strong>ANTI RADAR COATING LVL.</strong></td>
+                <td class="content-td">{{ _api.frameData.ship.anti_radar_coating_level }}</td>
+            </tr>
+            <tr>
+                <td><strong>THERMAL SIGNATURE</strong></td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.scanner_thermal_signature|number: "1.0-0" }}
+                </td>
             </tr>
         </table>
+    </div>
+    <hr>
+    <div class="section">
+        <div class="section-heading">
+            <strong>Ore Cargo</strong>
+        </div>
+        <div>
+            {{ data.oreCargoMassKg }} KG / {{ data.oreCargoCapacityMassKg }} KG
+        </div>
+        <div id="progress-container">
+            <progress value="{{ data.oreCargoMassKg }}" max="{{ data.oreCargoCapacityMassKg }}">
+            </progress>
+        </div>
     </div>
     <hr>
     <div class="section">
@@ -49,24 +70,6 @@
     <hr>
     <div class="section">
         <div class="section-heading">
-            <strong>Engine</strong>
-        </div>
-        <table>
-            <tr>
-                <td><strong>THRUST</strong></td>
-                <td class="content-td">{{ _api.frameData.ship.engine_newtons|number: "1.0-0" }} Newtons</td>
-            </tr>
-            <tr>
-                <strong>THRUST/KG</strong>
-                <td class="content-td">
-                    {{ (_api.frameData.ship.engine_newtons / _api.frameData.ship.mass)|number: "1.0-0" }} Newtons
-                </td>
-            </tr>
-        </table>
-    </div>
-    <hr>
-    <div class="section">
-        <div class="section-heading">
             <strong>Battery</strong>
         </div>
         <div>
@@ -92,15 +95,90 @@
     <hr>
     <div class="section">
         <div class="section-heading">
-            <strong>Ore</strong>
+            <strong>Engine</strong>
         </div>
-        <div>
-            {{ data.oreCargoMassKg }} KG / {{ data.oreCargoCapacityMassKg }} KG
-        </div>
-        <div id="progress-container">
-            <progress value="{{ data.oreCargoMassKg }}" max="{{ data.oreCargoCapacityMassKg }}">
-            </progress>
-        </div>
+        <table>
+            <tr>
+                <td><strong>THRUST</strong></td>
+                <td class="content-td">{{ _api.frameData.ship.engine_newtons|number: "1.0-0" }} Newtons</td>
+            </tr>
+            <tr>
+                <strong>THRUST/KG</strong>
+                <td class="content-td">
+                    {{ (_api.frameData.ship.engine_newtons / _api.frameData.ship.mass)|number: "1.0-0" }} Newtons
+                </td>
+            </tr>
+        </table>
     </div>
+    <hr>
+    <div class="section">
+        <div class="section-heading">
+            <strong>Scanner</strong>
+        </div>
+        <table>
+            <tr>
+                <td><strong>RADAR</strong></td>
+            </tr>
+            <tr>
+                <td class="title-indent-td">
+                    MAXIMUM RANGE
+                </td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.scanner_radar_range|number: "1.0-0" }} M
+                </td>
+            </tr>
+            <tr>
+                <td class="title-indent-td">
+                    SENSITIVITY LVL.
+                </td>
+                <td class="content-td">{{ _api.frameData.ship.scanner_radar_sensitivity }}</td>
+            </tr>
+            <tr>
+                <td><strong>THERMAL</strong></td>
+            </tr>
+            <tr>
+                <td class="title-indent-td">
+                    MAXIMUM RANGE
+                </td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.scanner_ir_range|number: "1.0-0" }} M
+                </td>
+            </tr>
+            <tr>
+                <td class="title-indent-td">MINIMUM SIGNATURE</td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.scanner_ir_minimum_thermal_signature|number: "1.0-0" }}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>TARGETING</strong></td>
+            </tr>
+            <tr>
+                <td class="title-indent-td">
+                    LEVEL
+                </td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_level }}
+                </td>
+            </tr>
+            <tr>
+                <td class="title-indent-td">
+                    LOCKING MAX. Δ°/SEC.
+                </td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.scanner_locking_max_traversal_degrees }}
+                </td>
+            </tr>
+            <tr>
+                <td class="title-indent-td">
+                    LOCKED MAX. Δ°/SEC.
+                </td>
+                <td class="content-td">
+                    {{ _api.frameData.ship.scanner_locked_max_traversal_degrees }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
 </div>
 
