@@ -1703,8 +1703,15 @@ class Ship(BaseModel):
             return # "not researching"
 
         # refund resources
-        self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
-        self.charge_battery(upgrade.cost['electricity'])
+        if utype == UpgradeType.CORE:
+            cost = upgrade.cost
+        elif utype == UpgradeType.SHIP:
+            cost = upgrade.cost_progression[upgrade.current_level + 1]
+        else:
+            raise NotImplementedError
+
+        self.virtual_ore_kg += (cost['ore'] * 0.75)
+        self.charge_battery(cost['electricity'])
 
         self._upgrades[utype][upgrade_ix].seconds_researched = None
         if utype == UpgradeType.CORE:

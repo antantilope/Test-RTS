@@ -2830,10 +2830,47 @@ class TestShipUpgrades(TestCase):
         # It does start because required core upgrade is earned.
         assert len(self.ship._ship_upgrade_active_indexes) == 1
 
-    @expectedFailure
     def test_core_upgrade_can_be_cancelled(self):
-        raise AssertionError
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = False
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 100_000
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 0
+        assert self.ship._core_upgrade_active_indexes == [0]
+        assert self.ship.battery_power == 100_000 - self.ship._upgrades[UpgradeType.CORE][0].cost['electricity']
+        assert self.ship.virtual_ore_kg == 1000 - self.ship._upgrades[UpgradeType.CORE][0].cost['ore']
+        self.ship.cmd_cancel_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == None
+        assert self.ship._core_upgrade_active_indexes == []
+        assert self.ship.battery_power == 100_000
+        assert round(self.ship.virtual_ore_kg) == round(
+            1000
+            - 0.25 * self.ship._upgrades[UpgradeType.CORE][0].cost['ore']
+        )
 
-    @expectedFailure
     def test_ship_upgrade_can_be_cancelled(self):
-        raise AssertionError
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 100_000
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+        assert self.ship.battery_power == 100_000 - self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['electricity']
+        assert self.ship.virtual_ore_kg == 1000 - self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['ore']
+        # Cancel the upgrade
+        self.ship.cmd_cancel_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == []
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched is None
+        assert self.ship.battery_power == 100_000
+        assert round(self.ship.virtual_ore_kg) == round(
+            1000
+            - 0.25 * self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['ore']
+        )
