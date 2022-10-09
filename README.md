@@ -208,17 +208,19 @@ $(document).ready(() => {
 
 ## Codebase Tour
 
-### Game Logic (Python Application)
+### Python Application (Game Logic)
  - api/
    - main.py
      - entry point for python application
      - defines syncronous socket server handler that communicates with nodejs middleware
+     - calls game methods
    - constants.py
      - houses all constants used by the python application. Primarily holds ship properties.
    - models/
      - game.py
-       - top level game logic and properties
-       - ship level game logic that cannot run at the ship level or is inefficient to run at the ship level
+       - holds top level game logic and properties
+       - holds ship level game logic that cannot run at the ship level or is inefficient to run at the ship level
+       - calls ship methods
      - ship.py
        - holds ship level game logic and properties
      - ship_upgrades.py
@@ -231,3 +233,18 @@ $(document).ready(() => {
    - tests/
      - Holds unit tests for python application
 
+
+### Node Backend Web Appliocation
+
+ - appclient/ (angular front end)
+ - static/
+   - static files that are served by the web application
+   - angular build files
+ - appmodels/
+   - this is a django project which only used for database migrations
+ - scripts/
+ - controllers/
+ - lib/
+ - templates/
+  -
+ -
