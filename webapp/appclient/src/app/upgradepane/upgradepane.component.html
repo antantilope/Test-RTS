@@ -333,129 +333,129 @@
             </div>
         </div>
 
-            <!-- Scanner Range -->
+        <!-- Scanner Range -->
+        <div
+            class="ship-upgrade-container"
+            *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.current_level < _api.frameData.ship.upgrade_summary.ship.scanner_range.max_level"
+        >
             <div
-                class="ship-upgrade-container"
-                *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.current_level < _api.frameData.ship.upgrade_summary.ship.scanner_range.max_level"
+                class="upgrade-header"
             >
-                <div
-                    class="upgrade-header"
-                >
-                    <strong>
-                        Scanner Range
-                    </strong>
+                <strong>
+                    Scanner Range
+                </strong>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched === null">
+                <div class="upgrade-cost-label">
+                    <span
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000;' : '#ff0000;'}"
+                    >
+                        🪙{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.ore }}
+                    </span>
+                    <span
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000;' : '#ff0000;'}"
+                    >
+                        🔋{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.electricity|number:"1.0-0" }}
+                    </span>
+                    ⌛{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.seconds }}
                 </div>
-                <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched === null">
-                    <div class="upgrade-cost-label">
-                        <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000;' : '#ff0000;'}"
-                        >
-                            🪙{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.ore }}
-                        </span>
-                        <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000;' : '#ff0000;'}"
-                        >
-                            🔋{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.electricity|number:"1.0-0" }}
-                        </span>
-                        ⌛{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.seconds }}
-                    </div>
-                    <div
-                        *ngFor="let mcun of scannerRangeMissingCoreUpgrades"
-                        class="upgrade-cost-label missing-core-upgrade-label"
-                    >
-                        🔬 requires <strong>{{ mcun }}</strong>
-                    </div>
+                <div
+                    *ngFor="let mcun of scannerRangeMissingCoreUpgrades"
+                    class="upgrade-cost-label missing-core-upgrade-label"
+                >
+                    🔬 requires <strong>{{ mcun }}</strong>
+                </div>
+                <button
+                    *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched === null"
+                    class="start-research-btn"
+                    (click)="btnStartScannerRangeUpgrade()"
+                >
+                    Research Level {{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_level + 1 }}
+                </button>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched !== null">
+                <div>
+                    time:
+                    {{ _api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched|number:"1.0-0" }}
+                    / {{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.seconds|number:"1.0-0" }}
+                </div>
+                <progress
+                    value="{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched }}"
+                    max="{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.seconds }}"
+                >
+                </progress>
+                <div style="margin-top: 8px;">
                     <button
-                        *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched === null"
-                        class="start-research-btn"
-                        (click)="btnStartScannerRangeUpgrade()"
+                        class="cancel-research-btn"
+                        (click)="btnCancelScannerRangeUpgrade()"
                     >
-                        Research Level {{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_level + 1 }}
+                        Cancel
                     </button>
                 </div>
-                <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched !== null">
-                    <div>
-                        time:
-                        {{ _api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched|number:"1.0-0" }}
-                        / {{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.seconds|number:"1.0-0" }}
-                    </div>
-                    <progress
-                        value="{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched }}"
-                        max="{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.seconds }}"
-                    >
-                    </progress>
-                    <div style="margin-top: 8px;">
-                        <button
-                            class="cancel-research-btn"
-                            (click)="btnCancelScannerRangeUpgrade()"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
             </div>
+        </div>
 
-            <!-- Scanner Lock Traversal -->
+        <!-- Scanner Lock Traversal -->
+        <div
+            class="ship-upgrade-container"
+            *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_level < _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.max_level"
+        >
             <div
-                class="ship-upgrade-container"
-                *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_level < _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.max_level"
+                class="upgrade-header"
             >
-                <div
-                    class="upgrade-header"
-                >
-                    <strong>
-                        Scanner Targeting
-                    </strong>
+                <strong>
+                    Scanner Targeting
+                </strong>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched === null">
+                <div class="upgrade-cost-label">
+                    <span
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000;' : '#ff0000;'}"
+                    >
+                        🪙{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.ore }}
+                    </span>
+                    <span
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000;' : '#ff0000;'}"
+                    >
+                        🔋{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.electricity|number:"1.0-0" }}
+                    </span>
+                    ⌛{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.seconds }}
                 </div>
-                <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched === null">
-                    <div class="upgrade-cost-label">
-                        <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000;' : '#ff0000;'}"
-                        >
-                            🪙{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.ore }}
-                        </span>
-                        <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000;' : '#ff0000;'}"
-                        >
-                            🔋{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.electricity|number:"1.0-0" }}
-                        </span>
-                        ⌛{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.seconds }}
-                    </div>
-                    <div
-                        *ngFor="let mcun of scannerLockTraversalMissingCoreUpgrades"
-                        class="upgrade-cost-label missing-core-upgrade-label"
-                    >
-                        🔬 requires <strong>{{ mcun }}</strong>
-                    </div>
+                <div
+                    *ngFor="let mcun of scannerLockTraversalMissingCoreUpgrades"
+                    class="upgrade-cost-label missing-core-upgrade-label"
+                >
+                    🔬 requires <strong>{{ mcun }}</strong>
+                </div>
+                <button
+                    *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched === null"
+                    class="start-research-btn"
+                    (click)="btnStartScannerLockTraversalUpgrade()"
+                >
+                    Research Level {{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_level + 1 }}
+                </button>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched !== null">
+                <div>
+                    time:
+                    {{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched|number:"1.0-0" }}
+                    / {{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.seconds|number:"1.0-0" }}
+                </div>
+                <progress
+                    value="{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched }}"
+                    max="{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.seconds }}"
+                >
+                </progress>
+                <div style="margin-top: 8px;">
                     <button
-                        *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched === null"
-                        class="start-research-btn"
-                        (click)="btnStartScannerLockTraversalUpgrade()"
+                        class="cancel-research-btn"
+                        (click)="btnCancelScannerLockTraversalUpgrade()"
                     >
-                        Research Level {{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_level + 1 }}
+                        Cancel
                     </button>
                 </div>
-                <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched !== null">
-                    <div>
-                        time:
-                        {{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched|number:"1.0-0" }}
-                        / {{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.seconds|number:"1.0-0" }}
-                    </div>
-                    <progress
-                        value="{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched }}"
-                        max="{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.seconds }}"
-                    >
-                    </progress>
-                    <div style="margin-top: 8px;">
-                        <button
-                            class="cancel-research-btn"
-                            (click)="btnCancelScannerLockTraversalUpgrade()"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
             </div>
+        </div>
 
     </div>
 </div>
