@@ -204,5 +204,30 @@ $(document).ready(() => {
 });
 
 ```
+<hr>
 
+## Codebase Tour
+
+### Game Logic (Python Application)
+ - api/
+   - main.py
+     - entry point for python application
+     - defines syncronous socket server handler that communicates with nodejs middleware
+   - constants.py
+     - houses all constants used by the python application. Primarily holds ship properties.
+   - models/
+     - game.py
+       - top level game logic and properties
+       - ship level game logic that cannot run at the ship level or is inefficient to run at the ship level
+     - ship.py
+       - holds ship level game logic and properties
+     - ship_upgrades.py
+       - defines ship upgrades and their costs, requirements, and effects
+     - ship_designator.py
+       - logic that assigns a random designator to each ship.
+       - players do not see opponent's handle's. They only see this random designation.
+     - utils2d.py
+       - defines math intensive operations for managing objects on a 2-dimensional plane
+   - tests/
+     - Holds unit tests for python application
 
