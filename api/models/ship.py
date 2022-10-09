@@ -1681,34 +1681,15 @@ class Ship(BaseModel):
         self._upgrade_summary[utype][slug]['seconds_researched'] = 0
 
     def cmd_cancel_core_upgrade(self, slug: str) -> None:
-        utype = UpgradeType.CORE
-        upgrade = None
-        upgrade_ix = None
-        for ix, u in enumerate(self._upgrades[utype]):
-            if u.slug == slug:
-                upgrade = u
-                upgrade_ix = ix
-                break
-        if upgrade is None:
-            return # "not found"
-        if upgrade.seconds_researched is None:
-            return # "not researching"
-
-        # restocking fee
-        self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
-        self.charge_battery(upgrade.cost['electricity'])
-
-        self._upgrades[utype][upgrade_ix].seconds_researched = None
-        self._core_upgrade_active_indexes = [
-                v for v in self._core_upgrade_active_indexes
-                if v != upgrade_ix
-            ]
-        self._upgrade_summary[utype][
-                self._upgrades[utype][upgrade_ix].slug
-            ]['seconds_researched'] = None
+        self._cancel_upgrade(UpgradeType.CORE, slug)
 
     def cmd_cancel_ship_upgrade(self, slug: str) -> None:
-        utype = UpgradeType.SHIP
+        self._cancel_upgrade(UpgradeType.SHIP, slug)
+
+    def _cancel_upgrade(self, utype: str, slug: str):
+        if utype != UpgradeType.SHIP and utype != UpgradeType.CORE:
+            raise Exception("invalid utype")
+
         upgrade = None
         upgrade_ix = None
         for ix, u in enumerate(self._upgrades[utype]):
@@ -1721,15 +1702,24 @@ class Ship(BaseModel):
         if upgrade.seconds_researched is None:
             return # "not researching"
 
-        # restocking fee
+        # refund resources
         self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
         self.charge_battery(upgrade.cost['electricity'])
 
         self._upgrades[utype][upgrade_ix].seconds_researched = None
-        self._core_upgrade_active_indexes = [
-                v for v in self._core_upgrade_active_indexes
-                if v != upgrade_ix
-            ]
+        if utype == UpgradeType.CORE:
+            self._core_upgrade_active_indexes = [
+                    v for v in self._core_upgrade_active_indexes
+                    if v != upgrade_ix
+                ]
+        elif utype == UpgradeType.SHIP:
+            self._ship_upgrade_active_indexes = [
+                    v for v in self._ship_upgrade_active_indexes
+                    if v != upgrade_ix
+                ]
+        else:
+            raise NotImplementedError
+
         self._upgrade_summary[utype][
                 self._upgrades[utype][upgrade_ix].slug
             ]['seconds_researched'] = None

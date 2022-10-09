@@ -2,22 +2,27 @@
     <h2><i>OFFLINE</i></h2>
 </div>
 <div *ngIf="data !== null">
-    <div>
+    <div class="section">
         <div class="section-heading">
             <strong>Mass</strong>
         </div>
-        <div>
-            <strong>TOTAL</strong> {{ data.shipMassKG }} KG
-        </div>
-        <div>
-            <strong>ORE</strong> {{ data.oreCargoMassKg }} KG
-        </div>
-        <div>
-            <strong>FUEL</strong> {{ data.fuelLevel / 75 }} KG
-        </div>
+        <table>
+            <tr>
+                <td><strong>TOTAL</strong></td>
+                <td class="content-td">{{ data.shipMassKG }} KG</td>
+            </tr>
+            <tr>
+                <td><strong>ORE</strong></td>
+                <td class="content-td">{{ data.oreCargoMassKg }} KG</td>
+            </tr>
+            <tr>
+                <td><strong>FUEL</strong></td>
+                <td class="content-td">{{ data.fuelLevel / 75 }} KG</td> <!-- TODO: repalce magic number -->
+            </tr>
+        </table>
     </div>
     <hr>
-    <div>
+    <div class="section">
         <div class="section-heading">
             <strong>Fuel</strong>
         </div>
@@ -42,7 +47,25 @@
         </div>
     </div>
     <hr>
-    <div>
+    <div class="section">
+        <div class="section-heading">
+            <strong>Engine</strong>
+        </div>
+        <table>
+            <tr>
+                <td><strong>THRUST</strong></td>
+                <td class="content-td">{{ _api.frameData.ship.engine_newtons|number: "1.0-0" }} Newtons</td>
+            </tr>
+            <tr>
+                <strong>THRUST/KG</strong>
+                <td class="content-td">
+                    {{ (_api.frameData.ship.engine_newtons / _api.frameData.ship.mass)|number: "1.0-0" }} Newtons
+                </td>
+            </tr>
+        </table>
+    </div>
+    <hr>
+    <div class="section">
         <div class="section-heading">
             <strong>Battery</strong>
         </div>
@@ -67,12 +90,12 @@
         </div>
     </div>
     <hr>
-    <div>
+    <div class="section">
         <div class="section-heading">
             <strong>Ore</strong>
         </div>
         <div>
-            {{ data.oreCargoMassKg }} / {{ data.oreCargoCapacityMassKg }}
+            {{ data.oreCargoMassKg }} KG / {{ data.oreCargoCapacityMassKg }} KG
         </div>
         <div id="progress-container">
             <progress value="{{ data.oreCargoMassKg }}" max="{{ data.oreCargoCapacityMassKg }}">

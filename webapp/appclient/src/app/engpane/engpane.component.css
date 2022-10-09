@@ -5,6 +5,11 @@ div {
 .section-heading {
     margin: 6px;
     font-size: 115%;
+    text-decoration: underline;
+}
+.section {
+    margin: 6px;
+    font-size:1.2rem;
 }
 
 #progress-container {
@@ -19,4 +24,9 @@ div {
 .supply-label {
     color: #00460f;
     font-weight: bold;
+}
+
+.content-td {
+    padding-left: 8px;
+    text-align: right;
 }

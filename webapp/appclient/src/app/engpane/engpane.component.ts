@@ -18,7 +18,7 @@ export class EngSubPaneData {
   batteryPower: number
   batteryCapacity: number
   batteryUsagePerSecond: number | null
-  batteryUsagePerMinute: number | null
+batteryUsagePerMinute: number | null
 }
 
 
@@ -29,13 +29,13 @@ export class EngSubPaneData {
 })
 export class EngpaneComponent implements OnInit {
 
-  private refreshIntervalMS = 1000
+  private refreshIntervalMS = 500
   public data: EngSubPaneData | null = null
   public lastUpdate: number| null = null
   private destroyed = false
 
   constructor(
-    private _api: ApiService,
+    public _api: ApiService,
     private _formatting: FormattingService
   ) { }
 
