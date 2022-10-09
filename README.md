@@ -62,6 +62,12 @@ $ python -c 'from django.core.management.utils import get_random_secret_key; pri
 
 ```
 
+### Create Example Maps
+```
+./webapp/appmodels/manage.py create_test_maps
+
+```
+
 ### Run Game Python API Tests
 ```bash
 ./test_api
@@ -112,12 +118,9 @@ $ redis-cli
 
 ```bash
 node scripts/create_superuser.js Jonst
-node scripts/create_user.js leeHDrew
+node scripts/create_user.js Derpson
 
-# Get player uuids
-node scripts/print_users.js
-
-node scripts/create_room.js USE_PLAYER_UUID_HERE "Test Room" 2 8001 0
+# Get login links
 node scripts/get_login_links.js
 ```
 
@@ -142,10 +145,7 @@ $ npm run-script builddev
 ```bash
 # From the webapp/ directory
 
-$ node index.js
-
-# OR (npm i nodemon)
-$ nodemon index.js
+$ ./devserver.sh
 ```
 
 <hr>
@@ -204,5 +204,51 @@ $(document).ready(() => {
 });
 
 ```
+<hr>
+
+## Codebase Tour
+
+### Python Application (Game Logic)
+ - api/
+   - main.py
+     - entry point for python application
+     - defines syncronous socket server handler that communicates with nodejs middleware
+     - calls game methods
+   - constants.py
+     - houses all constants used by the python application. Primarily holds ship properties.
+   - models/
+     - game.py
+       - holds top level game logic and properties
+       - holds ship level game logic that cannot run at the ship level or is inefficient to run at the ship level
+       - calls ship methods
+     - ship.py
+       - holds ship level game logic and properties
+     - ship_upgrades.py
+       - defines ship upgrades and their costs, requirements, and effects
+     - ship_designator.py
+       - logic that assigns a random designator to each ship.
+       - players do not see opponent's handle's. They only see this random designation.
+     - utils2d.py
+       - defines math intensive operations for managing objects on a 2-dimensional plane
+         - trigonometry
+         - geometry
+         - physics
+         - hitboxes
+   - tests/
+     - Holds unit tests for python application
 
 
+### Node Backend Web Appliocation
+
+ - appclient/ (angular front end)
+ - static/
+   - static files that are served by the web application
+   - angular build files
+ - appmodels/
+   - this is a django project which only used for database migrations
+ - scripts/
+ - controllers/
+ - lib/
+ - templates/
+  -
+ -

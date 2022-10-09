@@ -1,5 +1,5 @@
 
-from unittest import TestCase
+from unittest import TestCase, expectedFailure
 from uuid import uuid4
 
 from api.models.ship import AutoPilotPrograms, ShipStateKey
@@ -339,6 +339,7 @@ class TestShipAdjustResources(TestCase):
         self.ship.battery_power = 200_000
         self.ship.apu_fuel_usage_per_second = 125
         self.ship.apu_battery_charge_per_second = 200
+        self.ship.battery_capacity = 500_000
 
         self.ship.adjust_resources(fps=1, game_frame=1)
         assert self.ship.apu_online
@@ -622,11 +623,11 @@ class TestShipAdjustResources(TestCase):
     def test_ship_charging_ebeam_uses_resources(self):
         ''' EBEAM Charge '''
         self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge_power_usage_per_second = 4000
         self.ship.ebeam_charge = 0
         self.ship.ebeam_charge_capacity = 10000
         self.ship.ebeam_firing = False
         self.ship.ebeam_charging = True
-        self.ship.ebeam_charge_power_draw_multiple = 4
         self.ship.battery_power = 10000
         fps = 2
 
@@ -644,11 +645,11 @@ class TestShipAdjustResources(TestCase):
     def test_ship_charging_ebeam_is_interrupted_if_not_enogh_battery_power(self):
         ''' EBEAM Charge '''
         self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge_power_usage_per_second = 4000
         self.ship.ebeam_charge = 0
         self.ship.ebeam_charge_capacity = 10000
         self.ship.ebeam_firing = False
         self.ship.ebeam_charging = True
-        self.ship.ebeam_charge_power_draw_multiple = 4
         self.ship.battery_power = 3000
         fps = 2
 
@@ -666,11 +667,11 @@ class TestShipAdjustResources(TestCase):
     def test_ship_charging_ebeam_is_interrupted_if_at_ebeam_charge_capacity(self):
         ''' EBEAM Charge '''
         self.ship.ebeam_charge_rate_per_second = 1000
+        self.ship.ebeam_charge_power_usage_per_second = 4000
         self.ship.ebeam_charge = 0
         self.ship.ebeam_charge_capacity = 750
         self.ship.ebeam_firing = False
         self.ship.ebeam_charging = True
-        self.ship.ebeam_charge_power_draw_multiple = 4
         self.ship.battery_power = 10000
         fps = 2
 
@@ -2810,3 +2811,66 @@ class TestShipUpgrades(TestCase):
             ][
                 'current_level'
             ] == 1
+
+    def test_ship_upgrade_does_not_start_if_core_upgrade_is_missing(self):
+        assert self.ship.cargo_ore_mass_kg == 0
+        assert len(self.ship._ship_upgrade_active_indexes) == 0
+        # Try to start upgrade.
+        self.ship.cmd_start_ship_upgrade("ore_capacity")
+        # It doesnt start because missing core upgrade.
+        assert len(self.ship._ship_upgrade_active_indexes) == 0
+
+        # Mark required core upgrade as complete.
+        for ix, upgrade in enumerate(self.ship._upgrades[UpgradeType.CORE]):
+            if upgrade.slug == "titanium_alloy_hull":
+                self.ship._upgrades[UpgradeType.CORE][ix].earned = True
+
+        # Try to start upgrade.
+        self.ship.cmd_start_ship_upgrade("ore_capacity")
+        # It does start because required core upgrade is earned.
+        assert len(self.ship._ship_upgrade_active_indexes) == 1
+
+    def test_core_upgrade_can_be_cancelled(self):
+        assert self.ship._upgrades[UpgradeType.CORE][0].slug == "titanium_alloy_hull"
+        self.ship._upgrades[UpgradeType.CORE][0].earned = False
+        self.ship.docked_at_station = "foobar"
+        self.ship._upgrades[UpgradeType.CORE][0].seconds_researched = None
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 100_000
+        self.ship.cmd_start_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == 0
+        assert self.ship._core_upgrade_active_indexes == [0]
+        assert self.ship.battery_power == 100_000 - self.ship._upgrades[UpgradeType.CORE][0].cost['electricity']
+        assert self.ship.virtual_ore_kg == 1000 - self.ship._upgrades[UpgradeType.CORE][0].cost['ore']
+        self.ship.cmd_cancel_core_upgrade("titanium_alloy_hull")
+        assert self.ship._upgrades[UpgradeType.CORE][0].seconds_researched == None
+        assert self.ship._core_upgrade_active_indexes == []
+        assert self.ship.battery_power == 100_000
+        assert round(self.ship.virtual_ore_kg) == round(
+            1000
+            - 0.25 * self.ship._upgrades[UpgradeType.CORE][0].cost['ore']
+        )
+
+    def test_ship_upgrade_can_be_cancelled(self):
+        assert self.ship._upgrades[UpgradeType.SHIP][0].slug == "engine_newtons"
+        self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched = None
+        self.ship._upgrades[UpgradeType.SHIP][0].current_level = 0
+        self.ship._upgrades[UpgradeType.SHIP][0].max_level = 2
+        self.ship.virtual_ore_kg = 1000
+        self.ship.cargo_ore_mass_kg = 0
+        self.ship.battery_power = 100_000
+        self.ship.cmd_start_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == [0]
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched == 0
+        assert self.ship.battery_power == 100_000 - self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['electricity']
+        assert self.ship.virtual_ore_kg == 1000 - self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['ore']
+        # Cancel the upgrade
+        self.ship.cmd_cancel_ship_upgrade("engine_newtons")
+        assert self.ship._ship_upgrade_active_indexes == []
+        assert self.ship._upgrades[UpgradeType.SHIP][0].seconds_researched is None
+        assert self.ship.battery_power == 100_000
+        assert round(self.ship.virtual_ore_kg) == round(
+            1000
+            - 0.25 * self.ship._upgrades[UpgradeType.SHIP][0].cost_progression[1]['ore']
+        )

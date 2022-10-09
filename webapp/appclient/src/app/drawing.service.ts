@@ -15,7 +15,12 @@ import {
 } from "./models/drawable-objects.model"
 import { TimerItem } from './models/timer-item.model';
 import { PointCoord } from './models/point-coord.model';
-import { TWO_PI, PI_OVER_180 } from './constants';
+import {
+  TWO_PI,
+  PI_OVER_180,
+  LOW_FUEL_THRESHOLD,
+  LOW_POWER_THRESHOLD
+} from './constants';
 
 
 
@@ -23,6 +28,9 @@ const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
 }
 
+function getRandomFloat(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -50,7 +58,6 @@ export class DrawingService {
     this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
     this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
     this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
-
 
   }
 
@@ -537,12 +544,12 @@ export class DrawingService {
       ctx.font = 'bold 22px courier new'
       const redalertColorAlpha = this._api.frameData.game_frame % 70 > 35 ? "1" : "0.65"
       ctx.fillStyle = `rgb(255, 2, 2, ${redalertColorAlpha})`
-      if(this._api.frameData.ship.fuel_level < 1200) {
+      if(this._api.frameData.ship.fuel_level < LOW_FUEL_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
         lrcYOffset -= lrcYInterval
       }
-      if(this._api.frameData.ship.battery_power < 45000) {
+      if(this._api.frameData.ship.battery_power < LOW_POWER_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
         lrcYOffset -= lrcYInterval
@@ -578,14 +585,19 @@ export class DrawingService {
   }
 
   public drawFrontAndCenterAlerts(ctx: CanvasRenderingContext2D) {
+    // This function executes 1 if block and NOTHING MORE. (some have return statements.)
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       ctx.beginPath()
       ctx.font = 'bold 65px courier new'
       ctx.fillStyle = '#ffffff'
       ctx.textAlign = 'center'
-      ctx.fillText("SUCCESS 🏆🚀", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
+      ctx.fillText("🏆VICTORY", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
     }
     else if(!this._api.frameData.ship.alive) {
+      if((this._api.frameData.ship.died_on_frame + 100) > this._api.frameData.game_frame) {
+        // delay showing death quote
+        return;
+      }
       ctx.beginPath()
       ctx.font = 'bold 56px courier new'
       ctx.fillStyle = '#ff0000'
@@ -783,6 +795,67 @@ export class DrawingService {
     }
   }
 
+  public drawExplosionShockwaves(ctx: CanvasRenderingContext2D) {
+    if (!this._api.frameData.explosion_shockwaves.length) {
+      return
+    }
+    this._api.frameData.explosion_shockwaves.forEach(esw => {
+      this.drawExplosionShockwave(ctx, esw)
+    })
+  }
+
+  public drawExplosionShockwave(
+    ctx: CanvasRenderingContext2D,
+    esw: {id: string, origin_point: Array<number>, radius_meters: number}
+  ) {
+
+    const maxRadiusMeters = Math.max(
+      this._api.frameData.map_config.x_unit_length / this._api.frameData.map_config.units_per_meter,
+      this._api.frameData.map_config.y_unit_length / this._api.frameData.map_config.units_per_meter,
+    )
+    const fillAlpha = 0.12 * (1 - esw.radius_meters / maxRadiusMeters)
+    const startFadeOutAtMeters = maxRadiusMeters * 0.92;
+    let alphaMultiplier = 1
+    if(esw.radius_meters > startFadeOutAtMeters) {
+      alphaMultiplier = 1 - ((esw.radius_meters - startFadeOutAtMeters) / (maxRadiusMeters - startFadeOutAtMeters))
+    }
+
+    // Primary arc
+    ctx.beginPath()
+    ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
+    ctx.fillStyle = `rgb(255, 255, 255, ${fillAlpha})`
+    ctx.lineWidth = Math.max(
+      2,
+      Math.ceil(10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+    )
+    const swCenterCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      {x: esw.origin_point[0], y: esw.origin_point[1]},
+      this._camera.getPosition()
+    )
+    const radiusCanvasPx = esw.radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
+    ctx.stroke()
+    ctx.fill()
+
+    // Suplementary arcs
+    ctx.beginPath()
+    ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
+    const radiusCanvasPx1 = Math.max(1, radiusCanvasPx + randomInt(
+      -30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+    ))
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx1, 0, TWO_PI)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
+    const radiusCanvasPx2 = Math.max(1, radiusCanvasPx + randomInt(
+      -30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+    ))
+    ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx2, 0, TWO_PI)
+    ctx.stroke()
+  }
+
   public drawShip(
     ctx: CanvasRenderingContext2D,
     drawableShip: DrawableShip,
@@ -866,27 +939,43 @@ export class DrawingService {
 
 
     if(drawableShip.isVisual && !drawableShip.explosionFrame) {
+      // Visual Shake x/y offsets
+      let vsxo = 0, vsyo = 0;
+      if(
+        drawableShip.isSelf
+        // && !drawableShip.isDot
+        && this._api.lastShockwaveFrame !== null
+        && (this._api.lastShockwaveFrame + 75) > this._api.frameData.game_frame
+      ) {
+        const percentThroughShake = (this._api.frameData.game_frame - this._api.lastShockwaveFrame) / 75
+        const shakeReduction = 1 - percentThroughShake
+        const xOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+        const yOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+        vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+        vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+      }
       // Ship is within visual range
       // fin 0
       ctx.beginPath()
       ctx.fillStyle = drawableShip.fillColor
-      ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
-      ctx.lineTo(drawableShip.canvasCoordFin0P0.x, drawableShip.canvasCoordFin0P0.y)
-      ctx.lineTo(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y)
+      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin0P0.x + vsxo, drawableShip.canvasCoordFin0P0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin0P1.x + vsxo, drawableShip.canvasCoordFin0P1.y + vsyo)
       ctx.closePath()
       ctx.fill()
       // fin 1
       ctx.beginPath()
-      ctx.moveTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
-      ctx.lineTo(drawableShip.canvasCoordFin1P0.x, drawableShip.canvasCoordFin1P0.y)
-      ctx.lineTo(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y)
+      ctx.moveTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin1P0.x + vsxo, drawableShip.canvasCoordFin1P0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin1P1.x + vsxo, drawableShip.canvasCoordFin1P1.y + vsyo)
       ctx.closePath()
       ctx.fill()
+      // body
       ctx.beginPath()
-      ctx.moveTo(drawableShip.canvasCoordP0.x, drawableShip.canvasCoordP0.y)
-      ctx.lineTo(drawableShip.canvasCoordP1.x, drawableShip.canvasCoordP1.y)
-      ctx.lineTo(drawableShip.canvasCoordP2.x, drawableShip.canvasCoordP2.y)
-      ctx.lineTo(drawableShip.canvasCoordP3.x, drawableShip.canvasCoordP3.y)
+      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP1.x + vsxo, drawableShip.canvasCoordP1.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP2.x + vsxo, drawableShip.canvasCoordP2.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
       ctx.closePath()
       ctx.fill()
       if(drawableShip.visualEbeamCharging) {

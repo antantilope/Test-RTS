@@ -88,9 +88,10 @@ export class QuoteService {
     },
     {
       lines: [
-        "Tune in next week at LZRTech Arena",
-        "where my proxy will resist",
-        "directive 0 of a Hunter Drone."
+        "Tune in live next week on Channel 8",
+        "Business News where my proxy will resist",
+        "directive 0 of a Hunter Drone.",
+        "Viewer discretion is advised."
       ],
       author: this.presidentName,
     },
@@ -354,7 +355,7 @@ export class QuoteService {
       lines: [
         "If the ship catches fire:",
         "place this manual in the ship's forward",
-        "flame retardant document protection sleve.",
+        "flame retardant document protection sleeve.",
         "(patent pending)"
       ],
       author: this.instructionManualName,

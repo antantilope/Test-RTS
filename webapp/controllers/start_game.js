@@ -140,6 +140,7 @@ const runGameLoop = (room_id, port, app, io) => {
                         server_fps_throttle_seconds: respData.server_fps_throttle_seconds,
                         map_config: respData.map_config,
                         ebeam_rays: respData.ebeam_rays,
+                        explosion_shockwaves: respData.explosion_shockwaves,
                         winning_team: respData.winning_team,
                         killfeed: respData.killfeed,
                         space_stations: respData.space_stations,

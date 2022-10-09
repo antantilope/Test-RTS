@@ -4,8 +4,8 @@
     top: 110px; left: 210px;
     display: flex;
     flex-direction: column;
-    width: 400px;
-    height: 350px;
+    width: 500px;
+    height: 450px;
     background-color: #a6ffc1;
     cursor: grab;
     overflow-y: clip;

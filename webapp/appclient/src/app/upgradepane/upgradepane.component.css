@@ -8,27 +8,37 @@ div, h2 {
     padding: 4px;
     border: 1px solid #8b8b8b;
     border-radius: 5px;
+    font-size: 1.2rem;
 }
 .section-heading {
-    font-size: 130%;
+    font-size: 125%;
     font-weight: bold;
     margin-left:5px;
     margin-bottom: 10px;
+    text-decoration: underline;
 }
-#not-docked-at-station {
-    font-style: italic;
-    color: #3d2d2d;
+#not-docked-at-station-alert {
+    font-style: bold;
+    color: #ff0000;
+    font-size: 110%;
 }
 
 .core-upgrade-container {
-    margin-bottom: 15px;
+    margin-bottom: 4px;
     padding: 6px;
-    background-color: #befdd1; /* constrasted against #a6ffc1*/
+    background-color: #fbeeff; /* constrasted against #a6ffc1*/
     border-radius: 5px;
 }
 
-.core-upgrade-header{
-    font-size: 110%;
+.ship-upgrade-container {
+    margin-bottom: 4px;
+    padding: 6px;
+    background-color: #f9ffe8; /* constrasted against #a6ffc1*/
+    border-radius: 5px;
+}
+
+.upgrade-header{
+    font-size: 115%;
     margin-bottom: 5px;
 }
 
@@ -57,4 +67,7 @@ div, h2 {
 
 .upgrade-cost-label {
     margin-bottom: 5px;
+}
+.missing-core-upgrade-label {
+    color: #ff0000;
 }

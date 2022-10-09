@@ -106,6 +106,7 @@ class ShipStateKey:
 
 class ShipDeathType:
     EXPLOSION = 'explosion'
+    EXPLOSION_NEW = 'new_explosion'
     AFLAME = 'aflame'
     ADRIFT = 'adrift'
 
@@ -293,15 +294,16 @@ class Ship(BaseModel):
 
         # Ship Energy Beam
         self.ebeam_charge_rate_per_second = None
+        self.ebeam_charge_power_usage_per_second = None
         self.ebeam_charge_thermal_signature_rate_per_second = None
         self.ebeam_charge = None
         self.ebeam_charge_capacity = None
         self.ebeam_charging = False
         self.ebeam_firing = False
-        self.ebeam_charge_power_draw_multiple = None
         self.ebeam_discharge_rate_per_second = None
         self.ebeam_charge_fire_minimum = None
         self.ebeam_color = None
+        self.ebeam_last_hit_frame = None
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -330,7 +332,7 @@ class Ship(BaseModel):
         self.parked_at_ore_mine = None
         self.cargo_ore_mass_capacity_kg = None
         self.cargo_ore_mass_kg = 0.0
-        self.virtual_ore_kg = 1000000
+        self.virtual_ore_kg = 100_000
         self.mining_ore = False
         self.mining_ore_power_usage_per_second = None
         self.mining_ore_kg_collected_per_second = None
@@ -499,9 +501,13 @@ class Ship(BaseModel):
             'engine_starting': self.engine_starting,
             'engine_boosted': self.engine_boosted,
             'engine_boosted_last_frame': self.engine_boosted_last_frame,
+            'engine_lit_thermal_signature_rate_per_second': self.engine_lit_thermal_signature_rate_per_second,
 
             'apu_starting': self.apu_starting,
             'apu_online': self.apu_online,
+            'apu_battery_charge_per_second': self.apu_battery_charge_per_second,
+            'apu_fuel_usage_per_second': self.apu_fuel_usage_per_second,
+            'apu_online_thermal_signature_rate_per_second': self.apu_online_thermal_signature_rate_per_second,
 
             'scanner_online': self.scanner_online,
             'scanner_locking': self.scanner_locking,
@@ -515,7 +521,10 @@ class Ship(BaseModel):
             'scanner_data': list(self.scanner_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
+            'scanner_locking_max_traversal_degrees': self.scanner_locking_max_traversal_degrees,
+            'scanner_locked_max_traversal_degrees': self.scanner_locked_max_traversal_degrees,
             'scanner_radar_sensitivity': self.scanner_radar_sensitivity,
+            'anti_radar_coating_level': self.anti_radar_coating_level,
 
             'ebeam_firing': self.ebeam_firing,
             'ebeam_charging': self.ebeam_charging,
@@ -523,6 +532,11 @@ class Ship(BaseModel):
             'ebeam_color': self.ebeam_color,
             'ebeam_charge': self.ebeam_charge,
             'ebeam_can_fire': self.ebeam_charge >= self.ebeam_charge_fire_minimum and not self.ebeam_firing,
+            'ebeam_last_hit_frame': self.ebeam_last_hit_frame,
+            'ebeam_charge_rate_per_second': self.ebeam_charge_rate_per_second,
+            'ebeam_charge_power_usage_per_second': self.ebeam_charge_power_usage_per_second,
+            'ebeam_charge_thermal_signature_rate_per_second': self.ebeam_charge_thermal_signature_rate_per_second,
+            'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
 
             'docked_at_station': self.docked_at_station,
             'gravity_brake_position': self.gravity_brake_position,
@@ -541,6 +555,7 @@ class Ship(BaseModel):
             'last_ore_deposit_frame': self.last_ore_deposit_frame,
 
             'alive': self.died_on_frame is None,
+            'died_on_frame': self.died_on_frame,
             'aflame': self.aflame_since_frame is not None,
             'explosion_frame': self.explosion_frame,
 
@@ -662,10 +677,10 @@ class Ship(BaseModel):
         instance.scanner_locked_max_traversal_degrees = constants.SCANNER_LOCKED_MAX_TRAVERSAL_DEGREES
 
         instance.ebeam_charge_rate_per_second = constants.EBEAM_CHARGE_RATE_PER_SECOND
+        instance.ebeam_charge_power_usage_per_second = constants.EBEAM_CHARGE_POWER_USAGE_PER_SECOND
         instance.ebeam_charge_thermal_signature_rate_per_second = constants.EBEAM_CHARGE_THERMAL_SIGNATURE_RATE_PER_SECOND
         instance.ebeam_charge = 0
         instance.ebeam_charge_capacity = constants.EBEAM_CHARGE_CAPACITY
-        instance.ebeam_charge_power_draw_multiple = constants.EBEAM_CHARGE_BATTERY_POWER_DRAW_MULTIPLE
         instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
@@ -768,14 +783,15 @@ class Ship(BaseModel):
 
         ''' ENERGY BEAM '''
         if self.ebeam_charging:
-            adj = self.ebeam_charge_rate_per_second / fps
+            battery_adj = self.ebeam_charge_power_usage_per_second / fps
             try:
-                self.use_battery_power(adj * self.ebeam_charge_power_draw_multiple)
+                self.use_battery_power(battery_adj)
             except InsufficientPowerError:
                 self.ebeam_charging = False
             else:
+                charge_adj = self.ebeam_charge_rate_per_second / fps
                 self.ebeam_charge = min(
-                    self.ebeam_charge + adj,
+                    self.ebeam_charge + charge_adj,
                     self.ebeam_charge_capacity,
                 )
             if self.ebeam_charge >= self.ebeam_charge_capacity:
@@ -1056,7 +1072,7 @@ class Ship(BaseModel):
             if self.coord_x < 0 or self.coord_y < 0 or self.coord_x > map_x or self.coord_y > map_y:
                 self.die(game_frame)
                 self.explode()
-                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+                return ShipDeathType.EXPLOSION_NEW, game_frame - self.died_on_frame
 
         elif self.explosion_frame:
             if self.explosion_frame < 200:
@@ -1067,7 +1083,7 @@ class Ship(BaseModel):
 
         elif self.explode_immediately:
             self.explode()
-            return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+            return ShipDeathType.EXPLOSION_NEW, game_frame - self.died_on_frame
 
         elif self.aflame_since_frame is None:
             # Ship not aflame yet and has not yet exploded
@@ -1081,7 +1097,7 @@ class Ship(BaseModel):
             seconds_aflame = (game_frame - self.aflame_since_frame) / fps
             if seconds_aflame > self._seconds_to_explode:
                 self.explode()
-                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
+                return ShipDeathType.EXPLOSION_NEW, game_frame - self.died_on_frame
             return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
     def explode(self):
@@ -1677,7 +1693,15 @@ class Ship(BaseModel):
         self._upgrade_summary[utype][slug]['seconds_researched'] = 0
 
     def cmd_cancel_core_upgrade(self, slug: str) -> None:
-        utype = UpgradeType.CORE
+        self._cancel_upgrade(UpgradeType.CORE, slug)
+
+    def cmd_cancel_ship_upgrade(self, slug: str) -> None:
+        self._cancel_upgrade(UpgradeType.SHIP, slug)
+
+    def _cancel_upgrade(self, utype: str, slug: str):
+        if utype != UpgradeType.SHIP and utype != UpgradeType.CORE:
+            raise Exception("invalid utype")
+
         upgrade = None
         upgrade_ix = None
         for ix, u in enumerate(self._upgrades[utype]):
@@ -1690,30 +1714,31 @@ class Ship(BaseModel):
         if upgrade.seconds_researched is None:
             return # "not researching"
 
-        # restocking fee because deposit is virtual
-        self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
-        self.charge_battery(upgrade.cost['electricity'])
+        # refund resources
+        if utype == UpgradeType.CORE:
+            cost = upgrade.cost
+        elif utype == UpgradeType.SHIP:
+            cost = upgrade.cost_progression[upgrade.current_level + 1]
+        else:
+            raise NotImplementedError
+
+        self.virtual_ore_kg += (cost['ore'] * 0.75)
+        self.charge_battery(cost['electricity'])
 
         self._upgrades[utype][upgrade_ix].seconds_researched = None
-        self._core_upgrade_active_indexes = [
-                v for v in self._core_upgrade_active_indexes
-                if v != upgrade_ix
-            ]
+        if utype == UpgradeType.CORE:
+            self._core_upgrade_active_indexes = [
+                    v for v in self._core_upgrade_active_indexes
+                    if v != upgrade_ix
+                ]
+        elif utype == UpgradeType.SHIP:
+            self._ship_upgrade_active_indexes = [
+                    v for v in self._ship_upgrade_active_indexes
+                    if v != upgrade_ix
+                ]
+        else:
+            raise NotImplementedError
+
         self._upgrade_summary[utype][
                 self._upgrades[utype][upgrade_ix].slug
             ]['seconds_researched'] = None
-
-    def cmd_cancel_ship_upgrade(self, slug: str) -> None:
-        utype = UpgradeType.SHIP
-        upgrade = None
-        upgrade_ix = None
-        for ix, u in enumerate(self._upgrades[utype]):
-            if u.slug == slug:
-                upgrade = u
-                upgrade_ix = ix
-                break
-        if upgrade is None:
-            return # "not found"
-        if upgrade.seconds_researched is None:
-            return # "not researching"
-
