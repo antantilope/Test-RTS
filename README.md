@@ -62,6 +62,12 @@ $ python -c 'from django.core.management.utils import get_random_secret_key; pri
 
 ```
 
+### Create Example Maps
+```
+./webapp/appmodels/manage.py create_test_maps
+
+```
+
 ### Run Game Python API Tests
 ```bash
 ./test_api
@@ -112,12 +118,9 @@ $ redis-cli
 
 ```bash
 node scripts/create_superuser.js Jonst
-node scripts/create_user.js leeHDrew
+node scripts/create_user.js Derpson
 
-# Get player uuids
-node scripts/print_users.js
-
-node scripts/create_room.js USE_PLAYER_UUID_HERE "Test Room" 2 8001 0
+# Get login links
 node scripts/get_login_links.js
 ```
 
@@ -142,10 +145,7 @@ $ npm run-script builddev
 ```bash
 # From the webapp/ directory
 
-$ node index.js
-
-# OR (npm i nodemon)
-$ nodemon index.js
+$ ./devserver.sh
 ```
 
 <hr>
