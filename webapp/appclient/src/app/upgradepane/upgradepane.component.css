@@ -8,9 +8,10 @@ div, h2 {
     padding: 4px;
     border: 1px solid #8b8b8b;
     border-radius: 5px;
+    font-size: 1.2rem;
 }
 .section-heading {
-    font-size: 130%;
+    font-size: 125%;
     font-weight: bold;
     margin-left:5px;
     margin-bottom: 10px;
@@ -22,21 +23,21 @@ div, h2 {
 }
 
 .core-upgrade-container {
-    margin-bottom: 15px;
+    margin-bottom: 4px;
     padding: 6px;
-    background-color: #f5d8fd; /* constrasted against #a6ffc1*/
+    background-color: #fbeeff; /* constrasted against #a6ffc1*/
     border-radius: 5px;
 }
 
 .ship-upgrade-container {
-    margin-bottom: 15px;
+    margin-bottom: 4px;
     padding: 6px;
-    background-color: #ecfdbe; /* constrasted against #a6ffc1*/
+    background-color: #f9ffe8; /* constrasted against #a6ffc1*/
     border-radius: 5px;
 }
 
 .upgrade-header{
-    font-size: 110%;
+    font-size: 115%;
     margin-bottom: 5px;
 }
 
@@ -65,4 +66,7 @@ div, h2 {
 
 .upgrade-cost-label {
     margin-bottom: 5px;
+}
+.missing-core-upgrade-label {
+    color: #ff0000;
 }

@@ -81,8 +81,14 @@ const validateStartShipUpgrade = (data) => {
     const upgrades = [
         'scanner_range',
         'radar_sensitivity',
+        'anti_radar_coating',
         'scanner_lock_traversal',
         'engine_newtons',
+        'ore_capacity',
+        'apu_efficiency',
+        'fuel_capacity',
+        'battery_capacity',
+
     ];
     if (upgrades.indexOf(slug) === -1) {
         throw new CommandValidationError("invalid slug");

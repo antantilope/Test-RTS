@@ -1,5 +1,5 @@
 
-from typing import Dict, List, TypedDict, Union
+from typing import Dict, List, TypedDict, Union, Optional
 
 
 class UpgradeType:
@@ -10,6 +10,7 @@ class UpgradeCost(TypedDict):
     ore: Union[float, int]
     electricity: Union[float, int]
     seconds: int
+    core_upgrade_slugs: Optional[List[str]]
 
 class UpgradeEffect(TypedDict):
     field: str
@@ -53,6 +54,13 @@ class ShipUpgrade(BaseUpgrade):
             raise Exception("ship upgrade improperly configured")
 
         super().__init__()
+
+        # Add core upgrade requirements to cost progression
+        for level in cost_progression.keys():
+            cost_progression[level]['core_upgrade_slugs'] = []
+            if level in required_core_upgrades:
+                cost_progression[level]['core_upgrade_slugs'] += required_core_upgrades[level]
+
         self.name = name
         self.slug = slug
         self.max_level = max_level
@@ -85,7 +93,7 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
 
     # Core Upgrades
     titanium_alloy_hull = CoreUpgrade(
-        "Titanium Allow Hull",
+        "Titanium Alloy Hull",
         "titanium_alloy_hull",
         {
             "ore": 200,
