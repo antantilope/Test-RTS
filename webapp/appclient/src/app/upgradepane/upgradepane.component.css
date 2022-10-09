@@ -17,9 +17,10 @@ div, h2 {
     margin-bottom: 10px;
     text-decoration: underline;
 }
-#not-docked-at-station {
-    font-style: italic;
-    color: #3d2d2d;
+#not-docked-at-station-alert {
+    font-style: bold;
+    color: #ff0000;
+    font-size: 110%;
 }
 
 .core-upgrade-container {

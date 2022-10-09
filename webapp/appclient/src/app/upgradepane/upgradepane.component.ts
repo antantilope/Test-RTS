@@ -12,6 +12,7 @@ export class UpgradepaneComponent implements OnInit {
   // Array of missing core upgrades needed to start ship upgrades
   public engineNewtonsMissingCoreUpgrades: string[] = []
   public oreCapacityMissingCoreUpgrades: string[] = []
+  public scannerRangeMissingCoreUpgrades: string[] = []
 
   constructor(
     public _api: ApiService,
@@ -30,23 +31,29 @@ export class UpgradepaneComponent implements OnInit {
     if(this._api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost) {
       this.refreshOreCapacityMissingCoreUpgrades()
     }
+    if(this._api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost) {
+      this.refreshScannerRangeMissingCoreUpgrades()
+    }
     setTimeout(()=>{
       this.refreshMissingCoreUpgrades()
     }, this.refreshMissingCoreUpgradesInterval)
   }
-  private refreshEngineNewtonsMissingCoreUpgrades() {
-    this.engineNewtonsMissingCoreUpgrades = (
-      this._api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.core_upgrade_slugs.filter(coreUpgrdeSlug => {
+
+  private getMissingCoreUpgradeNamesForShipUpgrade(shipUpgradeSlug: string): string[] {
+    return (
+      this._api.frameData.ship.upgrade_summary.ship[shipUpgradeSlug].current_cost.core_upgrade_slugs.filter(coreUpgrdeSlug => {
         return this._api.frameData.ship.upgrade_summary.core[coreUpgrdeSlug].current_level == 0
       })
     ).map(missingSlug => this._api.frameData.ship.upgrade_summary.core[missingSlug].name)
   }
+  private refreshEngineNewtonsMissingCoreUpgrades() {
+    this.engineNewtonsMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("engine_newtons")
+  }
   private refreshOreCapacityMissingCoreUpgrades() {
-    this.oreCapacityMissingCoreUpgrades = (
-      this._api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost.core_upgrade_slugs.filter(coreUpgrdeSlug => {
-        return this._api.frameData.ship.upgrade_summary.core[coreUpgrdeSlug].current_level == 0
-      })
-    ).map(missingSlug => this._api.frameData.ship.upgrade_summary.core[missingSlug].name)
+    this.oreCapacityMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("ore_capacity")
+  }
+  private refreshScannerRangeMissingCoreUpgrades() {
+    this.scannerRangeMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("scanner_range")
   }
 
   // Core Upgrades
@@ -108,6 +115,18 @@ export class UpgradepaneComponent implements OnInit {
   public async btnCancelOreCapacityUpgrade() {
     const command = 'cancel_ship_upgrade';
     const slug = 'ore_capacity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnStartScannerRangeUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'scanner_range';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelScannerRangeUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'scanner_range';
     await this._api.post("/api/rooms/command", {command, slug});
   }
 

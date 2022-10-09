@@ -83,8 +83,8 @@ const validateStartShipUpgrade = (data) => {
         'radar_sensitivity',
         'anti_radar_coating',
         'scanner_lock_traversal',
-        'engine_newtons',
-        'ore_capacity',
+        'engine_newtons', //
+        'ore_capacity', //
         'apu_efficiency',
         'fuel_capacity',
         'battery_capacity',
