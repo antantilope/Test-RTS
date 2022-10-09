@@ -341,6 +341,25 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
             4: [{'field': 'fuel_capacity', 'delta': 7_000}],
         },
     )
+    apu_efficiency = ShipUpgrade(
+        "APU efficiency",
+        "apu_efficiency",
+        required_core_upgrades={},
+        cost_progression = {
+            1: {
+                "ore": 125,
+                "electricity": 50_000,
+                "seconds": 45,
+            }
+        },
+        effect_progression = {
+            1: [
+                {'field': 'apu_fuel_usage_per_second', 'delta': -20},
+                {'field': 'apu_battery_charge_per_second', 'delta': 100},
+                {'field': 'apu_online_thermal_signature_rate_per_second', 'delta': -40},
+            ],
+        },
+    )
 
     return {
         UpgradeType.SHIP: [
@@ -352,6 +371,7 @@ def get_upgrade_profile_1() -> Dict[str, List[Union[ShipUpgrade, CoreUpgrade]]]:
             ore_capacity,
             battery_capacity,
             fuel_capacity,
+            apu_efficiency,
         ],
         UpgradeType.CORE: [
             titanium_alloy_hull,
