@@ -14,6 +14,7 @@ export class UpgradepaneComponent implements OnInit {
   public oreCapacityMissingCoreUpgrades: string[] = []
   public scannerRangeMissingCoreUpgrades: string[] = []
   public scannerLockTraversalMissingCoreUpgrades: string[] = []
+  public scannerRadarSensitivityMissingCoreUpgrades: string[] = []
 
   constructor(
     public _api: ApiService,
@@ -38,6 +39,9 @@ export class UpgradepaneComponent implements OnInit {
     if(this._api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost) {
       this.refreshScannerLockTraversalMissingCoreUpgrades()
     }
+    if(this._api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost) {
+      this.refreshScannerRadarSensitivityMissingCoreUpgrades()
+    }
     setTimeout(()=>{
       this.refreshMissingCoreUpgrades()
     }, this.refreshMissingCoreUpgradesInterval)
@@ -61,6 +65,9 @@ export class UpgradepaneComponent implements OnInit {
   }
   private refreshScannerLockTraversalMissingCoreUpgrades() {
     this.scannerLockTraversalMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("scanner_lock_traversal")
+  }
+  private refreshScannerRadarSensitivityMissingCoreUpgrades() {
+    this.scannerRadarSensitivityMissingCoreUpgrades = this.getMissingCoreUpgradeNamesForShipUpgrade("radar_sensitivity")
   }
 
   // Core Upgrades
@@ -148,5 +155,18 @@ export class UpgradepaneComponent implements OnInit {
     const slug = 'scanner_lock_traversal';
     await this._api.post("/api/rooms/command", {command, slug});
   }
+
+  public async btnStartScannerRadarSensitivityUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'radar_sensitivity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelScannerRadarSensitivityUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'radar_sensitivity';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
 
 }

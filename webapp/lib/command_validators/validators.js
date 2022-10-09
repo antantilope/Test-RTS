@@ -80,9 +80,9 @@ const validateStartShipUpgrade = (data) => {
     }
     const upgrades = [
         'scanner_range', //
-        'radar_sensitivity',
+        'radar_sensitivity', //
         'anti_radar_coating',
-        'scanner_lock_traversal',
+        'scanner_lock_traversal', //
         'engine_newtons', //
         'ore_capacity', //
         'apu_efficiency',
