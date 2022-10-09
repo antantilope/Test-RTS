@@ -1,5 +1,5 @@
 
-from unittest import TestCase
+from unittest import TestCase, expectedFailure
 from uuid import uuid4
 
 from api.models.ship import AutoPilotPrograms, ShipStateKey
@@ -2829,3 +2829,11 @@ class TestShipUpgrades(TestCase):
         self.ship.cmd_start_ship_upgrade("ore_capacity")
         # It does start because required core upgrade is earned.
         assert len(self.ship._ship_upgrade_active_indexes) == 1
+
+    @expectedFailure
+    def test_core_upgrade_can_be_cancelled(self):
+        raise AssertionError
+
+    @expectedFailure
+    def test_ship_upgrade_can_be_cancelled(self):
+        raise AssertionError

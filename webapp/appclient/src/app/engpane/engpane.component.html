@@ -35,8 +35,8 @@
                 {{ data.fuelUsagePerSecond|number: "1.2-2" }}
             </div>
             <div>
-                <span *ngIf="data.fuelUsagePerSecond < 0" class="usage-label">Use/Sec</span>
-                <span *ngIf="data.fuelUsagePerSecond > 0" class="supply-label">Inc/Sec</span>
+                <span *ngIf="data.fuelUsagePerSecond < 0" class="usage-label">Use/Min</span>
+                <span *ngIf="data.fuelUsagePerSecond > 0" class="supply-label">Inc/Min</span>
                 {{ data.fuelUsagePerMinute|number: "1.2-2" }}
             </div>
         </div>

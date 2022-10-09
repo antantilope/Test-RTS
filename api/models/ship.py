@@ -1694,7 +1694,7 @@ class Ship(BaseModel):
         if upgrade.seconds_researched is None:
             return # "not researching"
 
-        # restocking fee because deposit is virtual
+        # restocking fee
         self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
         self.charge_battery(upgrade.cost['electricity'])
 
@@ -1721,3 +1721,15 @@ class Ship(BaseModel):
         if upgrade.seconds_researched is None:
             return # "not researching"
 
+        # restocking fee
+        self.virtual_ore_kg += (upgrade.cost['ore'] * 0.75)
+        self.charge_battery(upgrade.cost['electricity'])
+
+        self._upgrades[utype][upgrade_ix].seconds_researched = None
+        self._core_upgrade_active_indexes = [
+                v for v in self._core_upgrade_active_indexes
+                if v != upgrade_ix
+            ]
+        self._upgrade_summary[utype][
+                self._upgrades[utype][upgrade_ix].slug
+            ]['seconds_researched'] = None

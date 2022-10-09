@@ -14,6 +14,7 @@ div, h2 {
     font-weight: bold;
     margin-left:5px;
     margin-bottom: 10px;
+    text-decoration: underline;
 }
 #not-docked-at-station {
     font-style: italic;
@@ -23,11 +24,18 @@ div, h2 {
 .core-upgrade-container {
     margin-bottom: 15px;
     padding: 6px;
-    background-color: #befdd1; /* constrasted against #a6ffc1*/
+    background-color: #f5d8fd; /* constrasted against #a6ffc1*/
     border-radius: 5px;
 }
 
-.core-upgrade-header{
+.ship-upgrade-container {
+    margin-bottom: 15px;
+    padding: 6px;
+    background-color: #ecfdbe; /* constrasted against #a6ffc1*/
+    border-radius: 5px;
+}
+
+.upgrade-header{
     font-size: 110%;
     margin-bottom: 5px;
 }

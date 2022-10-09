@@ -15,6 +15,7 @@ export class UpgradepaneComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  // Core Upgrades
   public async btnStartAdvancedElectronicsUpgrade() {
     const command = 'start_core_upgrade';
     const slug = 'advanced_electronics';
@@ -48,6 +49,19 @@ export class UpgradepaneComponent implements OnInit {
   public async btnCancelLiquidNitrogenCoolingUpgrade() {
     const command = 'cancel_core_upgrade';
     const slug = 'liquid_nitrogen_cooling';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  // Ship Upgrades
+  public async btnStartEngineNewtonsUpgrade() {
+    const command = 'start_ship_upgrade';
+    const slug = 'engine_newtons';
+    await this._api.post("/api/rooms/command", {command, slug});
+  }
+
+  public async btnCancelEngineNewtonsUpgrade() {
+    const command = 'cancel_ship_upgrade';
+    const slug = 'engine_newtons';
     await this._api.post("/api/rooms/command", {command, slug});
   }
 

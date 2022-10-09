@@ -14,7 +14,7 @@
             <div class="core-upgrade-container">
                 <div
                     [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_level == 1) ? '#00410e;' : '#000000'}"
-                    class="core-upgrade-header"
+                    class="upgrade-header"
                 >
                     <strong>
                         Adanced Electronics
@@ -70,7 +70,7 @@
             <div class="core-upgrade-container">
                 <div
                     [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_level == 1) ? '#00410e;' : '#000000'}"
-                    class="core-upgrade-header"
+                    class="upgrade-header"
                 >
                     <strong>
                         Titanium Alloy Hull
@@ -126,7 +126,7 @@
             <div class="core-upgrade-container">
                 <div
                     [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_level == 1) ? '#00410e;' : '#000000'}"
-                    class="core-upgrade-header"
+                    class="upgrade-header"
                 >
                     <strong>
                         Liquid Nitrogen Cooling
@@ -178,6 +178,59 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+    <div class="upgrade-type-section">
+        <div class="section-heading">
+            Ship Upgrades
+        </div>
+
+        <!-- Engine Newtons -->
+        <div
+            class="ship-upgrade-container"
+            *ngIf="_api.frameData.ship.upgrade_summary.ship.engine_newtons.current_level < _api.frameData.ship.upgrade_summary.ship.engine_newtons.max_level"
+        >
+            <div
+                class="upgrade-header"
+            >
+                <strong>
+                    Engine Newtons
+                </strong>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.engine_newtons.seconds_researched === null">
+                <div class="upgrade-cost-label">
+                    🪙{{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.ore }}
+                    🔋{{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.electricity }}
+                    ⌛{{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.seconds }}
+                </div>
+                <button
+                    *ngIf="_api.frameData.ship.upgrade_summary.ship.engine_newtons.seconds_researched === null"
+                    class="start-research-btn"
+                    (click)="btnStartEngineNewtonsUpgrade()"
+                >
+                    Research Level {{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_level + 1 }}
+                </button>
+            </div>
+            <div *ngIf="_api.frameData.ship.upgrade_summary.ship.engine_newtons.seconds_researched !== null">
+                <div>
+                    time:
+                    {{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.seconds_researched|number:"1.0-0" }}
+                    / {{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.seconds|number:"1.0-0" }}
+                </div>
+                <progress
+                    value="{{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.seconds_researched }}"
+                    max="{{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.seconds }}"
+                >
+                </progress>
+                <div style="margin-top: 8px;">
+                    <button
+                        class="cancel-research-btn"
+                        (click)="btnCancelEngineNewtonsUpgrade()"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
