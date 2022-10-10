@@ -123,9 +123,9 @@ export class GamedisplayComponent implements OnInit {
     const key = event.key.toLocaleLowerCase()
     console.log({gameKeystroke: key})
     if (key === 'm') {
-      this._camera.toggleMap()
+      this._camera.gameDisplayCamera.toggleMap()
     } else if (key === 'n') {
-      this._camera.cycleMode()
+      this._camera.gameDisplayCamera.cycleMode()
     }
   }
 
@@ -136,9 +136,9 @@ export class GamedisplayComponent implements OnInit {
       if(this._pane.mouseInPane()) {
         return
       }
-      if (this._camera.canManualZoom()) {
+      if (this._camera.gameDisplayCamera.canManualZoom()) {
         const zoomIn = event.deltaY < 0
-        this._camera.adjustZoom(zoomIn)
+        this._camera.gameDisplayCamera.adjustZoom(zoomIn)
       }
     })
 
@@ -192,7 +192,7 @@ export class GamedisplayComponent implements OnInit {
     })
     window.addEventListener('mousemove', event => {
       this.mouseMovedWhileDown = true
-      if(!this._camera.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
+      if(!this._camera.gameDisplayCamera.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
         return
       }
       else if(this.mousePanLastX === null || this.mousePanLastY === null) {
@@ -200,11 +200,11 @@ export class GamedisplayComponent implements OnInit {
         this.mousePanLastY = event.screenY
       }
       else {
-        const cameraZoom = this._camera.getZoom()
+        const cameraZoom = this._camera.gameDisplayCamera.getZoom()
         const scaledDeltaX = (this.mousePanLastX - event.screenX) * cameraZoom
         const scaledDeltaY = (this.mousePanLastY - event.screenY) * cameraZoom * -1
-        this._camera.xPan(scaledDeltaX)
-        this._camera.yPan(scaledDeltaY)
+        this._camera.gameDisplayCamera.xPan(scaledDeltaX)
+        this._camera.gameDisplayCamera.yPan(scaledDeltaY)
         this.mousePanLastX = event.screenX
         this.mousePanLastY = event.screenY
       }
@@ -225,7 +225,7 @@ export class GamedisplayComponent implements OnInit {
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
     ) {
-      const mode = this._camera.getMode()
+      const mode = this._camera.gameDisplayCamera.getMode()
       if(
         (mode == CAMERA_MODE_SHIP || mode == CAMERA_MODE_SCANNER)
         && !this._api.frameData.ship.autopilot_program
@@ -254,7 +254,7 @@ export class GamedisplayComponent implements OnInit {
       return console.warn("could not handle heading adjust. ship0 != self")
     }
     const canvasShipPoint: PointCoord = this.drawableObjects.ships[0].canvasCoordCenter
-    const heading = this._camera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
+    const heading = this._camera.gameDisplayCamera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
     console.log({set_heading: heading})
     await this._api.post(
       "/api/rooms/command",
@@ -281,10 +281,10 @@ export class GamedisplayComponent implements OnInit {
     }
     let minDist: number
     let minDistData: any
-    const cameraPosition = this._camera.getPosition()
+    const cameraPosition = this._camera.gameDisplayCamera.getPosition()
     for(let i in this._api.frameData.ore_mines) {
       let om = this._api.frameData.ore_mines[i]
-      let omCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      let omCanvasCoord = this._camera.gameDisplayCamera.mapCoordToCanvasCoord(
         {x: om.position_map_units_x, y: om.position_map_units_y},
         cameraPosition,
       )
@@ -298,7 +298,7 @@ export class GamedisplayComponent implements OnInit {
     }
     for(let i in this._api.frameData.space_stations) {
       let st = this._api.frameData.space_stations[i]
-      let stCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      let stCanvasCoord = this._camera.gameDisplayCamera.mapCoordToCanvasCoord(
         {x: st.position_map_units_x, y: st.position_map_units_y},
         cameraPosition,
       )
@@ -336,7 +336,7 @@ export class GamedisplayComponent implements OnInit {
       console.log("resizeCanvas()")
       this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth
       this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight
-      this._camera.setCanvasWidthHeight(
+      this._camera.gameDisplayCamera.setCanvasWidthHeight(
         this.canvas.nativeElement.offsetWidth,
         this.canvas.nativeElement.offsetHeight,
       )
@@ -386,10 +386,10 @@ export class GamedisplayComponent implements OnInit {
       this.mineBtnTxtColor = "#ffffff"
     }
 
-    const camCoords = this._camera.getPosition()
-    const camMode = this._camera.getMode()
+    const camCoords = this._camera.gameDisplayCamera.getPosition()
+    const camMode = this._camera.gameDisplayCamera.getMode()
     if(camCoords.x === null || camCoords.y === null) {
-      this._camera.setPosition(
+      this._camera.gameDisplayCamera.setPosition(
         this._api.frameData.ship.coord_x,
         this._api.frameData.ship.coord_y,
       )
@@ -398,35 +398,35 @@ export class GamedisplayComponent implements OnInit {
     this.clearCanvas()
 
     if (camMode === CAMERA_MODE_SHIP) {
-      this._camera.setPosition(
+      this._camera.gameDisplayCamera.setPosition(
         this._api.frameData.ship.coord_x,
         this._api.frameData.ship.coord_y,
       )
     }
     else if (camMode === CAMERA_MODE_SCANNER) {
-      this._camera.setCameraPositionAndZoomForScannerMode(
+      this._camera.gameDisplayCamera.setCameraPositionAndZoomForScannerMode(
         this.scannerTargetIDCursor,
       )
     }
 
-    const drawableObjects: DrawableCanvasItems = this._camera.getDrawableCanvasObjects()
+    const drawableObjects: DrawableCanvasItems = this._camera.gameDisplayCamera.getDrawableCanvasObjects()
     this.drawableObjects = drawableObjects
 
     // Vision circles
     this._draw.drawVisionCircles(this.ctx, drawableObjects.visionCircles)
 
-    this._draw.drawExplosionShockwaves(this.ctx)
+    this._draw.drawExplosionShockwaves(this.ctx, this._camera.gameDisplayCamera)
 
     // Draw Map boundary
-    this._draw.drawMapBoundary(this.ctx, drawableObjects.mapWall);
+    this._draw.drawMapBoundary(this.ctx, this._camera.gameDisplayCamera, drawableObjects.mapWall);
 
     // Add map features
-    this._draw.drawSpaceStations(this.ctx)
-    this._draw.drawMiningLocations(this.ctx)
+    this._draw.drawSpaceStations(this.ctx, this._camera.gameDisplayCamera)
+    this._draw.drawMiningLocations(this.ctx, this._camera.gameDisplayCamera)
 
     // Waypoint, if one is set
     if(this.wayPoint !== null) {
-      this._draw.drawWaypoint(this.ctx, this.wayPoint)
+      this._draw.drawWaypoint(this.ctx, this._camera.gameDisplayCamera, this.wayPoint)
     }
 
     // expect smallest vision circle at end of array
@@ -434,6 +434,7 @@ export class GamedisplayComponent implements OnInit {
     if(lastIx > -1) {
       this._draw.drawVelocityAndHeadingLine(
         this.ctx,
+        this._camera.gameDisplayCamera,
         drawableObjects.visionCircles[lastIx],
       )
     }
@@ -443,27 +444,28 @@ export class GamedisplayComponent implements OnInit {
       const drawableShip: DrawableShip = drawableObjects.ships[i]
       this._draw.drawShip(
         this.ctx,
+        this._camera.gameDisplayCamera,
         drawableObjects.ships[i],
         this.scannerTargetIDCursor,
       )
     }
 
-    this._draw.drawOreDepositEffect(this.ctx)
+    this._draw.drawOreDepositEffect(this.ctx, this._camera.gameDisplayCamera)
 
     // E-Beams
-    this._draw.drawEbeams(this.ctx, drawableObjects.ebeamRays)
+    this._draw.drawEbeams(this.ctx, this._camera.gameDisplayCamera, drawableObjects.ebeamRays)
 
     // Corner overlays
-    this._draw.drawBottomLeftOverlay(this.ctx)
-    if(this._camera.getMode() !== CAMERA_MODE_MAP) {
-      this._draw.drawTopLeftOverlay(this.ctx);
-      this._draw.drawBottomRightOverlay(this.ctx)
+    this._draw.drawBottomLeftOverlay(this.ctx, this._camera.gameDisplayCamera)
+    if(this._camera.gameDisplayCamera.getMode() !== CAMERA_MODE_MAP) {
+      this._draw.drawTopLeftOverlay(this.ctx, this._camera.gameDisplayCamera);
+      this._draw.drawBottomRightOverlay(this.ctx, this._camera.gameDisplayCamera)
       if(!this.isDebug && this._api.frameData.ship.alive) {
-        this._draw.drawTopRightOverlay(this.ctx, this.wayPoint)
+        this._draw.drawTopRightOverlay(this.ctx, this._camera.gameDisplayCamera, this.wayPoint)
       }
     }
     // Front center and alerts
-    this._draw.drawFrontAndCenterAlerts(this.ctx)
+    this._draw.drawFrontAndCenterAlerts(this.ctx, this._camera.gameDisplayCamera)
 
     // Click feedback
     if(this.clickAnimationFrame) {
@@ -493,7 +495,7 @@ export class GamedisplayComponent implements OnInit {
 
   private clearCanvas(): void {
     this.ctx.beginPath()
-    this.ctx.clearRect(0, 0, this._camera.canvasWidth * 2, this._camera.canvasHeight * 2) // *2 because of bug where corner is not cleared
+    this.ctx.clearRect(0, 0, this._camera.gameDisplayCamera.canvasWidth * 2, this._camera.gameDisplayCamera.canvasHeight * 2) // *2 because of bug where corner is not cleared
   }
 
   private paintDebugData(): void {
@@ -504,7 +506,7 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillStyle = '#ffffff'
     this.ctx.textAlign = 'right'
 
-    const xOffset = this._camera.canvasWidth - 15
+    const xOffset = this._camera.gameDisplayCamera.canvasWidth - 15
     let yOffset = 25
     const yInterval = 20
 
@@ -534,17 +536,17 @@ export class GamedisplayComponent implements OnInit {
       yOffset += yInterval
     }
 
-    const {x, y} = this._camera.getPosition()
+    const {x, y} = this._camera.gameDisplayCamera.getPosition()
     this.ctx.fillText(`camera pos: X: ${x} Y: ${y}`, xOffset, yOffset)
     yOffset += yInterval
 
-    this.ctx.fillText(`camera zoom: ${this._camera.getZoom()}`, xOffset, yOffset)
+    this.ctx.fillText(`camera zoom: ${this._camera.gameDisplayCamera.getZoom()}`, xOffset, yOffset)
     yOffset += yInterval
 
-    this.ctx.fillText(`camera index: ${this._camera.getZoomIndex()}`, xOffset, yOffset)
+    this.ctx.fillText(`camera index: ${this._camera.gameDisplayCamera.getZoomIndex()}`, xOffset, yOffset)
     yOffset += yInterval
 
-    this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
+    this.ctx.fillText(`camera mode: ${this._camera.gameDisplayCamera.getMode()}`, xOffset, yOffset)
     yOffset += yInterval
 
     const [shipX, shipY] = [this._api.frameData.ship.coord_x, this._api.frameData.ship.coord_y]
@@ -558,16 +560,16 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText(`ship Velocity: X: ${shipVelX.toFixed(2)} Y: ${shipVelY.toFixed(2)}`, xOffset, yOffset)
     yOffset += yInterval
 
-    this.ctx.fillText(`camera mode: ${this._camera.getMode()}`, xOffset, yOffset)
+    this.ctx.fillText(`camera mode: ${this._camera.gameDisplayCamera.getMode()}`, xOffset, yOffset)
     yOffset += yInterval
 
   }
 
 
   private async setCameraToPilotMode() {
-    if(this._camera.getMode() == CAMERA_MODE_FREE) {
-      this._camera.setModeShip()
-      this._camera.setZoomIndex(3)
+    if(this._camera.gameDisplayCamera.getMode() == CAMERA_MODE_FREE) {
+      this._camera.gameDisplayCamera.setModeShip()
+      this._camera.gameDisplayCamera.setZoomIndex(3)
     }
   }
 
@@ -657,7 +659,7 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'activate_scanner'},
     )
-    setTimeout(()=>{this._camera.setModeScanner()})
+    setTimeout(()=>{this._camera.gameDisplayCamera.setModeScanner()})
     this._sound.playPrimaryButtonClickSound()
   }
 

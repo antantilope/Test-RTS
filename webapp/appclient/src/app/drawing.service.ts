@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { CameraService, CAMERA_MODE_MAP } from './camera.service';
+import { Camera, CAMERA_MODE_MAP } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
 import { UserService } from "./user.service";
@@ -47,7 +47,7 @@ export class DrawingService {
   private spaceStationVisualSideLengthM = 30
 
   constructor(
-    private _camera: CameraService,
+    // private _camera: CameraService,
     private _api: ApiService,
     private _formatting: FormattingService,
     private _quote: QuoteService,
@@ -64,13 +64,14 @@ export class DrawingService {
 
   public drawMapBoundary(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     mapWallCanvasBoxCoords: BoxCoords,
   ) {
     ctx.beginPath()
     ctx.strokeStyle ="#5e5e00"
     ctx.lineWidth = Math.max(
       2,
-      Math.ceil(8 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+      Math.ceil(8 * this._api.frameData.map_config.units_per_meter / camera.getZoom()),
     )
     ctx.rect(
       mapWallCanvasBoxCoords.x1,
@@ -113,7 +114,10 @@ export class DrawingService {
     }
   }
 
-  public drawOreDepositEffect(ctx: CanvasRenderingContext2D) {
+  public drawOreDepositEffect(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+  ) {
     const effectLengthFrames = 30
     if (
       (
@@ -130,9 +134,9 @@ export class DrawingService {
       - ship.last_ore_deposit_frame
     )
 
-    const shipCanvasCoords = this._camera.mapCoordToCanvasCoord(
+    const shipCanvasCoords = camera.mapCoordToCanvasCoord(
       {x: ship.coord_x, y: ship.coord_y},
-      this._camera.getPosition(),
+      camera.getPosition(),
     )
 
     const effectRadius = (15 + effectFrame) * 3.5
@@ -159,6 +163,7 @@ export class DrawingService {
 
   public drawWaypoint(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     wayPointMapCoord: PointCoord
   ) {
     const ship = this._api.frameData.ship
@@ -166,11 +171,11 @@ export class DrawingService {
       return
     }
 
-    const cameraPosition = this._camera.getPosition()
-    let wpCanvasCoord = this._camera.mapCoordToCanvasCoord(
+    const cameraPosition = camera.getPosition()
+    let wpCanvasCoord = camera.mapCoordToCanvasCoord(
       wayPointMapCoord, cameraPosition
     )
-    let shipCanvasCoord = this._camera.mapCoordToCanvasCoord(
+    let shipCanvasCoord = camera.mapCoordToCanvasCoord(
       {x: ship.coord_x, y: ship.coord_y}, cameraPosition
     )
 
@@ -203,6 +208,7 @@ export class DrawingService {
 
   public drawVelocityAndHeadingLine(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     visionCircle: VisionCircle
   ) {
     const ship = this._api.frameData.ship
@@ -214,7 +220,7 @@ export class DrawingService {
       ship.velocity_x_meters_per_second !== 0
       || ship.velocity_y_meters_per_second !== 0
     ) {
-      const vAngleRads = this._camera.getCanvasAngleBetween(
+      const vAngleRads = camera.getCanvasAngleBetween(
         {x:0, y:0},
         {
           x: visionCircle.canvasCoord.x + ship.velocity_x_meters_per_second * 1000,
@@ -242,7 +248,7 @@ export class DrawingService {
     const hAngleRads = (180 - ship.heading) * PI_OVER_180 // why -180? because it works.
     const halfVisionRadius = Math.min(
       visionCircle.radius / 2,
-      this._camera.canvasHalfHeight,
+      camera.canvasHalfHeight,
     )
     const headingLinePointB = {
       x: visionCircle.canvasCoord.x + (halfVisionRadius * Math.sin(hAngleRads)),
@@ -258,9 +264,10 @@ export class DrawingService {
 
   public drawEbeams(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     rays: EBeamRayDetails[],
   ) {
-    const ebeamThickness = this._camera.getEBeamLineThickness()
+    const ebeamThickness = camera.getEBeamLineThickness()
     for(let i in rays) {
       let ray = rays[i]
       ctx.beginPath()
@@ -274,11 +281,12 @@ export class DrawingService {
 
   public drawBottomRightOverlay(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
   ) {
     const brcYInterval = 45
     let brcYOffset = 30
     const brcXOffset = 15
-    const timerBarLength = Math.round(this._camera.canvasWidth / 8)
+    const timerBarLength = Math.round(camera.canvasWidth / 8)
     const textRAlignXOffset = brcXOffset + timerBarLength + 10
     const barRAlignXOffset = brcXOffset + timerBarLength
 
@@ -291,8 +299,8 @@ export class DrawingService {
     ctx.beginPath()
     ctx.fillText(
       this._api.frameData.elapsed_time,
-      this._camera.canvasWidth - 15,
-      this._camera.canvasHeight - brcYOffset,
+      camera.canvasWidth - 15,
+      camera.canvasHeight - brcYOffset,
     )
 
     // Timers
@@ -307,21 +315,21 @@ export class DrawingService {
         ctx.beginPath()
         ctx.fillText(
           timer.name,
-          this._camera.canvasWidth - textRAlignXOffset,
-          this._camera.canvasHeight - brcYOffset,
+          camera.canvasWidth - textRAlignXOffset,
+          camera.canvasHeight - brcYOffset,
         )
         ctx.beginPath()
         ctx.rect(
-          this._camera.canvasWidth - barRAlignXOffset, //    top left x
-          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+          camera.canvasWidth - barRAlignXOffset, //    top left x
+          camera.canvasHeight - (brcYOffset + 20),  // top left y
           timerBarLength, // width
           30,             // height
         )
         ctx.stroke()
         ctx.beginPath()
         ctx.rect(
-          this._camera.canvasWidth - barRAlignXOffset, //    top left x
-          this._camera.canvasHeight - (brcYOffset + 20),  // top left y
+          camera.canvasWidth - barRAlignXOffset, //    top left x
+          camera.canvasHeight - (brcYOffset + 20),  // top left y
           fillLength, // width
           30,         // height
         )
@@ -333,12 +341,13 @@ export class DrawingService {
 
   public drawTopRightOverlay(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     waypointMapCoord: PointCoord | null,
   ) {
     // Gyroscope circle
     const buffer = 3;
-    const gryroscopeRadius = Math.floor(this._camera.canvasHalfHeight / 8)
-    const gryroscopeX = this._camera.canvasWidth - (gryroscopeRadius + buffer)
+    const gryroscopeRadius = Math.floor(camera.canvasHalfHeight / 8)
+    const gryroscopeX = camera.canvasWidth - (gryroscopeRadius + buffer)
     const gryroscopeY = gryroscopeRadius + buffer
     ctx.beginPath()
     ctx.fillStyle = "rgb(255, 255, 255, 0.65)"
@@ -356,7 +365,7 @@ export class DrawingService {
       this._api.frameData.ship.velocity_x_meters_per_second
       || this._api.frameData.ship.velocity_y_meters_per_second
     ) {
-      const angleRads = this._camera.getCanvasAngleBetween(
+      const angleRads = camera.getCanvasAngleBetween(
         {x:0, y:0},
         {
           x: gryroscopeX + this._api.frameData.ship.velocity_x_meters_per_second * 1000,
@@ -412,14 +421,14 @@ export class DrawingService {
     ctx.textAlign = 'right'
     ctx.fillText(
       velocity + " M/S",
-      this._camera.canvasWidth - 3,
+      camera.canvasWidth - 3,
       gryroscopeY + gryroscopeRadius + 18,
     )
     // Thermal Signature Text
     ctx.beginPath()
     ctx.fillText(
       this._api.frameData.ship.scanner_thermal_signature + " IR ",
-      this._camera.canvasWidth - 3,
+      camera.canvasWidth - 3,
       gryroscopeY + gryroscopeRadius + 40,
     )
 
@@ -438,13 +447,16 @@ export class DrawingService {
       ctx.fillStyle = "rgb(193, 113, 209, 0.95)"
       ctx.fillText(
         `WP ${metersDist} M`,
-        this._camera.canvasWidth - 3,
+        camera.canvasWidth - 3,
         gryroscopeY + gryroscopeRadius + 65,
       )
     }
   }
 
-  public drawTopLeftOverlay(ctx: CanvasRenderingContext2D) {
+  public drawTopLeftOverlay(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+  ) {
     const tlcYInterval = 34
     const tlcKFYInterval = 28
     let tlcYOffset = 25
@@ -475,7 +487,7 @@ export class DrawingService {
       // Camera mode
       ctx.beginPath()
       ctx.fillStyle = '#ffffff'
-      ctx.fillText("🎥 " + this._camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
+      ctx.fillText("🎥 " + camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
       tlcYOffset += tlcYInterval
     }
     // Killfeed (TOP LEFT)
@@ -491,15 +503,18 @@ export class DrawingService {
     }
   }
 
-  public drawBottomLeftOverlay(ctx: CanvasRenderingContext2D) {
-    let lrcYOffset = this._camera.canvasHeight - 30
+  public drawBottomLeftOverlay(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+  ) {
+    let lrcYOffset = camera.canvasHeight - 30
     let lrcYInterval = 40
     const lrcXOffset = 15
     // Scale Bar
     const barLengthMeters = (
       (
-        (this._camera.canvasWidth / 4)
-        * this._camera.getZoom()
+        (camera.canvasWidth / 4)
+        * camera.getZoom()
       )
       / this._api.frameData.map_config.units_per_meter
     )
@@ -514,15 +529,15 @@ export class DrawingService {
     ctx.strokeStyle = "#ffffff"
     ctx.lineWidth = 3
     ctx.moveTo(lrcXOffset, lrcYOffset);
-    ctx.lineTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
+    ctx.lineTo((camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
     ctx.stroke()
     ctx.beginPath()
     ctx.moveTo(lrcXOffset, lrcYOffset);
     ctx.lineTo( lrcXOffset, lrcYOffset - 10);
     ctx.stroke()
     ctx.beginPath()
-    ctx.moveTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
-    ctx.lineTo((this._camera.canvasWidth / 4) + lrcXOffset, lrcYOffset - 10);
+    ctx.moveTo((camera.canvasWidth / 4) + lrcXOffset, lrcYOffset);
+    ctx.lineTo((camera.canvasWidth / 4) + lrcXOffset, lrcYOffset - 10);
     ctx.stroke()
     // Scale meters and user handle
     ctx.beginPath()
@@ -530,7 +545,7 @@ export class DrawingService {
     ctx.fillStyle = this._api.frameData.ship.alive ? '#ffffff' : "#ff0000";
     ctx.textAlign = 'left'
     ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
-    if(this._camera.getMode() === CAMERA_MODE_MAP) {
+    if(camera.getMode() === CAMERA_MODE_MAP) {
       return
     }
     lrcYOffset -= lrcYInterval
@@ -584,14 +599,17 @@ export class DrawingService {
     }
   }
 
-  public drawFrontAndCenterAlerts(ctx: CanvasRenderingContext2D) {
+  public drawFrontAndCenterAlerts(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+  ) {
     // This function executes 1 if block and NOTHING MORE. (some have return statements.)
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       ctx.beginPath()
       ctx.font = 'bold 65px courier new'
       ctx.fillStyle = '#ffffff'
       ctx.textAlign = 'center'
-      ctx.fillText("🏆VICTORY", this._camera.canvasHalfWidth, this._camera.canvasHalfHeight / 2)
+      ctx.fillText("🏆VICTORY", camera.canvasHalfWidth, camera.canvasHalfHeight / 2)
     }
     else if(!this._api.frameData.ship.alive) {
       if((this._api.frameData.ship.died_on_frame + 100) > this._api.frameData.game_frame) {
@@ -602,10 +620,10 @@ export class DrawingService {
       ctx.font = 'bold 56px courier new'
       ctx.fillStyle = '#ff0000'
       ctx.textAlign = 'center'
-      let deathTextYOffset = this._camera.canvasHalfHeight / 3
+      let deathTextYOffset = camera.canvasHalfHeight / 3
       const deathQuoteOffset = 50
       if(this._api.frameData.game_frame % 50 > 25) {
-        ctx.fillText("GAME OVER", this._camera.canvasHalfWidth, deathTextYOffset)
+        ctx.fillText("GAME OVER", camera.canvasHalfWidth, deathTextYOffset)
       }
       deathTextYOffset += (deathQuoteOffset * 2)
       ctx.beginPath()
@@ -632,14 +650,14 @@ export class DrawingService {
       ctx.textAlign = 'left'
       ctx.fillText(
         "Docked at",
-        this._camera.canvasHalfWidth / 3,
-        this._camera.canvasHalfHeight / 2
+        camera.canvasHalfWidth / 3,
+        camera.canvasHalfHeight / 2
       )
       ctx.font = 'bold 38px courier new'
       ctx.fillText(
         station.name,
-        this._camera.canvasHalfWidth / 3,
-        this._camera.canvasHalfHeight / 2 + 45
+        camera.canvasHalfWidth / 3,
+        camera.canvasHalfHeight / 2 + 45
       )
     }
     else if (this._api.frameData.ship.parked_at_ore_mine) {
@@ -652,20 +670,21 @@ export class DrawingService {
       ctx.textAlign = 'left'
       ctx.fillText(
         "Parked at",
-        this._camera.canvasHalfWidth / 3,
-        this._camera.canvasHalfHeight / 2
+        camera.canvasHalfWidth / 3,
+        camera.canvasHalfHeight / 2
       )
       ctx.font = 'bold 38px courier new'
       ctx.fillText(
         oreMine.name,
-        this._camera.canvasHalfWidth / 3,
-        this._camera.canvasHalfHeight / 2 + 45
+        camera.canvasHalfWidth / 3,
+        camera.canvasHalfHeight / 2 + 45
       )
     }
   }
 
   private drawAflameEffect(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     canvasCoord: PointCoord,
     fireBallRadiusCanvasPx: number,
   ) {
@@ -689,16 +708,16 @@ export class DrawingService {
     }
     // Draw flame sparks
     const sparkLineCount = randomInt(-8, 2)
-    ctx.lineWidth = Math.max(1, Math.floor(3 / this._camera.getZoom()))
+    ctx.lineWidth = Math.max(1, Math.floor(3 / camera.getZoom()))
     for(let i=0; i<sparkLineCount; i++) {
       let lineLength = fireBallRadiusCanvasPx * randomInt(9, 12)
       let angle = randomInt(0, 359)
-      let linep1 = this._camera.getCanvasPointAtLocation(
+      let linep1 = camera.getCanvasPointAtLocation(
         canvasCoord,
         angle,
         randomInt(0, Math.max(1, Math.floor(fireBallRadiusCanvasPx / 3))),
       )
-      let linep2 = this._camera.getCanvasPointAtLocation(
+      let linep2 = camera.getCanvasPointAtLocation(
         canvasCoord,
         angle,
         lineLength,
@@ -713,6 +732,7 @@ export class DrawingService {
 
   private drawExplosionFrameEffect(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     canvasCoord: PointCoord,
     explosionFrame: number,
     maxFireBallRadiusCanvasPx: number,
@@ -763,12 +783,12 @@ export class DrawingService {
       for(let i=0; i<debrisLineCount; i++) {
         let lineLength = maxFireBallRadiusCanvasPx * randomInt(1, 6)
         let angle = randomInt(0, 359)
-        let linep1 = this._camera.getCanvasPointAtLocation(
+        let linep1 = camera.getCanvasPointAtLocation(
           canvasCoord,
           angle,
           randomInt(0, Math.max(1, Math.floor(maxFireBallRadiusCanvasPx / 10))),
         )
-        let linep2 = this._camera.getCanvasPointAtLocation(
+        let linep2 = camera.getCanvasPointAtLocation(
           canvasCoord,
           angle,
           lineLength,
@@ -795,17 +815,18 @@ export class DrawingService {
     }
   }
 
-  public drawExplosionShockwaves(ctx: CanvasRenderingContext2D) {
+  public drawExplosionShockwaves(ctx: CanvasRenderingContext2D, camera: Camera,) {
     if (!this._api.frameData.explosion_shockwaves.length) {
       return
     }
     this._api.frameData.explosion_shockwaves.forEach(esw => {
-      this.drawExplosionShockwave(ctx, esw)
+      this.drawExplosionShockwave(ctx, camera, esw)
     })
   }
 
   public drawExplosionShockwave(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     esw: {id: string, origin_point: Array<number>, radius_meters: number}
   ) {
 
@@ -826,13 +847,13 @@ export class DrawingService {
     ctx.fillStyle = `rgb(255, 255, 255, ${fillAlpha})`
     ctx.lineWidth = Math.max(
       2,
-      Math.ceil(10 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+      Math.ceil(10 * this._api.frameData.map_config.units_per_meter / camera.getZoom()),
     )
-    const swCenterCanvasCoord = this._camera.mapCoordToCanvasCoord(
+    const swCenterCanvasCoord = camera.mapCoordToCanvasCoord(
       {x: esw.origin_point[0], y: esw.origin_point[1]},
-      this._camera.getPosition()
+      camera.getPosition()
     )
-    const radiusCanvasPx = esw.radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+    const radiusCanvasPx = esw.radius_meters * this._api.frameData.map_config.units_per_meter / camera.getZoom()
     ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx, 0, TWO_PI)
     ctx.stroke()
     ctx.fill()
@@ -841,16 +862,16 @@ export class DrawingService {
     ctx.beginPath()
     ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
     const radiusCanvasPx1 = Math.max(1, radiusCanvasPx + randomInt(
-      -30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
-      30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      -30 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
+      30 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
     ))
     ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx1, 0, TWO_PI)
     ctx.stroke()
     ctx.beginPath()
     ctx.strokeStyle = `rgb(127, 127, 127, ${getRandomFloat(0.3, 0.7) * alphaMultiplier})`
     const radiusCanvasPx2 = Math.max(1, radiusCanvasPx + randomInt(
-      -30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
-      30 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+      -30 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
+      30 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
     ))
     ctx.arc(swCenterCanvasCoord.x, swCenterCanvasCoord.y, radiusCanvasPx2, 0, TWO_PI)
     ctx.stroke()
@@ -858,6 +879,7 @@ export class DrawingService {
 
   public drawShip(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     drawableShip: DrawableShip,
     scannerTargetIDCursor: string | null,
   ) {
@@ -868,7 +890,7 @@ export class DrawingService {
       ctx.arc(
         drawableShip.canvasCoordCenter.x,
         drawableShip.canvasCoordCenter.y,
-        this._camera.minSizeForDotPx - 1,
+        camera.minSizeForDotPx - 1,
         0,
         TWO_PI,
       )
@@ -886,7 +908,7 @@ export class DrawingService {
         ctx.arc(
           drawableShip.canvasCoordCenter.x,
           drawableShip.canvasCoordCenter.y,
-          Math.ceil(randomInt(35, 50) * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          Math.ceil(randomInt(35, 50) * this._api.frameData.map_config.units_per_meter / camera.getZoom()),
           0, TWO_PI,
         )
         ctx.fill()
@@ -897,7 +919,7 @@ export class DrawingService {
         ctx.arc(
           drawableShip.canvasCoordCenter.x,
           drawableShip.canvasCoordCenter.y,
-          Math.ceil(randomInt(20, 25) * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          Math.ceil(randomInt(20, 25) * this._api.frameData.map_config.units_per_meter / camera.getZoom()),
           0, TWO_PI,
         )
         ctx.fill()
@@ -908,7 +930,7 @@ export class DrawingService {
         ctx.arc(
           drawableShip.canvasCoordCenter.x,
           drawableShip.canvasCoordCenter.y,
-          Math.ceil(randomInt(5, 10) * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          Math.ceil(randomInt(5, 10) * this._api.frameData.map_config.units_per_meter / camera.getZoom()),
           0, TWO_PI,
         )
         ctx.fill()
@@ -919,7 +941,7 @@ export class DrawingService {
         ctx.arc(
           drawableShip.canvasCoordP1.x,
           drawableShip.canvasCoordP1.y,
-          Math.ceil(1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          Math.ceil(1 * this._api.frameData.map_config.units_per_meter / camera.getZoom()),
           0, TWO_PI,
         )
         ctx.fill()
@@ -930,7 +952,7 @@ export class DrawingService {
         ctx.arc(
           drawableShip.canvasCoordP2.x,
           drawableShip.canvasCoordP2.y,
-          Math.ceil(1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()),
+          Math.ceil(1 * this._api.frameData.map_config.units_per_meter / camera.getZoom()),
           0, TWO_PI,
         )
         ctx.fill()
@@ -951,8 +973,8 @@ export class DrawingService {
         const shakeReduction = 1 - percentThroughShake
         const xOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
         const yOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
-        vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
-        vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / this._camera.getZoom()
+        vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
+        vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
       }
       // Ship is within visual range
       // fin 0
@@ -1051,11 +1073,11 @@ export class DrawingService {
         const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
         if(om) {
           const p0 = drawableShip.canvasCoordCenter;
-          const p1 = this._camera.mapCoordToCanvasCoord(
+          const p1 = camera.mapCoordToCanvasCoord(
             {x: om.position_map_units_x, y: om.position_map_units_y},
-            this._camera.getPosition(),
+            camera.getPosition(),
           )
-          const rockRadiusCanvasPx = om.service_radius_map_units / 3 / this._camera.getZoom()
+          const rockRadiusCanvasPx = om.service_radius_map_units / 3 / camera.getZoom()
           p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
           p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
           ctx.beginPath()
@@ -1078,6 +1100,7 @@ export class DrawingService {
       ))
       this.drawAflameEffect(
         ctx,
+        camera,
         drawableShip.canvasCoordCenter,
         flameRadiusCanvasPx,
       )
@@ -1096,6 +1119,7 @@ export class DrawingService {
       )
       this.drawExplosionFrameEffect(
         ctx,
+        camera,
         drawableShip.canvasCoordCenter,
         drawableShip.explosionFrame,
         maxFireBallRadius,
@@ -1176,8 +1200,8 @@ export class DrawingService {
     }
   }
 
-  private getIconFontSize() {
-    const zoomIx = this._camera.getZoomIndex()
+  private getIconFontSize(camera: Camera) {
+    const zoomIx = camera.getZoomIndex()
     if (zoomIx <= 10) {
       return 28
     } else if (zoomIx == 9) {
@@ -1189,11 +1213,11 @@ export class DrawingService {
     }
   }
 
-  public drawSpaceStations(ctx: CanvasRenderingContext2D) {
-    const cameraPosition = this._camera.getPosition()
+  public drawSpaceStations(ctx: CanvasRenderingContext2D, camera: Camera,) {
+    const cameraPosition = camera.getPosition()
     for(let i in this._api.frameData.space_stations) {
       const st: any = this._api.frameData.space_stations[i]
-      const centerCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      const centerCanvasCoord = camera.mapCoordToCanvasCoord(
         {x: st.position_map_units_x, y: st.position_map_units_y},
         cameraPosition,
       )
@@ -1201,10 +1225,10 @@ export class DrawingService {
       const sideLengthCanvasPx = Math.floor(
         (this.spaceStationVisualSideLengthM
         * this._api.frameData.map_config.units_per_meter)
-        / this._camera.getZoom()
+        / camera.getZoom()
       )
       if(sideLengthCanvasPx < 10) {
-        const iconFontSize = this.getIconFontSize()
+        const iconFontSize = this.getIconFontSize(camera)
         ctx.beginPath()
         ctx.font = iconFontSize + "px Courier New";
         ctx.fillStyle = "#ffffff";
@@ -1217,12 +1241,13 @@ export class DrawingService {
         );
       }
       else {
-        this.drawSpaceStation(ctx, st, centerCanvasCoord, sideLengthCanvasPx)
+        this.drawSpaceStation(ctx, camera, st, centerCanvasCoord, sideLengthCanvasPx)
       }
     }
   }
   private drawSpaceStation(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     st: any,
     centerCanvasCoord: PointCoord,
     sideLengthCanvasPx: number,
@@ -1240,8 +1265,8 @@ export class DrawingService {
     ctx.fill()
 
     // Draw service perimeter
-    const servicePerimeterCavasPx = st.service_radius_map_units / this._camera.getZoom()
-    const perimeterWidth = Math.ceil(4 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom())
+    const servicePerimeterCavasPx = st.service_radius_map_units / camera.getZoom()
+    const perimeterWidth = Math.ceil(4 * this._api.frameData.map_config.units_per_meter / camera.getZoom())
     if(Math.random() > 0.8) {
       ctx.beginPath()
       ctx.strokeStyle = Math.random() > 0.5 ? "rgb(0, 0, 255, 0.3)" : "rgb(0, 0, 255, 0.7)"
@@ -1359,12 +1384,12 @@ export class DrawingService {
     }
   }
 
-  public drawMiningLocations(ctx: CanvasRenderingContext2D) {
-    const cameraPosition = this._camera.getPosition()
+  public drawMiningLocations(ctx: CanvasRenderingContext2D, camera: Camera,) {
+    const cameraPosition = camera.getPosition()
     const minRockRadius = 10
     for(let ix in this._api.frameData.ore_mines) {
       let om = this._api.frameData.ore_mines[ix]
-      let centerCanvasCoord = this._camera.mapCoordToCanvasCoord(
+      let centerCanvasCoord = camera.mapCoordToCanvasCoord(
         {
           x: om.position_map_units_x,
           y: om.position_map_units_y,
@@ -1378,10 +1403,10 @@ export class DrawingService {
         percentage =  remainingOre / om.starting_ore_amount_kg
       }
 
-      const servicePerimeterRadiusCavasPx = om.service_radius_map_units / this._camera.getZoom()
+      const servicePerimeterRadiusCavasPx = om.service_radius_map_units / camera.getZoom()
       const rockRadiusCavasPx = servicePerimeterRadiusCavasPx / 3
       if(rockRadiusCavasPx < minRockRadius) {
-        const iconFontSize = this.getIconFontSize()
+        const iconFontSize = this.getIconFontSize(camera)
         ctx.beginPath()
         ctx.font = iconFontSize + "px Courier New";
         ctx.fillStyle = "#ffffff";
@@ -1401,12 +1426,13 @@ export class DrawingService {
         }
       }
       else {
-        this.drawMiningLocation(ctx, om, centerCanvasCoord, rockRadiusCavasPx, servicePerimeterRadiusCavasPx, percentage)
+        this.drawMiningLocation(ctx, camera, om, centerCanvasCoord, rockRadiusCavasPx, servicePerimeterRadiusCavasPx, percentage)
       }
     }
   }
   private drawMiningLocation(
     ctx: CanvasRenderingContext2D,
+    camera: Camera,
     om: any, centerCanvasCoord:
     PointCoord,
     rockRadiusCavasPx: number,
@@ -1440,7 +1466,7 @@ export class DrawingService {
     ctx.lineWidth = Math.ceil(
       Math.max(
         1,
-        1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+        1 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
       )
     )
     ctx.arc(
@@ -1456,13 +1482,13 @@ export class DrawingService {
       const bulbRadius = Math.floor(
         Math.max(
           1,
-          1 * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+          1 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
         )
       )
       const effectRadius = Math.floor(
         Math.max(
           1,
-          om.service_radius_meters * this._api.frameData.map_config.units_per_meter / this._camera.getZoom(),
+          om.service_radius_meters * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
         )
       )
       ctx.beginPath()
