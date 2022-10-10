@@ -1,5 +1,7 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs'
+import { ApiService } from '../api.service';
+
 
 import { CameraService } from '../camera.service';
 import { PaneService } from '../pane.service';
@@ -17,9 +19,12 @@ export class ScannerpaneComponent implements OnInit {
   @ViewChild("titleBar") titleBar: ElementRef
   zIndexesUpdatedSubscription: Subscription
 
+  private ctx: CanvasRenderingContext2D | null = null
+
   constructor(
     public _pane: PaneService,
     private _camera: CameraService,
+    private _api: ApiService,
   ) { }
 
   ngOnInit(): void {
@@ -48,10 +53,19 @@ export class ScannerpaneComponent implements OnInit {
     this.paneElement.nativeElement.addEventListener('mouseleave', ()=>{
       this._pane.registerMouseLeavingPane(this._pane.PANE_SCANNER)
     })
+    this.setupCanvasContext()
     this.select()
     this.resizeCanvas()
+    this.setCanvasColor()
+    setTimeout(()=>{
+      this.paintDisplay()
+    })
   }
 
+  private setupCanvasContext(): void {
+    this.ctx = this.ctx || this.canvas.nativeElement.getContext("2d")
+    console.log(this.ctx)
+  }
 
   select() {
     this._pane.addToTopOfZIndexes(this._pane.PANE_SCANNER)
@@ -64,15 +78,58 @@ export class ScannerpaneComponent implements OnInit {
   private resizeCanvas() {
     setTimeout(() => {
       console.log("resizeCanvas()")
-      const height = this.paneElement.nativeElement.height - this.titleBar.nativeElement.height
+      const height = this.paneElement.nativeElement.offsetHeight - this.titleBar.nativeElement.offsetHeight
+      console.log({calculatedHeight: height})
       this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth
-      this.canvas.nativeElement.offsetHeight = height
-      this.canvas.nativeElement.height = height
+      this.canvas.nativeElement.height = height// this.canvas.nativeElement.offsetHeight
       this._camera.scannerPaneCamera.setCanvasWidthHeight(
         this.canvas.nativeElement.offsetWidth,
         this.canvas.nativeElement.offsetHeight,
       )
     })
+  }
+
+  private setCanvasColor(): void {
+    this.canvas.nativeElement.style.backgroundColor = "#001800" // Dark Green
+  }
+
+  private clearCanvas(): void {
+    this.ctx.beginPath()
+    this.ctx.clearRect(
+      0, 0,
+      this._camera.scannerPaneCamera.canvasWidth * 2,  // *2 because of bug where corner is not cleared
+      this._camera.scannerPaneCamera.canvasHeight * 2, //
+    )
+  }
+
+  paintDisplay(): void {
+    // console.log("paintDisplay()")
+    const ship = this._api.frameData.ship
+    this.clearCanvas()
+
+    if(!ship.scanner_online) {
+      this.drawScannerUnavailableMessage()
+      window.requestAnimationFrame(this.paintDisplay.bind(this))
+      return
+    }
+
+    window.requestAnimationFrame(this.paintDisplay.bind(this))
+  }
+
+  private drawScannerUnavailableMessage() {
+    if(this._api.frameData.game_frame % 100 > 50) {
+      return
+    }
+    this.ctx.beginPath()
+    this.ctx.font = 'bold 40px Courier New'
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.textAlign = 'center'
+    this.ctx.textBaseline = "middle"
+    this.ctx.fillText(
+      "OFFLINE",
+      this._camera.scannerPaneCamera.canvasHalfWidth,
+      this._camera.scannerPaneCamera.canvasHeight / 3,
+    )
   }
 
 }
