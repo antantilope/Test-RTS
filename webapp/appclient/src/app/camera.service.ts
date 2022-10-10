@@ -20,7 +20,7 @@ export const CAMERA_MODE_FREE = 'free'
 
 /* Camera used  */
 export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'
-export const CAMERA_NAME_SCANNER_DISPLAY = 'CANNERDISPLAY'
+export const CAMERA_NAME_SCANNER_DISPLAY = 'SCANNERDISPLAY'
 
 export class Camera {
   // A camera points at a position on the map (absolute coordinate)
@@ -694,7 +694,6 @@ export class Camera {
     else {
       throw new Error("Not Implemented")
     }
-
   }
 
   public getCanvasPointAtLocation(startCanvasCoord: PointCoord, angle: number, canvasDistance: number): PointCoord {
@@ -740,6 +739,7 @@ export class CameraService {
 
 
   public gameDisplayCamera: Camera
+  public scannerPaneCamera: Camera
 
   constructor(
     private _api: ApiService,
@@ -747,6 +747,11 @@ export class CameraService {
 
     this.gameDisplayCamera = new Camera(
       CAMERA_NAME_GAME_DISPLAY,
+      this._api,
+    )
+
+    this.scannerPaneCamera = new Camera(
+      CAMERA_NAME_SCANNER_DISPLAY,
       this._api,
     )
 

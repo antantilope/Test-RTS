@@ -15,6 +15,7 @@ import { ShippaneComponent } from './shippane/shippane.component';
 import { EngpaneComponent } from './engpane/engpane.component';
 import { UpgradepaneComponent } from './upgradepane/upgradepane.component';
 import { StationpaneComponent } from './stationpane/stationpane.component';
+import { ScannerpaneComponent } from './scannerpane/scannerpane.component';
 
 
 @NgModule({
@@ -28,6 +29,7 @@ import { StationpaneComponent } from './stationpane/stationpane.component';
     EngpaneComponent,
     UpgradepaneComponent,
     StationpaneComponent,
+    ScannerpaneComponent,
   ],
   imports: [
     BrowserModule,
