@@ -2,6 +2,18 @@
 div, h2 {
     font-family: 'Courier New', Courier, monospace;
 }
+h2 {
+    margin:0;
+}
+#pane-title-container {
+    margin-top: 0.6rem;
+    margin-bottom: 0.8rem;
+}
+#welcome-to-label {
+    font-style: italic;
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+}
 
 .section-heading {
     font-size: 120%;
@@ -24,18 +36,40 @@ div, h2 {
     color: #3d2d2d;
 }
 
-.ore-desk-section {
+.section {
     margin-bottom:8px;
     padding: 4px;
     border: 1px solid #8b8b8b;
     border-radius: 5px;
 }
 
-#begin-feuling-btn-container {
+#feuling-btn-container {
     margin-top: 8px;
 }
-
 #begin-feuling-btn{
-    margin-top: 8px;
+    margin-top: 4px;
     font-size: 1.25rem;
+    background-color: #003b07;
+    color: #ffffff;
+    cursor: pointer;
+}
+#stop-feuling-btn{
+    margin-top: 4px;
+    font-size: 1.25rem;
+    background-color: #3b0000;
+    color: #ffffff;
+    cursor: pointer;
+}
+#ore-price {
+    font-weight: bold;
+    font-size:1.10rem;
+}
+
+#ore-price-label {
+    font-size:1.10rem;
+}
+
+.td-row-label {
+    text-align: left;
+    padding-left: 8px;
 }

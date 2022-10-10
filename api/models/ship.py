@@ -494,6 +494,7 @@ class Ship(BaseModel):
             'fuel_level': self.fuel_level,
             'fuel_capacity': self.fuel_capacity,
             'fueling_at_station': self.fueling_at_station,
+            'fuel_cost_ore_kg_per_fuel_unit': self.fuel_cost_ore_kg_per_fuel_unit,
 
             'upgrade_summary': self._upgrade_summary,
 
