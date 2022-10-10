@@ -1,22 +1,12 @@
 
 import { Injectable } from '@angular/core';
-import { loggers } from 'winston';
 
 import { ApiService } from './api.service';
+import { ScannerService } from './scanner.service';
 import { BoxCoords } from './models/box-coords.model';
 import { DrawableCanvasItems, DrawableShip, ScannerDataElement } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
 
-
-
-/* CAMERA_MODE_SHIP Camera Position automatically follows the ships coords. */
-export const CAMERA_MODE_SHIP = 'ship'
-/* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner data. */
-export const CAMERA_MODE_SCANNER = 'scanner'
-/* CAMERA_MODE_MAP */
-export const CAMERA_MODE_MAP = 'map'
-/* CAMERA_MODE_FREE Camera Position AND zoom are manually adjusted by the user. */
-export const CAMERA_MODE_FREE = 'free'
 
 /* Camera used  */
 export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'
@@ -44,17 +34,12 @@ export class Camera {
 
   private xPosition: number = null;
   private yPosition: number = null;
-  private mode = CAMERA_MODE_SHIP;
 
   // If in element width/height is smaller than this size,
   // represent it with a dot to ensure it is clearly visible.
   public minSizeForDotPx = 6;
 
   private framesToShowBoostedEngine = 5
-
-  private previousMode: null | string = null
-  private previousPosition: null | PointCoord = null
-  private previousZoomIndex: null | number = null
 
 
   constructor(
@@ -75,12 +60,8 @@ export class Camera {
     return this.zoom
   }
 
-  public canManualZoom(): boolean {
-    return this.mode !== CAMERA_MODE_SCANNER && this.mode !== CAMERA_MODE_MAP
-  }
-
-  public canManualPan(): boolean {
-    return this.mode === CAMERA_MODE_FREE
+  public setZoom(zoom: number) {
+    this.zoom = zoom
   }
 
   public adjustZoom(zoomIn: boolean): void {
@@ -106,12 +87,7 @@ export class Camera {
   }
 
   public getZoomIndex(): number | null {
-    const mode = this.getMode()
-    if (mode != CAMERA_MODE_SCANNER && mode != CAMERA_MODE_MAP) {
-      return this.zoomIndex
-    } else {
-      return null;
-    }
+    return this.zoomIndex
   }
 
   public xPan(delta: number): void {
@@ -131,93 +107,49 @@ export class Camera {
     return {x: this.xPosition, y: this.yPosition}
   }
 
-  public getMode(): string {
-    return this.mode
-  }
 
-  public cycleMode(): void {
-    // Mode cycle: "ship" -> "scanner" -> "ship" etc
-    const mode = this.getMode()
-    if (mode === CAMERA_MODE_SHIP) {
-      this.previousZoomIndex = this.getZoomIndex()
-      this.previousMode = CAMERA_MODE_SHIP
-      this.setModeScanner()
-    }
-    else if(mode === CAMERA_MODE_SCANNER) {
-      this.setModeShip()
-    }
-    else if (mode === CAMERA_MODE_MAP) {
-      this.closeMap()
-    }
-  }
+  // public setModeMap(): void {
+  //   // Save previous camera info for when map closes.
+  //   this.previousMode = this.getMode()
+  //   this.previousPosition = this.getPosition()
+  //   this.previousZoomIndex = this.getZoomIndex()
 
-  public setModeShip(): void {
-    this.mode = CAMERA_MODE_SHIP
-    this.setZoomToNearestLevel()
-    if(this.previousZoomIndex !== null && this.previousMode === CAMERA_MODE_SHIP) {
-      this.setZoomIndex(this.previousZoomIndex)
-    } else {
-      this.setZoomToNearestLevel()
-    }
-  }
-  public setModeScanner(): void {
-    this.mode = CAMERA_MODE_SCANNER
-  }
+  //   // Calculate position
+  //   this.mode = CAMERA_MODE_MAP
+  //   const mapCenterX = Math.floor(this._api.frameData.map_config.x_unit_length / 2)
+  //   const mapCenterY = Math.floor(this._api.frameData.map_config.y_unit_length / 2)
+  //   this.setPosition(mapCenterX, mapCenterY)
 
-  public toggleMap() {
-    if (this.getMode() == CAMERA_MODE_MAP) {
-      this.closeMap()
-    } else {
-      this.setModeMap()
-    }
-  }
-
-  public setModeMap(): void {
-    // Save previous camera info for when map closes.
-    this.previousMode = this.getMode()
-    this.previousPosition = this.getPosition()
-    this.previousZoomIndex = this.getZoomIndex()
-
-    // Calculate position
-    this.mode = CAMERA_MODE_MAP
-    const mapCenterX = Math.floor(this._api.frameData.map_config.x_unit_length / 2)
-    const mapCenterY = Math.floor(this._api.frameData.map_config.y_unit_length / 2)
-    this.setPosition(mapCenterX, mapCenterY)
-
-    // Calculate zoom to show full map
-    const mapUnitsPerPxW = Math.floor(mapCenterX / (this.canvasHalfWidth - 40))
-    const mapUnitsPerPxH = Math.floor(mapCenterY / (this.canvasHalfHeight - 40))
-    const mapUnitsPerPxX = Math.max(mapUnitsPerPxW, mapUnitsPerPxH)
-    this.zoom = mapUnitsPerPxX
-  }
+  //   // Calculate zoom to show full map
+  //   const mapUnitsPerPxW = Math.floor(mapCenterX / (this.canvasHalfWidth - 40))
+  //   const mapUnitsPerPxH = Math.floor(mapCenterY / (this.canvasHalfHeight - 40))
+  //   const mapUnitsPerPxX = Math.max(mapUnitsPerPxW, mapUnitsPerPxH)
+  //   this.zoom = mapUnitsPerPxX
+  // }
 
 
-  public closeMap() {
-    if (this.getMode() != CAMERA_MODE_MAP) {
-      return
-    }
-    else if (this.previousMode == CAMERA_MODE_SCANNER) {
-      this.setModeScanner()
-      return
-    }
-    else if (this.previousMode == CAMERA_MODE_SHIP) {
-      this.mode = CAMERA_MODE_SHIP
-      this.setZoomIndex(this.previousZoomIndex)
-    }
-    else if(this.previousMode == CAMERA_MODE_FREE) {
-      this.mode = CAMERA_MODE_FREE
-      this.setPosition(this.previousPosition.x, this.previousPosition.y)
-      this.setZoomIndex(this.previousZoomIndex)
-    }
-    else {
-      console.warn("could not select a camera profile after closing map.")
-    }
-  }
+  // public closeMap() {
+  //   if (this.getMode() != CAMERA_MODE_MAP) {
+  //     return
+  //   }
+  //   else if (this.previousMode == CAMERA_MODE_SCANNER) {
+  //     this.setModeScanner()
+  //     return
+  //   }
+  //   else if (this.previousMode == CAMERA_MODE_SHIP) {
+  //     this.mode = CAMERA_MODE_SHIP
+  //     this.setZoomIndex(this.previousZoomIndex)
+  //   }
+  //   else if(this.previousMode == CAMERA_MODE_FREE) {
+  //     this.mode = CAMERA_MODE_FREE
+  //     this.setPosition(this.previousPosition.x, this.previousPosition.y)
+  //     this.setZoomIndex(this.previousZoomIndex)
+  //   }
+  //   else {
+  //     console.warn("could not select a camera profile after closing map.")
+  //   }
+  // }
 
-  public setModeFree(): void {
-    this.mode = CAMERA_MODE_FREE
-    this.setZoomToNearestLevel()
-  }
   public setZoomToNearestLevel(): void {
     for(let i in this.zoomLevels) {
       if(this.zoom <= this.zoomLevels[i]) {

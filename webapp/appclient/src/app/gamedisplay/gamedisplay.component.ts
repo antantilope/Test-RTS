@@ -13,19 +13,18 @@ import {
 } from '../models/drawable-objects.model'
 import { ApiService } from "../api.service"
 import { PaneService } from '../pane.service'
-import {
-  CameraService,
-  CAMERA_MODE_SHIP,
-  CAMERA_MODE_SCANNER,
-  CAMERA_MODE_FREE,
-  CAMERA_MODE_MAP,
-} from '../camera.service'
+import { CameraService } from '../camera.service'
 import { FormattingService } from '../formatting.service'
 import { AllchatService } from "../allchat.service"
 import { PointCoord } from '../models/point-coord.model'
 import { DrawingService } from '../drawing.service'
 import { SoundService } from '../sound.service'
+import { ScannerService } from '../scanner.service'
 import { TWO_PI, FEATURE_ORE, FEATURE_STATION } from '../constants'
+
+const CAMERA_MODE_SHIP = "ship"
+const CAMERA_MODE_VISION = "vision"
+const CAMERA_MODE_MAP = "map"
 
 @Component({
   selector: 'app-gamedisplay',
@@ -39,10 +38,12 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
   @ViewChild("sidebarElement") sidebarElement: ElementRef
 
-  public scannerTargetIDCursor: string | null = null
-
 
   private ctx: CanvasRenderingContext2D | null = null
+
+  private cameraMode = CAMERA_MODE_SHIP
+  private previousCameraMode: string | null = null
+  private previousCameraZoomIndex = 4
 
   /* Props to track the user's mouse */
   private mouseInCanvas = true
@@ -82,12 +83,16 @@ export class GamedisplayComponent implements OnInit {
     public _pane: PaneService,
     public _allchat: AllchatService,
     private _draw: DrawingService,
+    public _scanner: ScannerService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
 
   ngOnInit(): void {
     console.log("GamedisplayComponent::ngOnInit")
+
+    this._scanner.scannerTargetIDCursor = null
+
     setTimeout(()=>{
       this.registerMouseEventListener()
       this.paintDisplay()
@@ -109,6 +114,83 @@ export class GamedisplayComponent implements OnInit {
     console.log("GamedisplayComponent::ngOnDestroy")
   }
 
+  // Camera methods
+  getCameraMode(): string {
+    return this.cameraMode
+  }
+
+  canManualZoom(): boolean {
+    return this.cameraMode === CAMERA_MODE_SHIP
+  }
+  canManualPan(): boolean {
+    // TODO: Observer mode
+    return false
+  }
+
+  setCameraModeShip() {
+    this.cameraMode = CAMERA_MODE_SHIP
+    this._camera.gameDisplayCamera.setZoomIndex(this.previousCameraZoomIndex)
+  }
+
+  setCameraModeVision() {
+    if(this.cameraMode === CAMERA_MODE_SHIP) {
+      this.previousCameraZoomIndex = this._camera.gameDisplayCamera.getZoomIndex()
+    }
+    this.cameraMode = CAMERA_MODE_VISION
+    this.setZoomForCameraModeVision()
+  }
+
+  setZoomForCameraModeVision() {
+    const visionRadius = this._api.frameData.ship.visual_range
+    const canvasRadius = Math.min(
+      this._camera.gameDisplayCamera.canvasHalfHeight,
+      this._camera.gameDisplayCamera.canvasHalfWidth,
+    )
+    this._camera.gameDisplayCamera.setZoom(
+      Math.ceil(visionRadius / canvasRadius * this._api.frameData.map_config.units_per_meter)
+    )
+  }
+
+  toggleMap() {
+    if(this.cameraMode !== CAMERA_MODE_MAP) {
+      this.setModeMap()
+    } else {
+      this.closeMap()
+    }
+  }
+
+  setModeMap(): void {
+    // Save previous camera info for when map closes.
+    this.previousCameraMode = this.getCameraMode()
+    if(this.previousCameraMode === CAMERA_MODE_SHIP) {
+      this.previousCameraZoomIndex = this._camera.gameDisplayCamera.getZoomIndex()
+    }
+    // Calculate position
+    this.cameraMode = CAMERA_MODE_MAP
+    const mapCenterX = Math.floor(this._api.frameData.map_config.x_unit_length / 2)
+    const mapCenterY = Math.floor(this._api.frameData.map_config.y_unit_length / 2)
+    this._camera.gameDisplayCamera.setPosition(mapCenterX, mapCenterY)
+
+    // Calculate zoom to show full map
+    const mapUnitsPerPxW = Math.floor(
+      mapCenterX / (this._camera.gameDisplayCamera.canvasHalfWidth - 40))
+    const mapUnitsPerPxH = Math.floor(
+      mapCenterY / (this._camera.gameDisplayCamera.canvasHalfHeight - 40))
+    const mapUnitsPerPxX = Math.max(mapUnitsPerPxW, mapUnitsPerPxH)
+    this._camera.gameDisplayCamera.setZoom(mapUnitsPerPxX)
+  }
+
+  public closeMap() {
+    if (this.previousCameraMode == CAMERA_MODE_SHIP) {
+      this.setCameraModeShip()
+    }
+    else if (this.previousCameraMode == CAMERA_MODE_VISION) {
+      this.setCameraModeVision()
+    }
+    else {
+      console.warn("could not select a camera profile after closing map.")
+    }
+  }
 
   @HostListener('window:resize', ['$event'])
   private handleWindowResize():void {
@@ -123,9 +205,7 @@ export class GamedisplayComponent implements OnInit {
     const key = event.key.toLocaleLowerCase()
     console.log({gameKeystroke: key})
     if (key === 'm') {
-      this._camera.gameDisplayCamera.toggleMap()
-    } else if (key === 'n') {
-      this._camera.gameDisplayCamera.cycleMode()
+      this.toggleMap()
     }
   }
 
@@ -136,7 +216,7 @@ export class GamedisplayComponent implements OnInit {
       if(this._pane.mouseInPane()) {
         return
       }
-      if (this._camera.gameDisplayCamera.canManualZoom()) {
+      if (this.canManualZoom()) {
         const zoomIn = event.deltaY < 0
         this._camera.gameDisplayCamera.adjustZoom(zoomIn)
       }
@@ -192,7 +272,7 @@ export class GamedisplayComponent implements OnInit {
     })
     window.addEventListener('mousemove', event => {
       this.mouseMovedWhileDown = true
-      if(!this._camera.gameDisplayCamera.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
+      if(!this.canManualPan() || !this.mouseClickDownInCanvas || !this.mouseInCanvas) {
         return
       }
       else if(this.mousePanLastX === null || this.mousePanLastY === null) {
@@ -225,9 +305,9 @@ export class GamedisplayComponent implements OnInit {
       && typeof this.drawableObjects.ships[0] !== 'undefined'
       && this.drawableObjects.ships[0].isSelf
     ) {
-      const mode = this._camera.gameDisplayCamera.getMode()
+      const cameraMode = this.getCameraMode()
       if(
-        (mode == CAMERA_MODE_SHIP || mode == CAMERA_MODE_SCANNER)
+        (cameraMode == CAMERA_MODE_SHIP || cameraMode == CAMERA_MODE_VISION)
         && !this._api.frameData.ship.autopilot_program
       ) {
         this.clickAnimationFrame = 1
@@ -235,8 +315,8 @@ export class GamedisplayComponent implements OnInit {
         this.clickAnimationCanvasY = mouseCanvasY
         this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
       }
-      else if (mode == CAMERA_MODE_MAP) {
-        this.handleMouseClickInCanvasDropWaypoint(mode, mouseCanvasX, mouseCanvasY)
+      else if (cameraMode == CAMERA_MODE_MAP) {
+        this.handleMouseClickInCanvasDropWaypoint(cameraMode, mouseCanvasX, mouseCanvasY)
         if(this._api.frameData.ship.autopilot_program == 'lock_waypoint') {
           console.log("reclicking to lock heading to waypoint")
           setTimeout(() => {
@@ -387,7 +467,7 @@ export class GamedisplayComponent implements OnInit {
     }
 
     const camCoords = this._camera.gameDisplayCamera.getPosition()
-    const camMode = this._camera.gameDisplayCamera.getMode()
+    const cameraMode = this.getCameraMode()
     if(camCoords.x === null || camCoords.y === null) {
       this._camera.gameDisplayCamera.setPosition(
         this._api.frameData.ship.coord_x,
@@ -397,16 +477,14 @@ export class GamedisplayComponent implements OnInit {
 
     this.clearCanvas()
 
-    if (camMode === CAMERA_MODE_SHIP) {
+    if (cameraMode === CAMERA_MODE_SHIP || cameraMode === CAMERA_MODE_VISION) {
       this._camera.gameDisplayCamera.setPosition(
         this._api.frameData.ship.coord_x,
         this._api.frameData.ship.coord_y,
       )
-    }
-    else if (camMode === CAMERA_MODE_SCANNER) {
-      this._camera.gameDisplayCamera.setCameraPositionAndZoomForScannerMode(
-        this.scannerTargetIDCursor,
-      )
+      if(cameraMode === CAMERA_MODE_VISION && this._api.frameData.game_frame % 60 == 0) {
+        this.setZoomForCameraModeVision()
+      }
     }
 
     const drawableObjects: DrawableCanvasItems = this._camera.gameDisplayCamera.getDrawableCanvasObjects()
@@ -446,7 +524,7 @@ export class GamedisplayComponent implements OnInit {
         this.ctx,
         this._camera.gameDisplayCamera,
         drawableObjects.ships[i],
-        this.scannerTargetIDCursor,
+        this._scanner.scannerTargetIDCursor,
       )
     }
 
@@ -456,9 +534,13 @@ export class GamedisplayComponent implements OnInit {
     this._draw.drawEbeams(this.ctx, this._camera.gameDisplayCamera, drawableObjects.ebeamRays)
 
     // Corner overlays
-    this._draw.drawBottomLeftOverlay(this.ctx, this._camera.gameDisplayCamera)
-    if(this._camera.gameDisplayCamera.getMode() !== CAMERA_MODE_MAP) {
-      this._draw.drawTopLeftOverlay(this.ctx, this._camera.gameDisplayCamera);
+    this._draw.drawBottomLeftOverlay(
+      this.ctx,
+      this._camera.gameDisplayCamera,
+      cameraMode === CAMERA_MODE_MAP,
+    )
+    if(cameraMode !== CAMERA_MODE_MAP) {
+      this._draw.drawTopLeftOverlay(this.ctx, cameraMode);
       this._draw.drawBottomRightOverlay(this.ctx, this._camera.gameDisplayCamera)
       if(!this.isDebug && this._api.frameData.ship.alive) {
         this._draw.drawTopRightOverlay(this.ctx, this._camera.gameDisplayCamera, this.wayPoint)
@@ -501,6 +583,8 @@ export class GamedisplayComponent implements OnInit {
   private paintDebugData(): void {
     /* Draw Debug info on the top right corner of the screen.
     */
+    const cameraMode = this.getCameraMode()
+
     this.ctx.beginPath()
     this.ctx.font = '16px Arial'
     this.ctx.fillStyle = '#ffffff'
@@ -546,7 +630,7 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.fillText(`camera index: ${this._camera.gameDisplayCamera.getZoomIndex()}`, xOffset, yOffset)
     yOffset += yInterval
 
-    this.ctx.fillText(`camera mode: ${this._camera.gameDisplayCamera.getMode()}`, xOffset, yOffset)
+    this.ctx.fillText(`camera mode: ${cameraMode}`, xOffset, yOffset)
     yOffset += yInterval
 
     const [shipX, shipY] = [this._api.frameData.ship.coord_x, this._api.frameData.ship.coord_y]
@@ -559,18 +643,6 @@ export class GamedisplayComponent implements OnInit {
     ]
     this.ctx.fillText(`ship Velocity: X: ${shipVelX.toFixed(2)} Y: ${shipVelY.toFixed(2)}`, xOffset, yOffset)
     yOffset += yInterval
-
-    this.ctx.fillText(`camera mode: ${this._camera.gameDisplayCamera.getMode()}`, xOffset, yOffset)
-    yOffset += yInterval
-
-  }
-
-
-  private async setCameraToPilotMode() {
-    if(this._camera.gameDisplayCamera.getMode() == CAMERA_MODE_FREE) {
-      this._camera.gameDisplayCamera.setModeShip()
-      this._camera.gameDisplayCamera.setZoomIndex(3)
-    }
   }
 
   public async btnActivateEngine() {
@@ -578,7 +650,6 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'activate_engine'},
     )
-    setTimeout(()=>{this.setCameraToPilotMode()})
     this._sound.playPrimaryButtonClickSound()
   }
 
@@ -595,7 +666,6 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'light_engine'},
     )
-    setTimeout(()=>{this.setCameraToPilotMode()})
     this._sound.playPrimaryButtonClickSound()
   }
 
@@ -659,12 +729,11 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'activate_scanner'},
     )
-    setTimeout(()=>{this._camera.gameDisplayCamera.setModeScanner()})
     this._sound.playPrimaryButtonClickSound()
   }
 
   public async btnDeactivateScanner() {
-    this.scannerTargetIDCursor = null
+    this._scanner.scannerTargetIDCursor = null
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_scanner'},
@@ -742,24 +811,24 @@ export class GamedisplayComponent implements OnInit {
 
   btnClickScannerCursorUp() {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
-      this.scannerTargetIDCursor = null
+      this._scanner.scannerTargetIDCursor = null
       return
     }
     if(!this._api.frameData.ship.scanner_data.length) {
-      this.scannerTargetIDCursor = null
+      this._scanner.scannerTargetIDCursor = null
       return
     }
-    if(this.scannerTargetIDCursor === null) {
-      this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
+    if(this._scanner.scannerTargetIDCursor === null) {
+      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
     }
     else {
-      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this.scannerTargetIDCursor)
+      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
       if(currentIndex === -1) {
-        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
       }
       else {
         const targetIndex = currentIndex === 0 ? this._api.frameData.ship.scanner_data.length - 1 : currentIndex - 1
-        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
       }
     }
     this._sound.playPrimaryButtonClickSound()
@@ -767,24 +836,24 @@ export class GamedisplayComponent implements OnInit {
 
   btnClickScannerCursorDown() {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
-      this.scannerTargetIDCursor = null
+      this._scanner.scannerTargetIDCursor = null
       return
     }
     if(!this._api.frameData.ship.scanner_data.length) {
-      this.scannerTargetIDCursor = null
+      this._scanner.scannerTargetIDCursor = null
       return
     }
-    if(this.scannerTargetIDCursor === null) {
-      this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+    if(this._scanner.scannerTargetIDCursor === null) {
+      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
     }
     else {
-      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this.scannerTargetIDCursor)
+      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
       if(currentIndex === -1) {
-        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
       }
       else {
         const targetIndex = currentIndex === this._api.frameData.ship.scanner_data.length - 1 ? 0 : currentIndex + 1
-        this.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
       }
     }
     this._sound.playPrimaryButtonClickSound()
@@ -792,26 +861,26 @@ export class GamedisplayComponent implements OnInit {
 
   async btnClickScannerCursorLock () {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
-      this.scannerTargetIDCursor = null
+      this._scanner.scannerTargetIDCursor = null
       return
     }
-    const targetIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this.scannerTargetIDCursor)
+    const targetIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
     if(targetIndex === -1) {
-      this.scannerTargetIDCursor = null
+      this._scanner.scannerTargetIDCursor = null
       return
     }
-    if(this.scannerTargetIDCursor === null) {
+    if(this._scanner.scannerTargetIDCursor === null) {
       return
     }
     if(this._api.frameData.ship.scanner_locking) {
       return
     }
-    if(this._api.frameData.ship.scanner_locked && this.scannerTargetIDCursor === this._api.frameData.ship.scanner_lock_target) {
+    if(this._api.frameData.ship.scanner_locked && this._scanner.scannerTargetIDCursor === this._api.frameData.ship.scanner_lock_target) {
       return
     }
     await this._api.post(
       "/api/rooms/command",
-      {command: 'set_scanner_lock_target', target: this.scannerTargetIDCursor},
+      {command: 'set_scanner_lock_target', target: this._scanner.scannerTargetIDCursor},
     )
     this._sound.playPrimaryButtonClickSound()
   }

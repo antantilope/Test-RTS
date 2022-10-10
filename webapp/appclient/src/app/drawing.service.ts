@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { Camera, CAMERA_MODE_MAP } from './camera.service';
+import { Camera } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
 import { UserService } from "./user.service";
@@ -455,7 +455,7 @@ export class DrawingService {
 
   public drawTopLeftOverlay(
     ctx: CanvasRenderingContext2D,
-    camera: Camera,
+    cameraMode: string,
   ) {
     const tlcYInterval = 34
     const tlcKFYInterval = 28
@@ -487,7 +487,7 @@ export class DrawingService {
       // Camera mode
       ctx.beginPath()
       ctx.fillStyle = '#ffffff'
-      ctx.fillText("🎥 " + camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
+      ctx.fillText("🎥 " + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
       tlcYOffset += tlcYInterval
     }
     // Killfeed (TOP LEFT)
@@ -506,6 +506,7 @@ export class DrawingService {
   public drawBottomLeftOverlay(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
+    isCameraModeMap: boolean,
   ) {
     let lrcYOffset = camera.canvasHeight - 30
     let lrcYInterval = 40
@@ -545,7 +546,7 @@ export class DrawingService {
     ctx.fillStyle = this._api.frameData.ship.alive ? '#ffffff' : "#ff0000";
     ctx.textAlign = 'left'
     ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
-    if(camera.getMode() === CAMERA_MODE_MAP) {
+    if(isCameraModeMap) {
       return
     }
     lrcYOffset -= lrcYInterval

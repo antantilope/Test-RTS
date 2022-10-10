@@ -112,23 +112,41 @@ export class ScannerpaneComponent implements OnInit {
       window.requestAnimationFrame(this.paintDisplay.bind(this))
       return
     }
+    this.drawTopRightOverlay()
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
 
   private drawScannerUnavailableMessage() {
-    if(this._api.frameData.game_frame % 100 > 50) {
-      return
-    }
     this.ctx.beginPath()
     this.ctx.font = 'bold 40px Courier New'
     this.ctx.fillStyle = '#ffffff'
     this.ctx.textAlign = 'center'
     this.ctx.textBaseline = "middle"
     this.ctx.fillText(
-      "OFFLINE",
+      this._api.frameData.ship.scanner_starting ? "STARTING" : "OFFLINE",
       this._camera.scannerPaneCamera.canvasHalfWidth,
       this._camera.scannerPaneCamera.canvasHeight / 3,
+    )
+  }
+
+  private drawTopRightOverlay() {
+    let mode;
+    if(this._api.frameData.ship.scanner_mode == "radar") {
+      mode = "RADAR"
+    } else if(this._api.frameData.ship.scanner_mode == "ir") {
+      mode = "THERMAL"
+    } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
+    let yOffset = 5;
+    const xOffset = this._camera.scannerPaneCamera.canvasWidth - 5
+    const yTextInterval = 30
+    this.ctx.beginPath()
+    this.ctx.font = '20px Courier New'
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.textAlign = 'right'
+    this.ctx.textBaseline = "top"
+    this.ctx.fillText(
+      mode, xOffset, yOffset
     )
   }
 
