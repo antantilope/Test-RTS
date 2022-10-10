@@ -11,22 +11,21 @@ import { PointCoord } from './models/point-coord.model';
 
 /* CAMERA_MODE_SHIP Camera Position automatically follows the ships coords. */
 export const CAMERA_MODE_SHIP = 'ship'
-
 /* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner data. */
 export const CAMERA_MODE_SCANNER = 'scanner'
-
 /* CAMERA_MODE_MAP */
 export const CAMERA_MODE_MAP = 'map'
-
 /* CAMERA_MODE_FREE Camera Position AND zoom are manually adjusted by the user. */
 export const CAMERA_MODE_FREE = 'free'
 
+/* Camera used  */
+export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'
+export const CAMERA_NAME_SCANNER_DISPLAY = 'CANNERDISPLAY'
 
+export class Camera {
+  // A camera points at a position on the map (absolute coordinate)
+  // and provides methods to orient pixels on a canvas.
 
-@Injectable({
-  providedIn: 'root'
-})
-export class CameraService {
 
   public canvasWidth: number = 0
   public canvasHeight: number = 0
@@ -47,6 +46,8 @@ export class CameraService {
   private yPosition: number = null;
   private mode = CAMERA_MODE_SHIP;
 
+  // If in element width/height is smaller than this size,
+  // represent it with a dot to ensure it is clearly visible.
   public minSizeForDotPx = 6;
 
   private framesToShowBoostedEngine = 5
@@ -55,10 +56,12 @@ export class CameraService {
   private previousPosition: null | PointCoord = null
   private previousZoomIndex: null | number = null
 
+
   constructor(
+    public name: string,
     private _api: ApiService,
-  ) {
-  }
+  ) {}
+
 
   public setCanvasWidthHeight(width: number, height: number) {
     this.canvasWidth = width
@@ -78,8 +81,6 @@ export class CameraService {
   public canManualPan(): boolean {
     return this.mode === CAMERA_MODE_FREE
   }
-
-
 
   public adjustZoom(zoomIn: boolean): void {
     if(zoomIn) {
@@ -188,6 +189,7 @@ export class CameraService {
     const mapUnitsPerPxX = Math.max(mapUnitsPerPxW, mapUnitsPerPxH)
     this.zoom = mapUnitsPerPxX
   }
+
 
   public closeMap() {
     if (this.getMode() != CAMERA_MODE_MAP) {
@@ -312,6 +314,7 @@ export class CameraService {
 
   }
 
+
   public setCameraPositionAndZoomForScannerMode(scannerTargetIDCursor: string | null) {
     const ship = this._api.frameData.ship
     if(!scannerTargetIDCursor && ship.scanner_locked && ship.scanner_lock_target) {
@@ -374,6 +377,7 @@ export class CameraService {
     halfDistance = halfDistance - this._api.frameData.map_config.units_per_meter
     this.zoom = halfDistance / canvasRadius
   }
+
 
   public getDrawableCanvasObjects(): DrawableCanvasItems {
     /* Get objects to draw on the canvas.
@@ -624,10 +628,9 @@ export class CameraService {
         color: ray.color
       })
     }
-
-
     return drawableItems
   }
+
 
   public getEBeamLineThickness(): number {
     return 4
@@ -723,6 +726,29 @@ export class CameraService {
       x: Math.floor(qx),
       y: Math.floor(qy),
     }
+
+  }
+
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CameraService {
+  // ANGULAR SERVICE * * * *
+  // Manages Camera instances
+
+
+  public gameDisplayCamera: Camera
+
+  constructor(
+    private _api: ApiService,
+  ) {
+
+    this.gameDisplayCamera = new Camera(
+      CAMERA_NAME_GAME_DISPLAY,
+      this._api,
+    )
 
   }
 
