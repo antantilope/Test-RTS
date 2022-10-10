@@ -187,6 +187,18 @@ const commandHandlers = {
             ship_command: 'stop_ore_mining',
         });
     },
+    start_fueling: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'start_fueling',
+        });
+    },
+    stop_fueling: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'stop_fueling',
+        });
+    },
     trade_ore_for_ore_coin: (req, queueName) => {
         req.app.get(queueName).push({
             player_id: req.session.player_id,

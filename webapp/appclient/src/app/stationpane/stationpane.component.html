@@ -1,16 +1,18 @@
 <div id="station-pain-container">
-    <div>
+    <div id="pane-title-container">
+        <div id="welcome-to-label">
+            Welcome to
+        </div>
         <h2>{{ stationName }}</h2>
     </div>
-    <hr>
     <div
         id="trade-ore-for-coin-container"
     >
-        <div class="section-heading">
-            Ore Trade Desk
-        </div>
-        <div class="ore-desk-section">
-            <p><strong>Trade Ore for Virtual Ore Coin</strong></p>
+        <div class="section">
+            <div class="section-heading">
+                Ore Trade Desk
+            </div>
+            <p><strong>Trade Physical Ore for Virtual Ore Coin</strong></p>
             <p *ngIf="_api.frameData.ship.cargo_ore_mass_kg == 0" id="no-ore-notice">
                 You have no raw ore to trade.
             </p>
@@ -23,21 +25,65 @@
                 💎🔄🪙
             </button>
         </div>
-        <div class="ore-desk-section">
-            <p><strong>Buy fuel</strong></p>
+    </div>
+    <div class="section">
+        <div class="section-heading">Refuel</div>
+        <div>
             <div>
-                <progress
-                    value="{{ _api.frameData.ship.fuel_level }}"
-                    max="{{ _api.frameData.ship.fuel_capacity }}"
-                >
-                </progress>
+                {{ _api.frameData.ship.fuel_level }} / {{ _api.frameData.ship.fuel_capacity }}
             </div>
-            <div id="begin-feuling-btn-container">
-                <button id="begin-feuling-btn">
-                    Begin Feuling
-                </button>
-            </div>
+            <progress
+                value="{{ _api.frameData.ship.fuel_level }}"
+                max="{{ _api.frameData.ship.fuel_capacity }}"
+            >
+            </progress>
+        </div>
+        <div id="feuling-btn-container">
+            <table>
+                <tr>
+                    <td>
+                        PRICE
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span id="ore-price">
+                            {{ (_api.frameData.ship.fuel_cost_ore_kg_per_fuel_unit * 75)|number: "1.2-2" }}
+                        </span>
+                    </td>
+                    <td class="td-row-label">
+                        <span id="ore-price-label">
+                            Ore KG Per Fuel KG
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span id="ore-price">
+                            {{ (_api.frameData.ship.fuel_cost_ore_kg_per_fuel_unit )|number: "1.4-4" }}
+                        </span>
+                    </td>
+                    <td class="td-row-label">
+                        <span id="ore-price-label">
+                            Ore KG Per Fuel Unit
+                        </span>
+                    </td>
+                </tr>
+            </table>
+            <button
+                id="begin-feuling-btn"
+                *ngIf="!_api.frameData.ship.fueling_at_station"
+                (click)="btnClickStartFueling()"
+            >
+                Begin Fueling
+            </button>
+            <button
+                id="stop-feuling-btn"
+                *ngIf="_api.frameData.ship.fueling_at_station"
+                (click)="btnClickHaltFueling()"
+            >
+                Halt Fueling
+            </button>
         </div>
     </div>
-    <hr>
 </div>

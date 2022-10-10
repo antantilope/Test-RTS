@@ -94,7 +94,7 @@ class ShipCommands:
     TRADE_ORE_FOR_ORE_COIN = 'trade_ore_for_ore_coin'
 
     START_FUELING = "start_fueling"
-    STOP_FUELING = "start_fueling"
+    STOP_FUELING = "stop_fueling"
 
     START_CORE_UPGRADE = "start_core_upgrade"
     START_SHIP_UPGRADE = "start_ship_upgrade"
@@ -228,7 +228,9 @@ class Ship(BaseModel):
         # Fuel Tank
         self.fuel_level = 0
         self.fuel_capacity = 0
-        self.fueling_at_station = None
+        self.fueling_at_station = False
+        self.fuel_cost_ore_kg_per_fuel_unit = None
+        self.refueling_rate_fuel_units_per_second = None
 
         # Engine
         self.engine_mass = 0
@@ -444,7 +446,7 @@ class Ship(BaseModel):
             self.battery_mass
             + self.engine_mass
             + self.cargo_ore_mass_kg
-            + int(self.fuel_level / constants.FUEL_MASS_UNITS_PER_KG)
+            + int(self.fuel_level / constants.FUEL_UNITS_PER_KG)
             + constants.HULL_BASE_MASS
             + constants.PILOT_MASS
         ))
@@ -492,6 +494,7 @@ class Ship(BaseModel):
             'fuel_level': self.fuel_level,
             'fuel_capacity': self.fuel_capacity,
             'fueling_at_station': self.fueling_at_station,
+            'fuel_cost_ore_kg_per_fuel_unit': self.fuel_cost_ore_kg_per_fuel_unit,
 
             'upgrade_summary': self._upgrade_summary,
 
@@ -636,6 +639,8 @@ class Ship(BaseModel):
 
         instance.fuel_level = constants.FUEL_START_LEVEL
         instance.fuel_capacity = constants.FUEL_CAPACITY
+        instance.fuel_cost_ore_kg_per_fuel_unit = constants.FUEL_COST_ORE_KG_PER_FUEL_UNIT
+        instance.refueling_rate_fuel_units_per_second = constants.REFUELING_RATE_FUEL_UNITS_PER_SECOND
 
         instance.visual_range = constants.MAX_VISUAL_RANGE_M
 
@@ -763,6 +768,12 @@ class Ship(BaseModel):
             raise InsufficientFuelError
         self.fuel_level -= quantity
 
+    def add_fuel(self, quantity: float) -> None:
+        self.fuel_level += min(
+            self.fuel_capacity - self.fuel_level,
+            quantity,
+        )
+
     def withdraw_ore(self, quantity: float):
         if quantity > (self.cargo_ore_mass_kg + self.virtual_ore_kg):
             raise InsufficientOreError
@@ -807,7 +818,23 @@ class Ship(BaseModel):
 
         ''' REFUELING '''
         if self.fueling_at_station:
-            pass
+            room_in_tank = self.fuel_capacity - self.fuel_level
+            if (
+                not self.docked_at_station
+                or not self.gravity_brake_deployed
+                or not self.is_stationary
+                or room_in_tank <= 0
+            ):
+                self.fueling_at_station = False
+            else:
+                fuel_adj = min(room_in_tank, self.refueling_rate_fuel_units_per_second / fps)
+                ore_adj = self.fuel_cost_ore_kg_per_fuel_unit * fuel_adj
+                try:
+                    self.withdraw_ore(ore_adj)
+                except InsufficientOreError:
+                    self.fueling_at_station = False
+                else:
+                    self.add_fuel(fuel_adj)
 
         ''' Scanner POWER DRAW (RUNNING) '''
         if self.scanner_online:
@@ -1383,6 +1410,11 @@ class Ship(BaseModel):
         elif command == ShipCommands.TRADE_ORE_FOR_ORE_COIN:
             self.cmd_trade_ore_for_ore_coin(kwargs['game_frame'])
 
+        elif command == ShipCommands.START_FUELING:
+            self.cmd_start_fueling()
+        elif command == ShipCommands.STOP_FUELING:
+            self.cmd_stop_fueling()
+
         elif command == ShipCommands.START_CORE_UPGRADE:
             self.cmd_start_core_upgrade(args[0])
         elif command == ShipCommands.START_SHIP_UPGRADE:
@@ -1614,12 +1646,12 @@ class Ship(BaseModel):
             return
         if self.fueling_at_station:
             return
-        self.fueling_at_station = self.docked_at_station
+        self.fueling_at_station = True
 
     def cmd_stop_fueling(self):
         if not self.fueling_at_station:
             return
-        self.fueling_at_station = None
+        self.fueling_at_station = False
 
     def _can_afford_upgrade(self, cost: UpgradeCost):
         avail_ore = self.virtual_ore_kg + self.cargo_ore_mass_kg

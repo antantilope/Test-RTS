@@ -26,4 +26,19 @@ export class StationpaneComponent implements OnInit {
       {command:'trade_ore_for_ore_coin'},
     )
   }
+
+  public async btnClickStartFueling() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'start_fueling'},
+    )
+  }
+
+  public async btnClickHaltFueling() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'stop_fueling'},
+    )
+  }
+
 }

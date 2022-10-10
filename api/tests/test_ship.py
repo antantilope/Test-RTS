@@ -713,6 +713,102 @@ class TestShipAdjustResources(TestCase):
         assert self.ship.battery_power == 5
         assert not self.ship.mining_ore
 
+    def test_refueling_is_stopped_if_gravity_brake_retracted(self):
+        fps = 1
+        self.ship.docked_at_station = "foobar"
+        self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
+        self.ship.virtual_ore_kg = 50000
+        self.ship.cargo_ore_mass_kg = 50000
+        self.ship.fuel_cost_ore_kg_per_fuel_unit = 1
+        self.ship.refueling_rate_fuel_units_per_second = 1
+        assert self.ship.gravity_brake_deployed
+        self.ship.fuel_capacity = 10_000
+        self.ship.fuel_level = 1_000
+        self.ship.fueling_at_station = True
+        self.ship.adjust_resources(fps, 1)
+        assert self.ship.fuel_level > 1000
+        new_level = self.ship.fuel_level
+        assert self.ship.fueling_at_station
+        # undock from station
+        self.ship.docked_at_station = None
+        self.ship.gravity_brake_position = 0
+        # fueling halted, no new fuel added
+        self.ship.adjust_resources(fps, 1)
+        assert not self.ship.fueling_at_station
+        assert self.ship.fuel_level == new_level
+
+    def test_fueling_is_stopped_if_not_enough_ore(self):
+        fps = 1
+        self.ship.docked_at_station = "foobar"
+        self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
+        self.ship.virtual_ore_kg = 50000
+        self.ship.cargo_ore_mass_kg = 50000
+        self.ship.fuel_cost_ore_kg_per_fuel_unit = 1
+        self.ship.refueling_rate_fuel_units_per_second = 1
+        assert self.ship.gravity_brake_deployed
+        self.ship.fuel_capacity = 10_000
+        self.ship.fuel_level = 1_000
+        self.ship.fueling_at_station = True
+        self.ship.adjust_resources(fps, 1)
+        assert self.ship.fuel_level > 1000
+        new_level = self.ship.fuel_level
+        assert self.ship.fueling_at_station
+        # remove all ore from coffers
+        self.ship.virtual_ore_kg = 0
+        self.ship.cargo_ore_mass_kg = 0
+        # fueling halted, no new fuel added
+        self.ship.adjust_resources(fps, 1)
+        assert not self.ship.fueling_at_station
+        assert self.ship.fuel_level == new_level
+
+    def test_fueling_is_stopped_if_tank_is_full(self):
+        fps = 1
+        self.ship.docked_at_station = "foobar"
+        self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
+        self.ship.virtual_ore_kg = 50000
+        self.ship.cargo_ore_mass_kg = 50000
+        self.ship.fuel_cost_ore_kg_per_fuel_unit = 1
+        self.ship.refueling_rate_fuel_units_per_second = 1
+        assert self.ship.gravity_brake_deployed
+        self.ship.fuel_capacity = 10_000
+        self.ship.fuel_level = 1_000
+        self.ship.fueling_at_station = True
+        self.ship.adjust_resources(fps, 1)
+        assert self.ship.fuel_level > 1000
+        assert self.ship.fueling_at_station
+        # set tank to be full
+        self.ship.fuel_level = self.ship.fuel_capacity
+        # fueling halted, no new fuel added
+        self.ship.adjust_resources(fps, 1)
+        assert not self.ship.fueling_at_station
+        assert self.ship.fuel_level == self.ship.fuel_capacity
+
+    def test_physical_ore_is_withdrawn_first_then_virtual_ore_when_fueling(self):
+        fps = 1
+        self.ship.docked_at_station = "foobar"
+        self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
+        self.ship.virtual_ore_kg = 10
+        self.ship.cargo_ore_mass_kg = 2
+        self.ship.fuel_cost_ore_kg_per_fuel_unit = 1
+        self.ship.refueling_rate_fuel_units_per_second = 1
+        assert self.ship.gravity_brake_deployed
+        self.ship.fuel_capacity = 10_000
+        self.ship.fuel_level = 1_000
+        self.ship.fueling_at_station = True
+        # assert
+        self.ship.adjust_resources(fps, 1)
+        assert self.ship.cargo_ore_mass_kg == 1
+        assert self.ship.virtual_ore_kg == 10
+        assert self.ship.fuel_level == 1_001
+        self.ship.adjust_resources(fps, 1)
+        assert self.ship.cargo_ore_mass_kg == 0
+        assert self.ship.virtual_ore_kg == 10
+        assert self.ship.fuel_level == 1_002
+        self.ship.adjust_resources(fps, 1)
+        assert self.ship.cargo_ore_mass_kg == 0
+        assert self.ship.virtual_ore_kg == 9
+        assert self.ship.fuel_level == 1_003
+
 
 '''
  ██████  █████  ██       ██████ ██    ██ ██       █████  ████████ ███████
