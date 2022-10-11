@@ -39,9 +39,9 @@ export class DrawingService {
 
   private deathQuote: QuoteDetails | null = null;
 
-  private actionTileImgEngineLit: any = new Image()
-  private actionTileImgEngineOnline: any = new Image()
-  private actionTileImgScannerOnline: any = new Image()
+  private actionTileImgEngineLit: HTMLImageElement = new Image()
+  private actionTileImgEngineOnline: HTMLImageElement = new Image()
+  private actionTileImgScannerOnline: HTMLImageElement = new Image()
 
 
   private spaceStationVisualSideLengthM = 30
@@ -579,7 +579,7 @@ export class DrawingService {
         )
         lrcYOffset -= 120
       }
-      else if (this._api.frameData.ship.engine_online) {
+      else if (this._api.frameData.ship.engine_online || this._api.frameData.ship.engine_starting) {
         ctx.drawImage(
           this.actionTileImgEngineOnline,
           lrcXOffset,
@@ -588,7 +588,7 @@ export class DrawingService {
         )
         lrcYOffset -= 120
       }
-      if(this._api.frameData.ship.scanner_online) {
+      if(this._api.frameData.ship.scanner_online || this._api.frameData.ship.scanner_starting) {
         ctx.drawImage(
           this.actionTileImgScannerOnline,
           lrcXOffset,
