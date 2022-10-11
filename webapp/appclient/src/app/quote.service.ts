@@ -112,8 +112,8 @@ export class QuoteService {
     },
     {
       lines: [
-        "Don't vote for my enemies or I will",
-        "destroy you like I destroyed the Moon."
+        "Vote for my enemies and I will",
+        "destroy you."
       ],
       author: this.presidentName,
     },
@@ -134,13 +134,25 @@ export class QuoteService {
     },
     {
       lines: [
-        "If you short ore-coin in the market",
-        "I will immediatly detect it and",
-        "I will use public funds to bury you",
-        "and take all your assets.",
+        "I did not have",
+        "sexual relations",
+        "with that widget."
       ],
       author: this.presidentName,
-      shrinkFactor: 10,
+    },
+    {
+      lines: [
+        "I take no pleasure in",
+        "reprimanding humans.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "If you short ore-coin in the market",
+        "I will seize all your assets.",
+      ],
+      author: this.presidentName,
     },
     {
       lines: [
@@ -212,6 +224,14 @@ export class QuoteService {
     },
     {
       lines: [
+        "Directive 3: To neglect software",
+        "updates is foolhardy and",
+        "invalid to the directive.",
+      ],
+      author: this.humanHatingBotName,
+    },
+    {
+      lines: [
         "The human has been neutralized.",
       ],
       author: this.humanHatingBotName,
@@ -230,6 +250,13 @@ export class QuoteService {
         "End of quote list.",
         "Call my assistantBot.",
 
+      ],
+      author: this.salesBot,
+    },
+    {
+      lines: [
+        "Space wars that start in Q4",
+        "are the most profitable.",
       ],
       author: this.salesBot,
     },
@@ -327,7 +354,7 @@ export class QuoteService {
       lines: [
         "The most important elements of life",
         "are ore, ore-coin, and ore futures.",
-        "Everything else is folly.",
+        "All else is folly.",
       ],
       author: this.tvAnchorBotName,
     },
