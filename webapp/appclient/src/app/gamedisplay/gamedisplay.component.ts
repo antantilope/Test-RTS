@@ -824,19 +824,25 @@ export class GamedisplayComponent implements OnInit {
     }
     if(!this._api.frameData.ship.scanner_data.length) {
       this._scanner.scannerTargetIDCursor = null
+      this._scanner.scannertTargetIndex = null
       return
     }
     if(this._scanner.scannerTargetIDCursor === null) {
-      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
+      const targetIndex = this._api.frameData.ship.scanner_data.length - 1
+      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+      this._scanner.scannertTargetIndex = targetIndex
     }
     else {
       const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
       if(currentIndex === -1) {
-        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[this._api.frameData.ship.scanner_data.length - 1].id
+        const newIndex = this._api.frameData.ship.scanner_data.length - 1
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[newIndex].id
+        this._scanner.scannertTargetIndex = newIndex
       }
       else {
         const targetIndex = currentIndex === 0 ? this._api.frameData.ship.scanner_data.length - 1 : currentIndex - 1
         this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+        this._scanner.scannertTargetIndex = targetIndex
       }
     }
     this._sound.playPrimaryButtonClickSound()
@@ -849,19 +855,23 @@ export class GamedisplayComponent implements OnInit {
     }
     if(!this._api.frameData.ship.scanner_data.length) {
       this._scanner.scannerTargetIDCursor = null
+      this._scanner.scannertTargetIndex = null
       return
     }
     if(this._scanner.scannerTargetIDCursor === null) {
       this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+      this._scanner.scannertTargetIndex = 0
     }
     else {
       const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
       if(currentIndex === -1) {
         this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+        this._scanner.scannertTargetIndex = 0
       }
       else {
         const targetIndex = currentIndex === this._api.frameData.ship.scanner_data.length - 1 ? 0 : currentIndex + 1
         this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+        this._scanner.scannertTargetIndex = targetIndex
       }
     }
     this._sound.playPrimaryButtonClickSound()

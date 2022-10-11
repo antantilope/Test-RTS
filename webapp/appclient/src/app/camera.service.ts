@@ -361,29 +361,6 @@ export class Camera {
 
     // Add vision circles in largest to smallest order
     const shipCanvasCoord = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
-    if(this._api.frameData.ship.scanner_online) {
-      let scannerRange;
-      let color;
-      if(this._api.frameData.ship.scanner_mode == 'radar') {
-        scannerRange = this._api.frameData.ship.scanner_radar_range
-        color = "#001402" // dark green
-      } else if (this._api.frameData.ship.scanner_mode == 'ir') {
-        scannerRange = this._api.frameData.ship.scanner_ir_range
-        color = "#140010" // dark pink
-      } else {
-        throw new Error("unknown scanner mode")
-      }
-      const scannerRangeCanvasPXRadius = Math.round(
-        (this._api.frameData.map_config.units_per_meter
-        * scannerRange) / this.getZoom()
-      )
-      drawableItems.visionCircles.push({
-        canvasCoord: shipCanvasCoord,
-        radius: scannerRangeCanvasPXRadius,
-        color,
-        name: this._api.frameData.ship.scanner_mode,
-      })
-    }
     const basicVisualRangeCanvasPxRadius = Math.round(
       (this._api.frameData.map_config.units_per_meter
       * this._api.frameData.ship.visual_range) / this.getZoom()
@@ -404,8 +381,6 @@ export class Camera {
       y1: corner1.y,
       y2: corner2.y,
     }
-
-
 
     // Add own ship to drawable ships array
     const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
