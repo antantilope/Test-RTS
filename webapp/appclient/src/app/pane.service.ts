@@ -16,7 +16,7 @@ export class PaneService {
   public allChatPaneVisible: boolean = false
   public mainMenuPaneVisible: boolean = false
   public shipPaneVisible: boolean = false
-  public scannerPaneVisible: boolean = true
+  public scannerPaneVisible: boolean = false
 
   private zIndexes: string[] = []
   public zIndexesUpdated: Subject<string[]> = new Subject()

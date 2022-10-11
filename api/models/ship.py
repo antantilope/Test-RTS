@@ -710,6 +710,7 @@ class Ship(BaseModel):
         if self.scanner_starting:
             yield {
                 'name': 'Scanner Startup',
+                'slug': 'scanner_startup',
                 'percent': round(
                     self.scanner_startup_power_used / self.scanner_activation_power_required_total * 100
                 ),

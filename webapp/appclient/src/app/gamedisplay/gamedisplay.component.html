@@ -141,7 +141,8 @@
                 class="command-bar-column-header"
                 [ngStyle]="{'color': (_api.frameData.ship.scanner_online) ? '#00ff00' : '#ffffff'}"
             >
-                <br>SCANNER
+                <br>
+                <span>SCANNER</span>
             </div>
             <div style="display:flex;">
                 <div>
@@ -165,6 +166,16 @@
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.scanner_online"
                         >
                             STOP
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            (click)="btnToggleScannerDataWindow()"
+                            title="Toggle Scanner Data Window"
+                            [disabled]="!_api.frameData.ship.alive"
+                        >
+                            DATA
                         </button>
                     </div>
                 </div>

@@ -729,6 +729,9 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'activate_scanner'},
     )
+    setTimeout(()=>{
+      this._pane.scannerPaneVisible = true
+    }, 100)
     this._sound.playPrimaryButtonClickSound()
   }
 
@@ -738,7 +741,12 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'deactivate_scanner'},
     )
+    this._pane.scannerPaneVisible = false
     this._sound.playPrimaryButtonClickSound()
+  }
+
+  btnToggleScannerDataWindow() {
+    this._pane.scannerPaneVisible = !this._pane.scannerPaneVisible
   }
 
   // Autopilot button handlers.

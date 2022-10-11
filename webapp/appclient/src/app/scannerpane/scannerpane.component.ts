@@ -5,6 +5,8 @@ import { ApiService } from '../api.service';
 
 import { CameraService } from '../camera.service';
 import { PaneService } from '../pane.service';
+import { TIMER_SLUG_SCANNER_STARTUP } from "../constants"
+import { TimerItem } from "../models/timer-item.model"
 
 @Component({
   selector: 'app-scannerpane',
@@ -118,16 +120,51 @@ export class ScannerpaneComponent implements OnInit {
   }
 
   private drawScannerUnavailableMessage() {
+    const isStarting = this._api.frameData.ship.scanner_starting
     this.ctx.beginPath()
     this.ctx.font = 'bold 40px Courier New'
     this.ctx.fillStyle = '#ffffff'
     this.ctx.textAlign = 'center'
-    this.ctx.textBaseline = "middle"
+    this.ctx.textBaseline = "bottom"
     this.ctx.fillText(
-      this._api.frameData.ship.scanner_starting ? "STARTING" : "OFFLINE",
+      isStarting ? "LOADING" : "OFFLINE",
       this._camera.scannerPaneCamera.canvasHalfWidth,
       this._camera.scannerPaneCamera.canvasHeight / 3,
     )
+    if(isStarting){
+      this.drawLoadingBar()
+    }
+  }
+  private drawLoadingBar() {
+    const timer: TimerItem | undefined = this._api.frameData.ship.timers.find(
+      t => t.slug === TIMER_SLUG_SCANNER_STARTUP)
+    if(!timer) {
+      return
+    }
+    const barOutlineX1 = Math.floor(this._camera.scannerPaneCamera.canvasWidth * 0.125)
+    const barOutlineX2 = Math.floor(this._camera.scannerPaneCamera.canvasWidth * 0.875)
+    const xLen = barOutlineX2 - barOutlineX1
+    const barOutlineY1 = this._camera.scannerPaneCamera.canvasHalfHeight
+    const barOutlineY2 = this._camera.scannerPaneCamera.canvasHalfHeight + 25
+    const barFillLen = Math.floor(xLen * (timer.percent / 100))
+    this.ctx.beginPath() // Loading Bar Outline
+    this.ctx.strokeStyle = "#ffffff"
+    this.ctx.lineWidth = 1
+    this.ctx.rect(
+      barOutlineX1, barOutlineY1,
+      xLen,
+      barOutlineY2 - barOutlineY1
+    )
+    this.ctx.stroke()
+    this.ctx.beginPath() // Loading Bar Fill
+    this.ctx.fillStyle = "#ffffff"
+    this.ctx.rect(
+      barOutlineX1, barOutlineY1,
+      barFillLen,
+      barOutlineY2 - barOutlineY1
+    )
+    this.ctx.fill()
+
   }
 
   private drawTopRightOverlay() {
