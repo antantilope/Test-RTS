@@ -47,6 +47,7 @@ class MapMiningLocationDetails(TypedDict):
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
     service_radius_map_units: int #
+    starting_ore_amount_kg: int
 
 class MapSpaceStation(TypedDict):
     uuid: str

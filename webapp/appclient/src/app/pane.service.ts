@@ -81,6 +81,10 @@ export class PaneService {
     return this._mouseInPane.length > 0
   }
 
+  mouseInScannerPane(): boolean {
+    return this._mouseInPane.indexOf(this.PANE_SCANNER) != -1
+  }
+
   addToTopOfZIndexes(paneName: string) {
     const currentIndex = this.zIndexes.indexOf(paneName)
     if(currentIndex === -1) {

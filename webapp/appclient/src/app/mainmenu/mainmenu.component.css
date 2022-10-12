@@ -9,6 +9,7 @@
     background-color: #f4b5ff;
     cursor: grab;
     overflow-y: clip;
+    overflow-x: clip;
     border-radius: 8px;
     max-width:500px;
     min-width: 100px;

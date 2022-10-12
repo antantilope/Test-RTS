@@ -107,7 +107,7 @@ export class GamedisplayComponent implements OnInit {
     this.resizeCanvas()
     this.setupCanvasContext()
     this.setCanvasColor()
-
+    this._camera.scannerPaneCamera.setMiddleZoom()
   }
 
   ngOnDestroy() {
@@ -213,11 +213,14 @@ export class GamedisplayComponent implements OnInit {
 
     // Zoom camera
     window.addEventListener('wheel', event => {
-      if(this._pane.mouseInPane()) {
+      const zoomIn = event.deltaY < 0
+      if(this._pane.mouseInPane() && this._api.frameData.ship.scanner_online) {
+        if(this._pane.mouseInScannerPane()) {
+          this._camera.scannerPaneCamera.adjustZoom(zoomIn)
+        }
         return
       }
       if (this.canManualZoom()) {
-        const zoomIn = event.deltaY < 0
         this._camera.gameDisplayCamera.adjustZoom(zoomIn)
       }
     })

@@ -36,6 +36,8 @@ export class ScannerpaneComponent implements OnInit {
   private bgColorRadar = "#001800"   // dark green
   private bgColorIR = "#0f0018"      // dark purple
   private bgColorOffline = "#181818" // dark gray
+  private maxCameraZoom: number
+  private minCameraZoom: number
 
   constructor(
     public _pane: PaneService,
@@ -46,6 +48,9 @@ export class ScannerpaneComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.maxCameraZoom = this._camera.scannerPaneCamera.getMaxZoom()
+    this.minCameraZoom = this._camera.scannerPaneCamera.getMinZoom()
+
     this.zIndexesUpdatedSubscription = this._pane.zIndexesUpdated.subscribe((zIndexes: string[]) => {
       const paneZIndex = zIndexes.indexOf(this._pane.PANE_SCANNER);
       if(paneZIndex === -1) {
@@ -140,7 +145,7 @@ export class ScannerpaneComponent implements OnInit {
     )
   }
 
-  paintDisplay(): void {
+  private paintDisplay(): void {
     // console.log("paintDisplay()")
     const ship = this._api.frameData.ship
     this.clearCanvas()
@@ -163,22 +168,15 @@ export class ScannerpaneComponent implements OnInit {
     let target: ScannerDataElement
 
     // Draw scene of selected target
+    const overlayAlpha = randomFloat(0.6, 0.95)
     if(anyTargets) {
       target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
       this._camera.scannerPaneCamera.setPosition(
         target.coord_x, target.coord_y,
       )
-      if(!target.alive){
-        const onDeathZoomTo = 30
-        const currentZoom = this._camera.scannerPaneCamera.getZoom()
-        if(currentZoom < onDeathZoomTo) {
-          this._camera.scannerPaneCamera.setZoom(currentZoom + 1)
-        }
-      }
       this.drawGameScene(target)
+      this.drawBottomLeftOverlay(overlayAlpha)
     }
-
-    const overlayAlpha = randomFloat(0.6, 0.95)
     this.drawTopLeftOverlay(overlayAlpha)
     this.drawBottomCenterAlert(overlayAlpha)
     this.drawTopRightOverlay(overlayAlpha)
@@ -429,6 +427,47 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.fillText(
       text, this._camera.scannerPaneCamera.canvasHalfWidth, yOffset
     )
+  }
+
+  private drawBottomLeftOverlay(alpha: number) {
+    // Zoom Info
+    const color = `rgb(255, 255, 255, ${alpha})`
+    this.ctx.font = '20px Courier New'
+    this.ctx.fillStyle = color
+    this.ctx.textAlign = 'left'
+    this.ctx.textBaseline = "bottom"
+    let yOffset = this._camera.scannerPaneCamera.canvasHeight - 15
+    const xOffset = 8
+
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      `ZOOM ${this._camera.scannerPaneCamera.getZoom()}`, xOffset, yOffset
+    )
+    yOffset -= 25
+
+    // Zoom bar
+    const barHeight = 15
+    const barWidth = 100
+    const y1 = yOffset - barHeight
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = color
+    this.ctx.lineWidth = 2
+    this.ctx.rect(
+      xOffset, y1, barWidth, barHeight
+    )
+    this.ctx.stroke()
+
+    // Zoom Bar Indicator line
+    const percent = (this._camera.scannerPaneCamera.getZoom() - this.minCameraZoom) / (this.maxCameraZoom - this.minCameraZoom)
+    const indicatorXOffset = xOffset + (barWidth * percent)
+    const overdrawLip = 3
+    const yTop = y1 - overdrawLip
+    const yBottom = y1 + barHeight + overdrawLip
+    this.ctx.beginPath()
+    this.ctx.lineWidth = 4
+    this.ctx.moveTo(indicatorXOffset, yTop)
+    this.ctx.lineTo(indicatorXOffset, yBottom)
+    this.ctx.stroke()
 
   }
 

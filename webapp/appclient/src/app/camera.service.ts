@@ -28,7 +28,7 @@ export class Camera {
     "Zooming out" increases this value
   */
   private zoom: number = 10;
-  private zoomLevels = [1, 5, 10, 15, 20, 25, 30, 35, 40]
+  private zoomLevels = [5, 7, 10, 15, 17, 20, 25, 27, 30, 35, 37, 40]
   private zoomIndex = this.zoomLevels.indexOf(this.zoom)
   private finalZoomIndex = this.zoomLevels.length - 1
 
@@ -60,13 +60,27 @@ export class Camera {
     return this.zoom
   }
 
+  public getMaxZoom(): number {
+    return Math.max(...this.zoomLevels)
+  }
+  public getMinZoom(): number {
+    return Math.min(...this.zoomLevels)
+  }
+
+
   public setZoom(zoom: number) {
     this.zoom = zoom
   }
 
+  public setMiddleZoom() {
+    this.setZoom(this.zoomLevels[Math.floor(
+      this.zoomLevels.length / 2
+    )])
+  }
+
   public adjustZoom(zoomIn: boolean): void {
     if(zoomIn) {
-      if (this.zoomIndex > 1) {
+      if (this.zoomIndex > 0) {
         this.zoomIndex--
         this.zoom = this.zoomLevels[this.zoomIndex]
       }
