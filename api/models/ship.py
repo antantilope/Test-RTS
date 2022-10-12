@@ -39,7 +39,7 @@ class ShipCoatType:
     RADAR_DEFEATING = "radar_defeating"
 
 class MapMiningLocationDetails(TypedDict):
-    id: str
+    uuid: str
     name: Optional[str]
     position_meters_x: int
     position_meters_y: int
@@ -49,7 +49,7 @@ class MapMiningLocationDetails(TypedDict):
     service_radius_map_units: int #
 
 class MapSpaceStation(TypedDict):
-    id: str
+    uuid: str
     name: Optional[str]
     position_meters_x: int
     position_meters_y: int
@@ -163,6 +163,7 @@ class ScannedElement(TypedDict):
 class TimerItem(TypedDict):
     name: str
     percent: int
+    slug: Optional[str]
 
 
 class AutoPilotPrograms:

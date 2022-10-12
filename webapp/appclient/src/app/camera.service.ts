@@ -4,9 +4,9 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { ScannerService } from './scanner.service';
 import { BoxCoords } from './models/box-coords.model';
-import { DrawableCanvasItems, DrawableShip, ScannerDataElement } from './models/drawable-objects.model';
+import { DrawableCanvasItems, DrawableShip } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
-
+import { ScannerDataElement } from './models/apidata.model';
 
 /* Camera used  */
 export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'

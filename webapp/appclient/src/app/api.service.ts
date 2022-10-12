@@ -6,6 +6,7 @@ import { Subject } from 'rxjs'
 
 import { StartCountdownPayload } from './models/startcountdown-payload.model'
 import { AllChatMessage } from './models/allchat-message.model';
+import { FrameData } from './models/apidata.model';
 
 
 @Injectable({
@@ -16,8 +17,8 @@ export class ApiService {
   private socket: any
 
   private EVENT_FRAMEDATA: string = "framedata"
-  public frameDataEvent: Subject<any> = new Subject()
-  public frameData: any | null = null
+  public frameDataEvent: Subject<void> = new Subject()
+  public frameData: FrameData | null = null
 
   public lastShockwaveFrame : number | null = null
 
@@ -41,9 +42,9 @@ export class ApiService {
       console.log("Socket Connected!")
     })
 
-    this.socket.on(this.EVENT_FRAMEDATA, (data: any) => {
+    this.socket.on(this.EVENT_FRAMEDATA, (data: FrameData) => {
       this.frameData = data
-      this.frameDataEvent.next(data)
+      this.frameDataEvent.next()
       if(data.game_frame % 400 === 0) {
         console.log({framedata: data})
       }

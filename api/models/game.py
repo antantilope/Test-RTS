@@ -70,8 +70,6 @@ class TopLevelMapDetails(TypedDict):
     meters_y: int
 
 
-
-
 class MapFeature(TypedDict):
     id: str
     name: Optional[str]

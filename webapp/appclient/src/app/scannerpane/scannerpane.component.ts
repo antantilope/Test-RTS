@@ -8,7 +8,7 @@ import { ScannerService } from '../scanner.service';
 import { DrawingService } from '../drawing.service';
 import { TIMER_SLUG_SCANNER_STARTUP } from "../constants"
 import { TimerItem } from "../models/timer-item.model"
-import { ScannerDataElement } from '../models/drawable-objects.model';
+import { ScannerDataElement } from '../models/apidata.model';
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
