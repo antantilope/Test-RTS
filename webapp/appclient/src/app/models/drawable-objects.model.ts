@@ -11,6 +11,7 @@ export class ScannerDataElement {
     coord_y: number
     id: string
     alive: boolean
+    anti_radar_coating_level: boolean
     designator: string
     visual_shape?: string
     visual_p0?: number[]

@@ -44,7 +44,7 @@ export class ApiService {
     this.socket.on(this.EVENT_FRAMEDATA, (data: any) => {
       this.frameData = data
       this.frameDataEvent.next(data)
-      if(data.game_frame % 500 === 0) {
+      if(data.game_frame % 400 === 0) {
         console.log({framedata: data})
       }
     })

@@ -133,6 +133,9 @@ class ScannedElement(TypedDict):
     target_heading: Optional[float] # Float describing beaing to element
     distance: Optional[int]
 
+    is_scannable: bool
+    is_visual: bool
+
     visual_p0: Tuple[int]
     visual_p1: Tuple[int]
     visual_p2: Tuple[int]

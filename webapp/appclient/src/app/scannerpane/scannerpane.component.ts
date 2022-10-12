@@ -7,6 +7,7 @@ import { PaneService } from '../pane.service';
 import { ScannerService } from '../scanner.service';
 import { TIMER_SLUG_SCANNER_STARTUP } from "../constants"
 import { TimerItem } from "../models/timer-item.model"
+import { ScannerDataElement } from '../models/drawable-objects.model';
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -157,9 +158,9 @@ export class ScannerpaneComponent implements OnInit {
     }
 
     const overlayAlpha = randomFloat(0.6, 0.95)
-    this.drawLeftRightOverlay(overlayAlpha)
-    this.drawFrontTopAlert(overlayAlpha)
+    this.drawTopLeftOverlay(overlayAlpha)
     this.drawBottomCenterAlert(overlayAlpha)
+    this.drawTopRightOverlay(overlayAlpha)
 
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
@@ -212,34 +213,127 @@ export class ScannerpaneComponent implements OnInit {
 
   }
 
-  private drawLeftRightOverlay(alpha: number) {
+  private drawTopRightOverlay(alpha:  number) {
+    // Target Stats
+    const anyTargets = this.anyTargetsOnScope()
+    let yOffset = 5
+    const xOffset = this._camera.scannerPaneCamera.canvasWidth - 5
+    const yInterval = 20
+    this.ctx.beginPath()
+    this.ctx.font = 'bold 23px Courier New'
+    this.ctx.fillStyle = `rgb(255, 255, 255, ${alpha})`
+    this.ctx.textAlign = 'right'
+    this.ctx.textBaseline = "top"
+    let txt = (
+      anyTargets
+      ? `TARGET ${this._scanner.scannertTargetIndex + 1}/${this._api.frameData.ship.scanner_data.length}`
+      : "NO TARGET"
+    )
+    this.ctx.fillText(txt, xOffset, yOffset)
+    if(!anyTargets) {
+      return
+    }
+    yOffset += (yInterval + 3)
+
+    this.ctx.beginPath()
+    this.ctx.font = '20px Courier New'
+    let target: ScannerDataElement
+    if(anyTargets) {
+      target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
+      this.ctx.fillText(
+        target.designator.toUpperCase(), xOffset, yOffset
+      )
+      yOffset += yInterval
+    } else {
+      return
+    }
+
+    if(target.visual_shape) {
+      const visualOnlyWarning = this.getIsVisualOnlyWarning(target)
+      this.ctx.beginPath()
+      this.ctx.fillText(
+        `${visualOnlyWarning?"⚠️":""}VISUAL`, xOffset, yOffset
+      )
+      yOffset += yInterval
+    }
+
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      `DIST. ${target.distance} M`, xOffset, yOffset
+    )
+    yOffset += yInterval
+
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      `BEARING ${target.relative_heading}°`, xOffset, yOffset
+    )
+    yOffset += yInterval
+
+    this.ctx.beginPath()
+    const mode = this._api.frameData.ship.scanner_mode
+    if(mode == "radar") {
+      const antiRadar = target.anti_radar_coating_level
+      this.ctx.fillText(
+        `ANTI RADAR ${antiRadar}`, xOffset, yOffset
+      )
+    } else if (mode == "ir") {
+       target.thermal_signature
+       this.ctx.fillText(
+        `SIGNATURE ${target.thermal_signature}`, xOffset, yOffset
+      )
+    } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
+    yOffset += yInterval
+  }
+
+  private getIsVisualOnlyWarning(target: ScannerDataElement):boolean {
+    // Returns true if ship is only scannable because
+    // it's within visual range
+    const mode = this._api.frameData.ship.scanner_mode
+    if(mode == "radar") {
+      return target.anti_radar_coating_level > this._api.frameData.ship.scanner_radar_sensitivity
+    } else if (mode == "ir") {
+      return target.thermal_signature < this._api.frameData.ship.scanner_ir_minimum_thermal_signature
+    } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
+  }
+
+  private drawTopLeftOverlay(alpha: number) {
     // Scanner Stats
-    // Row 1
+    let yOffset = 5;
+    const xOffset = 5
+    const yTextInterval = 20
+    this.ctx.beginPath()
+    this.ctx.font = 'bold 23px Courier New'
+    this.ctx.fillStyle = `rgb(255, 255, 255, ${alpha})`
+    this.ctx.textAlign = 'left'
+    this.ctx.textBaseline = "top"
+    this.ctx.fillText(
+      "SCAN STATS", xOffset, yOffset
+    )
+    yOffset += (yTextInterval + 3)
+
     let mode: string;
     if(this._api.frameData.ship.scanner_mode == "radar") {
       mode = "RADAR"
     } else if(this._api.frameData.ship.scanner_mode == "ir") {
       mode = "THERMAL"
     } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
-    let yOffset = 5;
-    const xOffset = 5
-    const yTextInterval = 24
+
     this.ctx.beginPath()
     this.ctx.font = '20px Courier New'
     this.ctx.fillStyle = `rgb(255, 255, 255, ${alpha})`
     this.ctx.textAlign = 'left'
     this.ctx.textBaseline = "top"
     this.ctx.fillText(
-      mode, xOffset, yOffset
+      "MODE " + mode, xOffset, yOffset
     )
     yOffset += yTextInterval
 
     this.ctx.beginPath()
     let text: string
     if(mode == "RADAR") {
-      text = "RNG " + this._api.frameData.ship.scanner_radar_range
+      text = "RANGE " + this._api.frameData.ship.scanner_radar_range
     } else if (mode == "THERMAL") {
-      text = "RNG " + this._api.frameData.ship.scanner_ir_range
+      text = "RANGE " + this._api.frameData.ship.scanner_ir_range
     } else { throw new Error(`unknown scanner mode ${mode}`)}
     this.ctx.fillText(
       text, xOffset, yOffset
@@ -260,45 +354,14 @@ export class ScannerpaneComponent implements OnInit {
 
     this.ctx.beginPath()
     if(!this._api.frameData.ship.scanner_locked) {
-      text = `Δ° ${this._api.frameData.ship.scanner_locking_max_traversal_degrees}`
+      text = `MAX Δ° ${this._api.frameData.ship.scanner_locking_max_traversal_degrees}`
     } else {
-      text = `Δ° ${this._api.frameData.ship.scanner_locked_max_traversal_degrees}`
+      text = `MAX Δ° ${this._api.frameData.ship.scanner_locked_max_traversal_degrees}`
     }
     this.ctx.fillText(
       text, xOffset, yOffset
     )
     yOffset += yTextInterval
-  }
-
-  private drawFrontTopAlert(alpha: number) {
-    const anyTargets = this.anyTargetsOnScope()
-    let yOffset = 5
-    const yInterval = 22
-    this.ctx.beginPath()
-    this.ctx.font = '23px Courier New'
-    this.ctx.fillStyle = `rgb(255, 255, 255, ${alpha})`
-    this.ctx.textAlign = 'center'
-    this.ctx.textBaseline = "top"
-    let txt = (
-      anyTargets
-      ? `TGT ${this._scanner.scannertTargetIndex + 1}/${this._api.frameData.ship.scanner_data.length}`
-      : "NO TGT"
-    )
-    this.ctx.fillText(
-      txt, this._camera.scannerPaneCamera.canvasHalfWidth, yOffset
-    )
-    yOffset += yInterval
-
-    if(anyTargets) {
-      this.ctx.beginPath()
-      this.ctx.font = 'bold 23px Courier New'
-      console.log(this._scanner.scannertTargetIndex)
-      const target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
-      this.ctx.fillText(
-        target.designator.toUpperCase(), this._camera.scannerPaneCamera.canvasHalfWidth, yOffset
-      )
-      yOffset += yInterval
-    }
   }
 
   private drawBottomCenterAlert(alpha) {

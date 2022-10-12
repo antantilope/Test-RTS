@@ -542,6 +542,8 @@ class Game(BaseModel):
                 scanner_data: ScannedElement = {
                     'id': other_id,
                     'designator': self._ships[other_id].scanner_designator,
+                    'anti_radar_coating_level': self._ships[other_id].anti_radar_coating_level,
+                    'scanner_thermal_signature': self._ships[other_id].scanner_thermal_signature,
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
                     'element_type': ScannedElementType.SHIP,
@@ -578,6 +580,7 @@ class Game(BaseModel):
                         'visual_fueling_at_station': self._ships[other_id].fueling_at_station,
                     })
                 if is_scannable:
+                    # TODO: refactor, this codepath always runs if is_visual == True
                     exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
                     scanner_data.update({
                         "distance": round(distance_meters),
