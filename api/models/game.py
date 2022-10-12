@@ -539,6 +539,7 @@ class Game(BaseModel):
                 is_scannable = False
 
             if is_visual or is_scannable:
+                exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
                 scanner_data: ScannedElement = {
                     'id': other_id,
                     'designator': self._ships[other_id].scanner_designator,
@@ -550,45 +551,35 @@ class Game(BaseModel):
                     'alive': self._ships[other_id].died_on_frame is None,
                     'aflame': self._ships[other_id].aflame_since_frame is not None,
                     'explosion_frame': self._ships[other_id].explosion_frame,
+                    'in_visual_range': is_visual,
                     'visual_p0': self._ships[other_id].map_p0,
                     'visual_p1': self._ships[other_id].map_p1,
                     'visual_p2': self._ships[other_id].map_p2,
                     'visual_p3': self._ships[other_id].map_p3,
                     'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
+                    'visual_shape': VisibleElementShapeType.RECT,
+                    'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
+                    'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
+                    'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
+                    'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
+                    'visual_engine_lit': self._ships[other_id].engine_lit,
+                    'visual_engine_boosted_last_frame': self._ships[other_id].engine_boosted_last_frame,
+                    'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
+                    'visual_ebeam_color': self._ships[other_id].ebeam_color,
+                    'visual_fill_color': '#ffffff',
+                    'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
+                    'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
+                    'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,
+                    'visual_mining_ore_location': (
+                        self._ships[other_id].parked_at_ore_mine
+                        if self._ships[other_id].mining_ore
+                        else None
+                    ),
+                    'visual_fueling_at_station': self._ships[other_id].fueling_at_station,
+                    "distance": round(distance_meters),
+                    "relative_heading": round(exact_heading),
+                    "target_heading": exact_heading,
                 }
-                if is_visual:
-                    scanner_data.update({
-                        'visual_shape': VisibleElementShapeType.RECT,
-                        'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
-                        'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
-                        'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
-                        'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
-                        'visual_engine_lit': self._ships[other_id].engine_lit,
-                        'visual_engine_boosted_last_frame': self._ships[other_id].engine_boosted_last_frame,
-                        'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
-                        'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
-                        'visual_ebeam_color': self._ships[other_id].ebeam_color,
-                        'visual_fill_color': '#ffffff',
-                        'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
-                        'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
-                        'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,
-                        'visual_mining_ore_location': (
-                            self._ships[other_id].parked_at_ore_mine
-                            if self._ships[other_id].mining_ore
-                            else None
-                        ),
-                        'visual_fueling_at_station': self._ships[other_id].fueling_at_station,
-                    })
-                if is_scannable:
-                    # TODO: refactor, this codepath always runs if is_visual == True
-                    exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
-                    scanner_data.update({
-                        "distance": round(distance_meters),
-                        "relative_heading": round(exact_heading),
-                        "target_heading": exact_heading,
-                    })
-                    if self._ships[ship_id].scanner_mode == ShipScannerMode.IR:
-                        scanner_data['thermal_signature'] = self._ships[other_id].scanner_thermal_signature
 
                 self._ships[ship_id].scanner_data[other_id] = scanner_data
 

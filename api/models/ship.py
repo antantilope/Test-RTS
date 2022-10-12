@@ -126,30 +126,39 @@ class ScannedElement(TypedDict):
     id: str
     designator: str
     element_type: str
-    thermal_signature: Optional[int]
+    anti_radar_coating_level: int
+    scanner_thermal_signature: int
     coord_x: int
     coord_y: int
-    relative_heading: Optional[int] # Rounded int describing bearing to element
-    target_heading: Optional[float] # Float describing beaing to element
-    distance: Optional[int]
+    relative_heading: int # Rounded int describing bearing to element
+    target_heading: float # Float describing beaing to element
+    distance: int
+    alive: bool
+    aflame: bool
+    explosion_frame: Union[None, int]
 
-    is_scannable: bool
-    is_visual: bool
-
+    in_visual_range: bool
     visual_p0: Tuple[int]
     visual_p1: Tuple[int]
     visual_p2: Tuple[int]
     visual_p3: Tuple[int]
+    visual_fin_0_rel_rot_coord_0: Tuple[int]
+    visual_fin_0_rel_rot_coord_1: Tuple[int]
+    visual_fin_1_rel_rot_coord_0: Tuple[int]
+    visual_fin_1_rel_rot_coord_1: Tuple[int]
 
-    visual_fill_color: Optional[str]
-    visual_stroke_color: Optional[str]
-    visual_shape: Optional[str]     # 'arc' or 'rect'
-    visual_radius: Optional[int]    # arc
-    visual_polygon_points: Optional[List[Tuple]]
-    visual_engine_lit: Optional[bool] #
-    visual_ebeam_charging: Optional[bool] #
-    visual_ebeam_firing: Optional[bool] #
-
+    visual_fill_color: str
+    visual_shape: str
+    visual_engine_lit: bool
+    visual_ebeam_charging: bool
+    visual_ebeam_firing: bool
+    visual_ebeam_color: str
+    visual_engine_boosted_last_frame: int
+    visual_gravity_brake_position: int
+    visual_gravity_brake_deployed_position: int
+    visual_gravity_brake_active: bool
+    visual_mining_ore_location: Union[None, str]
+    visual_fueling_at_station: bool
 
 class TimerItem(TypedDict):
     name: str

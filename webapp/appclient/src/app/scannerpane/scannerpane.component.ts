@@ -5,6 +5,7 @@ import { ApiService } from '../api.service';
 import { CameraService } from '../camera.service';
 import { PaneService } from '../pane.service';
 import { ScannerService } from '../scanner.service';
+import { DrawingService } from '../drawing.service';
 import { TIMER_SLUG_SCANNER_STARTUP } from "../constants"
 import { TimerItem } from "../models/timer-item.model"
 import { ScannerDataElement } from '../models/drawable-objects.model';
@@ -41,6 +42,7 @@ export class ScannerpaneComponent implements OnInit {
     private _camera: CameraService,
     private _api: ApiService,
     private _scanner: ScannerService,
+    private _draw: DrawingService,
   ) { }
 
   ngOnInit(): void {
@@ -150,19 +152,61 @@ export class ScannerpaneComponent implements OnInit {
       return
     }
 
-    const flickerOnOverlay = Math.random() < 0.85
+    const anyTargets = this.anyTargetsOnScope()
 
-    if(this.anyTargetsOnScope() && !this._scanner.scannerTargetIDCursor) {
+    // Select a target if any are available and not are selected.
+    if(anyTargets && !this._scanner.scannerTargetIDCursor) {
       this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
       this._scanner.scannertTargetIndex = 0
+    }
+
+    let target: ScannerDataElement
+
+    // Draw scene of selected target
+    if(anyTargets) {
+      target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
+      this._camera.scannerPaneCamera.setPosition(
+        target.coord_x, target.coord_y,
+      )
+      if(!target.alive){
+        const onDeathZoomTo = 30
+        const currentZoom = this._camera.scannerPaneCamera.getZoom()
+        if(currentZoom < onDeathZoomTo) {
+          this._camera.scannerPaneCamera.setZoom(currentZoom + 1)
+        }
+      }
+      this.drawGameScene(target)
     }
 
     const overlayAlpha = randomFloat(0.6, 0.95)
     this.drawTopLeftOverlay(overlayAlpha)
     this.drawBottomCenterAlert(overlayAlpha)
     this.drawTopRightOverlay(overlayAlpha)
-
     window.requestAnimationFrame(this.paintDisplay.bind(this))
+  }
+
+  private drawGameScene(target: ScannerDataElement) {
+    const drawableObjects = this._camera.scannerPaneCamera.getDrawableCanvasObjects()
+
+    // Add map features
+    this._draw.drawSpaceStations(this.ctx, this._camera.scannerPaneCamera)
+    this._draw.drawMiningLocations(this.ctx, this._camera.scannerPaneCamera)
+
+
+    // Ships
+    const drawBoundingBox = false
+    for(let i in drawableObjects.ships) {
+      this._draw.drawShip(
+        this.ctx,
+        this._camera.scannerPaneCamera,
+        drawableObjects.ships[i],
+        this._scanner.scannerTargetIDCursor,
+        drawBoundingBox,
+      )
+    }
+    // E-Beams
+    this._draw.drawEbeams(this.ctx, this._camera.scannerPaneCamera, drawableObjects.ebeamRays)
+
   }
 
   private drawScannerUnavailableMessage() {
@@ -236,7 +280,7 @@ export class ScannerpaneComponent implements OnInit {
     yOffset += (yInterval + 3)
 
     this.ctx.beginPath()
-    this.ctx.font = '20px Courier New'
+    this.ctx.font = 'italic 20px Courier New'
     let target: ScannerDataElement
     if(anyTargets) {
       target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
@@ -247,6 +291,8 @@ export class ScannerpaneComponent implements OnInit {
     } else {
       return
     }
+
+    this.ctx.font = '20px Courier New'
 
     if(target.visual_shape) {
       const visualOnlyWarning = this.getIsVisualOnlyWarning(target)
@@ -277,9 +323,9 @@ export class ScannerpaneComponent implements OnInit {
         `ANTI RADAR ${antiRadar}`, xOffset, yOffset
       )
     } else if (mode == "ir") {
-       target.thermal_signature
+       target.scanner_thermal_signature
        this.ctx.fillText(
-        `SIGNATURE ${target.thermal_signature}`, xOffset, yOffset
+        `SIGNATURE ${target.scanner_thermal_signature}`, xOffset, yOffset
       )
     } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
     yOffset += yInterval
@@ -292,7 +338,7 @@ export class ScannerpaneComponent implements OnInit {
     if(mode == "radar") {
       return target.anti_radar_coating_level > this._api.frameData.ship.scanner_radar_sensitivity
     } else if (mode == "ir") {
-      return target.thermal_signature < this._api.frameData.ship.scanner_ir_minimum_thermal_signature
+      return target.scanner_thermal_signature < this._api.frameData.ship.scanner_ir_minimum_thermal_signature
     } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
   }
 

@@ -519,12 +519,12 @@ export class GamedisplayComponent implements OnInit {
 
     // Ships
     for(let i in drawableObjects.ships) {
-      const drawableShip: DrawableShip = drawableObjects.ships[i]
       this._draw.drawShip(
         this.ctx,
         this._camera.gameDisplayCamera,
         drawableObjects.ships[i],
         this._scanner.scannerTargetIDCursor,
+        true,
       )
     }
 
