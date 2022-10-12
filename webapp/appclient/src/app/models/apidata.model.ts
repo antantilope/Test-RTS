@@ -56,7 +56,6 @@ export class UpgradeCost {
     number: number
     seconds: number
     core_upgrade_slugs?: string[]
-
 }
 
 export class UpgradePathSummary {
