@@ -960,132 +960,133 @@ export class DrawingService {
         ctx.fill()
       }
     }
-
-    // Visual Shake x/y offsets
-    let vsxo = 0, vsyo = 0;
-    if(
-      drawableShip.isSelf
-      // && !drawableShip.isDot
-      && this._api.lastShockwaveFrame !== null
-      && (this._api.lastShockwaveFrame + 75) > this._api.frameData.game_frame
-    ) {
-      const percentThroughShake = (this._api.frameData.game_frame - this._api.lastShockwaveFrame) / 75
-      const shakeReduction = 1 - percentThroughShake
-      const xOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
-      const yOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
-      vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
-      vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
-    }
-    // Ship is within visual range
-    // fin 0
-    ctx.beginPath()
-    ctx.fillStyle = drawableShip.fillColor
-    ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
-    ctx.lineTo(drawableShip.canvasCoordFin0P0.x + vsxo, drawableShip.canvasCoordFin0P0.y + vsyo)
-    ctx.lineTo(drawableShip.canvasCoordFin0P1.x + vsxo, drawableShip.canvasCoordFin0P1.y + vsyo)
-    ctx.closePath()
-    ctx.fill()
-    // fin 1
-    ctx.beginPath()
-    ctx.moveTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
-    ctx.lineTo(drawableShip.canvasCoordFin1P0.x + vsxo, drawableShip.canvasCoordFin1P0.y + vsyo)
-    ctx.lineTo(drawableShip.canvasCoordFin1P1.x + vsxo, drawableShip.canvasCoordFin1P1.y + vsyo)
-    ctx.closePath()
-    ctx.fill()
-    // body
-    ctx.beginPath()
-    ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
-    ctx.lineTo(drawableShip.canvasCoordP1.x + vsxo, drawableShip.canvasCoordP1.y + vsyo)
-    ctx.lineTo(drawableShip.canvasCoordP2.x + vsxo, drawableShip.canvasCoordP2.y + vsyo)
-    ctx.lineTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
-    ctx.closePath()
-    ctx.fill()
-    if(drawableShip.visualEbeamCharging) {
-      ctx.strokeStyle = "#ff0000"
-      ctx.lineWidth = randomInt(1, 4)
-      ctx.stroke()
-    }
-    if(drawableShip.engineLit) {
-      const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
-      const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
-      let engineOuterFlameRadius = Math.max(2, Math.round(
-        Math.sqrt(
-          (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
-          + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
-        ) / 2
-      ) * (drawableShip.engineBoosted ? 4 : 1))
-      engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
-      ctx.beginPath()
-      ctx.fillStyle = drawableShip.engineBoosted ? "rgb(71, 139, 255)" : "rgb(255, 0, 0, 0.9)"
-      ctx.arc(
-        engineFlameX,
-        engineFlameY,
-        engineOuterFlameRadius,
-        0,
-        TWO_PI,
-      )
-      ctx.fill()
-      ctx.beginPath()
-      ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
-      const engineInnerFlameRadius = Math.floor(engineOuterFlameRadius / 2) + randomInt(
-        engineOuterFlameRadius / -5, engineOuterFlameRadius / 5
-      )
-      ctx.arc(
-        engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
-        engineFlameY + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
-        engineInnerFlameRadius,
-        0,
-        TWO_PI,
-      )
-      ctx.fill()
-    }
-
-    if(drawableShip.gravityBrakePosition > 0) {
-      const fullyDesployedRadius = Math.ceil(
-        Math.sqrt(
-          Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP2.x, 2)
-          + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP2.y, 2)
-        )
-      )
-
-      let currentRadius = Math.ceil(
-        fullyDesployedRadius * (
-          drawableShip.gravityBrakePosition / drawableShip.gravityBrakeDeployedPosition
-        )
-      )
-      if(drawableShip.gravityBrakeActive) {
-        currentRadius += Math.ceil(currentRadius * Math.random() * 2.5)
-        ctx.fillStyle = `rgb(124, 0, 166, 0.75)`
-      } else {
-        ctx.fillStyle = Math.random() < 0.7 ? `rgb(0, 0, 255, 0.1)` : `rgb(0, 0, 255, 0.6)`
+    if(!drawableShip.explosionFrame){
+      // Visual Shake x/y offsets
+      let vsxo = 0, vsyo = 0;
+      if(
+        drawableShip.isSelf
+        // && !drawableShip.isDot
+        && this._api.lastShockwaveFrame !== null
+        && (this._api.lastShockwaveFrame + 75) > this._api.frameData.game_frame
+      ) {
+        const percentThroughShake = (this._api.frameData.game_frame - this._api.lastShockwaveFrame) / 75
+        const shakeReduction = 1 - percentThroughShake
+        const xOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+        const yOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+        vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
+        vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
       }
+      // Ship is within visual range
+      // fin 0
       ctx.beginPath()
-      const arcStart = drawableShip.gravityBrakeActive ? 0 : TWO_PI * Math.random()
-      const arcEnd = drawableShip.gravityBrakeActive ? TWO_PI : TWO_PI * Math.random()
-      ctx.arc(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y, currentRadius, arcStart, arcEnd)
+      ctx.fillStyle = drawableShip.fillColor
+      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin0P0.x + vsxo, drawableShip.canvasCoordFin0P0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin0P1.x + vsxo, drawableShip.canvasCoordFin0P1.y + vsyo)
+      ctx.closePath()
       ctx.fill()
+      // fin 1
       ctx.beginPath()
-      ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, arcStart, arcEnd)
+      ctx.moveTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin1P0.x + vsxo, drawableShip.canvasCoordFin1P0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordFin1P1.x + vsxo, drawableShip.canvasCoordFin1P1.y + vsyo)
+      ctx.closePath()
       ctx.fill()
-    }
-
-    if(drawableShip.miningOreLocation) {
-      const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
-      if(om) {
-        const p0 = drawableShip.canvasCoordCenter;
-        const p1 = camera.mapCoordToCanvasCoord(
-          {x: om.position_map_units_x, y: om.position_map_units_y},
-          camera.getPosition(),
-        )
-        const rockRadiusCanvasPx = om.service_radius_map_units / 3 / camera.getZoom()
-        p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
-        p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
-        ctx.beginPath()
-        ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
-        ctx.lineWidth = 4
-        ctx.moveTo(p0.x, p0.y)
-        ctx.lineTo(p1.x, p1.y)
+      // body
+      ctx.beginPath()
+      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP1.x + vsxo, drawableShip.canvasCoordP1.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP2.x + vsxo, drawableShip.canvasCoordP2.y + vsyo)
+      ctx.lineTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
+      ctx.closePath()
+      ctx.fill()
+      if(drawableShip.visualEbeamCharging) {
+        ctx.strokeStyle = "#ff0000"
+        ctx.lineWidth = randomInt(1, 4)
         ctx.stroke()
+      }
+      if(drawableShip.engineLit) {
+        const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
+        const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
+        let engineOuterFlameRadius = Math.max(2, Math.round(
+          Math.sqrt(
+            (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
+            + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
+          ) / 2
+        ) * (drawableShip.engineBoosted ? 4 : 1))
+        engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
+        ctx.beginPath()
+        ctx.fillStyle = drawableShip.engineBoosted ? "rgb(71, 139, 255)" : "rgb(255, 0, 0, 0.9)"
+        ctx.arc(
+          engineFlameX,
+          engineFlameY,
+          engineOuterFlameRadius,
+          0,
+          TWO_PI,
+        )
+        ctx.fill()
+        ctx.beginPath()
+        ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
+        const engineInnerFlameRadius = Math.floor(engineOuterFlameRadius / 2) + randomInt(
+          engineOuterFlameRadius / -5, engineOuterFlameRadius / 5
+        )
+        ctx.arc(
+          engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+          engineFlameY + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+          engineInnerFlameRadius,
+          0,
+          TWO_PI,
+        )
+        ctx.fill()
+      }
+
+      if(drawableShip.gravityBrakePosition > 0) {
+        const fullyDesployedRadius = Math.ceil(
+          Math.sqrt(
+            Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP2.x, 2)
+            + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP2.y, 2)
+          )
+        )
+
+        let currentRadius = Math.ceil(
+          fullyDesployedRadius * (
+            drawableShip.gravityBrakePosition / drawableShip.gravityBrakeDeployedPosition
+          )
+        )
+        if(drawableShip.gravityBrakeActive) {
+          currentRadius += Math.ceil(currentRadius * Math.random() * 2.5)
+          ctx.fillStyle = `rgb(124, 0, 166, 0.75)`
+        } else {
+          ctx.fillStyle = Math.random() < 0.7 ? `rgb(0, 0, 255, 0.1)` : `rgb(0, 0, 255, 0.6)`
+        }
+        ctx.beginPath()
+        const arcStart = drawableShip.gravityBrakeActive ? 0 : TWO_PI * Math.random()
+        const arcEnd = drawableShip.gravityBrakeActive ? TWO_PI : TWO_PI * Math.random()
+        ctx.arc(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y, currentRadius, arcStart, arcEnd)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, arcStart, arcEnd)
+        ctx.fill()
+      }
+
+      if(drawableShip.miningOreLocation) {
+        const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
+        if(om) {
+          const p0 = drawableShip.canvasCoordCenter;
+          const p1 = camera.mapCoordToCanvasCoord(
+            {x: om.position_map_units_x, y: om.position_map_units_y},
+            camera.getPosition(),
+          )
+          const rockRadiusCanvasPx = om.service_radius_map_units / 3 / camera.getZoom()
+          p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+          p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+          ctx.beginPath()
+          ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
+          ctx.lineWidth = 4
+          ctx.moveTo(p0.x, p0.y)
+          ctx.lineTo(p1.x, p1.y)
+          ctx.stroke()
+        }
       }
     }
 
