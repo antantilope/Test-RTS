@@ -732,6 +732,7 @@ class Ship(BaseModel):
         if self.scanner_locking:
             yield {
                 'name': 'Scanner Locking',
+                'slug': 'scanner_locking',
                 'percent': round(
                     self.scanner_locking_power_used / self.scanner_get_lock_power_requirement_total * 100
                 ),

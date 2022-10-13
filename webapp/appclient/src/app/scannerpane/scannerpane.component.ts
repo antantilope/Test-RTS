@@ -6,9 +6,13 @@ import { CameraService } from '../camera.service';
 import { PaneService } from '../pane.service';
 import { ScannerService } from '../scanner.service';
 import { DrawingService } from '../drawing.service';
-import { TIMER_SLUG_SCANNER_STARTUP } from "../constants"
+import {
+  TIMER_SLUG_SCANNER_STARTUP,
+  TIMER_SLUG_SCANNER_LOCKING,
+} from "../constants"
 import { TimerItem } from "../models/timer-item.model"
 import { ScannerDataElement } from '../models/apidata.model';
+import { DrawableCanvasItems } from '../models/drawable-objects.model'
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -38,6 +42,8 @@ export class ScannerpaneComponent implements OnInit {
   private bgColorOffline = "#181818" // dark gray
   private maxCameraZoom: number
   private minCameraZoom: number
+  private lockingCounter = 0
+  private lockingModLength = 20
 
   constructor(
     public _pane: PaneService,
@@ -45,7 +51,8 @@ export class ScannerpaneComponent implements OnInit {
     private _api: ApiService,
     private _scanner: ScannerService,
     private _draw: DrawingService,
-  ) { }
+  ) {
+  }
 
   ngOnInit(): void {
     this.maxCameraZoom = this._camera.scannerPaneCamera.getMaxZoom()
@@ -168,23 +175,35 @@ export class ScannerpaneComponent implements OnInit {
     let target: ScannerDataElement
 
     // Draw scene of selected target
-    const overlayAlpha = randomFloat(0.6, 0.95)
+    let drawableObjects: DrawableCanvasItems
+    const overlayAlpha = randomFloat(0.5, 0.95)
     if(anyTargets) {
       target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
+      if(!target) {
+        this._scanner.scannerTargetIDCursor = null
+        this._scanner.scannertTargetIndex = null
+        window.requestAnimationFrame(this.paintDisplay.bind(this))
+        return
+      }
+      drawableObjects = this._camera.scannerPaneCamera.getDrawableCanvasObjects()
       this._camera.scannerPaneCamera.setPosition(
         target.coord_x, target.coord_y,
       )
-      this.drawGameScene(target)
+      this.drawGameScene(drawableObjects)
       this.drawBottomLeftOverlay(overlayAlpha)
     }
     this.drawTopLeftOverlay(overlayAlpha)
     this.drawBottomCenterAlert(overlayAlpha)
     this.drawTopRightOverlay(overlayAlpha)
+
+    if(anyTargets && (this._api.frameData.ship.scanner_locking || this._api.frameData.ship.scanner_locked)) {
+      this.drawLockVisualIndicator(overlayAlpha, drawableObjects)
+    }
+
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
 
-  private drawGameScene(target: ScannerDataElement) {
-    const drawableObjects = this._camera.scannerPaneCamera.getDrawableCanvasObjects()
+  private drawGameScene(drawableObjects: DrawableCanvasItems) {
 
     // Add map features
     this._draw.drawSpaceStations(this.ctx, this._camera.scannerPaneCamera)
@@ -421,7 +440,7 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.textAlign = 'center'
     this.ctx.textBaseline = "bottom"
     this.ctx.font = 'bold 23px Courier New'
-    this.ctx.fillStyle = `rgb(255, 255, 255, ${alpha})`
+    this.ctx.fillStyle = this._api.frameData.ship.scanner_locked ? `rgb(255, 0, 0, ${alpha*1.3})`:`rgb(255, 255, 255, ${alpha})`
     // FIXME: adding extra pixels because canvas extends a few px beyond the pane
     const yOffset = this._camera.scannerPaneCamera.canvasHeight - (6 + 5)
     this.ctx.fillText(
@@ -468,7 +487,58 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.moveTo(indicatorXOffset, yTop)
     this.ctx.lineTo(indicatorXOffset, yBottom)
     this.ctx.stroke()
+  }
 
+  private drawLockVisualIndicator(alpha: number, drawableObjects: DrawableCanvasItems) {
+    let lineWidth = 2
+    if(this._api.frameData.ship.scanner_locking) {
+      const timer = this._api.frameData.ship.timers.find(t => t.slug === TIMER_SLUG_SCANNER_LOCKING)
+      if(!timer) {
+        return console.warn("expected to find timer")
+      }
+      // Blink crosshair, slow at first, faster as lock is obtained
+      this.lockingCounter++
+      const percent = timer.percent / 100
+      const mod = this.lockingCounter % this.lockingModLength
+      if (mod > (this.lockingModLength * percent)){
+        return
+      }
+    } else {
+      lineWidth = 4
+    }
+
+    const target = drawableObjects.ships.find(s=> this._api.frameData.ship.scanner_lock_target == s.shipId)
+    if(!target) {
+      return console.warn("expected to find drawable ship")
+    }
+    const midX  = (target.canvasBoundingBox.x2 + target.canvasBoundingBox.x1) / 2
+    const midY  = (target.canvasBoundingBox.y2 + target.canvasBoundingBox.y1) / 2
+    const dx = target.canvasBoundingBox.x2 - target.canvasBoundingBox.x1
+    const dy = target.canvasBoundingBox.y2 - target.canvasBoundingBox.y1
+    const maxRadius = Math.max(dx, dy)
+    const distance = maxRadius * this._api.frameData.ship.scanner_lock_traversal_slack
+    // Vertical CrossHairs
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = `rgb(255, 0, 0, ${alpha})`
+    this.ctx.lineWidth = lineWidth
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = this._api.frameData.ship.scanner_locked ? "rgb(255, 0, 0, 0.85)" : "rgb(255, 0, 0, 0.5)"
+    this.ctx.moveTo(midX + distance, midY + maxRadius)
+    this.ctx.lineTo(midX + distance, midY - maxRadius)
+    this.ctx.stroke()
+    this.ctx.beginPath()
+    this.ctx.moveTo(midX - distance, midY + maxRadius)
+    this.ctx.lineTo(midX - distance, midY - maxRadius)
+    this.ctx.stroke()
+    // Horizontal Crosshairs
+    this.ctx.beginPath()
+    this.ctx.moveTo(midX - maxRadius, midY + distance)
+    this.ctx.lineTo(midX + maxRadius, midY + distance)
+    this.ctx.stroke()
+    this.ctx.beginPath()
+    this.ctx.moveTo(midX - maxRadius, midY - distance)
+    this.ctx.lineTo(midX + maxRadius, midY - distance)
+    this.ctx.stroke()
   }
 
 }
