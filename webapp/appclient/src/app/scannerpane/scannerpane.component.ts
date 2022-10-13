@@ -42,8 +42,11 @@ export class ScannerpaneComponent implements OnInit {
   private bgColorOffline = "#181818" // dark gray
   private maxCameraZoom: number
   private minCameraZoom: number
+
+  private maxLockingModLength = 30
   private lockingCounter = 0
-  private lockingModLength = 20
+  private minOnCount = 10
+  private onForCount = 0
 
   constructor(
     public _pane: PaneService,
@@ -176,7 +179,7 @@ export class ScannerpaneComponent implements OnInit {
 
     // Draw scene of selected target
     let drawableObjects: DrawableCanvasItems
-    const overlayAlpha = randomFloat(0.5, 0.95)
+    const overlayAlpha = randomFloat(0.62, 0.95)
     if(anyTargets) {
       target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
       if(!target) {
@@ -279,7 +282,7 @@ export class ScannerpaneComponent implements OnInit {
     const anyTargets = this.anyTargetsOnScope()
     let yOffset = 5
     const xOffset = this._camera.scannerPaneCamera.canvasWidth - 5
-    const yInterval = 20
+    const yInterval = 22
     this.ctx.beginPath()
     this.ctx.font = 'bold 23px Courier New'
     this.ctx.fillStyle = `rgb(255, 255, 255, ${alpha})`
@@ -429,6 +432,7 @@ export class ScannerpaneComponent implements OnInit {
 
   private drawBottomCenterAlert(alpha) {
     let text: string
+    const useYellow = this._api.frameData.ship.scanner_mode == "ir"
     if(this._api.frameData.ship.scanner_locking) {
       text = "LOCKING"
     } else if(this._api.frameData.ship.scanner_locked) {
@@ -440,7 +444,7 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.textAlign = 'center'
     this.ctx.textBaseline = "bottom"
     this.ctx.font = 'bold 23px Courier New'
-    this.ctx.fillStyle = this._api.frameData.ship.scanner_locked ? `rgb(255, 0, 0, ${alpha*1.3})`:`rgb(255, 255, 255, ${alpha})`
+    this.ctx.fillStyle = this._api.frameData.ship.scanner_locked ? `rgb(255, ${useYellow?'255':'0'}, 0, ${alpha*1.3})`:`rgb(255, 255, 255, ${alpha})`
     // FIXME: adding extra pixels because canvas extends a few px beyond the pane
     const yOffset = this._camera.scannerPaneCamera.canvasHeight - (6 + 5)
     this.ctx.fillText(
@@ -490,21 +494,35 @@ export class ScannerpaneComponent implements OnInit {
   }
 
   private drawLockVisualIndicator(alpha: number, drawableObjects: DrawableCanvasItems) {
-    let lineWidth = 2
+    let lineWidth = 3
+    const useYellow = this._api.frameData.ship.scanner_mode == "ir"
     if(this._api.frameData.ship.scanner_locking) {
+      // If locking: blink crosshair, slow at first, faster as lock is obtained
       const timer = this._api.frameData.ship.timers.find(t => t.slug === TIMER_SLUG_SCANNER_LOCKING)
       if(!timer) {
         return console.warn("expected to find timer")
       }
-      // Blink crosshair, slow at first, faster as lock is obtained
-      this.lockingCounter++
-      const percent = timer.percent / 100
-      const mod = this.lockingCounter % this.lockingModLength
-      if (mod > (this.lockingModLength * percent)){
-        return
+      let skipCheck = false
+      if(this.onForCount && this.onForCount < this.minOnCount) {
+        this.onForCount++
+        skipCheck = true
+      } else if(this.onForCount && this.onForCount >= this.minOnCount) {
+        this.onForCount = 0
+        this.lockingCounter = 0
+      }
+      if(!skipCheck) {
+        this.lockingCounter++
+        const percent = timer.percent / 100
+        const modDenominator = Math.max(1, Math.floor(this.maxLockingModLength * (1 - percent)))
+        const mod = this.lockingCounter % modDenominator
+        if (mod){
+          return
+        }
+        this.onForCount = 1
       }
     } else {
-      lineWidth = 4
+      // If locked, no blinking, and
+      lineWidth = 5
     }
 
     const target = drawableObjects.ships.find(s=> this._api.frameData.ship.scanner_lock_target == s.shipId)
@@ -519,10 +537,9 @@ export class ScannerpaneComponent implements OnInit {
     const distance = maxRadius * this._api.frameData.ship.scanner_lock_traversal_slack
     // Vertical CrossHairs
     this.ctx.beginPath()
-    this.ctx.strokeStyle = `rgb(255, 0, 0, ${alpha})`
+    this.ctx.strokeStyle = `rgb(255, ${useYellow?'255':'0'}, 0, ${alpha / 2})`
     this.ctx.lineWidth = lineWidth
     this.ctx.beginPath()
-    this.ctx.strokeStyle = this._api.frameData.ship.scanner_locked ? "rgb(255, 0, 0, 0.85)" : "rgb(255, 0, 0, 0.5)"
     this.ctx.moveTo(midX + distance, midY + maxRadius)
     this.ctx.lineTo(midX + distance, midY - maxRadius)
     this.ctx.stroke()
@@ -539,6 +556,20 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.moveTo(midX - maxRadius, midY - distance)
     this.ctx.lineTo(midX + maxRadius, midY - distance)
     this.ctx.stroke()
+
+    if(this._api.frameData.ship.scanner_locked && Math.random() < 0.8) {
+      // Diamond Lock
+      const buffer = 0//randomInt(-2, 2)
+      this.ctx.beginPath()
+      this.ctx.lineWidth = 2
+      this.ctx.strokeStyle = `rgb(255, ${useYellow?'255':'0'}, 0, ${alpha / 2})`
+      this.ctx.moveTo(midX, midY - (maxRadius + buffer)) // top mid
+      this.ctx.lineTo(midX + maxRadius + buffer, midY) // mid right
+      this.ctx.lineTo(midX, midY + maxRadius + buffer) // bottom mid
+      this.ctx.lineTo(midX - (maxRadius + buffer), midY) // mid left
+      this.ctx.lineTo(midX, midY - (maxRadius + buffer)) // top mid
+      this.ctx.stroke()
+    }
   }
 
 }
