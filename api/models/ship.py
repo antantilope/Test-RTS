@@ -1,6 +1,6 @@
 
+from collections import OrderedDict
 import random
-import datetime as dt
 from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 
 from api.models.base import BaseModel
@@ -39,7 +39,7 @@ class ShipCoatType:
     RADAR_DEFEATING = "radar_defeating"
 
 class MapMiningLocationDetails(TypedDict):
-    id: str
+    uuid: str
     name: Optional[str]
     position_meters_x: int
     position_meters_y: int
@@ -47,9 +47,10 @@ class MapMiningLocationDetails(TypedDict):
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
     service_radius_map_units: int #
+    starting_ore_amount_kg: int
 
 class MapSpaceStation(TypedDict):
-    id: str
+    uuid: str
     name: Optional[str]
     position_meters_x: int
     position_meters_y: int
@@ -126,31 +127,44 @@ class ScannedElement(TypedDict):
     id: str
     designator: str
     element_type: str
-    thermal_signature: Optional[int]
+    anti_radar_coating_level: int
+    scanner_thermal_signature: int
     coord_x: int
     coord_y: int
-    relative_heading: Optional[int] # Rounded int describing bearing to element
-    target_heading: Optional[float] # Float describing beaing to element
-    distance: Optional[int]
+    relative_heading: int # Rounded int describing bearing to element
+    target_heading: float # Float describing beaing to element
+    distance: int
+    alive: bool
+    aflame: bool
+    explosion_frame: Union[None, int]
 
+    in_visual_range: bool
     visual_p0: Tuple[int]
     visual_p1: Tuple[int]
     visual_p2: Tuple[int]
     visual_p3: Tuple[int]
+    visual_fin_0_rel_rot_coord_0: Tuple[int]
+    visual_fin_0_rel_rot_coord_1: Tuple[int]
+    visual_fin_1_rel_rot_coord_0: Tuple[int]
+    visual_fin_1_rel_rot_coord_1: Tuple[int]
 
-    visual_fill_color: Optional[str]
-    visual_stroke_color: Optional[str]
-    visual_shape: Optional[str]     # 'arc' or 'rect'
-    visual_radius: Optional[int]    # arc
-    visual_polygon_points: Optional[List[Tuple]]
-    visual_engine_lit: Optional[bool] #
-    visual_ebeam_charging: Optional[bool] #
-    visual_ebeam_firing: Optional[bool] #
-
+    visual_fill_color: str
+    visual_shape: str
+    visual_engine_lit: bool
+    visual_ebeam_charging: bool
+    visual_ebeam_firing: bool
+    visual_ebeam_color: str
+    visual_engine_boosted_last_frame: int
+    visual_gravity_brake_position: int
+    visual_gravity_brake_deployed_position: int
+    visual_gravity_brake_active: bool
+    visual_mining_ore_location: Union[None, str]
+    visual_fueling_at_station: bool
 
 class TimerItem(TypedDict):
     name: str
     percent: int
+    slug: Optional[str]
 
 
 class AutoPilotPrograms:
@@ -282,7 +296,7 @@ class Ship(BaseModel):
         self.scanner_lock_target = None
         self.scanner_get_lock_power_requirement_total = None
         self.scanner_get_lock_power_requirement_per_second = None
-        self.scanner_data: Dict[str, ScannedElement] = {}
+        self.scanner_data: Dict[str, ScannedElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
@@ -710,6 +724,7 @@ class Ship(BaseModel):
         if self.scanner_starting:
             yield {
                 'name': 'Scanner Startup',
+                'slug': 'scanner_startup',
                 'percent': round(
                     self.scanner_startup_power_used / self.scanner_activation_power_required_total * 100
                 ),
@@ -717,6 +732,7 @@ class Ship(BaseModel):
         if self.scanner_locking:
             yield {
                 'name': 'Scanner Locking',
+                'slug': 'scanner_locking',
                 'percent': round(
                     self.scanner_locking_power_used / self.scanner_get_lock_power_requirement_total * 100
                 ),

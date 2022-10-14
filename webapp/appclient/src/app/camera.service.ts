@@ -1,26 +1,16 @@
 
 import { Injectable } from '@angular/core';
-import { loggers } from 'winston';
 
 import { ApiService } from './api.service';
+import { ScannerService } from './scanner.service';
 import { BoxCoords } from './models/box-coords.model';
-import { DrawableCanvasItems, DrawableShip, ScannerDataElement } from './models/drawable-objects.model';
+import { DrawableCanvasItems, DrawableShip } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
-
-
-
-/* CAMERA_MODE_SHIP Camera Position automatically follows the ships coords. */
-export const CAMERA_MODE_SHIP = 'ship'
-/* CAMERA_MODE_SCANNER Camera Position AND zoom automatically adjusts to show ship and scanner data. */
-export const CAMERA_MODE_SCANNER = 'scanner'
-/* CAMERA_MODE_MAP */
-export const CAMERA_MODE_MAP = 'map'
-/* CAMERA_MODE_FREE Camera Position AND zoom are manually adjusted by the user. */
-export const CAMERA_MODE_FREE = 'free'
+import { ScannerDataElement } from './models/apidata.model';
 
 /* Camera used  */
 export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'
-export const CAMERA_NAME_SCANNER_DISPLAY = 'CANNERDISPLAY'
+export const CAMERA_NAME_SCANNER_DISPLAY = 'SCANNERDISPLAY'
 
 export class Camera {
   // A camera points at a position on the map (absolute coordinate)
@@ -38,23 +28,18 @@ export class Camera {
     "Zooming out" increases this value
   */
   private zoom: number = 10;
-  private zoomLevels = [1, 5, 10, 15, 20, 25, 30, 35, 40]
+  private zoomLevels = [5, 7, 10, 15, 17, 20, 25, 27, 30, 35, 37, 40]
   private zoomIndex = this.zoomLevels.indexOf(this.zoom)
   private finalZoomIndex = this.zoomLevels.length - 1
 
   private xPosition: number = null;
   private yPosition: number = null;
-  private mode = CAMERA_MODE_SHIP;
 
   // If in element width/height is smaller than this size,
   // represent it with a dot to ensure it is clearly visible.
   public minSizeForDotPx = 6;
 
   private framesToShowBoostedEngine = 5
-
-  private previousMode: null | string = null
-  private previousPosition: null | PointCoord = null
-  private previousZoomIndex: null | number = null
 
 
   constructor(
@@ -74,17 +59,27 @@ export class Camera {
     return this.zoom
   }
 
-  public canManualZoom(): boolean {
-    return this.mode !== CAMERA_MODE_SCANNER && this.mode !== CAMERA_MODE_MAP
+  public getMaxZoom(): number {
+    return Math.max(...this.zoomLevels)
+  }
+  public getMinZoom(): number {
+    return Math.min(...this.zoomLevels)
   }
 
-  public canManualPan(): boolean {
-    return this.mode === CAMERA_MODE_FREE
+
+  public setZoom(zoom: number) {
+    this.zoom = zoom
+  }
+
+  public setMiddleZoom() {
+    this.setZoom(this.zoomLevels[Math.floor(
+      this.zoomLevels.length / 2
+    )])
   }
 
   public adjustZoom(zoomIn: boolean): void {
     if(zoomIn) {
-      if (this.zoomIndex > 1) {
+      if (this.zoomIndex > 0) {
         this.zoomIndex--
         this.zoom = this.zoomLevels[this.zoomIndex]
       }
@@ -105,12 +100,7 @@ export class Camera {
   }
 
   public getZoomIndex(): number | null {
-    const mode = this.getMode()
-    if (mode != CAMERA_MODE_SCANNER && mode != CAMERA_MODE_MAP) {
-      return this.zoomIndex
-    } else {
-      return null;
-    }
+    return this.zoomIndex
   }
 
   public xPan(delta: number): void {
@@ -130,93 +120,6 @@ export class Camera {
     return {x: this.xPosition, y: this.yPosition}
   }
 
-  public getMode(): string {
-    return this.mode
-  }
-
-  public cycleMode(): void {
-    // Mode cycle: "ship" -> "scanner" -> "ship" etc
-    const mode = this.getMode()
-    if (mode === CAMERA_MODE_SHIP) {
-      this.previousZoomIndex = this.getZoomIndex()
-      this.previousMode = CAMERA_MODE_SHIP
-      this.setModeScanner()
-    }
-    else if(mode === CAMERA_MODE_SCANNER) {
-      this.setModeShip()
-    }
-    else if (mode === CAMERA_MODE_MAP) {
-      this.closeMap()
-    }
-  }
-
-  public setModeShip(): void {
-    this.mode = CAMERA_MODE_SHIP
-    this.setZoomToNearestLevel()
-    if(this.previousZoomIndex !== null && this.previousMode === CAMERA_MODE_SHIP) {
-      this.setZoomIndex(this.previousZoomIndex)
-    } else {
-      this.setZoomToNearestLevel()
-    }
-  }
-  public setModeScanner(): void {
-    this.mode = CAMERA_MODE_SCANNER
-  }
-
-  public toggleMap() {
-    if (this.getMode() == CAMERA_MODE_MAP) {
-      this.closeMap()
-    } else {
-      this.setModeMap()
-    }
-  }
-
-  public setModeMap(): void {
-    // Save previous camera info for when map closes.
-    this.previousMode = this.getMode()
-    this.previousPosition = this.getPosition()
-    this.previousZoomIndex = this.getZoomIndex()
-
-    // Calculate position
-    this.mode = CAMERA_MODE_MAP
-    const mapCenterX = Math.floor(this._api.frameData.map_config.x_unit_length / 2)
-    const mapCenterY = Math.floor(this._api.frameData.map_config.y_unit_length / 2)
-    this.setPosition(mapCenterX, mapCenterY)
-
-    // Calculate zoom to show full map
-    const mapUnitsPerPxW = Math.floor(mapCenterX / (this.canvasHalfWidth - 40))
-    const mapUnitsPerPxH = Math.floor(mapCenterY / (this.canvasHalfHeight - 40))
-    const mapUnitsPerPxX = Math.max(mapUnitsPerPxW, mapUnitsPerPxH)
-    this.zoom = mapUnitsPerPxX
-  }
-
-
-  public closeMap() {
-    if (this.getMode() != CAMERA_MODE_MAP) {
-      return
-    }
-    else if (this.previousMode == CAMERA_MODE_SCANNER) {
-      this.setModeScanner()
-      return
-    }
-    else if (this.previousMode == CAMERA_MODE_SHIP) {
-      this.mode = CAMERA_MODE_SHIP
-      this.setZoomIndex(this.previousZoomIndex)
-    }
-    else if(this.previousMode == CAMERA_MODE_FREE) {
-      this.mode = CAMERA_MODE_FREE
-      this.setPosition(this.previousPosition.x, this.previousPosition.y)
-      this.setZoomIndex(this.previousZoomIndex)
-    }
-    else {
-      console.warn("could not select a camera profile after closing map.")
-    }
-  }
-
-  public setModeFree(): void {
-    this.mode = CAMERA_MODE_FREE
-    this.setZoomToNearestLevel()
-  }
   public setZoomToNearestLevel(): void {
     for(let i in this.zoomLevels) {
       if(this.zoom <= this.zoomLevels[i]) {
@@ -309,11 +212,6 @@ export class Camera {
       y: this.canvasHeight - (camDy + this.canvasHalfHeight),
     }
   }
-
-  public canvasCoordToMapCoord(canvasCoord: PointCoord, origin: PointCoord) {
-
-  }
-
 
   public setCameraPositionAndZoomForScannerMode(scannerTargetIDCursor: string | null) {
     const ship = this._api.frameData.ship
@@ -428,29 +326,6 @@ export class Camera {
 
     // Add vision circles in largest to smallest order
     const shipCanvasCoord = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
-    if(this._api.frameData.ship.scanner_online) {
-      let scannerRange;
-      let color;
-      if(this._api.frameData.ship.scanner_mode == 'radar') {
-        scannerRange = this._api.frameData.ship.scanner_radar_range
-        color = "#001402" // dark green
-      } else if (this._api.frameData.ship.scanner_mode == 'ir') {
-        scannerRange = this._api.frameData.ship.scanner_ir_range
-        color = "#140010" // dark pink
-      } else {
-        throw new Error("unknown scanner mode")
-      }
-      const scannerRangeCanvasPXRadius = Math.round(
-        (this._api.frameData.map_config.units_per_meter
-        * scannerRange) / this.getZoom()
-      )
-      drawableItems.visionCircles.push({
-        canvasCoord: shipCanvasCoord,
-        radius: scannerRangeCanvasPXRadius,
-        color,
-        name: this._api.frameData.ship.scanner_mode,
-      })
-    }
     const basicVisualRangeCanvasPxRadius = Math.round(
       (this._api.frameData.map_config.units_per_meter
       * this._api.frameData.ship.visual_range) / this.getZoom()
@@ -472,19 +347,20 @@ export class Camera {
       y2: corner2.y,
     }
 
-
+    let canvasCoordP0 = this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition)
+    let canvasCoordP1 = this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition)
+    let canvasCoordP2 = this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition)
+    let canvasCoordP3 = this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition)
 
     // Add own ship to drawable ships array
-    const overlayCenter = this.mapCoordToCanvasCoord({x: ship.coord_x, y:ship.coord_y}, cameraPosition)
     drawableItems.ships.push({
       isSelf: true,
-      isVisual: true,
       alive: ship.alive,
       designator: "you",
-      canvasCoordP0: this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition),
-      canvasCoordP1: this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition),
-      canvasCoordP2: this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition),
-      canvasCoordP3: this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition),
+      canvasCoordP0: canvasCoordP0,
+      canvasCoordP1: canvasCoordP1,
+      canvasCoordP2: canvasCoordP2,
+      canvasCoordP3: canvasCoordP3,
       canvasCoordFin0P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_0), shipCoord), cameraPosition),
       canvasCoordFin0P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_1), shipCoord), cameraPosition),
       canvasCoordFin1P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_0), shipCoord), cameraPosition),
@@ -502,14 +378,15 @@ export class Camera {
       miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
       fuelingAtStation: ship.fueling_at_station,
       visualEbeamCharging: ship.ebeam_charging,
+      inVisualRange: true,
+      canvasBoundingBox: this.rectCoordsToBoxCoords(
+        canvasCoordP0,
+        canvasCoordP1,
+        canvasCoordP2,
+        canvasCoordP3,
+        15,
+      )
     })
-    drawableItems.ships[0].canvasBoundingBox = this.rectCoordsToBoxCoords(
-      drawableItems.ships[0].canvasCoordP0,
-      drawableItems.ships[0].canvasCoordP1,
-      drawableItems.ships[0].canvasCoordP2,
-      drawableItems.ships[0].canvasCoordP3,
-      15,
-    )
     if (
       Math.abs(
         drawableItems.ships[0].canvasCoordP1.x
@@ -526,21 +403,38 @@ export class Camera {
       const scannerData: ScannerDataElement = ship.scanner_data[i]
       if (scannerData.element_type === 'ship') {
 
-        const canvasCoordP0 = this.mapCoordToCanvasCoord({
+        let canvasCoordP0 = this.mapCoordToCanvasCoord({
           x: scannerData.visual_p0[0],
           y: scannerData.visual_p0[1],
         }, cameraPosition)
-        const canvasCoordP1 = this.mapCoordToCanvasCoord({
+        let canvasCoordP1 = this.mapCoordToCanvasCoord({
           x: scannerData.visual_p1[0],
           y: scannerData.visual_p1[1],
         }, cameraPosition)
-        const canvasCoordP2 = this.mapCoordToCanvasCoord({
+        let canvasCoordP2 = this.mapCoordToCanvasCoord({
           x: scannerData.visual_p2[0],
           y: scannerData.visual_p2[1],
         }, cameraPosition)
-        const canvasCoordP3 = this.mapCoordToCanvasCoord({
+        let canvasCoordP3 = this.mapCoordToCanvasCoord({
           x: scannerData.visual_p3[0],
           y: scannerData.visual_p3[1],
+        }, cameraPosition)
+
+        const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_fin_0_rel_rot_coord_0[0],
+          y: scannerData.visual_fin_0_rel_rot_coord_0[1],
+        }, cameraPosition)
+        const canvasCoordFin0P1 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_fin_0_rel_rot_coord_1[0],
+          y: scannerData.visual_fin_0_rel_rot_coord_1[1],
+        }, cameraPosition)
+        const canvasCoordFin1P0 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_fin_1_rel_rot_coord_0[0],
+          y: scannerData.visual_fin_1_rel_rot_coord_0[1],
+        }, cameraPosition)
+        const canvasCoordFin1P1 = this.mapCoordToCanvasCoord({
+          x: scannerData.visual_fin_1_rel_rot_coord_1[0],
+          y: scannerData.visual_fin_1_rel_rot_coord_1[1],
         }, cameraPosition)
 
         let drawableShip: DrawableShip = {
@@ -555,67 +449,27 @@ export class Camera {
             y: scannerData.coord_y,
           }, cameraPosition),
           designator: scannerData.designator,
-          isVisual: false,
-          canvasCoordP0,
-          canvasCoordP1,
-          canvasCoordP2,
-          canvasCoordP3,
+          inVisualRange: scannerData.in_visual_range,
+          canvasCoordP0: canvasCoordP0,
+          canvasCoordP1: canvasCoordP1,
+          canvasCoordP2: canvasCoordP2,
+          canvasCoordP3: canvasCoordP3,
           visualEbeamCharging: scannerData.visual_ebeam_charging,
-        }
-        if(scannerData.visual_shape) {
-          // Ship is within visual range
-
-          drawableShip.isVisual = true
-
-          const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_fin_0_rel_rot_coord_0[0],
-            y: scannerData.visual_fin_0_rel_rot_coord_0[1],
-          }, cameraPosition)
-          const canvasCoordFin0P1 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_fin_0_rel_rot_coord_1[0],
-            y: scannerData.visual_fin_0_rel_rot_coord_1[1],
-          }, cameraPosition)
-          const canvasCoordFin1P0 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_fin_1_rel_rot_coord_0[0],
-            y: scannerData.visual_fin_1_rel_rot_coord_0[1],
-          }, cameraPosition)
-          const canvasCoordFin1P1 = this.mapCoordToCanvasCoord({
-            x: scannerData.visual_fin_1_rel_rot_coord_1[0],
-            y: scannerData.visual_fin_1_rel_rot_coord_1[1],
-          }, cameraPosition)
-
-          drawableShip = {
-            canvasCoordFin0P0,
-            canvasCoordFin0P1,
-            canvasCoordFin1P0,
-            canvasCoordFin1P1,
-            canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
-            engineLit: scannerData.visual_engine_lit,
-            engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
-            fillColor: scannerData.visual_fill_color,
-            gravityBrakePosition: scannerData.visual_gravity_brake_position,
-            gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
-            gravityBrakeActive: scannerData.visual_gravity_brake_active,
-            miningOreLocation: scannerData.visual_mining_ore_location,
-            fuelingAtStation: scannerData.visual_fueling_at_station,
-            ...drawableShip
-          }
-        }
-        else {
-          // Ship is not within visual range
-          drawableShip.isDot = scannerData.alive
-          drawableShip.canvasBoundingBox = this.coordToBoxCoord(drawableShip.canvasCoordCenter, 25)
-        }
-
-        if(scannerData.distance) {
-          drawableShip.distance = scannerData.distance
-          drawableShip.relativeHeading = scannerData.relative_heading
-        }
-        if(scannerData.thermal_signature) {
-          drawableShip.thermalSignature = scannerData.thermal_signature
+          canvasCoordFin0P0,
+          canvasCoordFin0P1,
+          canvasCoordFin1P0,
+          canvasCoordFin1P1,
+          canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
+          engineLit: scannerData.visual_engine_lit,
+          engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
+          fillColor: scannerData.visual_fill_color,
+          gravityBrakePosition: scannerData.visual_gravity_brake_position,
+          gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
+          gravityBrakeActive: scannerData.visual_gravity_brake_active,
+          miningOreLocation: scannerData.visual_mining_ore_location,
+          fuelingAtStation: scannerData.visual_fueling_at_station,
         }
         drawableItems.ships.push(drawableShip)
-
       }
     }
 
@@ -694,7 +548,6 @@ export class Camera {
     else {
       throw new Error("Not Implemented")
     }
-
   }
 
   public getCanvasPointAtLocation(startCanvasCoord: PointCoord, angle: number, canvasDistance: number): PointCoord {
@@ -740,6 +593,7 @@ export class CameraService {
 
 
   public gameDisplayCamera: Camera
+  public scannerPaneCamera: Camera
 
   constructor(
     private _api: ApiService,
@@ -747,6 +601,11 @@ export class CameraService {
 
     this.gameDisplayCamera = new Camera(
       CAMERA_NAME_GAME_DISPLAY,
+      this._api,
+    )
+
+    this.scannerPaneCamera = new Camera(
+      CAMERA_NAME_SCANNER_DISPLAY,
       this._api,
     )
 

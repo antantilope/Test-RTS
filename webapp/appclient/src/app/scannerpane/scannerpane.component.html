@@ -1,0 +1,22 @@
+<div
+    id="draggable-container"
+    (mousedown)="select();"
+    #paneElement
+    ngDraggable
+    ngResizable
+    (rzResizing)="paneResized($event)"
+>
+    <div id="title-bar" #titleBar>
+        <strong>Scanner Scope</strong>
+        <button id="close-btn" (click)="_pane.toggleScannerPane()">
+            x
+        </button>
+    </div>
+    <div id="pane-body">
+        <canvas
+            id="scanner-data-2d-canvas"
+            #graphicsCanvas
+        >
+        </canvas>
+    </div>
+</div>

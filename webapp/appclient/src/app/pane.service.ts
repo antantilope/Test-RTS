@@ -9,12 +9,14 @@ export class PaneService {
   public PANE_ALL_CHAT = "all-chat"
   public PANE_MAIN_MENU = "main-menu"
   public PANE_SHIP = "ship-menu"
+  public PANE_SCANNER = "scanner-display"
 
   public lastShipPaneSubPane: string
 
   public allChatPaneVisible: boolean = false
   public mainMenuPaneVisible: boolean = false
   public shipPaneVisible: boolean = false
+  public scannerPaneVisible: boolean = false
 
   private zIndexes: string[] = []
   public zIndexesUpdated: Subject<string[]> = new Subject()
@@ -30,6 +32,7 @@ export class PaneService {
       this.PANE_ALL_CHAT,
       this.PANE_MAIN_MENU,
       this.PANE_SHIP,
+      this.PANE_SCANNER,
     ]
   }
 
@@ -66,8 +69,20 @@ export class PaneService {
     }
   }
 
+  toggleScannerPane() {
+    const remove = this.scannerPaneVisible
+    this.scannerPaneVisible = !this.scannerPaneVisible
+    if(remove) {
+      this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_SCANNER)
+    }
+  }
+
   mouseInPane(): boolean {
     return this._mouseInPane.length > 0
+  }
+
+  mouseInScannerPane(): boolean {
+    return this._mouseInPane.indexOf(this.PANE_SCANNER) != -1
   }
 
   addToTopOfZIndexes(paneName: string) {

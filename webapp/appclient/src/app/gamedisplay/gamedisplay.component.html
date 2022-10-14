@@ -9,6 +9,9 @@
 <app-shippane *ngIf="_pane.shipPaneVisible">
 </app-shippane>
 
+<app-scannerpane *ngIf="_pane.scannerPaneVisible">
+</app-scannerpane>
+
 <!-- end of DRAGGABLE PANES -->
 
 <div id="outer-game-display-container">
@@ -23,17 +26,17 @@
             <div class="btn-gap">
             </div>
             <div>
-                <button class="sidebar-btn" (click)="_camera.gameDisplayCamera.setModeShip()" title="Camera: Ship">
+                <button class="sidebar-btn" (click)="setCameraModeShip()" title="Camera: Ship">
                     🚀🎥
                 </button>
             </div>
             <div>
-                <button class="sidebar-btn" (click)="_camera.gameDisplayCamera.setModeScanner()" title="Camera: Scanner">
+                <button class="sidebar-btn" (click)="setCameraModeVision()" title="Camera: Scanner">
                     📡🎥
                 </button>
             </div>
             <div>
-                <button class="sidebar-btn" (click)="_camera.gameDisplayCamera.toggleMap()" title="Camera: Map">
+                <button class="sidebar-btn" (click)="toggleMap()" title="Camera: Map">
                     🗺️🎥
                 </button>
             </div>
@@ -138,7 +141,8 @@
                 class="command-bar-column-header"
                 [ngStyle]="{'color': (_api.frameData.ship.scanner_online) ? '#00ff00' : '#ffffff'}"
             >
-                <br>SCANNER
+                <br>
+                <span>SCANNER</span>
             </div>
             <div style="display:flex;">
                 <div>
@@ -162,6 +166,16 @@
                             [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.scanner_online"
                         >
                             STOP
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            (click)="btnToggleScannerDataWindow()"
+                            title="Toggle Scanner Data Window"
+                            [disabled]="!_api.frameData.ship.alive"
+                        >
+                            SCOPE
                         </button>
                     </div>
                 </div>

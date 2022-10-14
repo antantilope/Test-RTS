@@ -41,7 +41,9 @@ export class MainmenuComponent implements OnInit {
       }
     })
   }
-
+  ngOnDestroy() {
+    this.zIndexesUpdatedSubscription.unsubscribe()
+  }
   ngAfterViewInit() {
     this.paneElement.nativeElement.addEventListener('mouseenter', ()=>{
       this._pane.registerMouseEnteringPane(this.paneName)

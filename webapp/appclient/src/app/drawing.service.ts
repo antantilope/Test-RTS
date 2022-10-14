@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { Camera, CAMERA_MODE_MAP } from './camera.service';
+import { Camera } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
 import { UserService } from "./user.service";
@@ -39,9 +39,9 @@ export class DrawingService {
 
   private deathQuote: QuoteDetails | null = null;
 
-  private actionTileImgEngineLit: any = new Image()
-  private actionTileImgEngineOnline: any = new Image()
-  private actionTileImgScannerOnline: any = new Image()
+  private actionTileImgEngineLit: HTMLImageElement = new Image()
+  private actionTileImgEngineOnline: HTMLImageElement = new Image()
+  private actionTileImgScannerOnline: HTMLImageElement = new Image()
 
 
   private spaceStationVisualSideLengthM = 30
@@ -455,7 +455,7 @@ export class DrawingService {
 
   public drawTopLeftOverlay(
     ctx: CanvasRenderingContext2D,
-    camera: Camera,
+    cameraMode: string,
   ) {
     const tlcYInterval = 34
     const tlcKFYInterval = 28
@@ -487,7 +487,7 @@ export class DrawingService {
       // Camera mode
       ctx.beginPath()
       ctx.fillStyle = '#ffffff'
-      ctx.fillText("🎥 " + camera.getMode().toUpperCase(), tlcXOffset, tlcYOffset)
+      ctx.fillText("🎥 " + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
       tlcYOffset += tlcYInterval
     }
     // Killfeed (TOP LEFT)
@@ -506,6 +506,7 @@ export class DrawingService {
   public drawBottomLeftOverlay(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
+    isCameraModeMap: boolean,
   ) {
     let lrcYOffset = camera.canvasHeight - 30
     let lrcYInterval = 40
@@ -545,7 +546,7 @@ export class DrawingService {
     ctx.fillStyle = this._api.frameData.ship.alive ? '#ffffff' : "#ff0000";
     ctx.textAlign = 'left'
     ctx.fillText(scaleLabel, lrcXOffset + 8, lrcYOffset - 12)
-    if(camera.getMode() === CAMERA_MODE_MAP) {
+    if(isCameraModeMap) {
       return
     }
     lrcYOffset -= lrcYInterval
@@ -578,7 +579,7 @@ export class DrawingService {
         )
         lrcYOffset -= 120
       }
-      else if (this._api.frameData.ship.engine_online) {
+      else if (this._api.frameData.ship.engine_online || this._api.frameData.ship.engine_starting) {
         ctx.drawImage(
           this.actionTileImgEngineOnline,
           lrcXOffset,
@@ -587,7 +588,7 @@ export class DrawingService {
         )
         lrcYOffset -= 120
       }
-      if(this._api.frameData.ship.scanner_online) {
+      if(this._api.frameData.ship.scanner_online || this._api.frameData.ship.scanner_starting) {
         ctx.drawImage(
           this.actionTileImgScannerOnline,
           lrcXOffset,
@@ -882,6 +883,7 @@ export class DrawingService {
     camera: Camera,
     drawableShip: DrawableShip,
     scannerTargetIDCursor: string | null,
+    drawBoundingBox: boolean,
   ) {
 
     if (drawableShip.isDot) {
@@ -898,10 +900,10 @@ export class DrawingService {
     }
 
     if(drawableShip.visualEbeamCharging) {
-      const chargePoint: PointCoord = {
-        x: Math.floor((drawableShip.canvasCoordP1.x + drawableShip.canvasCoordP2.x) / 2),
-        y: Math.floor((drawableShip.canvasCoordP1.y + drawableShip.canvasCoordP2.y) / 2)
-      }
+      // const chargePoint: PointCoord = {
+      //   x: Math.floor((drawableShip.canvasCoordP1.x + drawableShip.canvasCoordP2.x) / 2),
+      //   y: Math.floor((drawableShip.canvasCoordP1.y + drawableShip.canvasCoordP2.y) / 2)
+      // }
       if(Math.random() < 0.80) {
         ctx.beginPath()
         ctx.fillStyle = `rgb(255, 0, 0, 0.0${randomInt(5, 7)})`
@@ -958,9 +960,7 @@ export class DrawingService {
         ctx.fill()
       }
     }
-
-
-    if(drawableShip.isVisual && !drawableShip.explosionFrame) {
+    if(!drawableShip.explosionFrame){
       // Visual Shake x/y offsets
       let vsxo = 0, vsyo = 0;
       if(
@@ -1088,7 +1088,6 @@ export class DrawingService {
           ctx.stroke()
         }
       }
-
     }
 
     if(drawableShip.aflame) {
@@ -1126,7 +1125,7 @@ export class DrawingService {
       )
     }
 
-    if(drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
+    if(drawBoundingBox && drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
       const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
       const shipIsLockedOrLocking = drawableShip.shipId === this._api.frameData.ship.scanner_lock_target && (
         this._api.frameData.ship.scanner_locked || this._api.frameData.ship.scanner_locking
@@ -1156,20 +1155,6 @@ export class DrawingService {
       }
       ctx.fillText(desigPrefix + drawableShip.designator, bbXOffset, bbYOffset)
       bbYOffset += bbYInterval
-      if(drawableShip.distance) {
-        ctx.beginPath()
-        ctx.fillText(drawableShip.distance + " M", bbXOffset, bbYOffset)
-        bbYOffset += bbYInterval
-      }
-      if(drawableShip.thermalSignature) {
-        ctx.beginPath()
-        ctx.fillText(
-          drawableShip.thermalSignature + ` / ${this._api.frameData.ship.scanner_ir_minimum_thermal_signature} IR`,
-          bbXOffset,
-          bbYOffset,
-        )
-        bbYOffset += bbYInterval
-      }
       if (shipIsLockedOrLocking && this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
         const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
         const midY  = (drawableShip.canvasBoundingBox.y2 + drawableShip.canvasBoundingBox.y1) / 2

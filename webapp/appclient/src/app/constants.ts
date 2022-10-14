@@ -8,3 +8,8 @@ export const FEATURE_STATION = 'station'
 
 export const LOW_FUEL_THRESHOLD = 1200
 export const LOW_POWER_THRESHOLD = 45000
+
+
+// Timer Slugs
+export const TIMER_SLUG_SCANNER_STARTUP = "scanner_startup"
+export const TIMER_SLUG_SCANNER_LOCKING = "scanner_locking"
