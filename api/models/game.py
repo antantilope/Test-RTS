@@ -1,4 +1,5 @@
 
+from collections import OrderedDict
 import json
 import datetime as dt
 from typing import Tuple, TypedDict, Optional, List, Dict
@@ -135,7 +136,7 @@ class Game(BaseModel):
         self._spawn_points: List[MapSpawnPoint] = []
 
         self._players: Dict[str, PlayerDetails] = {}
-        self._ships: Dict[str, Ship] = {}
+        self._ships: Dict[str, Ship] = OrderedDict()
         self._ebeam_rays: List[EBeamRayDetails] = []
         self._killfeed: List[KillFeedElement] = []
         self._explosion_shockwaves: List[ExplosionShockwave] = []

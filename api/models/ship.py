@@ -1,6 +1,6 @@
 
+from collections import OrderedDict
 import random
-import datetime as dt
 from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 
 from api.models.base import BaseModel
@@ -296,7 +296,7 @@ class Ship(BaseModel):
         self.scanner_lock_target = None
         self.scanner_get_lock_power_requirement_total = None
         self.scanner_get_lock_power_requirement_per_second = None
-        self.scanner_data: Dict[str, ScannedElement] = {}
+        self.scanner_data: Dict[str, ScannedElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
