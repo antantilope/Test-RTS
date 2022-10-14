@@ -1,4 +1,5 @@
 
+from textwrap import indent
 from uuid import uuid4
 from unittest import TestCase
 
@@ -256,7 +257,7 @@ class TestGameUpdateScannerStates(TestCase):
         self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
-        assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['thermal_signature'] == 75
+        assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['scanner_thermal_signature'] == 75
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['coord_x'] == 1600 * self.upm
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['coord_y'] == 1600 * self.upm
         assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['distance'] == 1556
@@ -311,7 +312,7 @@ class TestGameUpdateScannerStates(TestCase):
         self.game.reset_and_update_scanner_states(self.player_2_ship_id)
         assert len(self.game._ships[self.player_1_ship_id].scanner_data) == 1
         assert len(self.game._ships[self.player_2_ship_id].scanner_data) == 0
-        assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['thermal_signature'] == 100
+        assert self.game._ships[self.player_1_ship_id].scanner_data[self.player_2_ship_id]['scanner_thermal_signature'] == 100
 
 
     def test_ship1_and_ship2_can_see_eachother_within_visual_range_scanners_offline(self):
@@ -343,6 +344,7 @@ class TestGameUpdateScannerStates(TestCase):
                 'coord_x': 1000 * self.upm,
                 'coord_y': 1000 * self.upm,
                 'element_type': ScannedElementType.SHIP,
+                'in_visual_range': True,
                 'visual_shape': VisibleElementShapeType.RECT,
                 'visual_p0': self.game._ships[self.player_2_ship_id].map_p0,
                 'visual_p1': self.game._ships[self.player_2_ship_id].map_p1,
@@ -365,7 +367,12 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_fueling_at_station': False,
                 'aflame': False,
                 'explosion_frame': None,
-                'alive': True
+                'alive': True,
+                'target_heading': 45,
+                "relative_heading": 45,
+                "distance": 707,
+                'anti_radar_coating_level':0,
+                'scanner_thermal_signature': 0,
             }
         )
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_data[self.player_1_ship_id],
@@ -376,6 +383,7 @@ class TestGameUpdateScannerStates(TestCase):
                 'coord_y': 500 * self.upm,
                 'element_type': ScannedElementType.SHIP,
                 'visual_shape': VisibleElementShapeType.RECT,
+                'in_visual_range': True,
                 'visual_p0': self.game._ships[self.player_1_ship_id].map_p0,
                 'visual_p1': self.game._ships[self.player_1_ship_id].map_p1,
                 'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
@@ -397,7 +405,12 @@ class TestGameUpdateScannerStates(TestCase):
                 'visual_mining_ore_location': None,
                 'aflame': False,
                 'explosion_frame': None,
-                'alive': True
+                'alive': True,
+                'target_heading': 225,
+                "relative_heading": 225,
+                "distance": 707,
+                'anti_radar_coating_level':0,
+                'scanner_thermal_signature': 0,
             }
         )
 
@@ -427,6 +440,7 @@ class TestGameUpdateScannerStates(TestCase):
             'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
             'coord_x': 500 * self.upm,
             'coord_y': 500 * self.upm,
+            'in_visual_range': True,
             'visual_shape': VisibleElementShapeType.RECT,
             'visual_p0': self.game._ships[self.player_1_ship_id].map_p0,
             'visual_p1': self.game._ships[self.player_1_ship_id].map_p1,
@@ -449,7 +463,12 @@ class TestGameUpdateScannerStates(TestCase):
             'visual_mining_ore_location': None,
             'aflame': False,
             'explosion_frame': None,
-            'alive': True
+            'alive': True,
+            "distance": 707,
+            "relative_heading": 225,
+            "target_heading": 225.0,
+            'anti_radar_coating_level':0,
+            'scanner_thermal_signature': 0,
         })
 
     def test_ship_1_and_ship_2_can_spot_eachother_with_radar_scanner_only(self):
