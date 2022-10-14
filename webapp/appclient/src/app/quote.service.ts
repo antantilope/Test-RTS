@@ -249,8 +249,8 @@ export class QuoteService {
     },
     {
       lines: [
-        "May God have mercy for my enemies",
-        "because I cannot express mercy.",
+        "May God have mercy on my enemies",
+        "for I am unable to.",
       ],
       author: this.knightedName,
     },
@@ -258,7 +258,7 @@ export class QuoteService {
       lines: [
         "I'm the commander, see.",
         "I do not need to explain why",
-        "I incinerate things",
+        "I incinerate things.",
       ],
       author: this.knightedName,
     },
@@ -472,9 +472,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "President Graybit is a terrific",
-        "president who supports many",
-        "useful ore policies.",
+        "President Graybit supports many",
+        "useful ore policies. To deny this",
+        "fact is now illegal."
       ],
       author: this.tvAnchorBotName,
     },
