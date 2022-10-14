@@ -900,10 +900,6 @@ export class DrawingService {
     }
 
     if(drawableShip.visualEbeamCharging) {
-      // const chargePoint: PointCoord = {
-      //   x: Math.floor((drawableShip.canvasCoordP1.x + drawableShip.canvasCoordP2.x) / 2),
-      //   y: Math.floor((drawableShip.canvasCoordP1.y + drawableShip.canvasCoordP2.y) / 2)
-      // }
       if(Math.random() < 0.80) {
         ctx.beginPath()
         ctx.fillStyle = `rgb(255, 0, 0, 0.0${randomInt(5, 7)})`
