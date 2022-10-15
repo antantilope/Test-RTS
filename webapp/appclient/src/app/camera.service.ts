@@ -584,6 +584,15 @@ export class Camera {
 
 }
 
+export const VELOCITY_TRAIL_ELEMENT_TTL_MS = 8000
+export class VelocityTrailElement {
+  createdAt: number
+  radiusMeters: number
+  mapCoord: PointCoord
+  grow: boolean
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -594,6 +603,9 @@ export class CameraService {
 
   public gameDisplayCamera: Camera
   public scannerPaneCamera: Camera
+
+  private updateVelocityTrailElementsInterval = 400
+  private velocityTrailElements: VelocityTrailElement[] = []
 
   constructor(
     private _api: ApiService,
@@ -609,6 +621,55 @@ export class CameraService {
       this._api,
     )
 
+    setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+  }
+
+  public getVelocityTrailElements(): VelocityTrailElement[] {
+    return this.velocityTrailElements
+  }
+
+  private updateVelocityTrailElements() {
+    if(!this._api.frameData) {
+      console.warn("updateVelocityTrailElements():: no framedata found")
+      return setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+    }
+
+    const now = performance.now()
+    // Clear old elements
+    this.velocityTrailElements = this.velocityTrailElements.filter((vte: VelocityTrailElement)=>{
+      return vte.createdAt + VELOCITY_TRAIL_ELEMENT_TTL_MS > now
+    })
+
+    // Add elements for own ship
+    if(
+      this._api.frameData.ship.velocity_x_meters_per_second
+      || this._api.frameData.ship.velocity_y_meters_per_second
+    ) {
+      this.velocityTrailElements.push({
+        createdAt: now,
+        mapCoord: {x: this._api.frameData.ship.coord_x, y:this._api.frameData.ship.coord_y},
+        radiusMeters: this._api.frameData.ship.engine_lit ? 1.5 : 0.4,
+        grow: this._api.frameData.ship.engine_lit,
+      })
+    }
+
+    // Add elements for scanner elements
+    for(let i in this._api.frameData.ship.scanner_data) {
+      let sde = this._api.frameData.ship.scanner_data[i]
+      if(sde.element_type !== "ship") {
+        continue
+      }
+      if(sde.velocity_x_meters_per_second || sde.velocity_y_meters_per_second){
+        this.velocityTrailElements.push({
+          createdAt: now,
+          mapCoord: {x:sde.coord_x, y:sde.coord_y},
+          radiusMeters: sde.visual_engine_lit ? 1.5 : 0.4,
+          grow: sde.visual_engine_lit,
+        })
+      }
+    }
+
+    setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
   }
 
 }

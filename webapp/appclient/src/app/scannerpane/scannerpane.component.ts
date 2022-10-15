@@ -97,7 +97,6 @@ export class ScannerpaneComponent implements OnInit {
 
   private setupCanvasContext(): void {
     this.ctx = this.ctx || this.canvas.nativeElement.getContext("2d")
-    console.log(this.ctx)
   }
 
   select() {
@@ -112,7 +111,6 @@ export class ScannerpaneComponent implements OnInit {
     setTimeout(() => {
       console.log("resizeCanvas()")
       const height = this.paneElement.nativeElement.offsetHeight - this.titleBar.nativeElement.offsetHeight
-      console.log({calculatedHeight: height})
       this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth
       this.canvas.nativeElement.height = height// this.canvas.nativeElement.offsetHeight
       this._camera.scannerPaneCamera.setCanvasWidthHeight(
@@ -156,7 +154,6 @@ export class ScannerpaneComponent implements OnInit {
   }
 
   private paintDisplay(): void {
-    // console.log("paintDisplay()")
     const ship = this._api.frameData.ship
     this.clearCanvas()
     this.setCanvasBGColor()
@@ -212,6 +209,11 @@ export class ScannerpaneComponent implements OnInit {
     this._draw.drawSpaceStations(this.ctx, this._camera.scannerPaneCamera)
     this._draw.drawMiningLocations(this.ctx, this._camera.scannerPaneCamera)
 
+    // Visual Velocity elements
+    this._draw.drawVisualVelocityElements(
+      this.ctx, this._camera.scannerPaneCamera,
+      this._camera.getVelocityTrailElements(),
+    )
 
     // Ships
     const drawBoundingBox = false

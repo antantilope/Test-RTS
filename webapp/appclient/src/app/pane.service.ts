@@ -37,7 +37,6 @@ export class PaneService {
   }
 
   setInputIsFocused(value: boolean, from: string) {
-    console.log(`marking input as focused:${value}, from ${from}`)
     this.inputIsFocused = value
   }
 
