@@ -547,6 +547,8 @@ class Game(BaseModel):
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
                     'element_type': ScannedElementType.SHIP,
+                    'velocity_x_meters_per_second': self._ships[other_id].velocity_x_meters_per_second,
+                    'velocity_y_meters_per_second': self._ships[other_id].velocity_y_meters_per_second,
                     'alive': self._ships[other_id].died_on_frame is None,
                     'aflame': self._ships[other_id].aflame_since_frame is not None,
                     'explosion_frame': self._ships[other_id].explosion_frame,

@@ -93,6 +93,8 @@ export class ScannerDataElement {
     coord_y: number
     id: string
     alive: boolean
+    velocity_x_meters_per_second: number
+    velocity_y_meters_per_second: number
     anti_radar_coating_level: number
     designator: string
     visual_shape: string
