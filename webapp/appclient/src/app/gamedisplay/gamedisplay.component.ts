@@ -231,6 +231,7 @@ export class GamedisplayComponent implements OnInit {
 
     // Pan camera
     this.canvas.nativeElement.addEventListener('mouseenter', ()=>{
+      console.log("mouseenter")
       this.mouseInCanvas = true
     })
     this.canvas.nativeElement.addEventListener('mouseleave', event => {
@@ -238,18 +239,12 @@ export class GamedisplayComponent implements OnInit {
       const canvasHeight = this.canvas.nativeElement.height
       const eventXPos = event.clientX
       const eventYPos = event.clientY
-      if (
-        eventYPos < 0
-        || eventYPos > canvasHeight
-        || eventXPos < 0
-        || eventXPos > canvasWidth
-        || eventXPos < this.sidebarElement.nativeElement.offsetWidth
-      ) {
-        this.mouseClickDownInCanvas = false
-        this.mouseInCanvas = false
-        this.mousePanLastX = null
-        this.mousePanLastY = null
-      }
+      console.log("mouseleave")
+      this.mouseClickDownInCanvas = false
+      this.mouseInCanvas = false
+      this.mousePanLastX = null
+      this.mousePanLastY = null
+
     })
     this.canvas.nativeElement.addEventListener('mousedown', ()=>{
       this.mouseMovedWhileDown = false
@@ -302,10 +297,7 @@ export class GamedisplayComponent implements OnInit {
       && this.drawableObjects.ships[0].isSelf
     ) {
       const cameraMode = this.getCameraMode()
-      if(
-        (cameraMode == CAMERA_MODE_SHIP || cameraMode == CAMERA_MODE_VISION)
-        && !this._api.frameData.ship.autopilot_program
-      ) {
+      if(!this._api.frameData.ship.autopilot_program) {
         this.clickAnimationFrame = 1
         this.clickAnimationCanvasX = mouseCanvasX
         this.clickAnimationCanvasY = mouseCanvasY
