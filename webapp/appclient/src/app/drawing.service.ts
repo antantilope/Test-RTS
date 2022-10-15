@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { Camera } from './camera.service';
+import {
+  Camera,
+  VelocityTrailElement,
+  VELOCITY_TRAIL_ELEMENT_TTL_MS,
+} from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
 import { UserService } from "./user.service";
@@ -110,6 +114,28 @@ export class DrawingService {
         startRad,
         endRad,
       )
+      ctx.fill()
+    }
+  }
+
+  public drawVisualVelocityElements(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    velocityTrailElements: VelocityTrailElement[],
+  ) {
+    const cameraPosition = camera.getPosition()
+    const now = performance.now()
+    for(let i in velocityTrailElements) {
+      let vte = velocityTrailElements[i]
+      let alpha = (VELOCITY_TRAIL_ELEMENT_TTL_MS - (now - vte.createdAt)) / VELOCITY_TRAIL_ELEMENT_TTL_MS
+      let pixelRadius = Math.max(
+        2,
+        vte.radiusMeters * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
+      ) * (vte.grow ? (1 + (3 * (now - vte.createdAt) / VELOCITY_TRAIL_ELEMENT_TTL_MS)): 1) // grow arc to 3x size if grow==true
+      let canvasCoord = camera.mapCoordToCanvasCoord(vte.mapCoord, cameraPosition)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(140, 140, 140, ${alpha})`
+      ctx.arc(canvasCoord.x, canvasCoord.y, pixelRadius, 0, TWO_PI)
       ctx.fill()
     }
   }

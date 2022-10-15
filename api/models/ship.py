@@ -133,6 +133,8 @@ class ScannedElement(TypedDict):
     coord_y: int
     relative_heading: int # Rounded int describing bearing to element
     target_heading: float # Float describing beaing to element
+    velocity_x_meters_per_second: float
+    velocity_y_meters_per_second: float
     distance: int
     alive: bool
     aflame: bool

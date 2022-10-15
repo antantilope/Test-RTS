@@ -260,13 +260,6 @@ export class GamedisplayComponent implements OnInit {
     window.addEventListener('mouseup', (event) => {
       if(/*!this.mouseMovedWhileDown &&*/ this.mouseInCanvas && !this._pane.mouseInPane()) {
         this.handleMouseClickInCanvas(event)
-      } else {
-        console.log("no click")
-        console.log({
-          "!this.mouseMovedWhileDown": !this.mouseMovedWhileDown,
-          "this.mouseInCanvas": this.mouseInCanvas,
-          "!this._pane.mouseInPane()": !this._pane.mouseInPane(),
-        })
       }
       this.mouseClickDownInCanvas = false
       this.mouseMovedWhileDown = false
@@ -338,7 +331,6 @@ export class GamedisplayComponent implements OnInit {
     }
     const canvasShipPoint: PointCoord = this.drawableObjects.ships[0].canvasCoordCenter
     const heading = this._camera.gameDisplayCamera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
-    console.log({set_heading: heading})
     await this._api.post(
       "/api/rooms/command",
       {command: "set_heading", heading},
@@ -519,6 +511,11 @@ export class GamedisplayComponent implements OnInit {
         drawableObjects.visionCircles[lastIx],
       )
     }
+
+    this._draw.drawVisualVelocityElements(
+      this.ctx, this._camera.gameDisplayCamera,
+      this._camera.getVelocityTrailElements(),
+    )
 
     // Ships
     for(let i in drawableObjects.ships) {
@@ -955,8 +952,6 @@ export class GamedisplayComponent implements OnInit {
       )
       this._sound.playUtilityButtonClickSound()
       return
-    } else {
-      console.log("gravbrake doing nothing")
     }
   }
 

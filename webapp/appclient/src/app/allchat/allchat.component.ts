@@ -85,7 +85,6 @@ export class AllchatComponent implements OnInit {
 
   focusOnInput() {
     setTimeout(()=>{
-      console.log("focusOnInput()");
       this.textInputElement.nativeElement.focus();
     });
   }
