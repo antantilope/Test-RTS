@@ -231,6 +231,7 @@ export class GamedisplayComponent implements OnInit {
 
     // Pan camera
     this.canvas.nativeElement.addEventListener('mouseenter', ()=>{
+      console.log("mouseenter")
       this.mouseInCanvas = true
     })
     this.canvas.nativeElement.addEventListener('mouseleave', event => {
@@ -238,18 +239,12 @@ export class GamedisplayComponent implements OnInit {
       const canvasHeight = this.canvas.nativeElement.height
       const eventXPos = event.clientX
       const eventYPos = event.clientY
-      if (
-        eventYPos < 0
-        || eventYPos > canvasHeight
-        || eventXPos < 0
-        || eventXPos > canvasWidth
-        || eventXPos < this.sidebarElement.nativeElement.offsetWidth
-      ) {
-        this.mouseClickDownInCanvas = false
-        this.mouseInCanvas = false
-        this.mousePanLastX = null
-        this.mousePanLastY = null
-      }
+      console.log("mouseleave")
+      this.mouseClickDownInCanvas = false
+      this.mouseInCanvas = false
+      this.mousePanLastX = null
+      this.mousePanLastY = null
+
     })
     this.canvas.nativeElement.addEventListener('mousedown', ()=>{
       this.mouseMovedWhileDown = false
