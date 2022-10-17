@@ -265,4 +265,3 @@ class TestEBeamAndDamage(TestCase):
                 self.game._colision_cycle_station,
         )
         assert isinstance(death_data, tuple)
-
