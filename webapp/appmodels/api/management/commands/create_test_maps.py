@@ -41,6 +41,7 @@ class Command(BaseCommand):
                 position_meters_x=500,
                 position_meters_y=500,
                 service_radius_meters=120,
+                collision_radius_meters=15,
                 name="Central Gas n' Go",
             )
         else:
@@ -71,6 +72,7 @@ class Command(BaseCommand):
                 position_meters_x=4500,
                 position_meters_y=4500,
                 service_radius_meters=120,
+                collision_radius_meters=15,
                 name="Central Gas n' Go",
             )
             MapSpaceStation.objects.create(
@@ -78,6 +80,7 @@ class Command(BaseCommand):
                 position_meters_x=3800,
                 position_meters_y=8500,
                 service_radius_meters=120,
+                collision_radius_meters=15,
                 name="Space Depot North",
             )
             MapSpaceStation.objects.create(
@@ -85,6 +88,7 @@ class Command(BaseCommand):
                 position_meters_x=3800,
                 position_meters_y=500,
                 service_radius_meters=120,
+                collision_radius_meters=15,
                 name="Space Depot South",
             )
             MapMiningLocation.objects.create(
@@ -93,6 +97,7 @@ class Command(BaseCommand):
                 position_meters_x=7500,
                 position_meters_y=6500,
                 service_radius_meters=100,
+                collision_radius_meters=15,
                 name="Johnson Mine",
             )
             MapMiningLocation.objects.create(
@@ -101,6 +106,7 @@ class Command(BaseCommand):
                 position_meters_x=1000,
                 position_meters_y=8000,
                 service_radius_meters=100,
+                collision_radius_meters=15,
                 name="North West Mine",
             )
             MapMiningLocation.objects.create(
@@ -109,6 +115,7 @@ class Command(BaseCommand):
                 position_meters_x=7500,
                 position_meters_y=2500,
                 service_radius_meters=100,
+                collision_radius_meters=15,
                 name="Doorson's Deposit",
             )
             MapMiningLocation.objects.create(
@@ -117,6 +124,7 @@ class Command(BaseCommand):
                 position_meters_x=1000,
                 position_meters_y=1000,
                 service_radius_meters=100,
+                collision_radius_meters=15,
                 name="South West Mine",
             )
         else:
@@ -159,6 +167,7 @@ class Command(BaseCommand):
                 position_meters_x=1000,
                 position_meters_y=1000,
                 service_radius_meters=120,
+                collision_radius_meters=15,
                 name="Outpost 87",
             )
             MapMiningLocation.objects.create(
@@ -167,6 +176,7 @@ class Command(BaseCommand):
                 position_meters_x=300,
                 position_meters_y=1000,
                 service_radius_meters=100,
+                collision_radius_meters=15,
                 name="Lucky's Deposit",
             )
             MapMiningLocation.objects.create(
@@ -175,6 +185,7 @@ class Command(BaseCommand):
                 position_meters_x=1700,
                 position_meters_y=1000,
                 service_radius_meters=100,
+                collision_radius_meters=15,
                 name="Fool's Ore Mine",
             )
         else:

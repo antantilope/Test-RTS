@@ -297,7 +297,7 @@ export class GamedisplayComponent implements OnInit {
       && this.drawableObjects.ships[0].isSelf
     ) {
       const cameraMode = this.getCameraMode()
-      if(!this._api.frameData.ship.autopilot_program) {
+      if(!this._api.frameData.ship.autopilot_program && cameraMode !== CAMERA_MODE_MAP) {
         this.clickAnimationFrame = 1
         this.clickAnimationCanvasX = mouseCanvasX
         this.clickAnimationCanvasY = mouseCanvasY

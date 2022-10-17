@@ -2398,19 +2398,20 @@ class TestShipAdvanceDamageProperties(TestCase):
         assert self.ship.aflame_since_frame is None
         assert self.ship.explosion_point == (25, 30,)
 
-    def test_dead_ship_explodes_if_it_goes_outside_map(self):
-        self.ship.explode_immediately = False
-        self.ship.died_on_frame = None
-        fps = 1
-        assert self.ship.explosion_frame is None
-        assert self.ship.explosion_point is None
-        self.ship.advance_damage_properties(1, 100, 100, fps)
-        assert self.ship.died_on_frame is None
-        assert self.ship.explosion_frame is None
-        assert self.ship.explosion_point is None
-        self.ship.advance_damage_properties(1, 10, 10, fps) # shrink map
-        assert self.ship.died_on_frame is not None
-        assert self.ship.explosion_frame == 1
+    # TODO: move test to game.py
+    # def test_dead_ship_explodes_if_it_goes_outside_map(self):
+    #     self.ship.explode_immediately = False
+    #     self.ship.died_on_frame = None
+    #     fps = 1
+    #     assert self.ship.explosion_frame is None
+    #     assert self.ship.explosion_point is None
+    #     self.ship.advance_damage_properties(1, 100, 100, fps)
+    #     assert self.ship.died_on_frame is None
+    #     assert self.ship.explosion_frame is None
+    #     assert self.ship.explosion_point is None
+    #     self.ship.advance_damage_properties(1, 10, 10, fps) # shrink map
+    #     assert self.ship.died_on_frame is not None
+    #     assert self.ship.explosion_frame == 1
 
 
 

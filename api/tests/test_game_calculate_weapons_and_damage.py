@@ -208,3 +208,16 @@ class TestEBeamAndDamage(TestCase):
         # Assert
         assert self.game._ships[self.player_2_ship_id].died_on_frame is None
         assert self.game._ships[self.player_1_ship_id].ebeam_firing is False
+
+
+    def test_ship_explodes_if_it_goes_outside_the_map(self):
+        pass
+
+
+    def test_ship_explodes_if_it_collides_with_mining_location(self):
+        pass
+
+
+    def test_ship_explodes_if_it_collides_with_space_station(self):
+        pass
+

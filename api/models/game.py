@@ -1,5 +1,6 @@
 
 from collections import OrderedDict
+from itertools import cycle
 import json
 import datetime as dt
 from typing import Tuple, TypedDict, Optional, List, Dict
@@ -7,6 +8,8 @@ from time import sleep
 import re
 import traceback
 from uuid import uuid4
+
+from numpy import stack
 
 from api import constants
 
@@ -167,6 +170,15 @@ class Game(BaseModel):
         self._frame_sleep = None
 
         self._game_start_time = None
+
+        self._colision_cycle_mine = "mine"
+        self._colision_cycle_station = "station"
+        self._colision_cycle_wall = "wall"
+        self._collision_cycle = cycle((
+            self._colision_cycle_mine,
+            self._colision_cycle_station,
+            self._colision_cycle_wall,
+        ))
 
 
     def get_state(self) -> GameState:
@@ -643,20 +655,38 @@ class Game(BaseModel):
                 "created_at_frame": self._game_frame,
                 "victim_name": self._ships[ship_id].scanner_designator,
             })
-
         if death_data and death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
             self._explosion_shockwaves.append({
                 "id": str(uuid4()),
                 "origin_point": self._ships[ship_id].coords,
                 "radius_meters": 1,
             })
-
         if death_data:
             return
 
+        if self._game_frame % 2 == 0:
+            collision_type = next(self._collision_cycle)
+            death_data = self._advance_collisions(
+                ship_id,
+                collision_type,
+            )
+            if death_data:
+                self._killfeed.append({
+                    "created_at_frame": self._game_frame,
+                    "victim_name": self._ships[ship_id].scanner_designator,
+                })
+                if death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
+                    self._explosion_shockwaves.append({
+                        "id": str(uuid4()),
+                        "origin_point": self._ships[ship_id].coords,
+                        "radius_meters": 1,
+                    })
+                return
+
+
         if self._ships[ship_id].ebeam_firing:
-            success = self._ships[ship_id].use_ebeam_charge(self._fps)
-            if success:
+            ebeam_fired = self._ships[ship_id].use_ebeam_charge(self._fps)
+            if ebeam_fired:
                 line, hits = self._get_ebeam_line_and_hit(self._ships[ship_id])
                 self._ebeam_rays.append({
                     "start_point": line[0],
@@ -673,6 +703,43 @@ class Game(BaseModel):
                         "created_at_frame": self._game_frame,
                         "victim_name": self._ships[hit_ship_id].scanner_designator,
                     })
+
+    def _advance_collisions(self, ship_id: str, collision_type: str):
+        if collision_type == self._colision_cycle_mine:
+            for mine in self._ore_mines:
+                dist = utils2d.calculate_point_distance(
+                    (mine['position_map_units_x'], mine['position_map_units_y']),
+                    self._ships[ship_id].coords,
+                )
+                if dist < (mine['collision_radius_meters'] * self._map_units_per_meter):
+                    self._ships[ship_id].die(self._game_frame)
+                    self._ships[ship_id].explode()
+                    return ShipDeathType.EXPLOSION_NEW, 0
+
+        elif collision_type == self._colision_cycle_station:
+            for st in self._space_stations:
+                dist = utils2d.calculate_point_distance(
+                    (st['position_map_units_x'], st['position_map_units_y']),
+                    self._ships[ship_id].coords,
+                )
+                if dist < (st['collision_radius_meters'] * self._map_units_per_meter):
+                    self._ships[ship_id].die(self._game_frame)
+                    self._ships[ship_id].explode()
+                    return ShipDeathType.EXPLOSION_NEW, 0
+
+        elif collision_type == self._colision_cycle_wall:
+            if (
+                self._ships[ship_id].coord_x < 0
+                or self._ships[ship_id].coord_y < 0
+                or self._ships[ship_id].coord_x > self._map_x_unit_length
+                or self._ships[ship_id].coord_y > self._map_y_unit_length
+            ):
+                self._ships[ship_id].die(self._game_frame)
+                self._ships[ship_id].explode()
+                return ShipDeathType.EXPLOSION_NEW, 0
+        else:
+            raise NotImplementedError()
+
 
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
         # gets starting point of EBeam ray
