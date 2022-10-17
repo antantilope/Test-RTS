@@ -80,7 +80,9 @@ class TestGravityBrakeCatchingLogic(TestCase):
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 30
         self.game.check_for_gravity_brake_catch(self.player_1_ship_id)
         assert self.game._ships[self.player_1_ship_id].gravity_brake_active is False
-        assert self.game._space_stations[0].get('grav_brake_last_caught') is None # TODO: REPLACE THIS
+        assert self.game._ships[self.player_1_ship_id].scouted_station_gravity_brake_catches_last_frame.get(
+            self.station_id
+        ) is None
         # Move ship into service radius and the brake catches.
         self.game._ships[self.player_1_ship_id].coord_x = 5500
         self.game._ships[self.player_1_ship_id].coord_y = 5500

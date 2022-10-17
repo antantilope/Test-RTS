@@ -58,7 +58,6 @@ class MapSpaceStation(TypedDict):
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
     service_radius_map_units: int #
-    grav_brake_last_caught: Optional[int] # most recent gameframe the station caught a grav brake
 
 class ShipCommands:
     LEAVE_GAME = 'leave_game'
