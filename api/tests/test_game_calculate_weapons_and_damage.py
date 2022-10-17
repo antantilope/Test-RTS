@@ -189,7 +189,7 @@ class TestEBeamAndDamage(TestCase):
         assert self.game._ships[self.player_1_ship_id].ebeam_firing is True
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         # Assert
-        assert self.game._ships[self.player_1_ship_id].ebeam_charge == 2083
+        assert self.game._ships[self.player_1_ship_id].ebeam_charge == 0
         assert self.game._ships[self.player_1_ship_id].ebeam_firing is False
 
     def test_ebeam_does_not_fire_if_not_enough_charge(self):
