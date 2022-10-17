@@ -742,7 +742,20 @@ class Game(BaseModel):
                 self._ships[ship_id].scanner_lock_target = None
                 self._ships[ship_id].gravity_brake_active = True
                 self._ships[ship_id].docking_at_station = st['uuid']
-                self._space_stations[ix]['grav_brake_last_caught'] = self._game_frame
+                self._ships[ship_id].scouted_station_gravity_brake_catches_last_frame[
+                    st['uuid']
+                ] = self._game_frame
+
+                # Update Fog of War for other ships
+                for other_id in (i for i in self._ships if i != ship_id):
+                    dist = utils2d.calculate_point_distance(
+                        (st['position_map_units_x'], st['position_map_units_y']),
+                        self._ships[other_id].coords,
+                    )
+                    if dist <= (self._ships[other_id].current_FOW_vision * self._map_units_per_meter):
+                        self._ships[other_id].scouted_station_gravity_brake_catches_last_frame[
+                            st['uuid']
+                        ] = self._game_frame
 
     def check_for_ore_mine_parking(self, ship_id: str) -> None:
         ship = self._ships[ship_id]

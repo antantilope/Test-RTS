@@ -25,6 +25,7 @@ import {
   LOW_FUEL_THRESHOLD,
   LOW_POWER_THRESHOLD
 } from './constants';
+import { SpaceStation } from './models/apidata.model';
 
 
 
@@ -1223,7 +1224,7 @@ export class DrawingService {
   public drawSpaceStations(ctx: CanvasRenderingContext2D, camera: Camera,) {
     const cameraPosition = camera.getPosition()
     for(let i in this._api.frameData.space_stations) {
-      const st: any = this._api.frameData.space_stations[i]
+      const st = this._api.frameData.space_stations[i]
       const centerCanvasCoord = camera.mapCoordToCanvasCoord(
         {x: st.position_map_units_x, y: st.position_map_units_y},
         cameraPosition,
@@ -1255,7 +1256,7 @@ export class DrawingService {
   private drawSpaceStation(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
-    st: any,
+    st: SpaceStation,
     centerCanvasCoord: PointCoord,
     sideLengthCanvasPx: number,
   ) {
@@ -1296,9 +1297,13 @@ export class DrawingService {
       TWO_PI,
     )
     ctx.stroke()
-    if(st.grav_brake_last_caught + 18 > this._api.frameData.game_frame) {
+    const grav_brake_last_caught: number | undefined = this._api.frameData.ship.scouted_station_gravity_brake_catches_last_frame[st.uuid]
+    if(
+      grav_brake_last_caught !== undefined
+      && (grav_brake_last_caught + 18 > this._api.frameData.game_frame)
+    ) {
       // Draw capture effect
-      const frame = this._api.frameData.game_frame - st.grav_brake_last_caught + 1
+      const frame = this._api.frameData.game_frame - grav_brake_last_caught + 1
       if(frame < 12 || Math.random() > 0.8) {
         ctx.beginPath()
         ctx.strokeStyle = `rgb(124, 0, 166, 0.${randomInt(20, 80)})`
