@@ -44,6 +44,7 @@ class MapMiningLocationDetails(TypedDict):
     position_meters_x: int
     position_meters_y: int
     service_radius_meters: int
+    collision_radius_meters: int
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
     service_radius_map_units: int #
@@ -55,6 +56,7 @@ class MapSpaceStation(TypedDict):
     position_meters_x: int
     position_meters_y: int
     service_radius_meters: int
+    collision_radius_meters: int
     position_map_units_x: int # Perform map unit version up front
     position_map_units_y: int #
     service_radius_map_units: int #
@@ -1113,16 +1115,14 @@ class Ship(BaseModel):
         delta_ebeam_charge = self.ebeam_discharge_rate_per_second / fps
         if delta_ebeam_charge > self.ebeam_charge:
             self.ebeam_firing = False
+            self.ebeam_charge = 0
             return False
         self.ebeam_charge = round(self.ebeam_charge - delta_ebeam_charge)
         return True
 
     def advance_damage_properties(self, game_frame: int, map_x: int, map_y: int, fps: int) -> Optional[Tuple]:
         if self.died_on_frame is None:
-            if self.coord_x < 0 or self.coord_y < 0 or self.coord_x > map_x or self.coord_y > map_y:
-                self.die(game_frame)
-                self.explode()
-                return ShipDeathType.EXPLOSION_NEW, game_frame - self.died_on_frame
+            return
 
         elif self.explosion_frame:
             if self.explosion_frame < 200:

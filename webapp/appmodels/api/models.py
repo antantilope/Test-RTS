@@ -47,6 +47,7 @@ class BaseBattleMapFeature(BaseModel):
     position_meters_x = models.PositiveBigIntegerField()
     position_meters_y = models.PositiveBigIntegerField()
     service_radius_meters = models.PositiveIntegerField()
+    collision_radius_meters = models.PositiveIntegerField()
     name = models.CharField(max_length=100, blank=True, null=True, default=None)
 
     class Meta:

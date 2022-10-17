@@ -46,8 +46,23 @@ class TestEBeamAndDamage(TestCase):
                 'position_meters_x': 200,
                 'position_meters_y': 200,
             }],
-            'spaceStations': [],
-            'miningLocations': [],
+            'spaceStations': [{
+                "uuid": str(uuid4()),
+                "position_meters_x": 1000,
+                "position_meters_y": 1000,
+                "service_radius_meters": 200,
+                "collision_radius_meters": 30,
+                "name": "derpson's station",
+            }],
+            'miningLocations': [{
+                "uuid": str(uuid4()),
+                "position_meters_x": 500,
+                "position_meters_y": 500,
+                "service_radius_meters": 120,
+                "collision_radius_meters": 30,
+                "name": "derpson's mine",
+                "starting_ore_amount_kg": 500,
+            }],
         }, map_units_per_meter=self.upm)
         assert self.game.map_is_configured
         self.game.advance_to_phase_1_starting()
@@ -189,7 +204,7 @@ class TestEBeamAndDamage(TestCase):
         assert self.game._ships[self.player_1_ship_id].ebeam_firing is True
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         # Assert
-        assert self.game._ships[self.player_1_ship_id].ebeam_charge == 2083
+        assert self.game._ships[self.player_1_ship_id].ebeam_charge == 0
         assert self.game._ships[self.player_1_ship_id].ebeam_firing is False
 
     def test_ebeam_does_not_fire_if_not_enough_charge(self):
@@ -208,3 +223,45 @@ class TestEBeamAndDamage(TestCase):
         # Assert
         assert self.game._ships[self.player_2_ship_id].died_on_frame is None
         assert self.game._ships[self.player_1_ship_id].ebeam_firing is False
+
+    def test_ship_explodes_if_it_goes_outside_the_map(self):
+        death_data = self.game._advance_collisions(
+                self.player_1_ship_id,
+                self.game._colision_cycle_wall,
+        )
+        assert death_data is None
+        self.game._ships[self.player_1_ship_id].coord_x = 1000
+        self.game._ships[self.player_1_ship_id].coord_y = -10
+        death_data = self.game._advance_collisions(
+                self.player_1_ship_id,
+                self.game._colision_cycle_wall,
+        )
+        assert isinstance(death_data, tuple)
+
+    def test_ship_explodes_if_it_collides_with_mining_location(self):
+        death_data = self.game._advance_collisions(
+                self.player_1_ship_id,
+                self.game._colision_cycle_mine,
+        )
+        assert death_data is None
+        self.game._ships[self.player_1_ship_id].coord_x = 4900
+        self.game._ships[self.player_1_ship_id].coord_y = 4900
+        death_data = self.game._advance_collisions(
+                self.player_1_ship_id,
+                self.game._colision_cycle_mine,
+        )
+        assert isinstance(death_data, tuple)
+
+    def test_ship_explodes_if_it_collides_with_space_station(self):
+        death_data = self.game._advance_collisions(
+                self.player_1_ship_id,
+                self.game._colision_cycle_station,
+        )
+        assert death_data is None
+        self.game._ships[self.player_1_ship_id].coord_x = 9900
+        self.game._ships[self.player_1_ship_id].coord_y = 9900
+        death_data = self.game._advance_collisions(
+                self.player_1_ship_id,
+                self.game._colision_cycle_station,
+        )
+        assert isinstance(death_data, tuple)

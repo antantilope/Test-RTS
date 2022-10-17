@@ -25,7 +25,7 @@ import {
   LOW_FUEL_THRESHOLD,
   LOW_POWER_THRESHOLD
 } from './constants';
-import { SpaceStation } from './models/apidata.model';
+import { OreMine, SpaceStation } from './models/apidata.model';
 
 
 
@@ -49,6 +49,7 @@ export class DrawingService {
   private actionTileImgScannerOnline: HTMLImageElement = new Image()
 
 
+  // TODO: fix magic number
   private spaceStationVisualSideLengthM = 30
 
   constructor(
@@ -1231,8 +1232,11 @@ export class DrawingService {
       )
 
       const sideLengthCanvasPx = Math.floor(
-        (this.spaceStationVisualSideLengthM
-        * this._api.frameData.map_config.units_per_meter)
+        (
+          st.collision_radius_meters
+          * 2
+          * this._api.frameData.map_config.units_per_meter
+        )
         / camera.getZoom()
       )
       if(sideLengthCanvasPx < 10) {
@@ -1416,7 +1420,7 @@ export class DrawingService {
       }
 
       const servicePerimeterRadiusCavasPx = om.service_radius_map_units / camera.getZoom()
-      const rockRadiusCavasPx = servicePerimeterRadiusCavasPx / 3
+      const rockRadiusCavasPx =  om.collision_radius_meters * this._api.frameData.map_config.units_per_meter / camera.getZoom()
       if(rockRadiusCavasPx < minRockRadius) {
         const iconFontSize = this.getIconFontSize(camera)
         ctx.beginPath()
@@ -1445,8 +1449,8 @@ export class DrawingService {
   private drawMiningLocation(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
-    om: any, centerCanvasCoord:
-    PointCoord,
+    om: OreMine,
+    centerCanvasCoord: PointCoord,
     rockRadiusCavasPx: number,
     servicePerimeterRadiusCavasPx: number,
     minedPercentage: number | null,

@@ -35,6 +35,7 @@ export class SpaceStation {
     position_map_units_x: number
     position_map_units_y: number
     service_radius_map_units: number
+    collision_radius_meters: number
 }
 
 export class OreMine {
@@ -46,6 +47,7 @@ export class OreMine {
     position_map_units_x: number
     position_map_units_y: number
     service_radius_map_units: number
+    collision_radius_meters: number
     starting_ore_amount_kg: number
 }
 
