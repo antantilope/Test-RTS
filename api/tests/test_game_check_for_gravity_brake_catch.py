@@ -80,7 +80,7 @@ class TestGravityBrakeCatchingLogic(TestCase):
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 30
         self.game.check_for_gravity_brake_catch(self.player_1_ship_id)
         assert self.game._ships[self.player_1_ship_id].gravity_brake_active is False
-        assert self.game._space_stations[0].get('grav_brake_last_caught') is None
+        assert self.game._space_stations[0].get('grav_brake_last_caught') is None # TODO: REPLACE THIS
         # Move ship into service radius and the brake catches.
         self.game._ships[self.player_1_ship_id].coord_x = 5500
         self.game._ships[self.player_1_ship_id].coord_y = 5500
@@ -88,7 +88,9 @@ class TestGravityBrakeCatchingLogic(TestCase):
         assert self.game._ships[self.player_1_ship_id].gravity_brake_active is True
         assert self.game._ships[self.player_1_ship_id].docking_at_station == self.station_id
         assert self.game._ships[self.player_1_ship_id].docked_at_station is None
-        assert self.game._space_stations[0]['grav_brake_last_caught'] == self.game._game_frame
+        assert self.game._ships[self.player_1_ship_id].scouted_station_gravity_brake_catches_last_frame[
+            self.station_id
+        ] == self.game._game_frame
 
     def test_grav_brake_does_not_activates_when_ship_with_retracted_brake_flies_through_service_radius(self):
         # brake not fully deployed.
@@ -122,3 +124,64 @@ class TestGravityBrakeCatchingLogic(TestCase):
         assert self.game._ships[self.player_1_ship_id].gravity_brake_active is True
         assert self.game._ships[self.player_1_ship_id].engine_lit is False # engine unlights
         assert self.game._ships[self.player_1_ship_id].engine_online is True
+
+    def test_other_ship_can_see_station_gravity_brake_catch_through_fog_of_war_if_close_enough(self):
+        self.game._ships[self.player_1_ship_id].gravity_brake_position = self.game._ships[self.player_1_ship_id].gravity_brake_deployed_position
+        self.game._ships[self.player_1_ship_id].gravity_brake_active = False
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 30
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 30
+        assert self.game._ships[self.player_1_ship_id].gravity_brake_active is False
+        # ship into service radius and the brake catches.
+        self.game._ships[self.player_1_ship_id].coord_x = 5500
+        self.game._ships[self.player_1_ship_id].coord_y = 5500
+        # move other ship near by so it can observe grabity brake catch
+        self.game._ships[self.player_2_ship_id].coord_x = 7000
+        self.game._ships[self.player_2_ship_id].coord_y = 7000
+        self.game.check_for_gravity_brake_catch(self.player_1_ship_id)
+
+        # ship 1 updated
+        assert self.game._ships[self.player_1_ship_id].gravity_brake_active is True
+        assert self.game._ships[self.player_1_ship_id].docking_at_station == self.station_id
+        assert self.game._ships[self.player_1_ship_id].docked_at_station is None
+        assert self.game._ships[self.player_1_ship_id].scouted_station_gravity_brake_catches_last_frame[
+            self.station_id
+        ] == self.game._game_frame
+
+        # other ship's fog of war updated (not docked but can see docking effect of ship 1)
+        assert self.game._ships[self.player_2_ship_id].gravity_brake_active is False
+        assert self.game._ships[self.player_2_ship_id].docking_at_station is None
+        assert self.game._ships[self.player_2_ship_id].docked_at_station is None
+        assert self.game._ships[self.player_2_ship_id].scouted_station_gravity_brake_catches_last_frame[
+            self.station_id
+        ] == self.game._game_frame
+
+    def test_other_ship_cannot_see_station_gravity_brake_catch_through_fog_of_war_if_not_close_enough(self):
+        self.game._ships[self.player_1_ship_id].gravity_brake_position = self.game._ships[self.player_1_ship_id].gravity_brake_deployed_position
+        self.game._ships[self.player_1_ship_id].gravity_brake_active = False
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 30
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 30
+        assert self.game._ships[self.player_1_ship_id].gravity_brake_active is False
+        # ship into service radius and the brake catches.
+        self.game._ships[self.player_1_ship_id].coord_x = 5500
+        self.game._ships[self.player_1_ship_id].coord_y = 5500
+        # move other ship further away so it can't observe grabity brake catch
+        self.game._ships[self.player_2_ship_id].coord_x = 9000
+        self.game._ships[self.player_2_ship_id].coord_y = 9000
+        self.game._ships[self.player_2_ship_id].visual_range = 200
+        self.game.check_for_gravity_brake_catch(self.player_1_ship_id)
+
+        # ship 1 updated
+        assert self.game._ships[self.player_1_ship_id].gravity_brake_active is True
+        assert self.game._ships[self.player_1_ship_id].docking_at_station == self.station_id
+        assert self.game._ships[self.player_1_ship_id].docked_at_station is None
+        assert self.game._ships[self.player_1_ship_id].scouted_station_gravity_brake_catches_last_frame[
+            self.station_id
+        ] == self.game._game_frame
+
+        # other ship's fog of war notupdated (not docked but can see docking effect of ship 1)
+        assert self.game._ships[self.player_2_ship_id].gravity_brake_active is False
+        assert self.game._ships[self.player_2_ship_id].docking_at_station is None
+        assert self.game._ships[self.player_2_ship_id].docked_at_station is None
+        assert self.game._ships[self.player_2_ship_id].scouted_station_gravity_brake_catches_last_frame.get(
+            self.station_id
+        ) is None

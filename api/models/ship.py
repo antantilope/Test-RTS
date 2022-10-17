@@ -345,6 +345,7 @@ class Ship(BaseModel):
         self.gravity_brake_retracting = False
         self.gravity_brake_extending = False
         self.gravity_brake_active = False # flipped to true, the ship rapidly slows down.
+        self.scouted_station_gravity_brake_catches_last_frame: Dict[str, int] = {}
 
         # Mining interactions
         self.parked_at_ore_mine = None
@@ -480,6 +481,10 @@ class Ship(BaseModel):
         return self.scanner_radar_range if self.scanner_mode == ShipScannerMode.RADAR else self.scanner_ir_range
 
     @property
+    def current_FOW_vision(self):
+        return self.scanner_range if self.scanner_online else self.visual_range
+
+    @property
     def gravity_brake_deployed(self) -> bool:
         return self.gravity_brake_position == self.gravity_brake_deployed_position
 
@@ -558,6 +563,7 @@ class Ship(BaseModel):
             'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
 
             'docked_at_station': self.docked_at_station,
+            'scouted_station_gravity_brake_catches_last_frame': self.scouted_station_gravity_brake_catches_last_frame,
             'gravity_brake_position': self.gravity_brake_position,
             'gravity_brake_deployed_position': self.gravity_brake_deployed_position,
             'gravity_brake_retracting': self.gravity_brake_retracting,

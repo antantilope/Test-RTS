@@ -35,7 +35,6 @@ export class SpaceStation {
     position_map_units_x: number
     position_map_units_y: number
     service_radius_map_units: number
-    grav_brake_last_caught: number
 }
 
 export class OreMine {
@@ -212,6 +211,7 @@ export class Ship {
     gravity_brake_extending: boolean
     gravity_brake_active: boolean
     gravity_brake_deployed: boolean
+    scouted_station_gravity_brake_catches_last_frame: {[key: string]: number}
 
     parked_at_ore_mine: string
     mining_ore: boolean
