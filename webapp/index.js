@@ -190,6 +190,25 @@ expressApp.get('/logout', (req, res) => {
 
 /* Admin
 */
+expressApp.get("/admin/asset_alignment", async (req, res) => {
+    if(!req.session.player_id){
+        return res.sendStatus(401);
+    }
+    const db = await get_db_connection();
+    let user;
+    try {
+        user = await get_user_details(db, req.session.player_id)
+    } catch (err) {
+        throw err;
+    } finally {
+        db.close()
+    }
+    if(!user || !user.is_superuser) {
+        return res.sendStatus(403);
+    }
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    return res.sendFile(path.join(__dirname, 'templates/asset_alignment.html'));
+})
 expressApp.get("/admin", async (req, res) => {
     if(!req.session.player_id){
         return res.sendStatus(401);

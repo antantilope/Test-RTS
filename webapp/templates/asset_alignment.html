@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="/static/js/jquery.js"></script>
+        <style>
+            body {
+                font-family: arial;
+                margin: 2rem;
+            }
+            canvas {
+                width: 100%;
+                height: 60vh;
+                border: 1px solid green;
+            }
+            .input-container {
+                border: 1px solid gray;
+                padding: 0.3rem;
+                font-size: 1.2rem;
+                margin: 0.3rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Game Admin</h1>
+        <a href="/">back</a>
+        <hr>
+        <div>
+            <canvas>
+            </canvas>
+        </div>
+        <div style="display:flex;">
+            <div class="input-container">
+                ASSET
+                <input id="asset-input" type="text" value="camo_rocket.svg">
+                <br>
+                <button onclick="loadNewAsset()">LOAD</button>
+            </div>
+            <div class="input-container">
+                ZOOM
+                <input id="zoom-input" type="range" min="1" max="100" value="1">
+                <br>
+                <span id="zoom-value"></span>
+            </div>
+            <div class="input-container">
+                PX per Meter
+                <input id="ppm-input" type="input" value="10">
+            </div>
+        </div>
+        <div style="display:flex;">
+            <div class="input-container">
+                Width Meters
+                <input id="width-input" type="input" value="7">
+            </div>
+            <div class="input-container">
+                Height Meters
+                <input id="height-input" type="input" value="21">
+            </div>
+        </div>
+        <div style="display:flex;">
+            <div class="input-container">
+                Left Offset Meters
+                <input id="left-offset-input" type="input" value="0">
+            </div>
+            <div class="input-container">
+                Right Offset Meters
+                <input id="right-offset-input" type="input" value="0">
+            </div>
+        </div>
+        <div style="display:flex;">
+            <div class="input-container">
+                Top Offset Meters
+                <input id="top-offset-input" type="input" value="0">
+            </div>
+            <div class="input-container">
+                Bottom Offset Meters
+                <input id="bottom-offset-input" type="input" value="0">
+            </div>
+        </div>
+        <script>
+
+            window.alTool = {
+                assetImage: null,
+            }
+
+            function loadNewAsset() {
+                const fileName = document.getElementById("asset-input").value;
+                const fullURL = "/static/img/" + fileName;
+                window.alTool.assetImage = new Image();
+                window.alTool.assetImage.src = fullURL;
+            }
+            function setCanvasSize() {
+                const canvas = document.querySelector("canvas")
+                canvas.width = canvas.offsetWidth
+                canvas.height = canvas.offsetHeight
+            }
+            function drawAsset(ctx) {
+                if(!window.alTool.assetImage) {
+                    return
+                }
+
+                const shipWidth = parseInt(document.getElementById("width-input").value)
+                const shipHeight = parseInt(document.getElementById("height-input").value)
+
+                const leftOffset = parseInt(document.getElementById("left-offset-input").value)
+                const rightOffset = parseInt(document.getElementById("right-offset-input").value)
+                const topOffset = parseInt(document.getElementById("top-offset-input").value)
+                const bottomOffset = parseInt(document.getElementById("bottom-offset-input").value)
+
+                const zoom = parseInt(document.getElementById("zoom-input").value)
+                const ppm = parseInt(document.getElementById("ppm-input").value)
+
+                const assetWidthMeters = shipWidth + leftOffset + rightOffset
+                const assetHeightMeters = shipHeight + topOffset + bottomOffset
+
+                const assetWidthPx = (assetWidthMeters * ppm) / zoom
+                const assetHeightPx = (assetHeightMeters * ppm) / zoom
+
+                 // Draw asset
+                ctx.drawImage(
+                    window.alTool.assetImage,
+                    0, 0, assetWidthPx, assetHeightPx
+                )
+
+                // Draw cropping box
+                x1 = leftOffset * ppm / zoom
+                y1 = topOffset * ppm / zoom
+                x2 = (shipWidth + leftOffset + rightOffset) * ppm / zoom
+                y2 = (shipHeight + topOffset + bottomOffset) * ppm / zoom
+                ctx.beginPath()
+                ctx.strokeStyle = "#00ff00"
+                ctx.lineWidth = 1
+                ctx.rect(
+                    x1, y1,
+                    x2 - x1,
+                    y2 - y1,
+                )
+                ctx.stroke()
+            }
+            function main(){
+                setCanvasSize()
+                const ctx = document.querySelector("canvas").getContext("2d")
+                drawAsset(ctx)
+                window.requestAnimationFrame(main)
+            }
+
+            /////////////////////////////////////////////////////////////
+            $(document).ready(()=>{
+                // Start of CSRF Setup //
+                function csrfSafeMethod(method) {
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+                window.csrftoken = (function (cname) {
+                    let name = cname + "=";
+                    let decodedCookie = decodeURIComponent(document.cookie);
+                    let ca = decodedCookie.split(';');
+                    for(let i = 0; i <ca.length; i++) {
+                        let c = ca[i];
+                        while (c.charAt(0) == ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return "";
+                })("csrftoken");
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("csrf-token", window.csrftoken);
+                        }
+                    }
+                });
+
+                setTimeout(main)
+            })
+
+        </script>
+    </body>
+</html>
