@@ -196,7 +196,6 @@ class Game(BaseModel):
         self._special_weapon_costs = {
             constants.MAGNET_MINE_SLUG: constants.MAGNET_MINE_ORE_COST,
         }
-        self._magnet_mine_launch_velocity_ms = constants.MAGNET_MINE_LAUNCH_VELOCITY_MS
         self._magnet_mine_tracking_acceleration_ms = constants.MAGNET_MINE_TRACKING_ACCELERATION_MS
         self._magnet_mine_arming_time_seconds = constants.MAGNET_MINE_ARMING_TIME_SECONDS
         self._magnet_mine_max_seconds_to_detonate = constants.MAGNET_MINE_MAX_SECONDS_TO_DETONATE
@@ -479,7 +478,6 @@ class Game(BaseModel):
             ship.adjust_resources(self._fps, self._game_frame)
             ship.calculate_physics(self._fps)
             ship.advance_thermal_signature(self._fps)
-            self.advance_magnet_mines(self._fps)
             self.reset_and_update_scanner_states(ship_id)
 
             # Autopilot/weapons updates must run after scanner/physics updates
@@ -497,6 +495,8 @@ class Game(BaseModel):
                 self.update_scouted_mine_ore_remaining(ship_id)
 
             self.advance_mining(ship_id)
+
+        self.advance_magnet_mines(self._fps)
 
         if any(self._explosions):
             self.advance_explosions()
@@ -727,22 +727,7 @@ class Game(BaseModel):
                 "victim_name": self._ships[ship_id].scanner_designator,
             })
         if death_data and death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
-            # self._explosion_shockwaves.append({
-            #     "id": str(uuid4()),
-            #     "origin_point": self._ships[ship_id].coords,
-            #     "radius_meters": 1,
-            # })
             is_firey = self._ships[ship_id].fuel_level > 6000
-            # self._explosions.append({
-            #     "id": str(uuid4()),
-            #     "ship_id": ship_id,
-            #     "origin_point": self._ships[ship_id].coords,
-            #     "radius_meters": 1,
-            #     "max_radius_meters": 100 if is_firey else 65,
-            #     "flame_ms": 3000 if is_firey else 1500,
-            #     "fade_ms": 6000 if is_firey else 4500,
-            #     "elapsed_ms": 0,
-            # })
             self.register_explosion_on_map(
                 self._ships[ship_id].coords,
                 100 if is_firey else 65,
@@ -800,13 +785,13 @@ class Game(BaseModel):
             self._ships[ship_id].magnet_mine_firing = False
             mine = MagnetMine(self._game_frame, ship_id)
             extra_x, extra_y = utils2d.calculate_x_y_components(
-                self._magnet_mine_launch_velocity_ms,
+                self._ships[ship_id]._special_weapons_launch_velocity,
                 self._ships[ship_id].heading,
             )
             mine.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             mine.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            mine.coord_x = (self._ships[ship_id].coord_x + extra_x) / self._fps
-            mine.coord_y = (self._ships[ship_id].coord_y + extra_y) / self._fps
+            mine.coord_x = self._ships[ship_id].coord_x
+            mine.coord_y = self._ships[ship_id].coord_y
             self._magnet_mines[mine.id] = mine
 
     def advance_magnet_mines(self, fps: int):
@@ -831,7 +816,7 @@ class Game(BaseModel):
                     and (
                         (
                             self._magnet_mines[mm_id].distance_to_closest_ship
-                            * self._map_units_per_meter
+                            / self._map_units_per_meter
                         ) < self._magnet_mine_max_proximity_to_explode_meters
                     )
                 ):
@@ -858,25 +843,23 @@ class Game(BaseModel):
 
                 # Accelerate
                 # Find towards closest ship
-                if not self._magnet_mines[mm_id].closest_ship_id or self._game_frame % 4 == 0:
-                    # Find closest ship
-                    closest_distance = None
-                    closest_id = None
-                    for ship_id in self._ships:
-                        distance = utils2d.calculate_point_distance(
-                            (
-                                self._magnet_mines[mm_id].coord_x,
-                                self._magnet_mines[mm_id].coord_y,
-                            ), (
-                                self._ships[ship_id].coord_x,
-                                self._ships[ship_id].coord_y,
-                            ),
-                        )
-                        if closest_distance is None or closest_distance > distance:
-                            closest_distance = distance
-                            closest_id = ship_id
-                    self._magnet_mines[mm_id].closest_ship_id = closest_id
-                    self._magnet_mines[mm_id].distance_to_closest_ship = distance
+                closest_distance = None
+                closest_id = None
+                for ship_id in self._ships:
+                    distance = utils2d.calculate_point_distance(
+                        (
+                            self._magnet_mines[mm_id].coord_x,
+                            self._magnet_mines[mm_id].coord_y,
+                        ), (
+                            self._ships[ship_id].coord_x,
+                            self._ships[ship_id].coord_y,
+                        ),
+                    )
+                    if closest_distance is None or closest_distance > distance:
+                        closest_distance = distance
+                        closest_id = ship_id
+                self._magnet_mines[mm_id].closest_ship_id = closest_id
+                self._magnet_mines[mm_id].distance_to_closest_ship = distance
 
                 # Apply acceleration
                 heading_to_closest = utils2d.calculate_heading_to_point((

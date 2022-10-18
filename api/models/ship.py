@@ -330,6 +330,9 @@ class Ship(BaseModel):
         # Special weapons tubes
         self.special_weapons_tubes_count = None
         self._special_weapon_costs = None
+        self._special_weapons_min_launch_velocity = None
+        self._special_weapons_max_launch_velocity = None
+        self._special_weapons_launch_velocity = None
         self.magnet_mines_loaded = 0
         self.magnet_mine_firing = False
 
@@ -731,6 +734,14 @@ class Ship(BaseModel):
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
 
         instance.special_weapons_tubes_count = constants.SPECIAL_WEAPONS_TUBES_COUNT
+        instance._special_weapons_min_launch_velocity = constants.SPECIAL_WEAPONS_MIN_LAUNCH_VELOCITY
+        instance._special_weapons_max_launch_velocity = constants.SPECIAL_WEAPONS_MAX_LAUNCH_VELOCITY
+        instance._special_weapons_launch_velocity = round(
+            (
+                instance._special_weapons_min_launch_velocity
+                + instance._special_weapons_max_launch_velocity
+            ) / 2
+        )
 
         instance.cargo_ore_mass_capacity_kg = constants.ORE_CAPACITY_KG
         instance.mining_ore_power_usage_per_second = constants.MINING_ORE_POWER_USAGE_PER_SECOND
@@ -1828,7 +1839,16 @@ class Ship(BaseModel):
             return
         self.magnet_mines_loaded += 1
 
-    def cmd_launch_magnet_mine(self):
+    def cmd_launch_magnet_mine(self, launch_velocity: int):
+        _velocity = max(
+            launch_velocity,
+            self._special_weapons_min_launch_velocity,
+        )
+        _velocity = min(
+            _velocity,
+            self._special_weapons_max_launch_velocity,
+        )
         if self.magnet_mines_loaded > 0 and not self.magnet_mine_firing:
             self.magnet_mines_loaded -= 1
             self.magnet_mine_firing = True
+            self._special_weapons_launch_velocity = _velocity
