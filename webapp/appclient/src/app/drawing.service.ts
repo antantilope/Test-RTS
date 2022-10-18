@@ -539,6 +539,7 @@ export class DrawingService {
     ctx: CanvasRenderingContext2D,
     camera: Camera,
     isCameraModeMap: boolean,
+    pneumaticWeaponMsg: string,
   ) {
     let lrcYOffset = camera.canvasHeight - 30
     let lrcYInterval = 40
@@ -595,13 +596,21 @@ export class DrawingService {
       if(this._api.frameData.ship.fuel_level < LOW_FUEL_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
-        lrcYOffset -= lrcYInterval
+        lrcYOffset -= lrcYInterval + 5
       }
       if(this._api.frameData.ship.battery_power < LOW_POWER_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
-        lrcYOffset -= lrcYInterval
+        lrcYOffset -= lrcYInterval + 5
       }
+
+      // Selected Pneumatic Weapon
+      ctx.beginPath()
+      ctx.fillStyle = "#ffffff"
+      ctx.font = 'bold 22px Courier New'
+      ctx.fillText(pneumaticWeaponMsg, lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+
       if (this._api.frameData.ship.engine_lit) {
         ctx.drawImage(
           this.actionTileImgEngineLit,

@@ -426,6 +426,13 @@ export class GamedisplayComponent implements OnInit {
     this.canvas.nativeElement.style.backgroundColor = "#000000" // Black
   }
 
+  private getCurrentTubeWeaponCount() {
+    if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
+      return this._api.frameData.ship.magnet_mines_loaded
+    }
+    return 0
+  }
+
   private paintDisplay(): void {
 
     if (this._api.frameData === null) {
@@ -539,10 +546,12 @@ export class GamedisplayComponent implements OnInit {
     this._draw.drawEbeams(this.ctx, this._camera.gameDisplayCamera, drawableObjects.ebeamRays)
 
     // Corner overlays
+    const tubeWeaponCt = this.getCurrentTubeWeaponCount()
     this._draw.drawBottomLeftOverlay(
       this.ctx,
       this._camera.gameDisplayCamera,
       cameraMode === CAMERA_MODE_MAP,
+      `TUBE: ${tubeWeaponCt > 0 ? tubeWeaponCt : "EMPTY"} ${this.selectedPneumaticWeapon}`
     )
     if(cameraMode !== CAMERA_MODE_MAP) {
       this._draw.drawTopLeftOverlay(this.ctx, cameraMode);
