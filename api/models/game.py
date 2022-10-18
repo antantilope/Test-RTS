@@ -549,6 +549,31 @@ class Game(BaseModel):
                 if ix not in ix_to_remove
             ]
 
+
+    def register_explosion_on_map(
+        self,
+        origin_point: Tuple[int],
+        max_radius_meters: int,
+        flame_ms: int,
+        fade_ms: int,
+        extras={}
+    ):
+        self._explosion_shockwaves.append({
+            "id": str(uuid4()),
+            "origin_point": origin_point,
+            "radius_meters": 1,
+        })
+        self._explosions.append({
+            "id": str(uuid4()),
+            "origin_point": origin_point,
+            "radius_meters": 1,
+            "max_radius_meters": max_radius_meters,
+            "flame_ms": flame_ms,
+            "fade_ms": fade_ms,
+            "elapsed_ms": 10,
+            **extras,
+        })
+
     def reset_and_update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
 
@@ -702,22 +727,29 @@ class Game(BaseModel):
                 "victim_name": self._ships[ship_id].scanner_designator,
             })
         if death_data and death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
-            self._explosion_shockwaves.append({
-                "id": str(uuid4()),
-                "origin_point": self._ships[ship_id].coords,
-                "radius_meters": 1,
-            })
+            # self._explosion_shockwaves.append({
+            #     "id": str(uuid4()),
+            #     "origin_point": self._ships[ship_id].coords,
+            #     "radius_meters": 1,
+            # })
             is_firey = self._ships[ship_id].fuel_level > 6000
-            self._explosions.append({
-                "id": str(uuid4()),
-                "ship_id": ship_id,
-                "origin_point": self._ships[ship_id].coords,
-                "radius_meters": 1,
-                "max_radius_meters": 100 if is_firey else 65,
-                "flame_ms": 3000 if is_firey else 1500,
-                "fade_ms": 6000 if is_firey else 4500,
-                "elapsed_ms": 0,
-            })
+            # self._explosions.append({
+            #     "id": str(uuid4()),
+            #     "ship_id": ship_id,
+            #     "origin_point": self._ships[ship_id].coords,
+            #     "radius_meters": 1,
+            #     "max_radius_meters": 100 if is_firey else 65,
+            #     "flame_ms": 3000 if is_firey else 1500,
+            #     "fade_ms": 6000 if is_firey else 4500,
+            #     "elapsed_ms": 0,
+            # })
+            self.register_explosion_on_map(
+                self._ships[ship_id].coords,
+                100 if is_firey else 65,
+                3000 if is_firey else 1500,
+                6000 if is_firey else 4500,
+                extras={'ship_id': ship_id},
+            )
         if death_data:
             return
 
@@ -733,22 +765,13 @@ class Game(BaseModel):
                     "victim_name": self._ships[ship_id].scanner_designator,
                 })
                 if death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
-                    self._explosion_shockwaves.append({
-                        "id": str(uuid4()),
-                        "origin_point": self._ships[ship_id].coords,
-                        "radius_meters": 1,
-                    })
-                    is_firey = self._ships[ship_id].fuel_level > 6000
-                    self._explosions.append({
-                        "id": str(uuid4()),
-                        "ship_id": ship_id,
-                        "origin_point": self._ships[ship_id].coords,
-                        "radius_meters": 1,
-                        "max_radius_meters": 100 if is_firey else 65,
-                        "flame_ms": 3000 if is_firey else 1500,
-                        "fade_ms": 6000 if is_firey else 4500,
-                        "elapsed_ms": 0,
-                    })
+                    self.register_explosion_on_map(
+                        self._ships[ship_id].coords,
+                        100 if is_firey else 65,
+                        3000 if is_firey else 1500,
+                        6000 if is_firey else 4500,
+                        extras={'ship_id': ship_id},
+                    )
                 return
 
 
@@ -814,41 +837,24 @@ class Game(BaseModel):
                 ):
                     self._magnet_mines[mm_id].exploded = True
                     self._ships[self._magnet_mines[mm_id].closest_ship_id].die(self._game_frame)
-                    self._explosion_shockwaves.append({
-                            "id": str(uuid4()),
-                            "origin_point": self._magnet_mines[mm_id].coords,
-                            "radius_meters": 1,
-                        })
-                    self._explosions.append({
-                        "id": str(uuid4()),
-                        "origin_point": self._magnet_mines[mm_id].coords,
-                        "radius_meters": 1,
-                        "max_radius_meters": 60,
-                        "flame_ms": 1200,
-                        "fade_ms": 2000,
-                        "elapsed_ms": 0,
-                    })
+                    self.register_explosion_on_map(
+                        self._magnet_mines[mm_id].coords,
+                        60,
+                        1200,
+                        2000,
+                    )
                     continue
 
                 # Blow up mine if timer has expired
                 if self._magnet_mines[mm_id].elapsed_milliseconds > (self._magnet_mine_max_seconds_to_detonate * 1000):
                     self._magnet_mines[mm_id].exploded = True
-                    self._explosion_shockwaves.append({
-                            "id": str(uuid4()),
-                            "origin_point": self._magnet_mines[mm_id].coords,
-                            "radius_meters": 1,
-                        })
-                    self._explosions.append({
-                        "id": str(uuid4()),
-                        "origin_point": self._magnet_mines[mm_id].coords,
-                        "radius_meters": 1,
-                        "max_radius_meters": 60,
-                        "flame_ms": 1200,
-                        "fade_ms": 2000,
-                        "elapsed_ms": 0,
-                    })
+                    self.register_explosion_on_map(
+                        self._magnet_mines[mm_id].coords,
+                        60,
+                        1200,
+                        2000,
+                    )
                     continue
-
 
                 # Accelerate
                 # Find towards closest ship
