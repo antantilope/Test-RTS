@@ -216,6 +216,10 @@ export class Ship {
     ebeam_charge_thermal_signature_rate_per_second: number
     ebeam_charge_fire_minimum: number
 
+    special_weapons_tubes_count: number
+    special_weapons_loaded: number
+    magnet_mines_loaded: number
+
     docked_at_station: string
     gravity_brake_position: number
     gravity_brake_deployed_position: number

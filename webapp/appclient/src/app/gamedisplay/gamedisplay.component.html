@@ -99,9 +99,16 @@
                             STOP
                         </button>
                     </div>
-                </div>
-                <div style="margin-left:3px;">
-                    <!-- Engine Sub Column 2 -->
+                    <div>
+                        <button
+                            (click)="btnUnlightEngine()"
+                            class="gd-ctrl-btn"
+                            title="Stop Engine"
+                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || !_api.frameData.ship.engine_lit"
+                        >
+                            IDLE
+                        </button>
+                    </div>
                     <div>
                         <button
                             (click)="btnLightEngine()"
@@ -122,20 +129,9 @@
                             BOOST
                         </button>
                     </div>
-                    <div>
-                        <button
-                            (click)="btnUnlightEngine()"
-                            class="gd-ctrl-btn"
-                            title="Stop Engine"
-                            [disabled]="!_api.frameData.ship.alive || !_api.frameData.ship.engine_online || !_api.frameData.ship.engine_lit"
-                        >
-                            IDLE
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
-
         <div class=command-bar-column>
             <div
                 class="command-bar-column-header"
@@ -275,6 +271,38 @@
                             (click)="btnClickFireEBeam()"
                         >
                             FIRE
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class=command-bar-column>
+            <div
+                class="command-bar-column-header"
+            >
+                PNEUMATIC
+                <br>TUBE
+            </div>
+            <div style="display:flex;">
+                <div>
+                    <!-- Energy Beam Sub Column 1 -->
+                    <div>
+                        <button
+                            class="gd-ctrl-btn"
+                            style="min-width:80px;"
+                            [disabled]="!_api.frameData.ship.alive"
+                            [ngStyle]="{'color': (_api.frameData.ship.ebeam_charging) ? '#00ff00' : '#000000'}"
+                        >
+                            CYCLE
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            class="gd-ctrl-btn-orange"
+                            style="min-width:80px;"
+                            [disabled]="!_api.frameData.ship.alive"
+                        >
+                            LAUNCH
                         </button>
                     </div>
                 </div>

@@ -41,4 +41,11 @@ export class StationpaneComponent implements OnInit {
     )
   }
 
+  public async btnClickBuyMagnetMine() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'buy_magnet_mine'},
+    )
+  }
+
 }
