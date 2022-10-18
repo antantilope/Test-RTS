@@ -784,6 +784,8 @@ class Game(BaseModel):
             # Spawn a new magnet mine.
             self._ships[ship_id].magnet_mine_firing = False
             mine = MagnetMine(self._game_frame, ship_id)
+            # ship._special_weapons_launch_velocity is set when processing
+            # ship commands in run_frame()
             extra_x, extra_y = utils2d.calculate_x_y_components(
                 self._ships[ship_id]._special_weapons_launch_velocity,
                 self._ships[ship_id].heading,
