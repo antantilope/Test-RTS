@@ -5,17 +5,21 @@ On patrol, run across unknown signature of loitering ship.
 stop and and observe
 
 Graybit's ship arives. they transmit coordinates to unknown ship.
-Coorinates are for a mining facility.
+Coordinates are encrypted. You see Graybit's ship then transfer
+a gigantic bomb.
 
 you are noticed. fight to the death. ship is fully upgraded with
-ews, solar panel. emps, and granades, and magnet mines.
+ews, solar panel, extra pneumatic tubes for emps, and granades, and magnetically
+drawn directional blast charges. MDDBC.
+
 
 
 Chapter One
 
-Boss is thretening you if you mess up paint job.
+You work for the Millenium Mining & Manufacturing Conglomerate.
+Manager is thretening you if you mess up paint job.
 You have negative money.
-Fly to station is pick up container.
+Fly to Light's End Ore Deposit, owned by 3M to pick up a container.
 depart station and spring a power leak. Going to die.
 stop and place distress becon.
 maruader arrives. About to destroy you.
@@ -48,13 +52,16 @@ Too fast. dropped into retro grade. slow down and catch gravity brake.
 
 come under attack and fight them off. autopilot creates a streaming channel
 and uses it to fund raise. puchase a remote reinforcements and destroy the mercinaries.
-and launch you to space station.and say there's a nearby derrelict that appears
-safe to investigate.
+You then depart for a station for refueling.
 
-You land and receive a message from Graybit. It says it will pay you to destroy
-a target. message includes coordintes that match the mine
+While fast traveling you receive a message from Graybit.
+It says it will pay you to travel to The Light's End Ore Deposit
+and meet with a delegation from Earth.
 
-You fly to investigate. look at patrol ship and match coordinates from ship log.
+You arrive at the station and find a derelict ship. fly to investigate.
+It's the The patrol ship from the prolog. You pull the ship's log
+The autopilot decryptes the coordinates and reveales the secret resnesvous
+from the prolog. The decrypted coordinates also point to Light's End Ore Deposit.
 
 
 Chapter Three
@@ -67,7 +74,7 @@ they agree it's a trap and send a 3 wings with flank the resnesvous point.
 
 flank alien ship and get into fight.
 
-Destroy it and. towards the end the wing turns on you.
+Destroy it and. towards the end the wing turns on you. You jump out and escape.
 
 
 Chapter Four
@@ -86,4 +93,5 @@ Another patole ship arrives and find's you'r derrelict.
 investigates. Approaches then without warning a fast arming
 directional mine locks and explodes. Cuts to black.
 
+VOIDSTAR
 
