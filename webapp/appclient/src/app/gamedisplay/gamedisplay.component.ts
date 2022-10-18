@@ -433,6 +433,12 @@ export class GamedisplayComponent implements OnInit {
     return 0
   }
 
+  public getHumanReadableCurrentTubeWeapon() {
+    return this.selectedPneumaticWeapon.replace(/\_/g, " ").toLowerCase().split(' ').map((word: string)=>{
+      return (word.charAt(0).toUpperCase() + word.slice(1));
+    }).join(' ');
+  }
+
   private paintDisplay(): void {
 
     if (this._api.frameData === null) {
@@ -551,7 +557,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx,
       this._camera.gameDisplayCamera,
       cameraMode === CAMERA_MODE_MAP,
-      `TUBE: ${tubeWeaponCt > 0 ? tubeWeaponCt : "EMPTY"} ${this.selectedPneumaticWeapon}`
+      `TUBE: ${tubeWeaponCt > 0 ? tubeWeaponCt : "EMPTY"} ${this.getHumanReadableCurrentTubeWeapon()}`
     )
     if(cameraMode !== CAMERA_MODE_MAP) {
       this._draw.drawTopLeftOverlay(this.ctx, cameraMode);
