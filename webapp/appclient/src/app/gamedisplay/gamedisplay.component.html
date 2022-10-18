@@ -285,13 +285,12 @@
             </div>
             <div style="display:flex;">
                 <div>
-                    <!-- Energy Beam Sub Column 1 -->
                     <div>
                         <button
                             class="gd-ctrl-btn"
                             style="min-width:80px;"
                             [disabled]="!_api.frameData.ship.alive"
-                            [ngStyle]="{'color': (_api.frameData.ship.ebeam_charging) ? '#00ff00' : '#000000'}"
+                            (click)="btnClickCyclePneumaticTube()"
                         >
                             CYCLE
                         </button>
@@ -301,9 +300,14 @@
                             class="gd-ctrl-btn-orange"
                             style="min-width:80px;"
                             [disabled]="!_api.frameData.ship.alive"
+                            (click)="btnClickFirePneumaticTube()"
                         >
                             LAUNCH
                         </button>
+                    </div>
+                    <div id="tube-launch-velocity-container">
+                        <span><strong>Launch<br>Speed</strong> {{ lauchVelocity }}M/S</span><br>
+                        <input [(ngModel)]="lauchVelocity" type="range" min="5" max="120">
                     </div>
                 </div>
             </div>

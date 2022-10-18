@@ -20,7 +20,12 @@ import { PointCoord } from '../models/point-coord.model'
 import { DrawingService } from '../drawing.service'
 import { SoundService } from '../sound.service'
 import { ScannerService } from '../scanner.service'
-import { TWO_PI, FEATURE_ORE, FEATURE_STATION } from '../constants'
+import {
+  TWO_PI,
+  FEATURE_ORE,
+  FEATURE_STATION,
+  MAGNET_MINE_SLUG
+} from '../constants'
 
 const CAMERA_MODE_SHIP = "ship"
 const CAMERA_MODE_VISION = "vision"
@@ -37,6 +42,8 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
   @ViewChild("sidebarElement") sidebarElement: ElementRef
+
+  public lauchVelocity: number = 65;
 
 
   private ctx: CanvasRenderingContext2D | null = null
@@ -74,6 +81,11 @@ export class GamedisplayComponent implements OnInit {
 
   public wayPoint: PointCoord | null = null
   public wayPointUUID: string | null = null
+
+  public selectedPneumaticWeapon = MAGNET_MINE_SLUG
+  private allPneumaticWeapons = [
+    MAGNET_MINE_SLUG,
+  ]
 
   constructor(
     public _api: ApiService,
@@ -214,8 +226,8 @@ export class GamedisplayComponent implements OnInit {
     // Zoom camera
     window.addEventListener('wheel', event => {
       const zoomIn = event.deltaY < 0
-      if(this._pane.mouseInPane() && this._api.frameData.ship.scanner_online) {
-        if(this._pane.mouseInScannerPane()) {
+      if(this._pane.mouseInPane()) {
+        if(this._pane.mouseInScannerPane() && this._api.frameData.ship.scanner_online) {
           this._camera.scannerPaneCamera.adjustZoom(zoomIn)
         }
         return
@@ -923,6 +935,26 @@ export class GamedisplayComponent implements OnInit {
         {command:'fire_ebeam'},
       )
       this._sound.playPrimaryButtonClickSound()
+    }
+  }
+
+  btnClickCyclePneumaticTube() {
+    const totalCount = this.allPneumaticWeapons.length
+    const currentIndex = this.allPneumaticWeapons.indexOf(this.selectedPneumaticWeapon)
+    if(currentIndex == (totalCount - 1)) {
+      this.selectedPneumaticWeapon = this.allPneumaticWeapons[0]
+    } else {
+      this.selectedPneumaticWeapon = this.allPneumaticWeapons[currentIndex + 1]
+    }
+    console.log("selected " + this.selectedPneumaticWeapon)
+  }
+
+  btnClickFirePneumaticTube() {
+    if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
+      this._api.post(
+        "/api/rooms/command",
+        {command:'launch_magnet_mine', launchVelocity: this.lauchVelocity,},
+      )
     }
   }
 
