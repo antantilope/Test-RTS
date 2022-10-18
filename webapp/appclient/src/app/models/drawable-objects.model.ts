@@ -23,7 +23,7 @@ export class DrawableShip {
     engineBoosted: boolean
     fillColor: string
     aflame: boolean
-    explosionFrame: number | null
+    exploded: boolean
     gravityBrakePosition: number
     gravityBrakeDeployedPosition: number
     gravityBrakeActive: boolean

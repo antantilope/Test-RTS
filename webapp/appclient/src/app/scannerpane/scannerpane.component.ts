@@ -13,6 +13,7 @@ import {
 import { TimerItem } from "../models/timer-item.model"
 import { ScannerDataElement } from '../models/apidata.model';
 import { DrawableCanvasItems } from '../models/drawable-objects.model'
+import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -226,6 +227,11 @@ export class ScannerpaneComponent implements OnInit {
         drawBoundingBox,
       )
     }
+
+    // Explosion FX
+    this._draw.drawExplosionShockwaves(this.ctx, this._camera.scannerPaneCamera)
+    this._draw.drawExplosions(this.ctx, this._camera.scannerPaneCamera)
+
     // E-Beams
     this._draw.drawEbeams(this.ctx, this._camera.scannerPaneCamera, drawableObjects.ebeamRays)
 

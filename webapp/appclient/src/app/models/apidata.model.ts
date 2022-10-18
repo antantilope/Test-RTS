@@ -21,6 +21,16 @@ export class ExplosionShockWave {
     radius_meters: number
 }
 
+export class Explosion {
+    id: string
+    origin_point: number[]
+    radius_meters: number
+    max_radius_meters: number
+    flame_ms: number
+    fade_ms: number
+    elapsed_ms: number
+}
+
 export class KillFeedElement {
     created_at_frame: number
     victim_name: string
@@ -114,7 +124,7 @@ export class ScannerDataElement {
     visual_ebeam_color: string
     visual_ebeam_firing: boolean
     aflame: boolean
-    explosion_frame: number | null
+    exploded: boolean
     distance: number
     relative_heading: number
     target_heading: number
@@ -226,7 +236,7 @@ export class Ship {
     alive: boolean
     died_on_frame: number | null
     aflame: boolean
-    explosion_frame: number | null
+    exploded: boolean
 
     visual_range: number
 
@@ -249,6 +259,7 @@ export class FrameData {
     space_stations: SpaceStation[]
     ore_mines: OreMine[]
     explosion_shockwaves: ExplosionShockWave[]
+    explosions: Explosion[]
     killfeed: KillFeedElement[]
     ship: Ship
 }

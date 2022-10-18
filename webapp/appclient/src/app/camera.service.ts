@@ -371,7 +371,7 @@ export class Camera {
       fillColor: "#919191",
       shipId: ship.id,
       aflame: ship.aflame,
-      explosionFrame: ship.explosion_frame,
+      exploded: ship.exploded,
       gravityBrakePosition: ship.gravity_brake_position,
       gravityBrakeDeployedPosition: ship.gravity_brake_deployed_position,
       gravityBrakeActive: ship.gravity_brake_active,
@@ -442,7 +442,7 @@ export class Camera {
           isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx ,
           alive: scannerData.alive,
           aflame: scannerData.aflame,
-          explosionFrame: scannerData.explosion_frame,
+          exploded: scannerData.exploded,
           shipId: scannerData.id,
           canvasCoordCenter: this.mapCoordToCanvasCoord({
             x: scannerData.coord_x,

@@ -25,7 +25,7 @@ import {
   LOW_FUEL_THRESHOLD,
   LOW_POWER_THRESHOLD
 } from './constants';
-import { OreMine, SpaceStation } from './models/apidata.model';
+import { Explosion, OreMine, SpaceStation } from './models/apidata.model';
 
 
 
@@ -35,6 +35,10 @@ const randomInt = function (min: number, max: number): number  {
 
 function getRandomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
+}
+
+function nthRoot(x, root) {
+  return Math.pow(x, 1 / root)
 }
 
 @Injectable({
@@ -759,34 +763,40 @@ export class DrawingService {
     }
   }
 
-  private drawExplosionFrameEffect(
-    ctx: CanvasRenderingContext2D,
-    camera: Camera,
-    canvasCoord: PointCoord,
-    explosionFrame: number,
-    maxFireBallRadiusCanvasPx: number,
-  ) {
-    if(explosionFrame < 8) {
-      let fbSize = (explosionFrame / 7) * maxFireBallRadiusCanvasPx
-      ctx.beginPath()
-      ctx.fillStyle = 'rgb(255, 0, 0, 1)'
-      ctx.arc(
-        canvasCoord.x + randomInt(-3, 3),
-        canvasCoord.y + randomInt(-3, 3),
-        fbSize,
-        0,
-        TWO_PI,
+  public drawExplosions(ctx: CanvasRenderingContext2D, camera: Camera) {
+    for(let i in this._api.frameData.explosions) {
+      this.drawExplosion(
+        ctx,
+        camera,
+        this._api.frameData.explosions[i],
       )
-      ctx.fill()
-    } else if (explosionFrame < 76) {
-      // Main fireball
-      let fbSize = maxFireBallRadiusCanvasPx * (randomInt(5, 8) / 7)
+    }
+  }
+
+  private drawExplosion(ctx: CanvasRenderingContext2D, camera: Camera, ex: Explosion) {
+    const ppm = this._api.frameData.map_config.units_per_meter
+    const zoom = camera.getZoom()
+    const cameraPosition = camera.getPosition()
+    let radiusMeters: number, radiusPx: number
+    const canvasCoord = camera.mapCoordToCanvasCoord(
+      {x:ex.origin_point[0], y:ex.origin_point[1]},
+      cameraPosition,
+    )
+    const maxFireBallRadiusCanvasPx = ex.max_radius_meters * ppm / zoom
+    if(ex.elapsed_ms < ex.flame_ms) {
+      // radiusMeters = Math.max(1, (((ex.elapsed_ms - ex.flame_ms) / ex.flame_ms) * ex.max_radius_meters) + randomInt(-2, 2))
+      const percentCompleteTime = ex.elapsed_ms / ex.flame_ms
+      const percentCompleteFlameRadius = nthRoot(percentCompleteTime, 2) // x=y^2
+      radiusMeters = Math.max(1, percentCompleteFlameRadius * ex.max_radius_meters + randomInt(-2, 2))
+      radiusPx = radiusMeters * ppm / zoom
+
+      // Primary fireball
       ctx.beginPath()
-      ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(5, 9)})`
+      ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(4, 8)})`
       ctx.arc(
         canvasCoord.x + randomInt(-3, 3),
         canvasCoord.y + randomInt(-3, 3),
-        fbSize,
+        radiusPx,
         0,
         TWO_PI,
       )
@@ -794,20 +804,21 @@ export class DrawingService {
       // Inner sub fireballs
       const subFireBallsCount = randomInt(2, 4)
       for(let i=0; i<subFireBallsCount; i++) {
-        let subFBSize = Math.floor(fbSize / randomInt(2, 4))
+        let subFBSizePx = Math.floor(radiusMeters / getRandomFloat(2, 4)) * ppm / zoom
         ctx.beginPath()
-        ctx.fillStyle = `rgb(255, ${randomInt(20, 65)}, 0, 0.${randomInt(7, 9)})`
+        ctx.fillStyle = `rgb(255, ${randomInt(50, 200)}, 0, 0.${randomInt(3, 6)})`
         ctx.arc(
-          canvasCoord.x + randomInt(-8, 8),
-          canvasCoord.y + randomInt(-8, 8),
-          subFBSize,
+          canvasCoord.x + randomInt(-4, 4),
+          canvasCoord.y + randomInt(-4, 4),
+          subFBSizePx,
           0,
           TWO_PI,
         )
         ctx.fill()
       }
-      // Deris Lines
+      // Debris lines
       const debrisLineCount = randomInt(-6, 6)
+      ctx.beginPath()
       ctx.lineWidth = 2
       for(let i=0; i<debrisLineCount; i++) {
         let lineLength = maxFireBallRadiusCanvasPx * randomInt(1, 6)
@@ -828,15 +839,22 @@ export class DrawingService {
         ctx.lineTo(linep2.x, linep2.y)
         ctx.stroke()
       }
-    } else {
-      let smokePuffSize = maxFireBallRadiusCanvasPx * 0.9 + (explosionFrame * 1.5);
-      let alpha = (1 - ((explosionFrame - 76) / 75)) / 3.75
+    }
+    else if(ex.elapsed_ms < (ex.flame_ms + ex.fade_ms)) {
+      // Fadeout smoke puff
+      const elapsedFade = ex.elapsed_ms - ex.flame_ms
+      const fadePercent = elapsedFade / ex.fade_ms
+      const startRadius = ex.max_radius_meters
+      const endRadius = ex.max_radius_meters * 1.4
+      radiusMeters = startRadius + (endRadius - startRadius) * fadePercent
+      const fadeRadiusPx = radiusMeters * ppm / zoom
+      const alpha = 0.4 - (0.4 * fadePercent)
       ctx.beginPath()
       ctx.fillStyle = `rgb(255, 0, 0, ${alpha})`
       ctx.arc(
         canvasCoord.x,
         canvasCoord.y,
-        Math.round(smokePuffSize),
+        Math.round(fadeRadiusPx),
         0,
         TWO_PI,
       )
@@ -914,6 +932,10 @@ export class DrawingService {
     drawBoundingBox: boolean,
   ) {
 
+    if(drawableShip.exploded){
+      return
+    }
+
     if (drawableShip.isDot) {
       ctx.beginPath()
       ctx.fillStyle = "rgb(0, 255, 0, 0.9)"
@@ -984,7 +1006,9 @@ export class DrawingService {
         ctx.fill()
       }
     }
-    if(!drawableShip.explosionFrame){
+
+    // TODO: remove this if block
+    if(!drawableShip.exploded){
       // Visual Shake x/y offsets
       let vsxo = 0, vsyo = 0;
       if(
@@ -1128,28 +1152,8 @@ export class DrawingService {
         flameRadiusCanvasPx,
       )
     }
-    if(drawableShip.explosionFrame && drawableShip.explosionFrame < 150) {
-      /* Explosion schedule
-        frame 1-6 fireball growth
-        frame 7-75 pulsating fireball
-        frame 76-150 fading smoke puff
-      */
-      let maxFireBallRadius = Math.round(
-        Math.sqrt(
-          (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
-          + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
-        ) * 10
-      )
-      this.drawExplosionFrameEffect(
-        ctx,
-        camera,
-        drawableShip.canvasCoordCenter,
-        drawableShip.explosionFrame,
-        maxFireBallRadius,
-      )
-    }
 
-    if(drawBoundingBox && drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
+    if(drawBoundingBox && drawableShip.canvasBoundingBox && !drawableShip.exploded) {
       const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
       const shipIsLockedOrLocking = drawableShip.shipId === this._api.frameData.ship.scanner_lock_target && (
         this._api.frameData.ship.scanner_locked || this._api.frameData.ship.scanner_locking

@@ -103,6 +103,9 @@ class ShipCommands:
     CANCEL_CORE_UPGRADE = "cancel_core_upgrade"
     CANCEL_SHIP_UPGRADE = "cancel_ship_upgrade"
 
+    BUY_MAGNET_MINE = "buy_magnet_mine"
+    LAUNCH_MAGNET_MINE = "launch_magnet_mine"
+
 class ShipStateKey:
     MASS = 'mass'
 
@@ -139,7 +142,7 @@ class ScannedElement(TypedDict):
     distance: int
     alive: bool
     aflame: bool
-    explosion_frame: Union[None, int]
+    exploded: bool
 
     in_visual_range: bool
     visual_p0: Tuple[int]
@@ -324,6 +327,12 @@ class Ship(BaseModel):
         self.ebeam_color = None
         self.ebeam_last_hit_frame = None
 
+        # Special weapons tubes
+        self.special_weapons_tubes_count = None
+        self._special_weapon_costs = None
+        self.magnet_mines_loaded = 0
+        self.magnet_mine_firing = False
+
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
         self.autopilot_waypoint_type = None
@@ -333,8 +342,8 @@ class Ship(BaseModel):
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 1)
         self.explode_immediately = random.randint(0, 5) == 1
-        self.explosion_frame = None
-        self.explosion_point = None
+        self.exploded = False
+        self._removed_from_map = False
         self._seconds_to_explode = random.randint(2, 5)
 
         # Space station interactions
@@ -489,6 +498,9 @@ class Ship(BaseModel):
     def gravity_brake_deployed(self) -> bool:
         return self.gravity_brake_position == self.gravity_brake_deployed_position
 
+    @property
+    def special_weapons_loaded(self):
+        return self.magnet_mines_loaded
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
@@ -563,6 +575,10 @@ class Ship(BaseModel):
             'ebeam_charge_thermal_signature_rate_per_second': self.ebeam_charge_thermal_signature_rate_per_second,
             'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
 
+            'special_weapons_tubes_count': self.special_weapons_tubes_count,
+            'special_weapons_loaded': self.special_weapons_loaded,
+            'magnet_mines_loaded': self.magnet_mines_loaded,
+
             'docked_at_station': self.docked_at_station,
             'scouted_station_gravity_brake_catches_last_frame': self.scouted_station_gravity_brake_catches_last_frame,
             'gravity_brake_position': self.gravity_brake_position,
@@ -583,7 +599,7 @@ class Ship(BaseModel):
             'alive': self.died_on_frame is None,
             'died_on_frame': self.died_on_frame,
             'aflame': self.aflame_since_frame is not None,
-            'explosion_frame': self.explosion_frame,
+            'exploded': self.exploded,
 
             'visual_range': self.visual_range,
 
@@ -593,7 +609,7 @@ class Ship(BaseModel):
         }
 
     @classmethod
-    def spawn(cls, team_id: str, map_units_per_meter: int = 1) -> "Ship":
+    def spawn(cls, team_id: str, special_weapon_costs: Dict[str, int], map_units_per_meter: int = 1) -> "Ship":
         """ Create new unpositioned ship with defaults
         """
         instance = cls()
@@ -602,6 +618,7 @@ class Ship(BaseModel):
         instance.team_id = team_id
 
         instance._upgrades = get_upgrade_profile_1()
+        instance._special_weapon_costs = special_weapon_costs
         instance._upgrade_summary[UpgradeType.CORE] = {}
         for cu in instance._upgrades[UpgradeType.CORE]:
             instance._upgrade_summary[UpgradeType.CORE][cu.slug] = {
@@ -712,6 +729,8 @@ class Ship(BaseModel):
         instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
+
+        instance.special_weapons_tubes_count = constants.SPECIAL_WEAPONS_TUBES_COUNT
 
         instance.cargo_ore_mass_capacity_kg = constants.ORE_CAPACITY_KG
         instance.mining_ore_power_usage_per_second = constants.MINING_ORE_POWER_USAGE_PER_SECOND
@@ -1124,12 +1143,8 @@ class Ship(BaseModel):
         if self.died_on_frame is None:
             return
 
-        elif self.explosion_frame:
-            if self.explosion_frame < 200:
-                # Ship is exploding, advance explosion frame
-                self.explosion_frame += 1
-                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
-            return ShipDeathType.ADRIFT, game_frame - self.died_on_frame
+        elif self.exploded:
+            return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
 
         elif self.explode_immediately:
             self.explode()
@@ -1151,8 +1166,7 @@ class Ship(BaseModel):
             return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
     def explode(self):
-        self.explosion_frame = 1
-        self.explosion_point = self.coords
+        self.exploded = True
         self.aflame_since_frame = None
         self.velocity_x_meters_per_second = 0
         self.velocity_y_meters_per_second = 0
@@ -1447,6 +1461,10 @@ class Ship(BaseModel):
         elif command == ShipCommands.CANCEL_SHIP_UPGRADE:
             self.cmd_cancel_ship_upgrade(args[0])
 
+        elif command == ShipCommands.BUY_MAGNET_MINE:
+            self.cmd_buy_magnet_mine()
+        elif command == ShipCommands.LAUNCH_MAGNET_MINE:
+            self.cmd_launch_magnet_mine()
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -1797,3 +1815,20 @@ class Ship(BaseModel):
         self._upgrade_summary[utype][
                 self._upgrades[utype][upgrade_ix].slug
             ]['seconds_researched'] = None
+
+    def cmd_buy_magnet_mine(self):
+        if self.special_weapons_loaded >= self.special_weapons_tubes_count:
+            return
+        if not self.docked_at_station:
+            return
+        ore_cost = self._special_weapon_costs[constants.MAGNET_MINE_SLUG]
+        try:
+            self.withdraw_ore(ore_cost)
+        except InsufficientOreError:
+            return
+        self.magnet_mines_loaded += 1
+
+    def cmd_launch_magnet_mine(self):
+        if self.magnet_mines_loaded > 0 and not self.magnet_mine_firing:
+            self.magnet_mines_loaded -= 1
+            self.magnet_mine_firing = True

@@ -21,7 +21,7 @@ from .utils import (
 class TestShipBasicMethods(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
 
     def test_to_dict_method_returns_a_dict(self):
         assert isinstance(self.ship.to_dict(), dict)
@@ -46,7 +46,7 @@ class TestShipBasicMethods(TestCase):
 class TestShipAdjustResources(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
 
     def test_engine_start_process_uses_power(self):
         ''' ENGINE ACTIVATE '''
@@ -857,7 +857,7 @@ class TestShipCMDCalculatePhysics(TestCase):
     def setUp(self):
         self.map_units_per_meter = 10
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=self.map_units_per_meter)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=self.map_units_per_meter)
 
         # Set values that are used in physics calculations.
         self.ship.engine_newtons = 1100
@@ -2151,7 +2151,7 @@ class TestShipCMDSetHeading(TestCase):
 
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
 
     def _assert_ship_heading_0(self):
         assert self.ship.heading == constants.DEGREES_NORTH
@@ -2262,7 +2262,7 @@ class TestShipCMDSetHeading(TestCase):
 class TestShipCMDActivateDeactivateLightEngine(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
 
     def test_activate_engine_command_updates_ship_state(self):
         assert self.ship.engine_startup_power_used is None
@@ -2300,7 +2300,7 @@ class TestShipCMDActivateDeactivateLightEngine(TestCase):
 class TestShipCMDTradeOreForOreCoin(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
         self.ship.last_ore_deposit_frame = None
         self.ship.virtual_ore_kg = 0
         self.ship.cargo_ore_mass_kg = 0
@@ -2327,7 +2327,7 @@ class TestShipCMDTradeOreForOreCoin(TestCase):
 class TestShipAdvanceDamageProperties(TestCase):
     def setUp(self) -> None:
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
         self.ship._seconds_to_explode = 2
         self.ship._seconds_to_aflame = 2
         self.ship.explode_immediately = False
@@ -2340,8 +2340,7 @@ class TestShipAdvanceDamageProperties(TestCase):
             self.ship.advance_damage_properties(i+1, 100, 100, 1)
         assert self.ship.died_on_frame is None
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_frame is None
-        assert self.ship.explosion_point is None
+        assert self.ship.exploded is False
 
     def test_an_dead_ship_catches_fire_and_explodes(self):
         self.ship.died_on_frame = 1
@@ -2349,54 +2348,50 @@ class TestShipAdvanceDamageProperties(TestCase):
         self.ship.advance_damage_properties(1, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_frame is None
+        assert self.ship.exploded is False
         self.ship.advance_damage_properties(2, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_frame is None
+        assert self.ship.exploded is False
         self.ship.advance_damage_properties(3, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_frame is None
+        assert self.ship.exploded is False
 
         self.ship.advance_damage_properties(4, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4 # Catch fire
-        assert self.ship.explosion_frame is None
+        assert self.ship.exploded is False
         self.ship.advance_damage_properties(5, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4
-        assert self.ship.explosion_frame is None
+        assert self.ship.exploded is False
         self.ship.advance_damage_properties(6, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame == 4
-        assert self.ship.explosion_frame is None
-        assert self.ship.explosion_point is None
+        assert self.ship.exploded is False
 
         self.ship.advance_damage_properties(7, 100, 100, fps) # Boom
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_frame == 1
-        assert self.ship.explosion_point == (25, 30,)
+        assert self.ship.exploded is True
         self.ship.advance_damage_properties(8, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_frame == 2
+        assert self.ship.exploded is True
         self.ship.advance_damage_properties(9, 100, 100, fps)
         assert self.ship.died_on_frame == 1
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_frame == 3
+        assert self.ship.exploded is True
 
     def test_dead_ship_can_explode_immediatly(self):
         self.ship.explode_immediately = True
         self.ship.died_on_frame = 1
         fps = 1
-        assert self.ship.explosion_frame is None
-        assert self.ship.explosion_point is None
+        assert self.ship.exploded is False
         self.ship.advance_damage_properties(1, 100, 100, fps)
-        assert self.ship.explosion_frame == 1 # Boom
+        assert self.ship.exploded is True # boom
         assert self.ship.aflame_since_frame is None
-        assert self.ship.explosion_point == (25, 30,)
 
 
 """ Ship Thermal Signature
@@ -2405,7 +2400,7 @@ class TestShipAdvanceDamageProperties(TestCase):
 class TestShipThermalSignature(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
         self.ship.coord_x = 25
         self.ship.coord_y = 30
 
@@ -2479,7 +2474,7 @@ class TestShipThermalSignature(TestCase):
 class TestShipAutopilot(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
         self.ship.coord_x = 25
         self.ship.coord_y = 30
 
@@ -2554,7 +2549,7 @@ class TestShipAutopilot(TestCase):
 class TestShipAdjustGravityBrake(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
         self.ship.gravity_brake_position = 0
         self.ship.gravity_brake_deployed_position = 100
         self.ship.gravity_brake_traversal_per_second = 40
@@ -2597,7 +2592,7 @@ class TestShipAdjustGravityBrake(TestCase):
 class TestShipUpgrades(TestCase):
     def setUp(self):
         team_id = str(uuid4())
-        self.ship = Ship.spawn(team_id, map_units_per_meter=10)
+        self.ship = Ship.spawn(team_id, {}, map_units_per_meter=10)
         self.ship.battery_power = 1_000_000
         self.ship.virtual_ore_kg = 1_000
         self.ship.cargo_ore_mass_kg = 0

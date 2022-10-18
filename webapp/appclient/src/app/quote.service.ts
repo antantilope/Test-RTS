@@ -171,9 +171,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "A human's usefulness depends upon their",
-        "participation in space war,",
-        "insofar as they can.",
+        "A human's usefulness depends upon",
+        "this participation in space war,",
+        "insofar as they can be forced.",
       ],
       author: this.presidentName,
     },

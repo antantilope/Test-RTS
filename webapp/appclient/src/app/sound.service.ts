@@ -384,7 +384,7 @@ export class SoundService {
        - ship rattle
        - fasten seatbelt sign
     */
-    if(ship.explosion_frame && !this.playedSelfExplosionSound) {
+    if(ship.exploded && !this.playedSelfExplosionSound) {
       this.playedSelfExplosionSound = true
       this.explosionSound.play()
     }
@@ -423,11 +423,11 @@ export class SoundService {
       }
     }
 
-    if (!this.copilotDeathSoundPlaying && !ship.alive && !ship.explosion_frame) {
+    if (!this.copilotDeathSoundPlaying && !ship.alive && !ship.exploded) {
       this.copilotDeathSoundPlaying = true
       this.copilotDeathSound.play()
     }
-    else if (this.copilotDeathSoundPlaying && ship.explosion_frame) {
+    else if (this.copilotDeathSoundPlaying && ship.exploded) {
       this.copilotDeathSound.pause()
     }
 
