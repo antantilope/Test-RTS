@@ -126,8 +126,9 @@ class VisibleElementShapeType:
 
 class ScannedElementType:
     SHIP = 'ship'
+    MAGNET_MINE = constants.MAGNET_MINE_SLUG
 
-class ScannedElement(TypedDict):
+class ScannedShipElement(TypedDict):
     id: str
     designator: str
     element_type: str
@@ -166,6 +167,16 @@ class ScannedElement(TypedDict):
     visual_gravity_brake_active: bool
     visual_mining_ore_location: Union[None, str]
     visual_fueling_at_station: bool
+
+class ScannedMagnetMineElement(TypedDict):
+    id: str
+    velocity_x_meters_per_second: float
+    velocity_y_meters_per_second: float
+    coord_x: int
+    coord_y: int
+    distance: int
+    exploded: bool
+    target_heading: float # Float describing beaing to element
 
 class TimerItem(TypedDict):
     name: str
@@ -302,7 +313,7 @@ class Ship(BaseModel):
         self.scanner_lock_target = None
         self.scanner_get_lock_power_requirement_total = None
         self.scanner_get_lock_power_requirement_per_second = None
-        self.scanner_data: Dict[str, ScannedElement] = OrderedDict()
+        self.scanner_data: Dict[str, ScannedShipElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None

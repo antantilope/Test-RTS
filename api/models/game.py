@@ -19,7 +19,7 @@ from .ship import (
     ShipCommands,
     ShipDeathType,
     ShipScannerMode,
-    ScannedElement,
+    ScannedShipElement,
     ScannedElementType,
     VisibleElementShapeType,
     MapMiningLocationDetails,
@@ -582,6 +582,7 @@ class Game(BaseModel):
         scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
         visual_range = self._ships[ship_id].visual_range
 
+        # Add ships to scanner data
         for other_id in (v for v in self._ships if v != ship_id):
 
             if self._ships[other_id]._removed_from_map:
@@ -622,7 +623,7 @@ class Game(BaseModel):
 
             if is_visual or is_scannable:
                 exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
-                scanner_data: ScannedElement = {
+                scanner_data: ScannedShipElement = {
                     'id': other_id,
                     'designator': self._ships[other_id].scanner_designator,
                     'anti_radar_coating_level': self._ships[other_id].anti_radar_coating_level,
@@ -666,6 +667,10 @@ class Game(BaseModel):
                 }
 
                 self._ships[ship_id].scanner_data[other_id] = scanner_data
+
+        # Add magnet mines to scanner data
+        for mm_id in self._magnet_mines:
+            pass
 
         # Check if scanner target has gone out of range
         if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:

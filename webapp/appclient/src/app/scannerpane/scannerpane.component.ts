@@ -11,7 +11,7 @@ import {
   TIMER_SLUG_SCANNER_LOCKING,
 } from "../constants"
 import { TimerItem } from "../models/timer-item.model"
-import { ScannerDataElement } from '../models/apidata.model';
+import { ScannerDataShipElement } from '../models/apidata.model';
 import { DrawableCanvasItems } from '../models/drawable-objects.model'
 import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
@@ -173,7 +173,7 @@ export class ScannerpaneComponent implements OnInit {
       this._scanner.scannertTargetIndex = 0
     }
 
-    let target: ScannerDataElement
+    let target: ScannerDataShipElement
 
     // Draw scene of selected target
     let drawableObjects: DrawableCanvasItems
@@ -309,7 +309,7 @@ export class ScannerpaneComponent implements OnInit {
 
     this.ctx.beginPath()
     this.ctx.font = 'italic 20px Courier New'
-    let target: ScannerDataElement
+    let target: ScannerDataShipElement
     if(anyTargets) {
       target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
       this.ctx.fillText(
@@ -359,7 +359,7 @@ export class ScannerpaneComponent implements OnInit {
     yOffset += yInterval
   }
 
-  private getIsVisualOnlyWarning(target: ScannerDataElement):boolean {
+  private getIsVisualOnlyWarning(target: ScannerDataShipElement):boolean {
     // Returns true if ship is only scannable because
     // it's within visual range
     const mode = this._api.frameData.ship.scanner_mode

@@ -98,7 +98,7 @@ export class UpgradeSummary {
     core: CoreUpgradeMap
 }
 
-export class ScannerDataElement {
+export class ScannerDataShipElement {
     element_type: string
     coord_x: number
     coord_y: number
@@ -136,6 +136,17 @@ export class ScannerDataElement {
     visual_fueling_at_station: boolean
     visual_ebeam_charging: boolean
 }
+export class ScannerDataMagnetMineElement {
+    id: string
+    element_type: string
+    velocity_x_meters_per_second: number
+    velocity_y_meters_per_second: number
+    coord_x: number
+    coord_y: number
+    distance: number
+    exploded: boolean
+}
+
 type scoutedOre = {
     [key: string]: number
 }
@@ -201,7 +212,7 @@ export class Ship {
     scanner_locking_max_traversal_degrees: number
     scanner_locked_max_traversal_degrees: number
     scanner_radar_sensitivity: number
-    scanner_data: ScannerDataElement[]
+    scanner_data: ScannerDataShipElement[]
     anti_radar_coating_level: number
 
     ebeam_firing: boolean

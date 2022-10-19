@@ -6,7 +6,7 @@ import { ScannerService } from './scanner.service';
 import { BoxCoords } from './models/box-coords.model';
 import { DrawableCanvasItems, DrawableShip } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
-import { ScannerDataElement } from './models/apidata.model';
+import { ScannerDataShipElement } from './models/apidata.model';
 
 /* Camera used  */
 export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'
@@ -400,7 +400,7 @@ export class Camera {
     // Draw other scanner elements
     const boundingBoxBuffer = 10
     for(let i in ship.scanner_data) {
-      const scannerData: ScannerDataElement = ship.scanner_data[i]
+      const scannerData: ScannerDataShipElement = ship.scanner_data[i]
       if (scannerData.element_type === 'ship') {
 
         let canvasCoordP0 = this.mapCoordToCanvasCoord({
