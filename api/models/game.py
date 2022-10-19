@@ -580,6 +580,7 @@ class Game(BaseModel):
         self._ships[ship_id].scanner_ship_data.clear()
         self._ships[ship_id].scanner_magnet_mine_data.clear()
 
+        ship_coords = self._ships[ship_id].coords
         scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
         visual_range = self._ships[ship_id].visual_range
 
@@ -590,7 +591,7 @@ class Game(BaseModel):
                 continue
 
             other_coords = self._ships[other_id].coords
-            ship_coords = self._ships[ship_id].coords
+
 
             distance = distance_cache.get_val(ship_coords, other_coords)
             if distance is None:

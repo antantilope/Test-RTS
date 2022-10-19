@@ -491,7 +491,7 @@ export class Camera {
         canvasH: mineSideLenPx,
         canvasBoundingBox: this.pointCoordToBoxCoord(
           canvasCoordCenter,
-          Math.max(boundingBoxBuffer, mineSideLenPx + boundingBoxBuffer),
+           Math.max(boundingBoxBuffer, mineSideLenPx + boundingBoxBuffer),
         ),
       })
       console.log({mineSideLenPx})

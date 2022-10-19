@@ -1241,6 +1241,13 @@ export class DrawingService {
       mine.canvasBoundingBox.y2 - mine.canvasBoundingBox.y1,
     )
     ctx.stroke()
+    const bbXOffset = mine.canvasBoundingBox.x1
+    let bbYOffset = mine.canvasBoundingBox.y2 + 20
+    ctx.beginPath()
+    ctx.font = 'bold 18px Courier New'
+    ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
+    ctx.textAlign = 'left'
+    ctx.fillText("🤖 Mine", bbXOffset, bbYOffset)
   }
 
   private getIconFontSize(camera: Camera) {
