@@ -137,6 +137,10 @@ class Explosion(TypedDict):
     fade_ms: float
     elapsed_ms: int
 
+class EBeamTargetingLine(TypedDict):
+    mine_coord: Tuple[int]
+    target_coord: Tuple[int]
+
 class Game(BaseModel):
 
     BASE_STATE_KEYS = ('ok', 'phase', 'map_config', 'players',)
@@ -160,6 +164,7 @@ class Game(BaseModel):
         self._ore_mines_remaining_ore: Dict[str, float] = {}
 
         self._magnet_mines: Dict[str, MagnetMine] = OrderedDict()
+        self._magnet_mine_targeting_lines: List[EBeamTargetingLine] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
 
@@ -251,6 +256,7 @@ class Game(BaseModel):
             "space_stations": self._space_stations,
             "ore_mines": self._ore_mines,
             "special_weapon_costs": self._special_weapon_costs,
+            "magnet_mine_targeting_lines": self._magnet_mine_targeting_lines,
         }
 
 
@@ -823,6 +829,7 @@ class Game(BaseModel):
             self._magnet_mines[mine.id] = mine
 
     def advance_magnet_mines(self, fps: int):
+        self._magnet_mine_targeting_lines.clear()
         for mm_id in self._magnet_mines:
 
             if self._magnet_mines[mm_id].exploded:
@@ -903,6 +910,12 @@ class Game(BaseModel):
                 )
                 self._magnet_mines[mm_id].velocity_x_meters_per_second += x_acc
                 self._magnet_mines[mm_id].velocity_y_meters_per_second += y_acc
+
+                # draw targeting line
+                self._magnet_mine_targeting_lines.append({
+                    "mine_coord": self._magnet_mines[mm_id].coords,
+                    "target_coord": self._ships[self._magnet_mines[mm_id].closest_ship_id].coords,
+                })
 
             # Adjust position
             self._magnet_mines[mm_id].coord_x += (

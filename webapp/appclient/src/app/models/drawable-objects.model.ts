@@ -42,6 +42,11 @@ export class DrawableMagnetMine {
     canvasBoundingBox: BoxCoords
 }
 
+export class DrawableMagnetMineTargetingLine {
+    mineCanvasCoord: PointCoord
+    targetCanvasCoord: PointCoord
+}
+
 export class EBeamRayDetails {
     startPoint: PointCoord
     endPoint: PointCoord
@@ -60,6 +65,7 @@ export class VisionCircle {
 export class DrawableCanvasItems {
     ships: DrawableShip[]
     magnetMines: DrawableMagnetMine[]
+    magnetMineTargetingLines: DrawableMagnetMineTargetingLine[]
     ebeamRays: EBeamRayDetails[]
     mapWall?: BoxCoords
     visionCircles: VisionCircle[]

@@ -548,6 +548,10 @@ export class GamedisplayComponent implements OnInit {
     for(let i in drawableObjects.magnetMines) {
       this._draw.drawMagnetMine(this.ctx, drawableObjects.magnetMines[i])
     }
+    this._draw.drawMagnetMineTargetingLines(
+      this.ctx,
+      drawableObjects.magnetMineTargetingLines
+    )
 
     this._draw.drawExplosions(this.ctx, this._camera.gameDisplayCamera)
 

@@ -31,6 +31,11 @@ export class Explosion {
     elapsed_ms: number
 }
 
+export class MagnetMineTargetingLines {
+    mine_coord: number[]
+    target_coord: number[]
+}
+
 export class KillFeedElement {
     created_at_frame: number
     victim_name: string
@@ -276,6 +281,7 @@ export class FrameData {
     ore_mines: OreMine[]
     explosion_shockwaves: ExplosionShockWave[]
     explosions: Explosion[]
+    magnet_mine_targeting_lines: MagnetMineTargetingLines[]
     killfeed: KillFeedElement[]
     ship: Ship
 }

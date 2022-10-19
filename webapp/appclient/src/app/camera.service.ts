@@ -3,10 +3,18 @@ import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
 import { BoxCoords } from './models/box-coords.model';
-import { DrawableCanvasItems, DrawableShip } from './models/drawable-objects.model';
+import {
+  DrawableCanvasItems,
+  DrawableShip,
+  DrawableMagnetMineTargetingLine
+} from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
 import { ScannerDataShipElement, Ship } from './models/apidata.model';
 import { MAGNET_MINE_SIDE_LENGTH_METERS } from "./constants"
+
+function getRandomFloat(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
 
 /* Camera used  */
 export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'
@@ -314,6 +322,7 @@ export class Camera {
     const drawableItems: DrawableCanvasItems = {
       ships: [],
       magnetMines: [],
+      magnetMineTargetingLines: [],
       ebeamRays: [],
       visionCircles:[],
     }
@@ -495,6 +504,26 @@ export class Camera {
         ),
       })
       console.log({mineSideLenPx})
+    }
+
+    // Magnet mine targeting lines
+    for(let i in this._api.frameData.magnet_mine_targeting_lines) {
+      let tl = this._api.frameData.magnet_mine_targeting_lines[i]
+      let pointA = this.mapCoordToCanvasCoord(
+        {x:tl.mine_coord[0], y:tl.mine_coord[1]},
+        cameraPosition,
+      )
+      let pointB = this.mapCoordToCanvasCoord(
+        {
+          x:tl.target_coord[0] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / this.getZoom()),
+          y:tl.target_coord[1] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / this.getZoom()),
+        },
+        cameraPosition,
+      )
+      drawableItems.magnetMineTargetingLines.push({
+        mineCanvasCoord: pointA,
+        targetCanvasCoord: pointB,
+      })
     }
 
     // Add Energy Beam Rays

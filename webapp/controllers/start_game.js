@@ -147,6 +147,7 @@ const runGameLoop = (room_id, port, app, io) => {
                         space_stations: respData.space_stations,
                         ore_mines: respData.ore_mines,
                         special_weapon_costs: respData.special_weapon_costs,
+                        magnet_mine_targeting_lines: respData.magnet_mine_targeting_lines,
                     },
                 );
             }

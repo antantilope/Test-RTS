@@ -15,6 +15,7 @@ import {
 import {
   DrawableShip,
   DrawableMagnetMine,
+  DrawableMagnetMineTargetingLine,
   VisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
@@ -1248,6 +1249,21 @@ export class DrawingService {
     ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
     ctx.fillText("🤖 Mine", bbXOffset, bbYOffset)
+  }
+
+  public drawMagnetMineTargetingLines(ctx: CanvasRenderingContext2D, lines: DrawableMagnetMineTargetingLine[]) {
+    for(let i in lines) {
+      if(Math.random() > 0.65) {
+        continue
+      }
+      let l = lines[i]
+      ctx.beginPath()
+      ctx.strokeStyle = Math.random() > 0.5 ? `rgb(0, 0, 255, ${getRandomFloat(0.1, 0.6)})` : `rgb(255, 0, 0, ${getRandomFloat(0.1, 0.6)})`
+      ctx.lineWidth = 2
+      ctx.moveTo(l.mineCanvasCoord.x, l.mineCanvasCoord.y)
+      ctx.lineTo(l.targetCanvasCoord.x, l.targetCanvasCoord.y)
+      ctx.stroke()
+    }
   }
 
   private getIconFontSize(camera: Camera) {
