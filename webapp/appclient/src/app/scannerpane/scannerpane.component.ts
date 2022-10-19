@@ -122,7 +122,7 @@ export class ScannerpaneComponent implements OnInit {
   }
 
   private anyTargetsOnScope(): boolean {
-    return this._api.frameData.ship.scanner_data.length > 0
+    return this._api.frameData.ship.scanner_ship_data.length > 0
   }
 
   private setCanvasBGColor(): void {
@@ -169,7 +169,7 @@ export class ScannerpaneComponent implements OnInit {
 
     // Select a target if any are available and not are selected.
     if(anyTargets && !this._scanner.scannerTargetIDCursor) {
-      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[0].id
       this._scanner.scannertTargetIndex = 0
     }
 
@@ -179,7 +179,7 @@ export class ScannerpaneComponent implements OnInit {
     let drawableObjects: DrawableCanvasItems
     const overlayAlpha = randomFloat(0.62, 0.95)
     if(anyTargets) {
-      target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
+      target = this._api.frameData.ship.scanner_ship_data[this._scanner.scannertTargetIndex]
       if(!target) {
         this._scanner.scannerTargetIDCursor = null
         this._scanner.scannertTargetIndex = null
@@ -298,7 +298,7 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.textBaseline = "top"
     let txt = (
       anyTargets
-      ? `TARGET ${this._scanner.scannertTargetIndex + 1}/${this._api.frameData.ship.scanner_data.length}`
+      ? `TARGET ${this._scanner.scannertTargetIndex + 1}/${this._api.frameData.ship.scanner_ship_data.length}`
       : "NO TARGET"
     )
     this.ctx.fillText(txt, xOffset, yOffset)
@@ -311,7 +311,7 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.font = 'italic 20px Courier New'
     let target: ScannerDataShipElement
     if(anyTargets) {
-      target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
+      target = this._api.frameData.ship.scanner_ship_data[this._scanner.scannertTargetIndex]
       this.ctx.fillText(
         target.designator.toUpperCase(), xOffset, yOffset
       )

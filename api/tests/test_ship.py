@@ -2480,7 +2480,7 @@ class TestShipAutopilot(TestCase):
 
     def test_autopilot_can_lock_onto_scanner_target(self):
         target_id = str(uuid4())
-        self.ship.scanner_data[target_id] = {'relative_heading': 177}
+        self.ship.scanner_ship_data[target_id] = {'relative_heading': 177}
         self.ship.scanner_lock_target = target_id
         self.ship.scanner_locking = False
         self.ship.scanner_locked = True

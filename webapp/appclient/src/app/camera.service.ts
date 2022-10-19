@@ -252,7 +252,7 @@ export class Camera {
   private setCameraPositionAndZoomShowShipAndTarget(scannerTargetIDCursor: string){
     const ship = this._api.frameData.ship
     // Point camera between ship and target
-    const scannerData = ship.scanner_data.find(sd => sd.id == scannerTargetIDCursor)
+    const scannerData = ship.scanner_ship_data.find(sd => sd.id == scannerTargetIDCursor)
     if(!scannerData) {
       return this.setCameraPositionAndZoomShowShipVision()
     }
@@ -399,8 +399,8 @@ export class Camera {
 
     // Draw other scanner elements
     const boundingBoxBuffer = 10
-    for(let i in ship.scanner_data) {
-      const scannerData: ScannerDataShipElement = ship.scanner_data[i]
+    for(let i in ship.scanner_ship_data) {
+      const scannerData: ScannerDataShipElement = ship.scanner_ship_data[i]
       if (scannerData.element_type === 'ship') {
 
         let canvasCoordP0 = this.mapCoordToCanvasCoord({
@@ -654,8 +654,8 @@ export class CameraService {
     }
 
     // Add elements for scanner elements
-    for(let i in this._api.frameData.ship.scanner_data) {
-      let sde = this._api.frameData.ship.scanner_data[i]
+    for(let i in this._api.frameData.ship.scanner_ship_data) {
+      let sde = this._api.frameData.ship.scanner_ship_data[i]
       if(sde.element_type !== "ship") {
         continue
       }

@@ -577,7 +577,7 @@ class Game(BaseModel):
     def reset_and_update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
 
-        self._ships[ship_id].scanner_data.clear()
+        self._ships[ship_id].scanner_ship_data.clear()
 
         scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
         visual_range = self._ships[ship_id].visual_range
@@ -623,7 +623,7 @@ class Game(BaseModel):
 
             if is_visual or is_scannable:
                 exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
-                scanner_data: ScannedShipElement = {
+                scanner_ship_data: ScannedShipElement = {
                     'id': other_id,
                     'designator': self._ships[other_id].scanner_designator,
                     'anti_radar_coating_level': self._ships[other_id].anti_radar_coating_level,
@@ -666,14 +666,14 @@ class Game(BaseModel):
                     "target_heading": exact_heading,
                 }
 
-                self._ships[ship_id].scanner_data[other_id] = scanner_data
+                self._ships[ship_id].scanner_ship_data[other_id] = scanner_ship_data
 
         # Add magnet mines to scanner data
         for mm_id in self._magnet_mines:
             pass
 
         # Check if scanner target has gone out of range
-        if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
+        if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_ship_data:
             self._ships[ship_id].scanner_lock_traversal_slack = None
             self._ships[ship_id].scanner_lock_target = None
             if self._ships[ship_id].scanner_locking:
@@ -685,11 +685,11 @@ class Game(BaseModel):
         # check if scanner target traversal is above maximum
         if self._ships[ship_id].scanner_lock_target and (self._ships[ship_id].scanner_locking or self._ships[ship_id].scanner_locked):
             if self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame is None:
-                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_ship_data[
                     self._ships[ship_id].scanner_lock_target
                 ]['target_heading']
             else:
-                target_heading = self._ships[ship_id].scanner_data[
+                target_heading = self._ships[ship_id].scanner_ship_data[
                     self._ships[ship_id].scanner_lock_target
                 ]['target_heading']
                 delta = abs(
@@ -709,7 +709,7 @@ class Game(BaseModel):
                     self._ships[ship_id].scanner_lock_traversal_slack = None
                     self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = None
                 else:
-                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_ship_data[
                         self._ships[ship_id].scanner_lock_target
                     ]['target_heading']
                     self._ships[ship_id].scanner_lock_traversal_slack = delta / max_traversal

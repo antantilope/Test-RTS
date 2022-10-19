@@ -313,7 +313,8 @@ class Ship(BaseModel):
         self.scanner_lock_target = None
         self.scanner_get_lock_power_requirement_total = None
         self.scanner_get_lock_power_requirement_per_second = None
-        self.scanner_data: Dict[str, ScannedShipElement] = OrderedDict()
+        self.scanner_ship_data: Dict[str, ScannedShipElement] = OrderedDict()
+        self.scanner_magnet_mine_data: Dict[str, ScannedMagnetMineElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
@@ -440,7 +441,7 @@ class Ship(BaseModel):
     @property
     def ebeam_heading(self) -> Union[float, int]:
         if self.scanner_lock_target and self.scanner_locked and self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_ON_TARGET:
-            return self.scanner_data[self.scanner_lock_target]['target_heading']
+            return self.scanner_ship_data[self.scanner_lock_target]['target_heading']
         return self.heading
 
 
@@ -569,7 +570,8 @@ class Ship(BaseModel):
             'scanner_radar_range': self.scanner_radar_range,
             'scanner_ir_range': self.scanner_ir_range,
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
-            'scanner_data': list(self.scanner_data.values()),
+            'scanner_ship_data': list(self.scanner_ship_data.values()),
+            'scanner_magnet_mine_data': list(self.scanner_magnet_mine_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
             'scanner_locking_max_traversal_degrees': self.scanner_locking_max_traversal_degrees,
@@ -1232,7 +1234,7 @@ class Ship(BaseModel):
             if not self.scanner_locked or not self.scanner_lock_target:
                 self.autopilot_program = None
                 return
-            self._set_heading(self.scanner_data[self.scanner_lock_target]["relative_heading"])
+            self._set_heading(self.scanner_ship_data[self.scanner_lock_target]["relative_heading"])
 
         elif self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_PROGRADE:
             _, angle = utils2d.calculate_resultant_vector(
@@ -1600,7 +1602,7 @@ class Ship(BaseModel):
         self.scanner_lock_target = None
         self.scanner_lock_traversal_degrees_previous_frame = None
         self.scanner_lock_traversal_slack = None
-        self.scanner_data.clear()
+        self.scanner_ship_data.clear()
 
     def cmd_set_scanner_mode_radar(self) -> None:
         self.scanner_mode = ShipScannerMode.RADAR
@@ -1611,7 +1613,7 @@ class Ship(BaseModel):
     def cmd_set_scanner_lock_target(self, target_id: str) -> None:
         if not self.scanner_online or self.scanner_locking:
             return
-        if target_id not in self.scanner_data:
+        if target_id not in self.scanner_ship_data:
             return
         self.scanner_locking = True
         self.scanner_locked = False

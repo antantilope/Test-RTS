@@ -325,12 +325,12 @@ export class SoundService {
     }
 
     // Ship spotted Alert
-    if(ship.alive && ship.scanner_data.length > this.spottedEnemiesCount) {
-      this.spottedEnemiesCount = ship.scanner_data.length;
+    if(ship.alive && ship.scanner_ship_data.length > this.spottedEnemiesCount) {
+      this.spottedEnemiesCount = ship.scanner_ship_data.length;
       this.enemySpottedSound.play()
     }
-    else if(ship.scanner_data.length < this.spottedEnemiesCount) {
-      this.spottedEnemiesCount = ship.scanner_data.length;
+    else if(ship.scanner_ship_data.length < this.spottedEnemiesCount) {
+      this.spottedEnemiesCount = ship.scanner_ship_data.length;
     }
     // Scanner State Alerts
     if (!this.scannerOnlineLastFrame && ship.scanner_online) {

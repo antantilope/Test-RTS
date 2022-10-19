@@ -138,11 +138,11 @@ export class ScannerDataShipElement {
 }
 export class ScannerDataMagnetMineElement {
     id: string
-    element_type: string
     velocity_x_meters_per_second: number
     velocity_y_meters_per_second: number
     coord_x: number
     coord_y: number
+    target_heading: number
     distance: number
     exploded: boolean
 }
@@ -212,7 +212,9 @@ export class Ship {
     scanner_locking_max_traversal_degrees: number
     scanner_locked_max_traversal_degrees: number
     scanner_radar_sensitivity: number
-    scanner_data: ScannerDataShipElement[]
+    scanner_ship_data: ScannerDataShipElement[]
+    scanner_magnet_mine_data: ScannerDataMagnetMineElement[]
+
     anti_radar_coating_level: number
 
     ebeam_firing: boolean
