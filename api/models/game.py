@@ -9,18 +9,16 @@ import re
 import traceback
 from uuid import uuid4
 
-from numpy import stack
-
 from api import constants
 
 from .base import BaseModel
 from .ship import (
-    ScannedMagnetMineElement,
     Ship,
     ShipCommands,
     ShipDeathType,
     ShipScannerMode,
     ScannedShipElement,
+    ScannedMagnetMineElement,
     VisibleElementShapeType,
     MapMiningLocationDetails,
     MapSpaceStation,
@@ -824,8 +822,10 @@ class Game(BaseModel):
             )
             mine.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             mine.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            mine.coord_x = self._ships[ship_id].coord_x
-            mine.coord_y = self._ships[ship_id].coord_y
+            ship_p1_x, ship_p1_y = self._ships[ship_id].map_p1
+            ship_p2_x, ship_p2_y = self._ships[ship_id].map_p2
+            mine.coord_x = round((ship_p1_x + ship_p2_x) / 2)
+            mine.coord_y = round((ship_p1_y + ship_p2_y) / 2)
             self._magnet_mines[mine.id] = mine
 
     def advance_magnet_mines(self, fps: int):
