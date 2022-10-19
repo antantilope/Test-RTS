@@ -122,4 +122,4 @@ exports.validateRunAutoPilotProgram = validateRunAutoPilotProgram;
 exports.validateRunAutopilotHeadingToWaypoint = validateRunAutopilotHeadingToWaypoint;
 exports.validateStartCoreUpgrade = validateStartCoreUpgrade;
 exports.validateStartShipUpgrade = validateStartShipUpgrade;
-exports.validateLaunchTubeWeapon = validateLaunchTubeWeapon
+exports.validateLaunchTubeWeapon = validateLaunchTubeWeapon;

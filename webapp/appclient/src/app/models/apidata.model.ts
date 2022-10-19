@@ -99,7 +99,6 @@ export class UpgradeSummary {
 }
 
 export class ScannerDataShipElement {
-    element_type: string
     coord_x: number
     coord_y: number
     id: string

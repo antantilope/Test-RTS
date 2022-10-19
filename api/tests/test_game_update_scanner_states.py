@@ -5,9 +5,9 @@ from unittest import TestCase
 
 from api.models.game import Game, GamePhase, ShipScannerMode
 from api import utils2d
-from api.models.ship import VisibleElementShapeType, ScannedElementType
+from api.models.ship import VisibleElementShapeType
 
-class TestGameUpdateScannerStates(TestCase):
+class TestGameUpdateScannerStatesForShips(TestCase):
 
     def setUp(self):
         # MAP UNITS PER METER
@@ -343,7 +343,6 @@ class TestGameUpdateScannerStates(TestCase):
                 'designator': self.game._ships[self.player_2_ship_id].scanner_designator,
                 'coord_x': 1000 * self.upm,
                 'coord_y': 1000 * self.upm,
-                'element_type': ScannedElementType.SHIP,
                 'in_visual_range': True,
                 'visual_shape': VisibleElementShapeType.RECT,
                 'velocity_y_meters_per_second': 0,
@@ -383,7 +382,6 @@ class TestGameUpdateScannerStates(TestCase):
                 'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
                 'coord_x': 500 * self.upm,
                 'coord_y': 500 * self.upm,
-                'element_type': ScannedElementType.SHIP,
                 'visual_shape': VisibleElementShapeType.RECT,
                 'in_visual_range': True,
                 'visual_p0': self.game._ships[self.player_1_ship_id].map_p0,
@@ -440,7 +438,6 @@ class TestGameUpdateScannerStates(TestCase):
         assert len(self.game._ships[self.player_2_ship_id].scanner_ship_data) == 1
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_ship_data[self.player_1_ship_id], {
             'id': self.player_1_ship_id,
-            'element_type': ScannedElementType.SHIP,
             'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
             'coord_x': 500 * self.upm,
             'coord_y': 500 * self.upm,
@@ -835,3 +832,86 @@ class TestGameUpdateScannerStates(TestCase):
         assert self.game._ships[self.player_1_ship_id].scanner_locked is False
         assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_degrees_previous_frame is None
         assert self.game._ships[self.player_1_ship_id].scanner_lock_traversal_slack is None
+
+
+class TestGameUpdateScannerStatesForMines(TestCase):
+
+    def setUp(self):
+        # MAP UNITS PER METER
+        self.upm = 10
+
+        self.player_1_id = str(uuid4())
+        self.player_1_handle = "foobar"
+        self.player_1_ship_id = None
+        self.player_1_team_id = str(uuid4())
+        self.player_2_id = str(uuid4())
+        self.player_2_handle = "derpy"
+        self.player_2_ship_id = None
+        self.player_2_team_id = str(uuid4())
+
+        self.game = Game()
+
+        self.game.register_player({
+            'player_id':self.player_1_id,
+            'player_name': self.player_1_handle,
+            'team_id': self.player_1_team_id,
+        })
+        self.game.register_player({
+            'player_id':self.player_2_id,
+            'player_name': self.player_2_handle,
+            'team_id': self.player_2_team_id,
+        })
+
+        self.game.set_map({
+            'mapData':{
+                "meters_x": 100 * 1000, # 100KM
+                "meters_y": 100 * 1000, # 100KM
+                "name": "TestMap",
+            },
+            'spawnPoints': [{
+                'position_meters_x': 100,
+                'position_meters_y': 100,
+            },{
+                'position_meters_x': 200,
+                'position_meters_y': 200,
+            }],
+            'spaceStations': [],
+            'miningLocations': [],
+        }, map_units_per_meter=self.upm)
+        assert self.game.map_is_configured
+        self.game.advance_to_phase_1_starting()
+
+        self.player_1_ship_id = self.game._player_id_to_ship_id_map[self.player_1_id]
+        self.player_2_ship_id = self.game._player_id_to_ship_id_map[self.player_2_id]
+
+        self.game._game_start_countdown = 1
+        self.game.decr_phase_1_starting_countdown()
+        assert self.game._phase == GamePhase.LIVE
+        assert self.game._game_frame == 1
+        for ship_id in self.game._ships:
+            assert self.game._ships[ship_id].scanner_ship_data == {}
+
+        self.game._ships[self.player_1_ship_id].visual_range = 1
+        self.game._ships[self.player_2_ship_id].visual_range = 1
+
+        self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 5
+        self.game._ships[self.player_2_ship_id].magnet_mines_loaded = 5
+
+
+    def test_both_ships_can_visually_spot_mine_if_mine_in_visual_range_for_both(self):
+        self.game._ships[self.player_1_ship_id].visual_range = 1000
+        self.game._ships[self.player_2_ship_id].visual_range = 1000
+
+        assert len(self.game._ships[self.player_1_ship_id].scanner_magnet_mine_data) == 0
+        assert len(self.game._ships[self.player_2_ship_id].scanner_magnet_mine_data) == 0
+
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._magnet_mines) == 1
+
+        self.game.reset_and_update_scanner_states(self.player_1_ship_id)
+        self.game.reset_and_update_scanner_states(self.player_2_ship_id)
+        assert len(self.game._ships[self.player_1_ship_id].scanner_magnet_mine_data) == 1
+        assert len(self.game._ships[self.player_2_ship_id].scanner_magnet_mine_data) == 1

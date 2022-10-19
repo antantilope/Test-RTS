@@ -124,14 +124,9 @@ class VisibleElementShapeType:
     ARC = 'arc'
     RECT = 'rect'
 
-class ScannedElementType:
-    SHIP = 'ship'
-    MAGNET_MINE = constants.MAGNET_MINE_SLUG
-
 class ScannedShipElement(TypedDict):
     id: str
     designator: str
-    element_type: str
     anti_radar_coating_level: int
     scanner_thermal_signature: int
     coord_x: int
@@ -176,7 +171,7 @@ class ScannedMagnetMineElement(TypedDict):
     coord_y: int
     distance: int
     exploded: bool
-    target_heading: float # Float describing beaing to element
+    relative_heading: int
 
 class TimerItem(TypedDict):
     name: str
@@ -345,7 +340,7 @@ class Ship(BaseModel):
         self._special_weapons_min_launch_velocity = None
         self._special_weapons_max_launch_velocity = None
         self._special_weapons_launch_velocity = None
-        self.magnet_mines_loaded = 0
+        self.magnet_mines_loaded = 4
         self.magnet_mine_firing = False
 
         self.autopilot_program = None
@@ -1488,7 +1483,7 @@ class Ship(BaseModel):
         elif command == ShipCommands.BUY_MAGNET_MINE:
             self.cmd_buy_magnet_mine()
         elif command == ShipCommands.LAUNCH_MAGNET_MINE:
-            self.cmd_launch_magnet_mine()
+            self.cmd_launch_magnet_mine(args[0])
         else:
             raise ShipCommandError("NotImplementedError")
 

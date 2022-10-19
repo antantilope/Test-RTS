@@ -1,4 +1,6 @@
 
+# These tests are a bit horrible.
+
 from uuid import uuid4
 
 from unittest import TestCase
@@ -66,6 +68,8 @@ class TestMagnetMine(TestCase):
         self.game._ships[self.player_1_ship_id].virtual_ore_kg = 1000
         self.game._ships[self.player_2_ship_id].virtual_ore_kg = 1000
         self.game._special_weapon_costs[MAGNET_MINE_SLUG] = 200
+        self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 0
+        self.game._ships[self.player_2_ship_id].magnet_mines_loaded = 0
 
     def test_ship_can_buy_magnet_mine_if_tube_available(self):
         assert self.game._ships[self.player_1_ship_id].magnet_mines_loaded == 0
@@ -364,3 +368,149 @@ class TestMagnetMine(TestCase):
         self.game.advance_magnet_mines(fps=10)
         assert mine.exploded
         self.game._ships[self.player_2_ship_id].died_on_frame is not None
+
+    def test_mine_can_lock_onto_shooter_and_blow_them_up(self):
+        self.game._magnet_mine_max_proximity_to_explode_meters = 50
+        self.game._fps = 1
+        self.game._magnet_mine_arming_time_seconds = 3
+        self.game._magnet_mine_tracking_acceleration_ms = 10
+        assert len(self.game._magnet_mines) == 0
+
+        # ship 1 at 100, 100 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 100 * 10
+        self.game._ships[self.player_1_ship_id].coord_y = 100 * 10
+        self.game._ships[self.player_1_ship_id].heading = 0
+        self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 1
+        # ship 2 2000M north at 100, 2100 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 100 * 10
+        self.game._ships[self.player_2_ship_id].coord_y = 2100 * 10
+
+        self._game_frame = 4
+
+        # Fire mine due north
+        # moving at 100M/S, arming after 3 seconds.
+        # mine will be 1850 meters from ship 2
+        # mine will be 150 meters from ship 1
+        # mine should target ship 2
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
+            launch_velocity=50
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._magnet_mines) == 1
+        mine_id = next(iter(self.game._magnet_mines.keys()))
+        mine = self.game._magnet_mines[mine_id]
+        assert mine.elapsed_milliseconds == 0
+        assert not mine.armed
+        assert mine.velocity_y_meters_per_second == 50
+
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 1000
+        assert not mine.armed
+        assert mine.coord_x == 1000
+        assert mine.coord_y == 1500
+        assert mine.velocity_y_meters_per_second == 50
+        assert mine.closest_ship_id is None
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 2000
+        assert not mine.armed
+        assert mine.coord_x == 1000
+        assert mine.coord_y == 2000
+        assert mine.velocity_y_meters_per_second == 50
+        assert mine.closest_ship_id is None
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 3000
+        assert not mine.armed
+        assert mine.coord_x == 1000
+        assert mine.coord_y == 2500
+        assert mine.velocity_y_meters_per_second == 50
+        assert mine.closest_ship_id is None
+        # MINE NOW ARMED
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 4000
+        assert mine.armed
+        assert mine.coord_x == 1000
+        assert mine.coord_y == 2900
+        assert mine.velocity_y_meters_per_second == 40
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 5000
+        assert mine.armed
+        assert mine.coord_x == 1000
+        assert mine.coord_y == 3200
+        assert mine.velocity_y_meters_per_second == 30
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 6000
+        assert mine.armed
+        assert mine.coord_x == 1000
+        assert mine.coord_y == 3400
+        assert mine.velocity_y_meters_per_second == 20
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 7000
+        assert mine.armed
+        assert mine.coord_x == 1000
+        assert mine.coord_y == 3500
+        assert mine.velocity_y_meters_per_second == 10
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 8000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 3500
+        assert mine.velocity_y_meters_per_second == 0
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 9000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 3400
+        assert mine.velocity_y_meters_per_second == -10
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 10000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 3200
+        assert mine.velocity_y_meters_per_second == -20
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 11000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 2900
+        assert mine.velocity_y_meters_per_second == -30
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 12000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 2500
+        assert mine.velocity_y_meters_per_second == -40
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 13000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 2000
+        assert mine.velocity_y_meters_per_second == -50
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 14000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 1400
+        assert mine.velocity_y_meters_per_second == -60
+        assert mine.closest_ship_id == self.player_1_ship_id
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.elapsed_milliseconds == 15000
+        assert mine.armed
+        assert round(mine.coord_x) == 1000
+        assert mine.coord_y == 700
+        assert mine.velocity_y_meters_per_second == -70
+        assert mine.closest_ship_id == self.player_1_ship_id
+        # About to explode.
+        assert self.game._ships[self.player_1_ship_id].died_on_frame is None
+        self.game.advance_magnet_mines(fps=1)
+        assert mine.exploded
+        assert self.game._ships[self.player_1_ship_id].died_on_frame == self.game._game_frame

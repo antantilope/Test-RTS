@@ -31,6 +31,17 @@ export class DrawableShip {
     fuelingAtStation:boolean
 }
 
+export class DrawableMagnetMine {
+    mineId: string
+    isDot: boolean
+    canvasCoordCenter: PointCoord
+    canvasX1: number
+    canvasY1: number
+    canvasW: number
+    canvasH: number
+    canvasBoundingBox: BoxCoords
+}
+
 export class EBeamRayDetails {
     startPoint: PointCoord
     endPoint: PointCoord
@@ -48,6 +59,7 @@ export class VisionCircle {
 
 export class DrawableCanvasItems {
     ships: DrawableShip[]
+    magnetMines: DrawableMagnetMine[]
     ebeamRays: EBeamRayDetails[]
     mapWall?: BoxCoords
     visionCircles: VisionCircle[]

@@ -544,6 +544,11 @@ export class GamedisplayComponent implements OnInit {
         true,
       )
     }
+    // magnet mines
+    for(let i in drawableObjects.magnetMines) {
+      this._draw.drawMagnetMine(this.ctx, drawableObjects.magnetMines[i])
+    }
+
     this._draw.drawExplosions(this.ctx, this._camera.gameDisplayCamera)
 
     this._draw.drawOreDepositEffect(this.ctx, this._camera.gameDisplayCamera)
@@ -968,8 +973,10 @@ export class GamedisplayComponent implements OnInit {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
       this._api.post(
         "/api/rooms/command",
-        {command:'launch_magnet_mine', launchVelocity: this.lauchVelocity,},
+        {command:'launch_magnet_mine', launch_velocity: this.lauchVelocity,},
       )
+    } else {
+      console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)
     }
   }
 

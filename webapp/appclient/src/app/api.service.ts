@@ -43,6 +43,7 @@ export class ApiService {
     })
 
     this.socket.on(this.EVENT_FRAMEDATA, (data: FrameData) => {
+      console.log({mines: data.ship.scanner_magnet_mine_data})
       this.frameData = data
       this.frameDataEvent.next()
       if(data.game_frame % 400 === 0) {

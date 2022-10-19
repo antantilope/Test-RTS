@@ -15,12 +15,12 @@ from api import constants
 
 from .base import BaseModel
 from .ship import (
+    ScannedMagnetMineElement,
     Ship,
     ShipCommands,
     ShipDeathType,
     ShipScannerMode,
     ScannedShipElement,
-    ScannedElementType,
     VisibleElementShapeType,
     MapMiningLocationDetails,
     MapSpaceStation,
@@ -578,6 +578,7 @@ class Game(BaseModel):
         distance_cache = CoordDistanceCache()
 
         self._ships[ship_id].scanner_ship_data.clear()
+        self._ships[ship_id].scanner_magnet_mine_data.clear()
 
         scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
         visual_range = self._ships[ship_id].visual_range
@@ -630,7 +631,6 @@ class Game(BaseModel):
                     'scanner_thermal_signature': self._ships[other_id].scanner_thermal_signature,
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
-                    'element_type': ScannedElementType.SHIP,
                     'velocity_x_meters_per_second': self._ships[other_id].velocity_x_meters_per_second,
                     'velocity_y_meters_per_second': self._ships[other_id].velocity_y_meters_per_second,
                     'alive': self._ships[other_id].died_on_frame is None,
@@ -670,7 +670,27 @@ class Game(BaseModel):
 
         # Add magnet mines to scanner data
         for mm_id in self._magnet_mines:
-            pass
+            mine_coords = self._magnet_mines[mm_id].coords
+            distance = utils2d.calculate_point_distance(ship_coords, mine_coords)
+            distance_meters = round(distance / self._map_units_per_meter)
+            is_visual = visual_range >= distance_meters
+            is_scannable = (
+                scan_range is not None
+                and scan_range >= distance_meters
+                and self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR
+            )
+            if is_visual or is_scannable:
+                exact_heading = utils2d.calculate_heading_to_point(ship_coords, mine_coords)
+                self._ships[ship_id].scanner_magnet_mine_data[mm_id] = {
+                    'id': mm_id,
+                    'velocity_x_meters_per_second': self._magnet_mines[mm_id].velocity_x_meters_per_second,
+                    'velocity_y_meters_per_second': self._magnet_mines[mm_id].velocity_y_meters_per_second,
+                    'coord_x': mine_coords[0],
+                    'coord_y': mine_coords[1],
+                    'distance': distance_meters,
+                    'exploded': self._magnet_mines[mm_id].exploded,
+                    'relative_heading': round(exact_heading),
+                }
 
         # Check if scanner target has gone out of range
         if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_ship_data:
@@ -831,7 +851,7 @@ class Game(BaseModel):
                     self._ships[self._magnet_mines[mm_id].closest_ship_id].die(self._game_frame)
                     self.register_explosion_on_map(
                         self._magnet_mines[mm_id].coords,
-                        60,
+                        80,
                         1200,
                         2000,
                     )
@@ -842,7 +862,7 @@ class Game(BaseModel):
                     self._magnet_mines[mm_id].exploded = True
                     self.register_explosion_on_map(
                         self._magnet_mines[mm_id].coords,
-                        60,
+                        80,
                         1200,
                         2000,
                     )
@@ -866,7 +886,7 @@ class Game(BaseModel):
                         closest_distance = distance
                         closest_id = ship_id
                 self._magnet_mines[mm_id].closest_ship_id = closest_id
-                self._magnet_mines[mm_id].distance_to_closest_ship = distance
+                self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
 
                 # Apply acceleration
                 heading_to_closest = utils2d.calculate_heading_to_point((

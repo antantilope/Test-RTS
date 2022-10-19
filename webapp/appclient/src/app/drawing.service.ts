@@ -14,6 +14,7 @@ import {
 } from "./models/box-coords.model"
 import {
   DrawableShip,
+  DrawableMagnetMine,
   VisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
@@ -52,6 +53,7 @@ export class DrawingService {
   private actionTileImgEngineOnline: HTMLImageElement = new Image()
   private actionTileImgScannerOnline: HTMLImageElement = new Image()
 
+  private magnetMineAsset: HTMLImageElement = new Image()
 
   // TODO: fix magic number
   private spaceStationVisualSideLengthM = 30
@@ -68,6 +70,7 @@ export class DrawingService {
     this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
     this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
     this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
+    this.magnetMineAsset.src = "/static/img/magnet-mine.svg"
 
   }
 
@@ -1217,6 +1220,27 @@ export class DrawingService {
         ctx.stroke()
       }
     }
+  }
+
+  public drawMagnetMine(
+    ctx: CanvasRenderingContext2D,
+    mine: DrawableMagnetMine,
+  ) {
+    ctx.drawImage(
+      this.magnetMineAsset,
+      mine.canvasX1, mine.canvasY1,
+      mine.canvasW, mine.canvasH,
+    )
+    ctx.beginPath()
+    ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+    ctx.lineWidth = 2.5
+    ctx.rect(
+      mine.canvasBoundingBox.x1,
+      mine.canvasBoundingBox.y1,
+      mine.canvasBoundingBox.x2 - mine.canvasBoundingBox.x1,
+      mine.canvasBoundingBox.y2 - mine.canvasBoundingBox.y1,
+    )
+    ctx.stroke()
   }
 
   private getIconFontSize(camera: Camera) {
