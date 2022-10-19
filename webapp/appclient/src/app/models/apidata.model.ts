@@ -139,6 +139,7 @@ export class ScannerDataShipElement {
     visual_mining_ore_location: string | null
     visual_fueling_at_station: boolean
     visual_ebeam_charging: boolean
+    visual_last_tube_fire_frame: null | number
 }
 export class ScannerDataMagnetMineElement {
     id: string
@@ -235,6 +236,7 @@ export class Ship {
 
     special_weapons_tubes_count: number
     special_weapons_loaded: number
+    last_tube_fire_frame: number
     magnet_mines_loaded: number
 
     docked_at_station: string

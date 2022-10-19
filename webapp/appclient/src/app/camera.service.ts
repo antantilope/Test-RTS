@@ -383,6 +383,7 @@ export class Camera {
       miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
       fuelingAtStation: ship.fueling_at_station,
       visualEbeamCharging: ship.ebeam_charging,
+      lastTubeFireFrame: ship.last_tube_fire_frame,
       inVisualRange: true,
       canvasBoundingBox: this.rectCoordsToBoxCoords(
         canvasCoordP0,
@@ -472,6 +473,7 @@ export class Camera {
         gravityBrakeActive: scannerData.visual_gravity_brake_active,
         miningOreLocation: scannerData.visual_mining_ore_location,
         fuelingAtStation: scannerData.visual_fueling_at_station,
+        lastTubeFireFrame: scannerData.visual_last_tube_fire_frame,
       }
       drawableItems.ships.push(drawableShip)
     }

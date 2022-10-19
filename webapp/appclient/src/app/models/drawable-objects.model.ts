@@ -29,6 +29,7 @@ export class DrawableShip {
     gravityBrakeActive: boolean
     miningOreLocation: string
     fuelingAtStation:boolean
+    lastTubeFireFrame: number
 }
 
 export class DrawableMagnetMine {

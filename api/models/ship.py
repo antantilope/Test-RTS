@@ -162,6 +162,7 @@ class ScannedShipElement(TypedDict):
     visual_gravity_brake_active: bool
     visual_mining_ore_location: Union[None, str]
     visual_fueling_at_station: bool
+    visual_last_tube_fire_frame: Union[None, int]
 
 class ScannedMagnetMineElement(TypedDict):
     id: str
@@ -336,6 +337,7 @@ class Ship(BaseModel):
 
         # Special weapons tubes
         self.special_weapons_tubes_count = None
+        self.last_tube_fire_frame = None
         self._special_weapon_costs = None
         self._special_weapons_min_launch_velocity = None
         self._special_weapons_max_launch_velocity = None
@@ -587,6 +589,7 @@ class Ship(BaseModel):
             'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
 
             'special_weapons_tubes_count': self.special_weapons_tubes_count,
+            'last_tube_fire_frame': self.last_tube_fire_frame,
             'special_weapons_loaded': self.special_weapons_loaded,
             'magnet_mines_loaded': self.magnet_mines_loaded,
 

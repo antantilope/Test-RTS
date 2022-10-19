@@ -27,7 +27,7 @@ import {
   LOW_FUEL_THRESHOLD,
   LOW_POWER_THRESHOLD
 } from './constants';
-import { Explosion, OreMine, SpaceStation } from './models/apidata.model';
+import { Explosion, OreMine, Ship, SpaceStation } from './models/apidata.model';
 
 
 
@@ -815,19 +815,21 @@ export class DrawingService {
       )
       ctx.fill()
       // Inner sub fireballs
-      const subFireBallsCount = randomInt(2, 4)
-      for(let i=0; i<subFireBallsCount; i++) {
-        let subFBSizePx = Math.floor(radiusMeters / getRandomFloat(2, 4)) * ppm / zoom
-        ctx.beginPath()
-        ctx.fillStyle = `rgb(255, ${randomInt(50, 200)}, 0, 0.${randomInt(3, 6)})`
-        ctx.arc(
-          canvasCoord.x + randomInt(-4, 4),
-          canvasCoord.y + randomInt(-4, 4),
-          subFBSizePx,
-          0,
-          TWO_PI,
-        )
-        ctx.fill()
+      if(percentCompleteTime < 0.4) {
+        const subFireBallsCount = randomInt(2, 4)
+        for(let i=0; i<subFireBallsCount; i++) {
+          let subFBSizePx = Math.floor(radiusMeters / getRandomFloat(2, 4)) * ppm / zoom
+          ctx.beginPath()
+          ctx.fillStyle = `rgb(255, ${randomInt(50, 200)}, 0, 0.${randomInt(3, 6)})`
+          ctx.arc(
+            canvasCoord.x + randomInt(-4, 4),
+            canvasCoord.y + randomInt(-4, 4),
+            subFBSizePx,
+            0,
+            TWO_PI,
+          )
+          ctx.fill()
+        }
       }
       // Debris lines
       const debrisLineCount = randomInt(-6, 6)
@@ -1220,6 +1222,23 @@ export class DrawingService {
         ctx.lineTo(midX + maxRadius, midY - distance)
         ctx.stroke()
       }
+    }
+    const tubeFireAnimationFrameCt = 15
+    if(
+      drawableShip.lastTubeFireFrame !== null
+      && (drawableShip.lastTubeFireFrame + tubeFireAnimationFrameCt) >= this._api.frameData.game_frame
+    ) {
+      console.log("drawing tube weapon smoke puff")
+      const percentComplete = (this._api.frameData.game_frame - drawableShip.lastTubeFireFrame) / tubeFireAnimationFrameCt
+      const radiusPx = (8 * this._api.frameData.map_config.units_per_meter / camera.getZoom()) * percentComplete
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(200, 200, 200, ${1 - percentComplete})`
+      ctx.arc(
+        (drawableShip.canvasCoordP1.x + drawableShip.canvasCoordP2.x) / 2,
+        (drawableShip.canvasCoordP1.y + drawableShip.canvasCoordP2.y) / 2,
+        radiusPx, 0, TWO_PI
+      )
+      ctx.fill()
     }
   }
 

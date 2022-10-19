@@ -666,6 +666,7 @@ class Game(BaseModel):
                         else None
                     ),
                     'visual_fueling_at_station': self._ships[other_id].fueling_at_station,
+                    "visual_last_tube_fire_frame": self._ships[other_id].last_tube_fire_frame,
                     "distance": round(distance_meters),
                     "relative_heading": round(exact_heading),
                     "target_heading": exact_heading,
@@ -813,6 +814,7 @@ class Game(BaseModel):
         if self._ships[ship_id].magnet_mine_firing:
             # Spawn a new magnet mine.
             self._ships[ship_id].magnet_mine_firing = False
+            self._ships[ship_id].last_tube_fire_frame = self._game_frame
             mine = MagnetMine(self._game_frame, ship_id)
             # ship._special_weapons_launch_velocity is set when processing
             # ship commands in run_frame()
@@ -881,6 +883,8 @@ class Game(BaseModel):
                 closest_distance = None
                 closest_id = None
                 for ship_id in self._ships:
+                    if self._ships[ship_id].exploded:
+                        continue
                     distance = utils2d.calculate_point_distance(
                         (
                             self._magnet_mines[mm_id].coord_x,
@@ -896,26 +900,27 @@ class Game(BaseModel):
                 self._magnet_mines[mm_id].closest_ship_id = closest_id
                 self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
 
-                # Apply acceleration
-                heading_to_closest = utils2d.calculate_heading_to_point((
-                    self._magnet_mines[mm_id].coord_x,
-                    self._magnet_mines[mm_id].coord_y,
-                ), (
-                    self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_x,
-                    self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_y,
-                ))
-                x_acc, y_acc = utils2d.calculate_x_y_components(
-                    self._magnet_mine_tracking_acceleration_ms / fps,
-                    heading_to_closest,
-                )
-                self._magnet_mines[mm_id].velocity_x_meters_per_second += x_acc
-                self._magnet_mines[mm_id].velocity_y_meters_per_second += y_acc
+                if closest_id is not None:
+                    # Apply acceleration
+                    heading_to_closest = utils2d.calculate_heading_to_point((
+                        self._magnet_mines[mm_id].coord_x,
+                        self._magnet_mines[mm_id].coord_y,
+                    ), (
+                        self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_x,
+                        self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_y,
+                    ))
+                    x_acc, y_acc = utils2d.calculate_x_y_components(
+                        self._magnet_mine_tracking_acceleration_ms / fps,
+                        heading_to_closest,
+                    )
+                    self._magnet_mines[mm_id].velocity_x_meters_per_second += x_acc
+                    self._magnet_mines[mm_id].velocity_y_meters_per_second += y_acc
 
-                # draw targeting line
-                self._magnet_mine_targeting_lines.append({
-                    "mine_coord": self._magnet_mines[mm_id].coords,
-                    "target_coord": self._ships[self._magnet_mines[mm_id].closest_ship_id].coords,
-                })
+                    # draw targeting line
+                    self._magnet_mine_targeting_lines.append({
+                        "mine_coord": self._magnet_mines[mm_id].coords,
+                        "target_coord": self._ships[self._magnet_mines[mm_id].closest_ship_id].coords,
+                    })
 
             # Adjust position
             self._magnet_mines[mm_id].coord_x += (
