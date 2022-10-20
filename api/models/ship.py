@@ -354,7 +354,7 @@ class Ship(BaseModel):
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 1)
-        self.explode_immediately = False# random.randint(0, 8) == 1
+        self.explode_immediately = random.randint(0, 9) == 1
         self.exploded = False
         self._removed_from_map = False
         self._seconds_to_explode = random.randint(3, 6)
