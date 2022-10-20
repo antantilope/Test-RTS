@@ -494,6 +494,7 @@ export class Camera {
       let canvasY1 = canvasCoordCenter.y - mineHalfSideLenPx
       drawableItems.magnetMines.push({
         mineId: mm.id,
+        percentArmed: mm.percent_armed,
         isDot: mineSideLenPx <= this.minSizeForDotPx,
         canvasCoordCenter,
         canvasX1,

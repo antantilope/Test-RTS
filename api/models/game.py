@@ -696,6 +696,7 @@ class Game(BaseModel):
                     'distance': distance_meters,
                     'exploded': self._magnet_mines[mm_id].exploded,
                     'relative_heading': round(exact_heading),
+                    'percent_armed': self._magnet_mines[mm_id].percent_armed,
                 }
 
         # Check if scanner target has gone out of range
@@ -833,6 +834,7 @@ class Game(BaseModel):
     def advance_magnet_mines(self, fps: int):
         keys_to_drop = []
         self._magnet_mine_targeting_lines.clear()
+        arm_time_ms = self._magnet_mine_arming_time_seconds * 1000
         for mm_id in self._magnet_mines:
 
             if self._magnet_mines[mm_id].exploded:
@@ -844,9 +846,13 @@ class Game(BaseModel):
             # Arm the mine if enough time has passed
             if (
                 not self._magnet_mines[mm_id].armed
-                and self._magnet_mines[mm_id].elapsed_milliseconds > (self._magnet_mine_arming_time_seconds * 1000)
+                and self._magnet_mines[mm_id].elapsed_milliseconds > arm_time_ms
             ):
                 self._magnet_mines[mm_id].armed = True
+                self._magnet_mines[mm_id].percent_armed = 1
+
+            elif not self._magnet_mines[mm_id].armed:
+                self._magnet_mines[mm_id].percent_armed = self._magnet_mines[mm_id].elapsed_milliseconds / arm_time_ms
 
             if self._magnet_mines[mm_id].armed:
                 # Blow up mine if close enough in proximity to target

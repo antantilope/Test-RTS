@@ -173,6 +173,7 @@ class ScannedMagnetMineElement(TypedDict):
     distance: int
     exploded: bool
     relative_heading: int
+    percent_armed: float
 
 class TimerItem(TypedDict):
     name: str

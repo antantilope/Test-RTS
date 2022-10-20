@@ -1251,16 +1251,69 @@ export class DrawingService {
       mine.canvasX1, mine.canvasY1,
       mine.canvasW, mine.canvasH,
     )
-    ctx.beginPath()
     ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
-    ctx.lineWidth = 2.5
-    ctx.rect(
-      mine.canvasBoundingBox.x1,
-      mine.canvasBoundingBox.y1,
-      mine.canvasBoundingBox.x2 - mine.canvasBoundingBox.x1,
-      mine.canvasBoundingBox.y2 - mine.canvasBoundingBox.y1,
-    )
-    ctx.stroke()
+    ctx.lineWidth = 1.75 + (1.5 * mine.percentArmed)
+    if(mine.percentArmed > 0.97) {
+      ctx.beginPath()
+      ctx.rect(
+        mine.canvasBoundingBox.x1,
+        mine.canvasBoundingBox.y1,
+        mine.canvasBoundingBox.x2 - mine.canvasBoundingBox.x1,
+        mine.canvasBoundingBox.y2 - mine.canvasBoundingBox.y1,
+      )
+      ctx.stroke()
+    } else {
+      // Draw arming animation with bounding box.
+      const topLen = mine.canvasBoundingBox.x2 - mine.canvasBoundingBox.x1
+      const sideLen = mine.canvasBoundingBox.y2 - mine.canvasBoundingBox.y1
+      // Top Line (left to right)
+      if(mine.percentArmed >= 0.25) {
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1)
+        ctx.stroke()
+      } else {
+        let percSide = mine.percentArmed / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x1 + (topLen * percSide), mine.canvasBoundingBox.y1)
+        ctx.stroke()
+      }
+      // right side line (top to bottom)
+      if(mine.percentArmed >= 0.50) {
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (mine.percentArmed >= 0.25 && mine.percentArmed < 0.5) {
+        let percSide = (mine.percentArmed - 0.25) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1 + (sideLen * percSide))
+        ctx.stroke()
+      }
+      // bottom line (right to left)
+      if(mine.percentArmed >= 0.75) {
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y2)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (mine.percentArmed >= 0.50 && mine.percentArmed < 0.75) {
+        let percSide = (mine.percentArmed - 0.5) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y2)
+        ctx.lineTo(mine.canvasBoundingBox.x2 - (topLen * percSide), mine.canvasBoundingBox.y2)
+        ctx.stroke()
+      }
+      // left side (bottom to top)
+      if(mine.percentArmed > 0.75 && mine.percentArmed <= 0.97) {
+        let percSide = (mine.percentArmed - 0.75) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y2)
+        ctx.lineTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y2 - (sideLen * percSide))
+        ctx.stroke()
+      }
+    }
     const bbXOffset = mine.canvasBoundingBox.x1
     let bbYOffset = mine.canvasBoundingBox.y2 + 20
     ctx.beginPath()

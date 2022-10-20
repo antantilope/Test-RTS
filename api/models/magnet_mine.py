@@ -13,6 +13,7 @@ class MagnetMine(BaseModel):
         self.ship_id = ship_id
 
         self.armed = False
+        self.percent_armed = 0
         self.exploded = False
 
         # Position
@@ -28,4 +29,4 @@ class MagnetMine(BaseModel):
 
     @property
     def coords(self):
-        return (self.coord_x, self.coord_y)
+        return (self.coord_x, self.coord_y,)

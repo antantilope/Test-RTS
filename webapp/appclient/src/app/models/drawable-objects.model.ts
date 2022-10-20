@@ -41,6 +41,7 @@ export class DrawableMagnetMine {
     canvasW: number
     canvasH: number
     canvasBoundingBox: BoxCoords
+    percentArmed: number
 }
 
 export class DrawableMagnetMineTargetingLine {
