@@ -705,7 +705,6 @@ export class CameraService {
     this.flameSmokeElements = this.flameSmokeElements.filter((fse: FlameSmokeElement)=>{
       return fse.createdAt + FLAME_SMOKE_ELEMENT_TTL_MS > now
     })
-    console.log({smoke: this.flameSmokeElements})
     // Add elements for own ship
     if(this._api.frameData.ship.aflame) {
       this.flameSmokeElements.push({
