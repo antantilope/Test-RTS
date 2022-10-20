@@ -714,14 +714,31 @@ export class CameraService {
       if(sde.velocity_x_meters_per_second || sde.velocity_y_meters_per_second){
         this.velocityTrailElements.push({
           createdAt: now,
-          mapCoord: {x:sde.coord_x, y:sde.coord_y},
+          mapCoord: {
+            x: Math.floor((sde.visual_p0[0] + sde.visual_p3[0]) / 2),
+            y: Math.floor((sde.visual_p0[1] + sde.visual_p3[1]) / 2),
+          },
           radiusMeters: sde.visual_engine_lit ? 1.5 : 0.4,
           grow: sde.visual_engine_lit,
         })
       }
     }
+    for(let i in this._api.frameData.ship.scanner_magnet_mine_data) {
+      let sde = this._api.frameData.ship.scanner_magnet_mine_data[i]
+      if(!sde.exploded && (sde.velocity_x_meters_per_second || sde.velocity_y_meters_per_second)){
+        this.velocityTrailElements.push({
+          createdAt: now,
+          mapCoord: {x:sde.coord_x, y:sde.coord_y},
+          radiusMeters: 1,
+          grow: false,
+        })
+      }
+    }
 
-    setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+    setTimeout(
+      this.updateVelocityTrailElements.bind(this),
+      this.updateVelocityTrailElementsInterval,
+    )
   }
 
 }
