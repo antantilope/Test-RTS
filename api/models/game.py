@@ -210,6 +210,7 @@ class Game(BaseModel):
         # Special Weapons
         self._special_weapon_costs = {
             constants.MAGNET_MINE_SLUG: constants.MAGNET_MINE_ORE_COST,
+            constants.EMP_SLUG: constants.EMP_ORE_COST,
         }
         self._magnet_mine_tracking_acceleration_ms = constants.MAGNET_MINE_TRACKING_ACCELERATION_MS
         self._magnet_mine_arming_time_seconds = constants.MAGNET_MINE_ARMING_TIME_SECONDS

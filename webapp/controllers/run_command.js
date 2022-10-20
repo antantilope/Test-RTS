@@ -252,6 +252,20 @@ const commandHandlers = {
             args: [velocity],
         });
     },
+    buy_emp: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'buy_emp',
+        });
+    },
+    launch_emp: (req, queueName) => {
+        const velocity = validateLaunchTubeWeapon(req.body)
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'launch_emp',
+            args: [velocity],
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {

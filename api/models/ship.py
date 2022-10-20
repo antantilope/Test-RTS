@@ -103,8 +103,11 @@ class ShipCommands:
     CANCEL_CORE_UPGRADE = "cancel_core_upgrade"
     CANCEL_SHIP_UPGRADE = "cancel_ship_upgrade"
 
+    # Tube Weapons
     BUY_MAGNET_MINE = "buy_magnet_mine"
     LAUNCH_MAGNET_MINE = "launch_magnet_mine"
+    BUY_EMP = "buy_emp"
+    LAUNCH_EMP = "launch_emp"
 
 class ShipStateKey:
     MASS = 'mass'
@@ -343,8 +346,10 @@ class Ship(BaseModel):
         self._special_weapons_min_launch_velocity = None
         self._special_weapons_max_launch_velocity = None
         self._special_weapons_launch_velocity = None
-        self.magnet_mines_loaded = 4
+        self.magnet_mines_loaded = 0
+        self.emps_loaded = 0
         self.magnet_mine_firing = False
+        self.emp_firing = False
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -513,7 +518,7 @@ class Ship(BaseModel):
 
     @property
     def special_weapons_loaded(self):
-        return self.magnet_mines_loaded
+        return self.magnet_mines_loaded + self.emps_loaded
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
@@ -593,6 +598,7 @@ class Ship(BaseModel):
             'last_tube_fire_frame': self.last_tube_fire_frame,
             'special_weapons_loaded': self.special_weapons_loaded,
             'magnet_mines_loaded': self.magnet_mines_loaded,
+            'emps_loaded': self.emps_loaded,
 
             'docked_at_station': self.docked_at_station,
             'scouted_station_gravity_brake_catches_last_frame': self.scouted_station_gravity_brake_catches_last_frame,
@@ -1488,6 +1494,11 @@ class Ship(BaseModel):
             self.cmd_buy_magnet_mine()
         elif command == ShipCommands.LAUNCH_MAGNET_MINE:
             self.cmd_launch_magnet_mine(args[0])
+        elif command == ShipCommands.BUY_EMP:
+            self.cmd_buy_emp()
+        elif command == ShipCommands.LAUNCH_EMP:
+            self.cmd_launch_emp(args[0])
+
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -1839,6 +1850,7 @@ class Ship(BaseModel):
                 self._upgrades[utype][upgrade_ix].slug
             ]['seconds_researched'] = None
 
+    # TUBE WEAPON COMMANDS
     def cmd_buy_magnet_mine(self):
         if self.special_weapons_loaded >= self.special_weapons_tubes_count:
             return
@@ -1864,3 +1876,30 @@ class Ship(BaseModel):
             self.magnet_mines_loaded -= 1
             self.magnet_mine_firing = True
             self._special_weapons_launch_velocity = _velocity
+
+    def cmd_buy_emp(self):
+        if self.special_weapons_loaded >= self.special_weapons_tubes_count:
+            return
+        if not self.docked_at_station:
+            return
+        ore_cost = self._special_weapon_costs[constants.EMP_SLUG]
+        try:
+            self.withdraw_ore(ore_cost)
+        except InsufficientOreError:
+            return
+        self.emps_loaded += 1
+    
+    def cmd_launch_emp(self, launch_velocity: int):
+        _velocity = max(
+            launch_velocity,
+            self._special_weapons_min_launch_velocity,
+        )
+        _velocity = min(
+            _velocity,
+            self._special_weapons_max_launch_velocity,
+        )
+        if self.emps_loaded > 0 and not self.magnet_mine_firing:
+            self.emps_loaded -= 1
+            self.emp_firing = True
+            self._special_weapons_launch_velocity = _velocity
+            
