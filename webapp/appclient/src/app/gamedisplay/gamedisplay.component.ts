@@ -529,6 +529,10 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+    this._draw.drawVisualFlameSmokeElements(
+      this.ctx, this._camera.gameDisplayCamera,
+      this._camera.getFlameSmokeElements()
+    )
     this._draw.drawVisualVelocityElements(
       this.ctx, this._camera.gameDisplayCamera,
       this._camera.getVelocityTrailElements(),

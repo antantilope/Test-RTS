@@ -648,6 +648,14 @@ export class VelocityTrailElement {
 }
 
 
+export const FLAME_SMOKE_ELEMENT_TTL_MS = 3500
+export class FlameSmokeElement {
+  createdAt: number
+  initalRadiusMeters: number
+  mapCoord: PointCoord
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -661,6 +669,9 @@ export class CameraService {
 
   private updateVelocityTrailElementsInterval = 400
   private velocityTrailElements: VelocityTrailElement[] = []
+
+  private updateFlameSmokeElementInterval = 300
+  private flameSmokeElements: FlameSmokeElement[] = []
 
   constructor(
     private _api: ApiService,
@@ -677,12 +688,57 @@ export class CameraService {
     )
 
     setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+    setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
   }
 
+  // Flame Smoke
+  public getFlameSmokeElements(): FlameSmokeElement[] {
+    return this.flameSmokeElements
+  }
+  private updateFlameSmokeElements() {
+    if(!this._api.frameData) {
+      console.warn("updateVelocityTrailElements():: no framedata found")
+      return setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
+    }
+    const now = performance.now()
+    // Clear old elements
+    this.flameSmokeElements = this.flameSmokeElements.filter((fse: FlameSmokeElement)=>{
+      return fse.createdAt + FLAME_SMOKE_ELEMENT_TTL_MS > now
+    })
+    console.log({smoke: this.flameSmokeElements})
+    // Add elements for own ship
+    if(this._api.frameData.ship.aflame) {
+      this.flameSmokeElements.push({
+        createdAt: now,
+        mapCoord: {
+          x: this._api.frameData.ship.coord_x + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+          y: this._api.frameData.ship.coord_y + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: getRandomFloat(4, 7),
+      })
+    }
+    // Add elements from other ships
+    for(let i in this._api.frameData.ship.scanner_ship_data){
+      let sde = this._api.frameData.ship.scanner_ship_data[i]
+      if(sde.aflame) {
+        this.flameSmokeElements.push({
+          createdAt: now,
+          mapCoord: {
+            x: sde.coord_x + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+            y: sde.coord_y + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+          },
+          initalRadiusMeters: getRandomFloat(4, 7),
+        })
+      }
+    }
+
+    setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
+  }
+
+  // Velocity Visual Dots
   public getVelocityTrailElements(): VelocityTrailElement[] {
     return this.velocityTrailElements
   }
-
   private updateVelocityTrailElements() {
     if(!this._api.frameData) {
       console.warn("updateVelocityTrailElements():: no framedata found")

@@ -210,6 +210,11 @@ export class ScannerpaneComponent implements OnInit {
     this._draw.drawSpaceStations(this.ctx, this._camera.scannerPaneCamera)
     this._draw.drawMiningLocations(this.ctx, this._camera.scannerPaneCamera)
 
+    // Flame smoke elements
+    this._draw.drawVisualFlameSmokeElements(
+      this.ctx, this._camera.scannerPaneCamera,
+      this._camera.getFlameSmokeElements()
+    )
     // Visual Velocity elements
     this._draw.drawVisualVelocityElements(
       this.ctx, this._camera.scannerPaneCamera,

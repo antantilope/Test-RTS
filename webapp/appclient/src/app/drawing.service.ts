@@ -4,7 +4,9 @@ import { ApiService } from './api.service';
 import {
   Camera,
   VelocityTrailElement,
+  FlameSmokeElement,
   VELOCITY_TRAIL_ELEMENT_TTL_MS,
+  FLAME_SMOKE_ELEMENT_TTL_MS,
 } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
@@ -146,6 +148,31 @@ export class DrawingService {
       ctx.beginPath()
       ctx.fillStyle = `rgb(140, 140, 140, ${alpha})`
       ctx.arc(canvasCoord.x, canvasCoord.y, pixelRadius, 0, TWO_PI)
+      ctx.fill()
+    }
+  }
+
+  public drawVisualFlameSmokeElements(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    flameSmokeElements: FlameSmokeElement[],
+  ){
+    const cameraPosition = camera.getPosition()
+    const zoom = camera.getZoom()
+    const ppm = this._api.frameData.map_config.units_per_meter
+    const now = performance.now()
+    for(let i in flameSmokeElements) {
+      let fse = flameSmokeElements[i]
+      let agePercent = (now - fse.createdAt) / FLAME_SMOKE_ELEMENT_TTL_MS
+      let radiusPx = (fse.initalRadiusMeters + (fse.initalRadiusMeters * agePercent)) * ppm / zoom
+      let alpha = 0.55 - (0.55 * agePercent)
+      let canvasCoord = camera.mapCoordToCanvasCoord(fse.mapCoord, cameraPosition)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(127, 127, 127, ${alpha})`
+      ctx.arc(
+        canvasCoord.x, canvasCoord.y,
+        radiusPx, 0, TWO_PI
+      )
       ctx.fill()
     }
   }

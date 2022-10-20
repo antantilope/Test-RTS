@@ -354,10 +354,10 @@ class Ship(BaseModel):
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 1)
-        self.explode_immediately = random.randint(0, 5) == 1
+        self.explode_immediately = False#random.randint(0, 5) == 1
         self.exploded = False
         self._removed_from_map = False
-        self._seconds_to_explode = random.randint(2, 5)
+        self._seconds_to_explode = 5#random.randint(2, 5)
 
         # Space station interactions
         self.docked_at_station = None
