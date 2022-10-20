@@ -146,6 +146,13 @@ class Game(BaseModel):
     def __init__(self):
         super().__init__()
 
+        # This property (_is_testing) is a bit of an antipattern.
+        # Ideally game logic should work exactly the same in unit tests
+        # as it does in a live environment.
+        # This field should only be referenced when you want CPU intensive
+        # tasks to only run on every Nth frame, but for ease of testing
+        # you want the task to run every frame. BE CAREFUL WHEN TIEING
+        # LOGIC TO CODE PATHS THAT DONT RUN EVERY FRAME! - Jon
         self._is_testing = False
 
         self.logger = get_logger("Game-Logger")
