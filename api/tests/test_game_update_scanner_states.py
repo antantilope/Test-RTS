@@ -10,6 +10,9 @@ from api.models.ship import VisibleElementShapeType
 class TestGameUpdateScannerStatesForShips(TestCase):
 
     def setUp(self):
+        self.maxDiff = None
+
+
         # MAP UNITS PER METER
         self.upm = 10
 
@@ -344,9 +347,9 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'coord_x': 1000 * self.upm,
                 'coord_y': 1000 * self.upm,
                 'in_visual_range': True,
+                'velocity_y_meters_per_second': 0.0,
+                'velocity_x_meters_per_second': 0.0,
                 'visual_shape': VisibleElementShapeType.RECT,
-                'velocity_y_meters_per_second': 0,
-                'velocity_x_meters_per_second': 0,
                 'visual_p0': self.game._ships[self.player_2_ship_id].map_p0,
                 'visual_p1': self.game._ships[self.player_2_ship_id].map_p1,
                 'visual_p2': self.game._ships[self.player_2_ship_id].map_p2,
@@ -369,11 +372,12 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'aflame': False,
                 'exploded': False,
                 'alive': True,
-                'target_heading': 45,
+                'target_heading': 45.0,
                 "relative_heading": 45,
                 "distance": 707,
                 'anti_radar_coating_level':0,
                 'scanner_thermal_signature': 0,
+                'visual_last_tube_fire_frame': None,
             }
         )
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_ship_data[self.player_1_ship_id],
@@ -408,11 +412,12 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'aflame': False,
                 'exploded': False,
                 'alive': True,
-                'target_heading': 225,
+                'target_heading': 225.0,
                 "relative_heading": 225,
                 "distance": 707,
                 'anti_radar_coating_level':0,
                 'scanner_thermal_signature': 0,
+                'visual_last_tube_fire_frame': None,
             }
         )
 
@@ -448,8 +453,8 @@ class TestGameUpdateScannerStatesForShips(TestCase):
             'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
             'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
             'visual_engine_lit': False,
-            'velocity_x_meters_per_second': 0,
-            'velocity_y_meters_per_second': 0,
+            'velocity_x_meters_per_second': 0.0,
+            'velocity_y_meters_per_second': 0.0,
             'visual_engine_boosted_last_frame': -10,
             'visual_ebeam_charging': False,
             'visual_ebeam_firing': False,
@@ -472,6 +477,7 @@ class TestGameUpdateScannerStatesForShips(TestCase):
             "target_heading": 225.0,
             'anti_radar_coating_level':0,
             'scanner_thermal_signature': 0,
+            'visual_last_tube_fire_frame': None,
         })
 
     def test_ship_1_and_ship_2_can_spot_eachother_with_radar_scanner_only(self):

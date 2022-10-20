@@ -831,10 +831,12 @@ class Game(BaseModel):
             self._magnet_mines[mine.id] = mine
 
     def advance_magnet_mines(self, fps: int):
+        keys_to_drop = []
         self._magnet_mine_targeting_lines.clear()
         for mm_id in self._magnet_mines:
 
             if self._magnet_mines[mm_id].exploded:
+                keys_to_drop.append(mm_id)
                 continue
 
             self._magnet_mines[mm_id].elapsed_milliseconds += (1000 / fps)
@@ -931,6 +933,11 @@ class Game(BaseModel):
                 (self._magnet_mines[mm_id].velocity_y_meters_per_second
                 * self._map_units_per_meter)
                 / fps)
+
+        # mines get deleted from dict on the frame after they explode.
+        if any(keys_to_drop):
+            for k in keys_to_drop:
+                del self._magnet_mines[k]
 
 
     def _advance_collisions(self, ship_id: str, collision_type: str):
