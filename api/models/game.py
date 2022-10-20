@@ -146,6 +146,8 @@ class Game(BaseModel):
     def __init__(self):
         super().__init__()
 
+        self._is_testing = False
+
         self.logger = get_logger("Game-Logger")
 
         self._spawn_points: List[MapSpawnPoint] = []
@@ -835,6 +837,10 @@ class Game(BaseModel):
         keys_to_drop = []
         self._magnet_mine_targeting_lines.clear()
         arm_time_ms = self._magnet_mine_arming_time_seconds * 1000
+
+        # For a performance boost, only check proximity every 3rd frame
+        check_proximity = self._is_testing or self._game_frame % 3 == 0
+
         for mm_id in self._magnet_mines:
 
             if self._magnet_mines[mm_id].exploded:
@@ -886,27 +892,42 @@ class Game(BaseModel):
                     )
                     continue
 
-                # Accelerate
-                # Find towards closest ship
                 closest_distance = None
                 closest_id = None
-                for ship_id in self._ships:
-                    if self._ships[ship_id].exploded:
-                        continue
+                if check_proximity or self._magnet_mines[mm_id].closest_ship_id is None:
+                    # Find towards closest ship
+                    # update distance to targeted ship
+                    for ship_id in self._ships:
+                        if self._ships[ship_id].exploded:
+                            continue
+                        distance = utils2d.calculate_point_distance(
+                            (
+                                self._magnet_mines[mm_id].coord_x,
+                                self._magnet_mines[mm_id].coord_y,
+                            ), (
+                                self._ships[ship_id].coord_x,
+                                self._ships[ship_id].coord_y,
+                            ),
+                        )
+                        if closest_distance is None or closest_distance > distance:
+                            closest_distance = distance
+                            closest_id = ship_id
+                    self._magnet_mines[mm_id].closest_ship_id = closest_id
+                    self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
+                
+                else:
+                    # update distance to targeted ship
                     distance = utils2d.calculate_point_distance(
                         (
                             self._magnet_mines[mm_id].coord_x,
                             self._magnet_mines[mm_id].coord_y,
                         ), (
-                            self._ships[ship_id].coord_x,
-                            self._ships[ship_id].coord_y,
+                            self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_x,
+                            self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_y,
                         ),
                     )
-                    if closest_distance is None or closest_distance > distance:
-                        closest_distance = distance
-                        closest_id = ship_id
-                self._magnet_mines[mm_id].closest_ship_id = closest_id
-                self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
+                    self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
+
 
                 if closest_id is not None:
                     # Apply acceleration
