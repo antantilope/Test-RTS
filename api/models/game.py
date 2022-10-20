@@ -3,7 +3,7 @@ from collections import OrderedDict
 from itertools import cycle
 import json
 import datetime as dt
-from typing import Tuple, TypedDict, Optional, List, Dict
+from typing import Tuple, TypedDict, Optional, List, Dict, Set
 from time import sleep
 import re
 import traceback
@@ -146,6 +146,15 @@ class Game(BaseModel):
     def __init__(self):
         super().__init__()
 
+        # This property (_is_testing) is a bit of an antipattern.
+        # Ideally game logic should work exactly the same in unit tests
+        # as it does in a live environment.
+        # This field should only be referenced when you want CPU intensive
+        # tasks to only run on every Nth frame, but for ease of testing
+        # you want the task to run every frame. BE CAREFUL WHEN TIEING
+        # LOGIC TO CODE PATHS THAT DONT RUN EVERY FRAME! - Jon
+        self._is_testing = False
+
         self.logger = get_logger("Game-Logger")
 
         self._spawn_points: List[MapSpawnPoint] = []
@@ -155,8 +164,11 @@ class Game(BaseModel):
         self._ebeam_rays: List[EBeamRayDetails] = []
         self._killfeed: List[KillFeedElement] = []
         self._explosion_shockwaves: List[ExplosionShockwave] = []
+        self._ships_hit_by_shockwave: Dict[str, Set[str]] = {}
         self._explosions: List[Explosion] = []
         self._explosion_shockwave_max_radius_meters = None
+        self._shockwave_max_delta_v_meters_per_second = constants.SHOCKWAVE_MAX_DELTA_V_METERS_PER_SECOND
+        self._shockwave_max_delta_v_coef = constants.SHOCKWAVE_MAX_DELTA_V_COEF
         self._space_stations: List[MapSpaceStation] = []
         self._ore_mines: List[MapMiningLocationDetails] = []
         self._ore_mines_remaining_ore: Dict[str, float] = {}
@@ -308,10 +320,7 @@ class Game(BaseModel):
         for om in self._ore_mines:
             self._ore_mines_remaining_ore[om['uuid']] = om['starting_ore_amount_kg']
 
-        self._explosion_shockwave_max_radius_meters = max(
-            request['mapData']['meters_x'],
-            request['mapData']['meters_y'],
-        )
+        self._explosion_shockwave_max_radius_meters = 4000
 
     def _validate_can_set_map(self):
         if self._phase != GamePhase.LOBBY:
@@ -518,15 +527,59 @@ class Game(BaseModel):
         self.incr_game_frame()
 
 
+    def _shock_wave_delta_v_calculator(self, distance: float) -> float:
+        # calculate total magnitude a shockwave should have on an element
+        # relative to the distance from the shock wave's center
+        return max(
+            0,
+            self._shockwave_max_delta_v_coef * (distance**2) + self._shockwave_max_delta_v_meters_per_second
+        )
+
     def advance_explosion_shockwaves(self):
         delta_radius = constants.SPEED_OF_SOUND_METERS_PER_SECOND / self._fps
         ix_to_remove = set()
+        sw_ids_to_remove = set()
+        check_for_sw_physics = self._is_testing or self._game_frame % 5 == 0
         for ix, esw in enumerate(self._explosion_shockwaves):
+            # Adjust radius of shockwave
             new_radius = esw['radius_meters'] + delta_radius
             if new_radius > self._explosion_shockwave_max_radius_meters:
                 ix_to_remove.add(ix)
+                sw_ids_to_remove.add(esw['id'])
             else:
                 self._explosion_shockwaves[ix]['radius_meters'] = new_radius
+            
+            # adjust ship velocities if they have been struck by the shock wave
+            if check_for_sw_physics:
+                for ship_id in self._ships:
+                    if (
+                        ship_id in self._ships_hit_by_shockwave[esw['id']]
+                        or self._ships[ship_id].exploded
+                        or self._ships[ship_id].docked_at_station
+                        or self._ships[ship_id].docking_at_station
+                    ):
+                        continue
+                    distance_meters = utils2d.calculate_point_distance(
+                        self._ships[ship_id].coords,
+                        esw['origin_point'],
+                    ) / self._map_units_per_meter
+                    if distance_meters <= esw['radius_meters']:
+                        self._ships_hit_by_shockwave[esw['id']].add(ship_id)
+                        acc_heading = utils2d.calculate_heading_to_point(
+                            esw['origin_point'],
+                            self._ships[ship_id].coords
+                        )
+                        delta_v_meters = self._shock_wave_delta_v_calculator(distance_meters)
+                        if not delta_v_meters > 0:
+                            continue
+                        fx_meters, fy_meters = utils2d.calculate_x_y_components(
+                            delta_v_meters,
+                            acc_heading,
+                        )
+                        # No FPS calculation here, acceleration is instant
+                        # and occurs over a single frame.
+                        self._ships[ship_id].velocity_x_meters_per_second += fx_meters
+                        self._ships[ship_id].velocity_y_meters_per_second += fy_meters
 
         if ix_to_remove:
             self._explosion_shockwaves = [
@@ -534,6 +587,11 @@ class Game(BaseModel):
                 for ix, esw in enumerate(self._explosion_shockwaves)
                 if ix not in ix_to_remove
             ]
+            self._ships_hit_by_shockwave = {
+                k: v
+                for k, v in self._ships_hit_by_shockwave.items()
+                if k not in sw_ids_to_remove
+            }
 
     def advance_explosions(self):
         ix_to_remove = []
@@ -562,11 +620,13 @@ class Game(BaseModel):
         fade_ms: int,
         extras={}
     ):
+        shockwave_id = str(uuid4()) 
         self._explosion_shockwaves.append({
-            "id": str(uuid4()),
+            "id": shockwave_id,
             "origin_point": origin_point,
             "radius_meters": 1,
         })
+        self._ships_hit_by_shockwave[shockwave_id] = set()
         self._explosions.append({
             "id": str(uuid4()),
             "origin_point": origin_point,
@@ -777,6 +837,7 @@ class Game(BaseModel):
                 collision_type,
             )
             if death_data:
+                is_firey = self._ships[ship_id].fuel_level > 6000
                 self._killfeed.append({
                     "created_at_frame": self._game_frame,
                     "victim_name": self._ships[ship_id].scanner_designator,
@@ -835,6 +896,10 @@ class Game(BaseModel):
         keys_to_drop = []
         self._magnet_mine_targeting_lines.clear()
         arm_time_ms = self._magnet_mine_arming_time_seconds * 1000
+
+        # For a performance boost, only check proximity every 3rd frame
+        check_proximity = self._is_testing or self._game_frame % 3 == 0
+
         for mm_id in self._magnet_mines:
 
             if self._magnet_mines[mm_id].exploded:
@@ -886,27 +951,42 @@ class Game(BaseModel):
                     )
                     continue
 
-                # Accelerate
-                # Find towards closest ship
                 closest_distance = None
                 closest_id = None
-                for ship_id in self._ships:
-                    if self._ships[ship_id].exploded:
-                        continue
+                if check_proximity or self._magnet_mines[mm_id].closest_ship_id is None:
+                    # Find towards closest ship
+                    # update distance to targeted ship
+                    for ship_id in self._ships:
+                        if self._ships[ship_id].exploded:
+                            continue
+                        distance = utils2d.calculate_point_distance(
+                            (
+                                self._magnet_mines[mm_id].coord_x,
+                                self._magnet_mines[mm_id].coord_y,
+                            ), (
+                                self._ships[ship_id].coord_x,
+                                self._ships[ship_id].coord_y,
+                            ),
+                        )
+                        if closest_distance is None or closest_distance > distance:
+                            closest_distance = distance
+                            closest_id = ship_id
+                    self._magnet_mines[mm_id].closest_ship_id = closest_id
+                    self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
+                
+                else:
+                    # update distance to targeted ship
                     distance = utils2d.calculate_point_distance(
                         (
                             self._magnet_mines[mm_id].coord_x,
                             self._magnet_mines[mm_id].coord_y,
                         ), (
-                            self._ships[ship_id].coord_x,
-                            self._ships[ship_id].coord_y,
+                            self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_x,
+                            self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_y,
                         ),
                     )
-                    if closest_distance is None or closest_distance > distance:
-                        closest_distance = distance
-                        closest_id = ship_id
-                self._magnet_mines[mm_id].closest_ship_id = closest_id
-                self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
+                    self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
+
 
                 if closest_id is not None:
                     # Apply acceleration

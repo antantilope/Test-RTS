@@ -26,6 +26,7 @@ class TestMagnetMine(TestCase):
 
         self.game = Game()
         self.game._fps = 1
+        self.game._is_testing = True
 
         self.game.register_player({
             'player_id':self.player_1_id,

@@ -676,6 +676,8 @@ export class GamedisplayComponent implements OnInit {
     ]
     this.ctx.fillText(`ship Velocity: X: ${shipVelX.toFixed(2)} Y: ${shipVelY.toFixed(2)}`, xOffset, yOffset)
     yOffset += yInterval
+    this.ctx.fillText(`ship exploded: ${this._api.frameData.ship.exploded}`, xOffset, yOffset)
+    yOffset += yInterval
   }
 
   public async btnActivateEngine() {

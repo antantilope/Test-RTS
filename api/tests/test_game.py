@@ -119,12 +119,12 @@ class TestGame(TestCase):
     def test_max_explosion_shockwave_radius_is_set_when_configuring_the_map(self):
         game = Game()
         game._phase = GamePhase.LOBBY
-
         assert not game.map_is_configured
+        assert game._explosion_shockwave_max_radius_meters is None
         game.set_map({
             'mapData':{
-                "meters_x": 100 * 1000, # 100KM
-                "meters_y": 200 * 1000, # 200KM
+                "meters_x": 100 * 1000,
+                "meters_y": 200 * 1000,
                 "name": "TestMap",
             },
             'spawnPoints': [{
@@ -138,7 +138,7 @@ class TestGame(TestCase):
             'miningLocations': [],
         }, map_units_per_meter=10)
         assert game.map_is_configured
-        assert game._explosion_shockwave_max_radius_meters == 200 * 1000
+        assert game._explosion_shockwave_max_radius_meters == 4000
 
     def test_game_cannot_configure_map_if_not_in_lobby_phase(self):
         game = Game()

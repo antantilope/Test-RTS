@@ -920,15 +920,12 @@ export class DrawingService {
     esw: {id: string, origin_point: Array<number>, radius_meters: number}
   ) {
 
-    const maxRadiusMeters = Math.max(
-      this._api.frameData.map_config.x_unit_length / this._api.frameData.map_config.units_per_meter,
-      this._api.frameData.map_config.y_unit_length / this._api.frameData.map_config.units_per_meter,
-    )
-    const fillAlpha = 0.12 * (1 - esw.radius_meters / maxRadiusMeters)
-    const startFadeOutAtMeters = maxRadiusMeters * 0.92;
+    const _explosion_shockwave_max_radius_meters = 4000
+    const fillAlpha = 0.12 * (1 - esw.radius_meters / _explosion_shockwave_max_radius_meters)
+    const startFadeOutAtMeters = _explosion_shockwave_max_radius_meters * 0.92;
     let alphaMultiplier = 1
     if(esw.radius_meters > startFadeOutAtMeters) {
-      alphaMultiplier = 1 - ((esw.radius_meters - startFadeOutAtMeters) / (maxRadiusMeters - startFadeOutAtMeters))
+      alphaMultiplier = 1 - ((esw.radius_meters - startFadeOutAtMeters) / (_explosion_shockwave_max_radius_meters - startFadeOutAtMeters))
     }
 
     // Primary arc
@@ -1256,7 +1253,6 @@ export class DrawingService {
       drawableShip.lastTubeFireFrame !== null
       && (drawableShip.lastTubeFireFrame + tubeFireAnimationFrameCt) >= this._api.frameData.game_frame
     ) {
-      console.log("drawing tube weapon smoke puff")
       const percentComplete = (this._api.frameData.game_frame - drawableShip.lastTubeFireFrame) / tubeFireAnimationFrameCt
       const radiusPx = (this._api.frameData.map_config.units_per_meter / camera.getZoom()) * ((percentComplete * 10) + 4)
       ctx.beginPath()
