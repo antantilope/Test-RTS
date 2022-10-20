@@ -58,7 +58,7 @@ export class ApiService {
       this.sigkillEvent.next()
       setTimeout(() => {
         location.reload()
-      }, 1500);
+      }, 750);
     })
 
     this.socket.on(this.EVENT_PUBMSG, (message: AllChatMessage)=>{

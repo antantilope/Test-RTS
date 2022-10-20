@@ -161,10 +161,11 @@ export class DrawingService {
     const zoom = camera.getZoom()
     const ppm = this._api.frameData.map_config.units_per_meter
     const now = performance.now()
+    const maxGrowthCoef = 1.9
     for(let i in flameSmokeElements) {
       let fse = flameSmokeElements[i]
       let agePercent = (now - fse.createdAt) / FLAME_SMOKE_ELEMENT_TTL_MS
-      let radiusPx = (fse.initalRadiusMeters + (fse.initalRadiusMeters * agePercent)) * ppm / zoom
+      let radiusPx = (fse.initalRadiusMeters + (fse.initalRadiusMeters * maxGrowthCoef * agePercent)) * ppm / zoom
       let alpha = 0.55 - (0.55 * agePercent)
       let canvasCoord = camera.mapCoordToCanvasCoord(fse.mapCoord, cameraPosition)
       ctx.beginPath()
