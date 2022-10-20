@@ -239,6 +239,7 @@ export class Ship {
     special_weapons_loaded: number
     last_tube_fire_frame: number
     magnet_mines_loaded: number
+    emps_loaded: number
 
     docked_at_station: string
     gravity_brake_position: number
@@ -269,6 +270,12 @@ export class Ship {
     timers: Timer[]
 }
 
+export class SpecialWeaponsCost {
+    emp: number
+    magnet_mine: number
+}
+
+
 export class FrameData {
     phase: string
 
@@ -287,4 +294,5 @@ export class FrameData {
     magnet_mine_targeting_lines: MagnetMineTargetingLines[]
     killfeed: KillFeedElement[]
     ship: Ship
+    special_weapon_costs: SpecialWeaponsCost
 }

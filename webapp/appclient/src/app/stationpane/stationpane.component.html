@@ -36,10 +36,12 @@
                 <table>
                     <tr>
                         <td>
-                            Available Tubes
+                            <strong>Available Tubes</strong>
                         </td>
                         <td class="td-armory-table-value">
-                            {{ _api.frameData.ship.special_weapons_tubes_count - _api.frameData.ship.special_weapons_loaded }}
+                            <strong>
+                                {{ _api.frameData.ship.special_weapons_tubes_count - _api.frameData.ship.special_weapons_loaded }}
+                            </strong>
                         </td>
                     </tr>
                     <tr>
@@ -49,13 +51,26 @@
                         <td class="td-armory-table-value">
                             {{ _api.frameData.ship.magnet_mines_loaded }}
                         </td>
+                        <td>
+                            <button class="buy-weapon-btn" (click)="btnClickBuyMagnetMine()">
+                                Buy @ {{ _api.frameData.special_weapon_costs.magnet_mine }}🪙
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            EMPs
+                        </td>
+                        <td class="td-armory-table-value">
+                            {{ _api.frameData.ship.emps_loaded }}
+                        </td>
+                        <td>
+                            <button class="buy-weapon-btn" (click)="btnClickBuyEMP()">
+                                Buy @ {{ _api.frameData.special_weapon_costs.emp }}🪙
+                            </button>
+                        </td>
                     </tr>
                 </table>
-            </div>
-            <div>
-                <button class="buy-weapon-btn" (click)="btnClickBuyMagnetMine()">
-                    Purchase Magnet Mine
-                </button>
             </div>
         </div>
     </div>

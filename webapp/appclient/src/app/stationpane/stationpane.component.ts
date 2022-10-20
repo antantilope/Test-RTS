@@ -48,4 +48,11 @@ export class StationpaneComponent implements OnInit {
     )
   }
 
+  public async btnClickBuyEMP() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'buy_emp'},
+    )
+  }
+
 }
