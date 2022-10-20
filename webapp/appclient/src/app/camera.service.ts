@@ -505,7 +505,6 @@ export class Camera {
            Math.max(boundingBoxBuffer, mineSideLenPx + boundingBoxBuffer),
         ),
       })
-      console.log({mineSideLenPx})
     }
 
     // Magnet mine targeting lines
