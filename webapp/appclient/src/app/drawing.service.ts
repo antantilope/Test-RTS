@@ -4,7 +4,9 @@ import { ApiService } from './api.service';
 import {
   Camera,
   VelocityTrailElement,
+  FlameSmokeElement,
   VELOCITY_TRAIL_ELEMENT_TTL_MS,
+  FLAME_SMOKE_ELEMENT_TTL_MS,
 } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
@@ -14,6 +16,8 @@ import {
 } from "./models/box-coords.model"
 import {
   DrawableShip,
+  DrawableMagnetMine,
+  DrawableMagnetMineTargetingLine,
   VisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
@@ -25,7 +29,7 @@ import {
   LOW_FUEL_THRESHOLD,
   LOW_POWER_THRESHOLD
 } from './constants';
-import { OreMine, SpaceStation } from './models/apidata.model';
+import { Explosion, OreMine, Ship, SpaceStation } from './models/apidata.model';
 
 
 
@@ -35,6 +39,10 @@ const randomInt = function (min: number, max: number): number  {
 
 function getRandomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
+}
+
+function nthRoot(x, root) {
+  return Math.pow(x, 1 / root)
 }
 
 @Injectable({
@@ -48,6 +56,7 @@ export class DrawingService {
   private actionTileImgEngineOnline: HTMLImageElement = new Image()
   private actionTileImgScannerOnline: HTMLImageElement = new Image()
 
+  private magnetMineAsset: HTMLImageElement = new Image()
 
   // TODO: fix magic number
   private spaceStationVisualSideLengthM = 30
@@ -64,6 +73,7 @@ export class DrawingService {
     this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
     this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
     this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
+    this.magnetMineAsset.src = "/static/img/magnet-mine.svg"
 
   }
 
@@ -138,6 +148,32 @@ export class DrawingService {
       ctx.beginPath()
       ctx.fillStyle = `rgb(140, 140, 140, ${alpha})`
       ctx.arc(canvasCoord.x, canvasCoord.y, pixelRadius, 0, TWO_PI)
+      ctx.fill()
+    }
+  }
+
+  public drawVisualFlameSmokeElements(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    flameSmokeElements: FlameSmokeElement[],
+  ){
+    const cameraPosition = camera.getPosition()
+    const zoom = camera.getZoom()
+    const ppm = this._api.frameData.map_config.units_per_meter
+    const now = performance.now()
+    const maxGrowthCoef = 1.9
+    for(let i in flameSmokeElements) {
+      let fse = flameSmokeElements[i]
+      let agePercent = (now - fse.createdAt) / FLAME_SMOKE_ELEMENT_TTL_MS
+      let radiusPx = (fse.initalRadiusMeters + (fse.initalRadiusMeters * maxGrowthCoef * agePercent)) * ppm / zoom
+      let alpha = 0.55 - (0.55 * agePercent)
+      let canvasCoord = camera.mapCoordToCanvasCoord(fse.mapCoord, cameraPosition)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(127, 127, 127, ${alpha})`
+      ctx.arc(
+        canvasCoord.x, canvasCoord.y,
+        radiusPx, 0, TWO_PI
+      )
       ctx.fill()
     }
   }
@@ -535,6 +571,7 @@ export class DrawingService {
     ctx: CanvasRenderingContext2D,
     camera: Camera,
     isCameraModeMap: boolean,
+    pneumaticWeaponMsg: string,
   ) {
     let lrcYOffset = camera.canvasHeight - 30
     let lrcYInterval = 40
@@ -591,13 +628,21 @@ export class DrawingService {
       if(this._api.frameData.ship.fuel_level < LOW_FUEL_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW FUEL", lrcXOffset, lrcYOffset)
-        lrcYOffset -= lrcYInterval
+        lrcYOffset -= lrcYInterval + 5
       }
       if(this._api.frameData.ship.battery_power < LOW_POWER_THRESHOLD) {
         ctx.beginPath()
         ctx.fillText("⚠️ LOW POWER", lrcXOffset, lrcYOffset)
-        lrcYOffset -= lrcYInterval
+        lrcYOffset -= lrcYInterval + 5
       }
+
+      // Selected Pneumatic Weapon
+      ctx.beginPath()
+      ctx.fillStyle = "#ffffff"
+      ctx.font = 'bold 22px Courier New'
+      ctx.fillText(pneumaticWeaponMsg, lrcXOffset, lrcYOffset)
+      lrcYOffset -= lrcYInterval
+
       if (this._api.frameData.ship.engine_lit) {
         ctx.drawImage(
           this.actionTileImgEngineLit,
@@ -759,55 +804,64 @@ export class DrawingService {
     }
   }
 
-  private drawExplosionFrameEffect(
-    ctx: CanvasRenderingContext2D,
-    camera: Camera,
-    canvasCoord: PointCoord,
-    explosionFrame: number,
-    maxFireBallRadiusCanvasPx: number,
-  ) {
-    if(explosionFrame < 8) {
-      let fbSize = (explosionFrame / 7) * maxFireBallRadiusCanvasPx
-      ctx.beginPath()
-      ctx.fillStyle = 'rgb(255, 0, 0, 1)'
-      ctx.arc(
-        canvasCoord.x + randomInt(-3, 3),
-        canvasCoord.y + randomInt(-3, 3),
-        fbSize,
-        0,
-        TWO_PI,
+  public drawExplosions(ctx: CanvasRenderingContext2D, camera: Camera) {
+    for(let i in this._api.frameData.explosions) {
+      this.drawExplosion(
+        ctx,
+        camera,
+        this._api.frameData.explosions[i],
       )
-      ctx.fill()
-    } else if (explosionFrame < 76) {
-      // Main fireball
-      let fbSize = maxFireBallRadiusCanvasPx * (randomInt(5, 8) / 7)
+    }
+  }
+
+  private drawExplosion(ctx: CanvasRenderingContext2D, camera: Camera, ex: Explosion) {
+    const ppm = this._api.frameData.map_config.units_per_meter
+    const zoom = camera.getZoom()
+    const cameraPosition = camera.getPosition()
+    let radiusMeters: number, radiusPx: number
+    const canvasCoord = camera.mapCoordToCanvasCoord(
+      {x:ex.origin_point[0], y:ex.origin_point[1]},
+      cameraPosition,
+    )
+    const maxFireBallRadiusCanvasPx = ex.max_radius_meters * ppm / zoom
+    if(ex.elapsed_ms < ex.flame_ms) {
+      // radiusMeters = Math.max(1, (((ex.elapsed_ms - ex.flame_ms) / ex.flame_ms) * ex.max_radius_meters) + randomInt(-2, 2))
+      const percentCompleteTime = ex.elapsed_ms / ex.flame_ms
+      const percentCompleteFlameRadius = nthRoot(percentCompleteTime, 2) // x=y^2
+      radiusMeters = Math.max(1, percentCompleteFlameRadius * ex.max_radius_meters + randomInt(-2, 2))
+      radiusPx = radiusMeters * ppm / zoom
+
+      // Primary fireball
       ctx.beginPath()
-      ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(5, 9)})`
+      ctx.fillStyle = `rgb(255, 0, 0, 0.${randomInt(4, 8)})`
       ctx.arc(
         canvasCoord.x + randomInt(-3, 3),
         canvasCoord.y + randomInt(-3, 3),
-        fbSize,
+        radiusPx,
         0,
         TWO_PI,
       )
       ctx.fill()
       // Inner sub fireballs
-      const subFireBallsCount = randomInt(2, 4)
-      for(let i=0; i<subFireBallsCount; i++) {
-        let subFBSize = Math.floor(fbSize / randomInt(2, 4))
-        ctx.beginPath()
-        ctx.fillStyle = `rgb(255, ${randomInt(20, 65)}, 0, 0.${randomInt(7, 9)})`
-        ctx.arc(
-          canvasCoord.x + randomInt(-8, 8),
-          canvasCoord.y + randomInt(-8, 8),
-          subFBSize,
-          0,
-          TWO_PI,
-        )
-        ctx.fill()
+      if(percentCompleteTime < 0.4) {
+        const subFireBallsCount = randomInt(2, 4)
+        for(let i=0; i<subFireBallsCount; i++) {
+          let subFBSizePx = Math.floor(radiusMeters / getRandomFloat(2, 4)) * ppm / zoom
+          ctx.beginPath()
+          ctx.fillStyle = `rgb(255, ${randomInt(50, 200)}, 0, 0.${randomInt(3, 6)})`
+          ctx.arc(
+            canvasCoord.x + randomInt(-4, 4),
+            canvasCoord.y + randomInt(-4, 4),
+            subFBSizePx,
+            0,
+            TWO_PI,
+          )
+          ctx.fill()
+        }
       }
-      // Deris Lines
+      // Debris lines
       const debrisLineCount = randomInt(-6, 6)
+      ctx.beginPath()
       ctx.lineWidth = 2
       for(let i=0; i<debrisLineCount; i++) {
         let lineLength = maxFireBallRadiusCanvasPx * randomInt(1, 6)
@@ -828,15 +882,22 @@ export class DrawingService {
         ctx.lineTo(linep2.x, linep2.y)
         ctx.stroke()
       }
-    } else {
-      let smokePuffSize = maxFireBallRadiusCanvasPx * 0.9 + (explosionFrame * 1.5);
-      let alpha = (1 - ((explosionFrame - 76) / 75)) / 3.75
+    }
+    else if(ex.elapsed_ms < (ex.flame_ms + ex.fade_ms)) {
+      // Fadeout smoke puff
+      const elapsedFade = ex.elapsed_ms - ex.flame_ms
+      const fadePercent = elapsedFade / ex.fade_ms
+      const startRadius = ex.max_radius_meters
+      const endRadius = ex.max_radius_meters * 1.4
+      radiusMeters = startRadius + (endRadius - startRadius) * fadePercent
+      const fadeRadiusPx = radiusMeters * ppm / zoom
+      const alpha = 0.4 - (0.4 * fadePercent)
       ctx.beginPath()
       ctx.fillStyle = `rgb(255, 0, 0, ${alpha})`
       ctx.arc(
         canvasCoord.x,
         canvasCoord.y,
-        Math.round(smokePuffSize),
+        Math.round(fadeRadiusPx),
         0,
         TWO_PI,
       )
@@ -914,6 +975,10 @@ export class DrawingService {
     drawBoundingBox: boolean,
   ) {
 
+    if(drawableShip.exploded){
+      return
+    }
+
     if (drawableShip.isDot) {
       ctx.beginPath()
       ctx.fillStyle = "rgb(0, 255, 0, 0.9)"
@@ -984,133 +1049,132 @@ export class DrawingService {
         ctx.fill()
       }
     }
-    if(!drawableShip.explosionFrame){
-      // Visual Shake x/y offsets
-      let vsxo = 0, vsyo = 0;
-      if(
-        drawableShip.isSelf
-        // && !drawableShip.isDot
-        && this._api.lastShockwaveFrame !== null
-        && (this._api.lastShockwaveFrame + 75) > this._api.frameData.game_frame
-      ) {
-        const percentThroughShake = (this._api.frameData.game_frame - this._api.lastShockwaveFrame) / 75
-        const shakeReduction = 1 - percentThroughShake
-        const xOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
-        const yOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
-        vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
-        vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
+
+    // Visual Shake x/y offsets
+    let vsxo = 0, vsyo = 0;
+    if(
+      drawableShip.isSelf
+      // && !drawableShip.isDot
+      && this._api.lastShockwaveFrame !== null
+      && (this._api.lastShockwaveFrame + 75) > this._api.frameData.game_frame
+    ) {
+      const percentThroughShake = (this._api.frameData.game_frame - this._api.lastShockwaveFrame) / 75
+      const shakeReduction = 1 - percentThroughShake
+      const xOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+      const yOffsetM = getRandomFloat(-2 * shakeReduction, 2 * shakeReduction)
+      vsxo = xOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
+      vsyo = yOffsetM * this._api.frameData.map_config.units_per_meter / camera.getZoom()
+    }
+    // Ship is within visual range
+    // fin 0
+    ctx.beginPath()
+    ctx.fillStyle = drawableShip.fillColor
+    ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+    ctx.lineTo(drawableShip.canvasCoordFin0P0.x + vsxo, drawableShip.canvasCoordFin0P0.y + vsyo)
+    ctx.lineTo(drawableShip.canvasCoordFin0P1.x + vsxo, drawableShip.canvasCoordFin0P1.y + vsyo)
+    ctx.closePath()
+    ctx.fill()
+    // fin 1
+    ctx.beginPath()
+    ctx.moveTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
+    ctx.lineTo(drawableShip.canvasCoordFin1P0.x + vsxo, drawableShip.canvasCoordFin1P0.y + vsyo)
+    ctx.lineTo(drawableShip.canvasCoordFin1P1.x + vsxo, drawableShip.canvasCoordFin1P1.y + vsyo)
+    ctx.closePath()
+    ctx.fill()
+    // body
+    ctx.beginPath()
+    ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
+    ctx.lineTo(drawableShip.canvasCoordP1.x + vsxo, drawableShip.canvasCoordP1.y + vsyo)
+    ctx.lineTo(drawableShip.canvasCoordP2.x + vsxo, drawableShip.canvasCoordP2.y + vsyo)
+    ctx.lineTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
+    ctx.closePath()
+    ctx.fill()
+    if(drawableShip.visualEbeamCharging) {
+      ctx.strokeStyle = "#ff0000"
+      ctx.lineWidth = randomInt(1, 4)
+      ctx.stroke()
+    }
+    if(drawableShip.engineLit) {
+      const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
+      const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
+      let engineOuterFlameRadius = Math.max(2, Math.round(
+        Math.sqrt(
+          (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
+          + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
+        ) / 2
+      ) * (drawableShip.engineBoosted ? 4 : 1))
+      engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
+      ctx.beginPath()
+      ctx.fillStyle = drawableShip.engineBoosted ? "rgb(71, 139, 255)" : "rgb(255, 0, 0, 0.9)"
+      ctx.arc(
+        engineFlameX,
+        engineFlameY,
+        engineOuterFlameRadius,
+        0,
+        TWO_PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
+      const engineInnerFlameRadius = Math.floor(engineOuterFlameRadius / 2) + randomInt(
+        engineOuterFlameRadius / -5, engineOuterFlameRadius / 5
+      )
+      ctx.arc(
+        engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+        engineFlameY + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
+        engineInnerFlameRadius,
+        0,
+        TWO_PI,
+      )
+      ctx.fill()
+    }
+
+    if(drawableShip.gravityBrakePosition > 0) {
+      const fullyDesployedRadius = Math.ceil(
+        Math.sqrt(
+          Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP2.x, 2)
+          + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP2.y, 2)
+        )
+      )
+
+      let currentRadius = Math.ceil(
+        fullyDesployedRadius * (
+          drawableShip.gravityBrakePosition / drawableShip.gravityBrakeDeployedPosition
+        )
+      )
+      if(drawableShip.gravityBrakeActive) {
+        currentRadius += Math.ceil(currentRadius * Math.random() * 2.5)
+        ctx.fillStyle = `rgb(124, 0, 166, 0.75)`
+      } else {
+        ctx.fillStyle = Math.random() < 0.7 ? `rgb(0, 0, 255, 0.1)` : `rgb(0, 0, 255, 0.6)`
       }
-      // Ship is within visual range
-      // fin 0
       ctx.beginPath()
-      ctx.fillStyle = drawableShip.fillColor
-      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
-      ctx.lineTo(drawableShip.canvasCoordFin0P0.x + vsxo, drawableShip.canvasCoordFin0P0.y + vsyo)
-      ctx.lineTo(drawableShip.canvasCoordFin0P1.x + vsxo, drawableShip.canvasCoordFin0P1.y + vsyo)
-      ctx.closePath()
+      const arcStart = drawableShip.gravityBrakeActive ? 0 : TWO_PI * Math.random()
+      const arcEnd = drawableShip.gravityBrakeActive ? TWO_PI : TWO_PI * Math.random()
+      ctx.arc(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y, currentRadius, arcStart, arcEnd)
       ctx.fill()
-      // fin 1
       ctx.beginPath()
-      ctx.moveTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
-      ctx.lineTo(drawableShip.canvasCoordFin1P0.x + vsxo, drawableShip.canvasCoordFin1P0.y + vsyo)
-      ctx.lineTo(drawableShip.canvasCoordFin1P1.x + vsxo, drawableShip.canvasCoordFin1P1.y + vsyo)
-      ctx.closePath()
+      ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, arcStart, arcEnd)
       ctx.fill()
-      // body
-      ctx.beginPath()
-      ctx.moveTo(drawableShip.canvasCoordP0.x + vsxo, drawableShip.canvasCoordP0.y + vsyo)
-      ctx.lineTo(drawableShip.canvasCoordP1.x + vsxo, drawableShip.canvasCoordP1.y + vsyo)
-      ctx.lineTo(drawableShip.canvasCoordP2.x + vsxo, drawableShip.canvasCoordP2.y + vsyo)
-      ctx.lineTo(drawableShip.canvasCoordP3.x + vsxo, drawableShip.canvasCoordP3.y + vsyo)
-      ctx.closePath()
-      ctx.fill()
-      if(drawableShip.visualEbeamCharging) {
-        ctx.strokeStyle = "#ff0000"
-        ctx.lineWidth = randomInt(1, 4)
+    }
+
+    if(drawableShip.miningOreLocation) {
+      const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
+      if(om) {
+        const p0 = drawableShip.canvasCoordCenter;
+        const p1 = camera.mapCoordToCanvasCoord(
+          {x: om.position_map_units_x, y: om.position_map_units_y},
+          camera.getPosition(),
+        )
+        const rockRadiusCanvasPx = om.service_radius_map_units / 3 / camera.getZoom()
+        p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+        p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+        ctx.beginPath()
+        ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
+        ctx.lineWidth = 4
+        ctx.moveTo(p0.x, p0.y)
+        ctx.lineTo(p1.x, p1.y)
         ctx.stroke()
-      }
-      if(drawableShip.engineLit) {
-        const engineFlameX = Math.round((drawableShip.canvasCoordP3.x + drawableShip.canvasCoordP0.x) / 2)
-        const engineFlameY = Math.round((drawableShip.canvasCoordP3.y + drawableShip.canvasCoordP0.y) / 2)
-        let engineOuterFlameRadius = Math.max(2, Math.round(
-          Math.sqrt(
-            (Math.pow(drawableShip.canvasCoordP3.x - drawableShip.canvasCoordP0.x, 2)
-            + Math.pow(drawableShip.canvasCoordP3.y - drawableShip.canvasCoordP0.y, 2))
-          ) / 2
-        ) * (drawableShip.engineBoosted ? 4 : 1))
-        engineOuterFlameRadius += randomInt(engineOuterFlameRadius / 4, engineOuterFlameRadius)
-        ctx.beginPath()
-        ctx.fillStyle = drawableShip.engineBoosted ? "rgb(71, 139, 255)" : "rgb(255, 0, 0, 0.9)"
-        ctx.arc(
-          engineFlameX,
-          engineFlameY,
-          engineOuterFlameRadius,
-          0,
-          TWO_PI,
-        )
-        ctx.fill()
-        ctx.beginPath()
-        ctx.fillStyle = "rgb(255, 186, 89, 0.8)"
-        const engineInnerFlameRadius = Math.floor(engineOuterFlameRadius / 2) + randomInt(
-          engineOuterFlameRadius / -5, engineOuterFlameRadius / 5
-        )
-        ctx.arc(
-          engineFlameX + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
-          engineFlameY + randomInt(engineInnerFlameRadius / -4, engineInnerFlameRadius / 4),
-          engineInnerFlameRadius,
-          0,
-          TWO_PI,
-        )
-        ctx.fill()
-      }
-
-      if(drawableShip.gravityBrakePosition > 0) {
-        const fullyDesployedRadius = Math.ceil(
-          Math.sqrt(
-            Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP2.x, 2)
-            + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP2.y, 2)
-          )
-        )
-
-        let currentRadius = Math.ceil(
-          fullyDesployedRadius * (
-            drawableShip.gravityBrakePosition / drawableShip.gravityBrakeDeployedPosition
-          )
-        )
-        if(drawableShip.gravityBrakeActive) {
-          currentRadius += Math.ceil(currentRadius * Math.random() * 2.5)
-          ctx.fillStyle = `rgb(124, 0, 166, 0.75)`
-        } else {
-          ctx.fillStyle = Math.random() < 0.7 ? `rgb(0, 0, 255, 0.1)` : `rgb(0, 0, 255, 0.6)`
-        }
-        ctx.beginPath()
-        const arcStart = drawableShip.gravityBrakeActive ? 0 : TWO_PI * Math.random()
-        const arcEnd = drawableShip.gravityBrakeActive ? TWO_PI : TWO_PI * Math.random()
-        ctx.arc(drawableShip.canvasCoordFin0P1.x, drawableShip.canvasCoordFin0P1.y, currentRadius, arcStart, arcEnd)
-        ctx.fill()
-        ctx.beginPath()
-        ctx.arc(drawableShip.canvasCoordFin1P1.x, drawableShip.canvasCoordFin1P1.y, currentRadius, arcStart, arcEnd)
-        ctx.fill()
-      }
-
-      if(drawableShip.miningOreLocation) {
-        const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
-        if(om) {
-          const p0 = drawableShip.canvasCoordCenter;
-          const p1 = camera.mapCoordToCanvasCoord(
-            {x: om.position_map_units_x, y: om.position_map_units_y},
-            camera.getPosition(),
-          )
-          const rockRadiusCanvasPx = om.service_radius_map_units / 3 / camera.getZoom()
-          p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
-          p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
-          ctx.beginPath()
-          ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
-          ctx.lineWidth = 4
-          ctx.moveTo(p0.x, p0.y)
-          ctx.lineTo(p1.x, p1.y)
-          ctx.stroke()
-        }
       }
     }
 
@@ -1128,28 +1192,8 @@ export class DrawingService {
         flameRadiusCanvasPx,
       )
     }
-    if(drawableShip.explosionFrame && drawableShip.explosionFrame < 150) {
-      /* Explosion schedule
-        frame 1-6 fireball growth
-        frame 7-75 pulsating fireball
-        frame 76-150 fading smoke puff
-      */
-      let maxFireBallRadius = Math.round(
-        Math.sqrt(
-          (Math.pow(drawableShip.canvasCoordP1.x - drawableShip.canvasCoordP0.x, 2)
-          + Math.pow(drawableShip.canvasCoordP1.y - drawableShip.canvasCoordP0.y, 2))
-        ) * 10
-      )
-      this.drawExplosionFrameEffect(
-        ctx,
-        camera,
-        drawableShip.canvasCoordCenter,
-        drawableShip.explosionFrame,
-        maxFireBallRadius,
-      )
-    }
 
-    if(drawBoundingBox && drawableShip.canvasBoundingBox && !drawableShip.explosionFrame) {
+    if(drawBoundingBox && drawableShip.canvasBoundingBox && !drawableShip.exploded) {
       const shipIsLocked = this._api.frameData.ship.scanner_locked && drawableShip.shipId === this._api.frameData.ship.scanner_lock_target
       const shipIsLockedOrLocking = drawableShip.shipId === this._api.frameData.ship.scanner_lock_target && (
         this._api.frameData.ship.scanner_locked || this._api.frameData.ship.scanner_locking
@@ -1206,6 +1250,119 @@ export class DrawingService {
         ctx.lineTo(midX + maxRadius, midY - distance)
         ctx.stroke()
       }
+    }
+    const tubeFireAnimationFrameCt = 15
+    if(
+      drawableShip.lastTubeFireFrame !== null
+      && (drawableShip.lastTubeFireFrame + tubeFireAnimationFrameCt) >= this._api.frameData.game_frame
+    ) {
+      console.log("drawing tube weapon smoke puff")
+      const percentComplete = (this._api.frameData.game_frame - drawableShip.lastTubeFireFrame) / tubeFireAnimationFrameCt
+      const radiusPx = (this._api.frameData.map_config.units_per_meter / camera.getZoom()) * ((percentComplete * 10) + 4)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(200, 200, 200, ${1 - percentComplete})`
+      ctx.arc(
+        (drawableShip.canvasCoordP1.x + drawableShip.canvasCoordP2.x) / 2,
+        (drawableShip.canvasCoordP1.y + drawableShip.canvasCoordP2.y) / 2,
+        radiusPx, 0, TWO_PI
+      )
+      ctx.fill()
+    }
+  }
+
+  public drawMagnetMine(
+    ctx: CanvasRenderingContext2D,
+    mine: DrawableMagnetMine,
+  ) {
+    ctx.drawImage(
+      this.magnetMineAsset,
+      mine.canvasX1, mine.canvasY1,
+      mine.canvasW, mine.canvasH,
+    )
+    ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+    ctx.lineWidth = 1.75 + (1.5 * mine.percentArmed)
+    if(mine.percentArmed > 0.97) {
+      ctx.beginPath()
+      ctx.rect(
+        mine.canvasBoundingBox.x1,
+        mine.canvasBoundingBox.y1,
+        mine.canvasBoundingBox.x2 - mine.canvasBoundingBox.x1,
+        mine.canvasBoundingBox.y2 - mine.canvasBoundingBox.y1,
+      )
+      ctx.stroke()
+    } else {
+      // Draw arming animation with bounding box.
+      const topLen = mine.canvasBoundingBox.x2 - mine.canvasBoundingBox.x1
+      const sideLen = mine.canvasBoundingBox.y2 - mine.canvasBoundingBox.y1
+      // Top Line (left to right)
+      if(mine.percentArmed >= 0.25) {
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1)
+        ctx.stroke()
+      } else {
+        let percSide = mine.percentArmed / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x1 + (topLen * percSide), mine.canvasBoundingBox.y1)
+        ctx.stroke()
+      }
+      // right side line (top to bottom)
+      if(mine.percentArmed >= 0.50) {
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (mine.percentArmed >= 0.25 && mine.percentArmed < 0.5) {
+        let percSide = (mine.percentArmed - 0.25) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y1 + (sideLen * percSide))
+        ctx.stroke()
+      }
+      // bottom line (right to left)
+      if(mine.percentArmed >= 0.75) {
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y2)
+        ctx.lineTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (mine.percentArmed >= 0.50 && mine.percentArmed < 0.75) {
+        let percSide = (mine.percentArmed - 0.5) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x2, mine.canvasBoundingBox.y2)
+        ctx.lineTo(mine.canvasBoundingBox.x2 - (topLen * percSide), mine.canvasBoundingBox.y2)
+        ctx.stroke()
+      }
+      // left side (bottom to top)
+      if(mine.percentArmed > 0.75 && mine.percentArmed <= 0.97) {
+        let percSide = (mine.percentArmed - 0.75) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y2)
+        ctx.lineTo(mine.canvasBoundingBox.x1, mine.canvasBoundingBox.y2 - (sideLen * percSide))
+        ctx.stroke()
+      }
+    }
+    const bbXOffset = mine.canvasBoundingBox.x1
+    let bbYOffset = mine.canvasBoundingBox.y2 + 20
+    ctx.beginPath()
+    ctx.font = 'bold 18px Courier New'
+    ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
+    ctx.textAlign = 'left'
+    ctx.fillText("🤖 Mine", bbXOffset, bbYOffset)
+  }
+
+  public drawMagnetMineTargetingLines(ctx: CanvasRenderingContext2D, lines: DrawableMagnetMineTargetingLine[]) {
+    for(let i in lines) {
+      if(Math.random() > 0.65) {
+        continue
+      }
+      let l = lines[i]
+      ctx.beginPath()
+      ctx.strokeStyle = Math.random() > 0.5 ? `rgb(0, 0, 255, ${getRandomFloat(0.1, 0.6)})` : `rgb(255, 0, 0, ${getRandomFloat(0.1, 0.6)})`
+      ctx.lineWidth = 2
+      ctx.moveTo(l.mineCanvasCoord.x, l.mineCanvasCoord.y)
+      ctx.lineTo(l.targetCanvasCoord.x, l.targetCanvasCoord.y)
+      ctx.stroke()
     }
   }
 

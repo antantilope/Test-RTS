@@ -60,6 +60,13 @@ h2 {
     color: #ffffff;
     cursor: pointer;
 }
+.buy-weapon-btn{
+    margin-top: 4px;
+    font-size: 1.25rem;
+    background-color: #5d3a00;
+    color: #ffffff;
+    cursor: pointer;
+}
 #ore-price {
     font-weight: bold;
     font-size:1.10rem;
@@ -71,5 +78,10 @@ h2 {
 
 .td-row-label {
     text-align: left;
+    padding-left: 8px;
+}
+
+.td-armory-table-value {
+    text-align: right;
     padding-left: 8px;
 }

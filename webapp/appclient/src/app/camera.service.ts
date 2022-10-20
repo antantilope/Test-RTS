@@ -2,11 +2,19 @@
 import { Injectable } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { ScannerService } from './scanner.service';
 import { BoxCoords } from './models/box-coords.model';
-import { DrawableCanvasItems, DrawableShip } from './models/drawable-objects.model';
+import {
+  DrawableCanvasItems,
+  DrawableShip,
+  DrawableMagnetMineTargetingLine
+} from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
-import { ScannerDataElement } from './models/apidata.model';
+import { ScannerDataShipElement, Ship } from './models/apidata.model';
+import { MAGNET_MINE_SIDE_LENGTH_METERS } from "./constants"
+
+function getRandomFloat(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
 
 /* Camera used  */
 export const CAMERA_NAME_GAME_DISPLAY = 'GAMEDISPLAY'
@@ -157,7 +165,7 @@ export class Camera {
     }
   }
 
-  private coordToBoxCoord(point: PointCoord, buffer: number = 0): BoxCoords {
+  private pointCoordToBoxCoord(point: PointCoord, buffer: number): BoxCoords {
     return {
       x1: point.x - buffer,
       y1: point.y - buffer,
@@ -252,7 +260,7 @@ export class Camera {
   private setCameraPositionAndZoomShowShipAndTarget(scannerTargetIDCursor: string){
     const ship = this._api.frameData.ship
     // Point camera between ship and target
-    const scannerData = ship.scanner_data.find(sd => sd.id == scannerTargetIDCursor)
+    const scannerData = ship.scanner_ship_data.find(sd => sd.id == scannerTargetIDCursor)
     if(!scannerData) {
       return this.setCameraPositionAndZoomShowShipVision()
     }
@@ -285,13 +293,8 @@ export class Camera {
     const cameraMapBoxCoords: BoxCoords = this.getCameraMapBoxCoords()
 
     // Ship
-    const ship: any = this._api.frameData.ship
-    const mapConfig:{
-      units_per_meter:number,
-      map_name:string,
-      x_unit_length:number,
-      y_unit_length:number
-    } = this._api.frameData.map_config
+    const ship: Ship = this._api.frameData.ship
+    const mapConfig = this._api.frameData.map_config
     const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
     const shipMapCoordP0: PointCoord = this.relativeCoordToAbsoluteCoord(
       this.arrayToCoords(ship.rel_rot_coord_0),
@@ -318,6 +321,8 @@ export class Camera {
 
     const drawableItems: DrawableCanvasItems = {
       ships: [],
+      magnetMines: [],
+      magnetMineTargetingLines: [],
       ebeamRays: [],
       visionCircles:[],
     }
@@ -371,13 +376,14 @@ export class Camera {
       fillColor: "#919191",
       shipId: ship.id,
       aflame: ship.aflame,
-      explosionFrame: ship.explosion_frame,
+      exploded: ship.exploded,
       gravityBrakePosition: ship.gravity_brake_position,
       gravityBrakeDeployedPosition: ship.gravity_brake_deployed_position,
       gravityBrakeActive: ship.gravity_brake_active,
       miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
       fuelingAtStation: ship.fueling_at_station,
       visualEbeamCharging: ship.ebeam_charging,
+      lastTubeFireFrame: ship.last_tube_fire_frame,
       inVisualRange: true,
       canvasBoundingBox: this.rectCoordsToBoxCoords(
         canvasCoordP0,
@@ -398,79 +404,128 @@ export class Camera {
     }
 
     // Draw other scanner elements
+    // Other Ships
     const boundingBoxBuffer = 10
-    for(let i in ship.scanner_data) {
-      const scannerData: ScannerDataElement = ship.scanner_data[i]
-      if (scannerData.element_type === 'ship') {
+    for(let i in ship.scanner_ship_data) {
+      const scannerData: ScannerDataShipElement = ship.scanner_ship_data[i]
+      let canvasCoordP0 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_p0[0],
+        y: scannerData.visual_p0[1],
+      }, cameraPosition)
+      let canvasCoordP1 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_p1[0],
+        y: scannerData.visual_p1[1],
+      }, cameraPosition)
+      let canvasCoordP2 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_p2[0],
+        y: scannerData.visual_p2[1],
+      }, cameraPosition)
+      let canvasCoordP3 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_p3[0],
+        y: scannerData.visual_p3[1],
+      }, cameraPosition)
 
-        let canvasCoordP0 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_p0[0],
-          y: scannerData.visual_p0[1],
-        }, cameraPosition)
-        let canvasCoordP1 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_p1[0],
-          y: scannerData.visual_p1[1],
-        }, cameraPosition)
-        let canvasCoordP2 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_p2[0],
-          y: scannerData.visual_p2[1],
-        }, cameraPosition)
-        let canvasCoordP3 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_p3[0],
-          y: scannerData.visual_p3[1],
-        }, cameraPosition)
+      const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_fin_0_rel_rot_coord_0[0],
+        y: scannerData.visual_fin_0_rel_rot_coord_0[1],
+      }, cameraPosition)
+      const canvasCoordFin0P1 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_fin_0_rel_rot_coord_1[0],
+        y: scannerData.visual_fin_0_rel_rot_coord_1[1],
+      }, cameraPosition)
+      const canvasCoordFin1P0 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_fin_1_rel_rot_coord_0[0],
+        y: scannerData.visual_fin_1_rel_rot_coord_0[1],
+      }, cameraPosition)
+      const canvasCoordFin1P1 = this.mapCoordToCanvasCoord({
+        x: scannerData.visual_fin_1_rel_rot_coord_1[0],
+        y: scannerData.visual_fin_1_rel_rot_coord_1[1],
+      }, cameraPosition)
 
-        const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_fin_0_rel_rot_coord_0[0],
-          y: scannerData.visual_fin_0_rel_rot_coord_0[1],
-        }, cameraPosition)
-        const canvasCoordFin0P1 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_fin_0_rel_rot_coord_1[0],
-          y: scannerData.visual_fin_0_rel_rot_coord_1[1],
-        }, cameraPosition)
-        const canvasCoordFin1P0 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_fin_1_rel_rot_coord_0[0],
-          y: scannerData.visual_fin_1_rel_rot_coord_0[1],
-        }, cameraPosition)
-        const canvasCoordFin1P1 = this.mapCoordToCanvasCoord({
-          x: scannerData.visual_fin_1_rel_rot_coord_1[0],
-          y: scannerData.visual_fin_1_rel_rot_coord_1[1],
-        }, cameraPosition)
-
-        let drawableShip: DrawableShip = {
-          isSelf: false,
-          isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx ,
-          alive: scannerData.alive,
-          aflame: scannerData.aflame,
-          explosionFrame: scannerData.explosion_frame,
-          shipId: scannerData.id,
-          canvasCoordCenter: this.mapCoordToCanvasCoord({
-            x: scannerData.coord_x,
-            y: scannerData.coord_y,
-          }, cameraPosition),
-          designator: scannerData.designator,
-          inVisualRange: scannerData.in_visual_range,
-          canvasCoordP0: canvasCoordP0,
-          canvasCoordP1: canvasCoordP1,
-          canvasCoordP2: canvasCoordP2,
-          canvasCoordP3: canvasCoordP3,
-          visualEbeamCharging: scannerData.visual_ebeam_charging,
-          canvasCoordFin0P0,
-          canvasCoordFin0P1,
-          canvasCoordFin1P0,
-          canvasCoordFin1P1,
-          canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
-          engineLit: scannerData.visual_engine_lit,
-          engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
-          fillColor: scannerData.visual_fill_color,
-          gravityBrakePosition: scannerData.visual_gravity_brake_position,
-          gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
-          gravityBrakeActive: scannerData.visual_gravity_brake_active,
-          miningOreLocation: scannerData.visual_mining_ore_location,
-          fuelingAtStation: scannerData.visual_fueling_at_station,
-        }
-        drawableItems.ships.push(drawableShip)
+      let drawableShip: DrawableShip = {
+        isSelf: false,
+        isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
+        alive: scannerData.alive,
+        aflame: scannerData.aflame,
+        exploded: scannerData.exploded,
+        shipId: scannerData.id,
+        canvasCoordCenter: this.mapCoordToCanvasCoord({
+          x: scannerData.coord_x,
+          y: scannerData.coord_y,
+        }, cameraPosition),
+        designator: scannerData.designator,
+        inVisualRange: scannerData.in_visual_range,
+        canvasCoordP0: canvasCoordP0,
+        canvasCoordP1: canvasCoordP1,
+        canvasCoordP2: canvasCoordP2,
+        canvasCoordP3: canvasCoordP3,
+        visualEbeamCharging: scannerData.visual_ebeam_charging,
+        canvasCoordFin0P0,
+        canvasCoordFin0P1,
+        canvasCoordFin1P0,
+        canvasCoordFin1P1,
+        canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
+        engineLit: scannerData.visual_engine_lit,
+        engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
+        fillColor: scannerData.visual_fill_color,
+        gravityBrakePosition: scannerData.visual_gravity_brake_position,
+        gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
+        gravityBrakeActive: scannerData.visual_gravity_brake_active,
+        miningOreLocation: scannerData.visual_mining_ore_location,
+        fuelingAtStation: scannerData.visual_fueling_at_station,
+        lastTubeFireFrame: scannerData.visual_last_tube_fire_frame,
       }
+      drawableItems.ships.push(drawableShip)
+    }
+
+    // Magnet mines
+    const mineSideLenPx = MAGNET_MINE_SIDE_LENGTH_METERS * mapConfig.units_per_meter / this.getZoom()
+    const mineHalfSideLenPx = mineSideLenPx / 2
+    for(let i in ship.scanner_magnet_mine_data) {
+      let mm = ship.scanner_magnet_mine_data[i]
+      if(mm.exploded) {
+        continue
+      }
+      let canvasCoordCenter = this.mapCoordToCanvasCoord(
+        {x: mm.coord_x, y: mm.coord_y},
+        cameraPosition,
+      )
+      let canvasX1 = canvasCoordCenter.x - mineHalfSideLenPx
+      let canvasY1 = canvasCoordCenter.y - mineHalfSideLenPx
+      drawableItems.magnetMines.push({
+        mineId: mm.id,
+        percentArmed: mm.percent_armed,
+        isDot: mineSideLenPx <= this.minSizeForDotPx,
+        canvasCoordCenter,
+        canvasX1,
+        canvasY1,
+        canvasW: mineSideLenPx,
+        canvasH: mineSideLenPx,
+        canvasBoundingBox: this.pointCoordToBoxCoord(
+          canvasCoordCenter,
+           Math.max(boundingBoxBuffer, mineSideLenPx + boundingBoxBuffer),
+        ),
+      })
+    }
+
+    // Magnet mine targeting lines
+    for(let i in this._api.frameData.magnet_mine_targeting_lines) {
+      let tl = this._api.frameData.magnet_mine_targeting_lines[i]
+      let pointA = this.mapCoordToCanvasCoord(
+        {x:tl.mine_coord[0], y:tl.mine_coord[1]},
+        cameraPosition,
+      )
+      let pointB = this.mapCoordToCanvasCoord(
+        {
+          x:tl.target_coord[0] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / this.getZoom()),
+          y:tl.target_coord[1] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / this.getZoom()),
+        },
+        cameraPosition,
+      )
+      drawableItems.magnetMineTargetingLines.push({
+        mineCanvasCoord: pointA,
+        targetCanvasCoord: pointB,
+      })
     }
 
     // Add Energy Beam Rays
@@ -593,6 +648,14 @@ export class VelocityTrailElement {
 }
 
 
+export const FLAME_SMOKE_ELEMENT_TTL_MS = 3500
+export class FlameSmokeElement {
+  createdAt: number
+  initalRadiusMeters: number
+  mapCoord: PointCoord
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -606,6 +669,9 @@ export class CameraService {
 
   private updateVelocityTrailElementsInterval = 400
   private velocityTrailElements: VelocityTrailElement[] = []
+
+  private updateFlameSmokeElementInterval = 300
+  private flameSmokeElements: FlameSmokeElement[] = []
 
   constructor(
     private _api: ApiService,
@@ -622,12 +688,57 @@ export class CameraService {
     )
 
     setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+    setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
   }
 
+  // Flame Smoke
+  public getFlameSmokeElements(): FlameSmokeElement[] {
+    return this.flameSmokeElements
+  }
+  private updateFlameSmokeElements() {
+    if(!this._api.frameData) {
+      console.warn("updateVelocityTrailElements():: no framedata found")
+      return setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
+    }
+    const now = performance.now()
+    // Clear old elements
+    this.flameSmokeElements = this.flameSmokeElements.filter((fse: FlameSmokeElement)=>{
+      return fse.createdAt + FLAME_SMOKE_ELEMENT_TTL_MS > now
+    })
+    console.log({smoke: this.flameSmokeElements})
+    // Add elements for own ship
+    if(this._api.frameData.ship.aflame) {
+      this.flameSmokeElements.push({
+        createdAt: now,
+        mapCoord: {
+          x: this._api.frameData.ship.coord_x + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+          y: this._api.frameData.ship.coord_y + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: getRandomFloat(4, 7),
+      })
+    }
+    // Add elements from other ships
+    for(let i in this._api.frameData.ship.scanner_ship_data){
+      let sde = this._api.frameData.ship.scanner_ship_data[i]
+      if(sde.aflame) {
+        this.flameSmokeElements.push({
+          createdAt: now,
+          mapCoord: {
+            x: sde.coord_x + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+            y: sde.coord_y + getRandomFloat(-7, 7) * this._api.frameData.map_config.units_per_meter,
+          },
+          initalRadiusMeters: getRandomFloat(4, 7),
+        })
+      }
+    }
+
+    setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
+  }
+
+  // Velocity Visual Dots
   public getVelocityTrailElements(): VelocityTrailElement[] {
     return this.velocityTrailElements
   }
-
   private updateVelocityTrailElements() {
     if(!this._api.frameData) {
       console.warn("updateVelocityTrailElements():: no framedata found")
@@ -654,22 +765,36 @@ export class CameraService {
     }
 
     // Add elements for scanner elements
-    for(let i in this._api.frameData.ship.scanner_data) {
-      let sde = this._api.frameData.ship.scanner_data[i]
-      if(sde.element_type !== "ship") {
-        continue
-      }
+    for(let i in this._api.frameData.ship.scanner_ship_data) {
+      let sde = this._api.frameData.ship.scanner_ship_data[i]
       if(sde.velocity_x_meters_per_second || sde.velocity_y_meters_per_second){
         this.velocityTrailElements.push({
           createdAt: now,
-          mapCoord: {x:sde.coord_x, y:sde.coord_y},
+          mapCoord: {
+            x: Math.floor((sde.visual_p0[0] + sde.visual_p3[0]) / 2),
+            y: Math.floor((sde.visual_p0[1] + sde.visual_p3[1]) / 2),
+          },
           radiusMeters: sde.visual_engine_lit ? 1.5 : 0.4,
           grow: sde.visual_engine_lit,
         })
       }
     }
+    for(let i in this._api.frameData.ship.scanner_magnet_mine_data) {
+      let sde = this._api.frameData.ship.scanner_magnet_mine_data[i]
+      if(!sde.exploded && (sde.velocity_x_meters_per_second || sde.velocity_y_meters_per_second)){
+        this.velocityTrailElements.push({
+          createdAt: now,
+          mapCoord: {x:sde.coord_x, y:sde.coord_y},
+          radiusMeters: 1,
+          grow: false,
+        })
+      }
+    }
 
-    setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+    setTimeout(
+      this.updateVelocityTrailElements.bind(this),
+      this.updateVelocityTrailElementsInterval,
+    )
   }
 
 }

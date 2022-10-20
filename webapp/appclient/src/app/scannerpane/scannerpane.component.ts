@@ -11,8 +11,9 @@ import {
   TIMER_SLUG_SCANNER_LOCKING,
 } from "../constants"
 import { TimerItem } from "../models/timer-item.model"
-import { ScannerDataElement } from '../models/apidata.model';
+import { ScannerDataShipElement } from '../models/apidata.model';
 import { DrawableCanvasItems } from '../models/drawable-objects.model'
+import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -121,7 +122,7 @@ export class ScannerpaneComponent implements OnInit {
   }
 
   private anyTargetsOnScope(): boolean {
-    return this._api.frameData.ship.scanner_data.length > 0
+    return this._api.frameData.ship.scanner_ship_data.length > 0
   }
 
   private setCanvasBGColor(): void {
@@ -168,17 +169,17 @@ export class ScannerpaneComponent implements OnInit {
 
     // Select a target if any are available and not are selected.
     if(anyTargets && !this._scanner.scannerTargetIDCursor) {
-      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[0].id
       this._scanner.scannertTargetIndex = 0
     }
 
-    let target: ScannerDataElement
+    let target: ScannerDataShipElement
 
     // Draw scene of selected target
     let drawableObjects: DrawableCanvasItems
     const overlayAlpha = randomFloat(0.62, 0.95)
     if(anyTargets) {
-      target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
+      target = this._api.frameData.ship.scanner_ship_data[this._scanner.scannertTargetIndex]
       if(!target) {
         this._scanner.scannerTargetIDCursor = null
         this._scanner.scannertTargetIndex = null
@@ -209,6 +210,11 @@ export class ScannerpaneComponent implements OnInit {
     this._draw.drawSpaceStations(this.ctx, this._camera.scannerPaneCamera)
     this._draw.drawMiningLocations(this.ctx, this._camera.scannerPaneCamera)
 
+    // Flame smoke elements
+    this._draw.drawVisualFlameSmokeElements(
+      this.ctx, this._camera.scannerPaneCamera,
+      this._camera.getFlameSmokeElements()
+    )
     // Visual Velocity elements
     this._draw.drawVisualVelocityElements(
       this.ctx, this._camera.scannerPaneCamera,
@@ -226,6 +232,19 @@ export class ScannerpaneComponent implements OnInit {
         drawBoundingBox,
       )
     }
+    // magnet mines
+    for(let i in drawableObjects.magnetMines) {
+      this._draw.drawMagnetMine(this.ctx, drawableObjects.magnetMines[i])
+    }
+    this._draw.drawMagnetMineTargetingLines(
+      this.ctx,
+      drawableObjects.magnetMineTargetingLines
+    )
+
+    // Explosion FX
+    this._draw.drawExplosionShockwaves(this.ctx, this._camera.scannerPaneCamera)
+    this._draw.drawExplosions(this.ctx, this._camera.scannerPaneCamera)
+
     // E-Beams
     this._draw.drawEbeams(this.ctx, this._camera.scannerPaneCamera, drawableObjects.ebeamRays)
 
@@ -292,7 +311,7 @@ export class ScannerpaneComponent implements OnInit {
     this.ctx.textBaseline = "top"
     let txt = (
       anyTargets
-      ? `TARGET ${this._scanner.scannertTargetIndex + 1}/${this._api.frameData.ship.scanner_data.length}`
+      ? `TARGET ${this._scanner.scannertTargetIndex + 1}/${this._api.frameData.ship.scanner_ship_data.length}`
       : "NO TARGET"
     )
     this.ctx.fillText(txt, xOffset, yOffset)
@@ -303,9 +322,9 @@ export class ScannerpaneComponent implements OnInit {
 
     this.ctx.beginPath()
     this.ctx.font = 'italic 20px Courier New'
-    let target: ScannerDataElement
+    let target: ScannerDataShipElement
     if(anyTargets) {
-      target = this._api.frameData.ship.scanner_data[this._scanner.scannertTargetIndex]
+      target = this._api.frameData.ship.scanner_ship_data[this._scanner.scannertTargetIndex]
       this.ctx.fillText(
         target.designator.toUpperCase(), xOffset, yOffset
       )
@@ -353,7 +372,7 @@ export class ScannerpaneComponent implements OnInit {
     yOffset += yInterval
   }
 
-  private getIsVisualOnlyWarning(target: ScannerDataElement):boolean {
+  private getIsVisualOnlyWarning(target: ScannerDataShipElement):boolean {
     // Returns true if ship is only scannable because
     // it's within visual range
     const mode = this._api.frameData.ship.scanner_mode

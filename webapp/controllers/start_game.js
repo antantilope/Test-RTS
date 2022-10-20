@@ -141,10 +141,13 @@ const runGameLoop = (room_id, port, app, io) => {
                         map_config: respData.map_config,
                         ebeam_rays: respData.ebeam_rays,
                         explosion_shockwaves: respData.explosion_shockwaves,
+                        explosions: respData.explosions,
                         winning_team: respData.winning_team,
                         killfeed: respData.killfeed,
                         space_stations: respData.space_stations,
                         ore_mines: respData.ore_mines,
+                        special_weapon_costs: respData.special_weapon_costs,
+                        magnet_mine_targeting_lines: respData.magnet_mine_targeting_lines,
                     },
                 );
             }

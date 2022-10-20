@@ -109,6 +109,7 @@ export class SoundService {
 
   private playedSelfExplosionSound = false
   private explosionSound: HTMLAudioElement
+  private explosionSoundClones: any[] = []
   private fastenSeatbeltSound: HTMLAudioElement
   private shipRattlingSound: HTMLAudioElement
 
@@ -212,6 +213,27 @@ export class SoundService {
     // Mining laser
     this.copilotMiningBeamActiveSound = new Audio("/static/sound/copilot-mining-beam-active.mp3")
     this.copilotMiningBeamOfflineSound = new Audio("/static/sound/copilot-mining-beam-offline.mp3")
+  }
+
+  // any sound that needs to overlap with itself
+  // needs to be wrapped in a method that creates
+  // and manages cloned nodes.
+  private playExplosion(){
+    if(this.explosionSound.paused) {
+      this.explosionSound.play()
+      return
+    }
+    for(let i in this.explosionSoundClones){
+      if(this.explosionSoundClones[i].paused) {
+        this.explosionSoundClones[i].play()
+        return
+      }
+    }
+    console.warn("no available explosion nodes, creating clone.")
+    this.explosionSoundClones.push(this.explosionSound.cloneNode())
+    this.explosionSoundClones[
+      this.explosionSoundClones.length - 1
+    ].play()
   }
 
   public playPrimaryButtonClickSound(): void {
@@ -325,12 +347,12 @@ export class SoundService {
     }
 
     // Ship spotted Alert
-    if(ship.alive && ship.scanner_data.length > this.spottedEnemiesCount) {
-      this.spottedEnemiesCount = ship.scanner_data.length;
+    if(ship.alive && ship.scanner_ship_data.length > this.spottedEnemiesCount) {
+      this.spottedEnemiesCount = ship.scanner_ship_data.length;
       this.enemySpottedSound.play()
     }
-    else if(ship.scanner_data.length < this.spottedEnemiesCount) {
-      this.spottedEnemiesCount = ship.scanner_data.length;
+    else if(ship.scanner_ship_data.length < this.spottedEnemiesCount) {
+      this.spottedEnemiesCount = ship.scanner_ship_data.length;
     }
     // Scanner State Alerts
     if (!this.scannerOnlineLastFrame && ship.scanner_online) {
@@ -384,9 +406,9 @@ export class SoundService {
        - ship rattle
        - fasten seatbelt sign
     */
-    if(ship.explosion_frame && !this.playedSelfExplosionSound) {
+    if(ship.exploded && !this.playedSelfExplosionSound) {
       this.playedSelfExplosionSound = true
-      this.explosionSound.play()
+      this.playExplosion()
     }
     else if(!this.playedSelfExplosionSound) {
       for(let i in this._api.frameData.explosion_shockwaves) {
@@ -407,7 +429,7 @@ export class SoundService {
         ) / this._api.frameData.map_config.units_per_meter
         if(metersDistanceFromCenter <= esw.radius_meters) {
           this.heardExplosionShockwaveIds.push(esw.id)
-          this.explosionSound.play()
+          this.playExplosion()
           this._api.lastShockwaveFrame = this._api.frameData.game_frame
           setTimeout(() =>{
             this.shipRattlingSound.play()
@@ -423,11 +445,11 @@ export class SoundService {
       }
     }
 
-    if (!this.copilotDeathSoundPlaying && !ship.alive && !ship.explosion_frame) {
+    if (!this.copilotDeathSoundPlaying && !ship.alive && !ship.exploded) {
       this.copilotDeathSoundPlaying = true
       this.copilotDeathSound.play()
     }
-    else if (this.copilotDeathSoundPlaying && ship.explosion_frame) {
+    else if (this.copilotDeathSoundPlaying && ship.exploded) {
       this.copilotDeathSound.pause()
     }
 

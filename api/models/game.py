@@ -9,8 +9,6 @@ import re
 import traceback
 from uuid import uuid4
 
-from numpy import stack
-
 from api import constants
 
 from .base import BaseModel
@@ -19,20 +17,20 @@ from .ship import (
     ShipCommands,
     ShipDeathType,
     ShipScannerMode,
-    ScannedElement,
-    ScannedElementType,
+    ScannedShipElement,
+    ScannedMagnetMineElement,
     VisibleElementShapeType,
     MapMiningLocationDetails,
     MapSpaceStation,
     AutopilotError,
 )
 from .ship_designator import get_designations
+from .magnet_mine import MagnetMine
 from api import utils2d
 from api.constants import (
     MAX_SERVER_FPS,
     MIN_ELAPSED_TIME_PER_FRAME,
     GAME_START_COUNTDOWN_FROM,
-    FINAL_EXPLOSION_FRAME,
 )
 from api.coord_cache import (
     CoordDistanceCache,
@@ -125,7 +123,21 @@ class KillFeedElement(TypedDict):
 class ExplosionShockwave(TypedDict):
     id: str
     origin_point: Tuple[int]
-    radius_meters: int
+    radius_meters: float
+
+class Explosion(TypedDict):
+    id: str
+    ship_id: Optional[str]
+    origin_point: Tuple[int]
+    max_radius_meters: int
+    radius_meters: float
+    flame_ms: float
+    fade_ms: float
+    elapsed_ms: int
+
+class EBeamTargetingLine(TypedDict):
+    mine_coord: Tuple[int]
+    target_coord: Tuple[int]
 
 class Game(BaseModel):
 
@@ -143,11 +155,14 @@ class Game(BaseModel):
         self._ebeam_rays: List[EBeamRayDetails] = []
         self._killfeed: List[KillFeedElement] = []
         self._explosion_shockwaves: List[ExplosionShockwave] = []
+        self._explosions: List[Explosion] = []
         self._explosion_shockwave_max_radius_meters = None
         self._space_stations: List[MapSpaceStation] = []
         self._ore_mines: List[MapMiningLocationDetails] = []
         self._ore_mines_remaining_ore: Dict[str, float] = {}
 
+        self._magnet_mines: Dict[str, MagnetMine] = OrderedDict()
+        self._magnet_mine_targeting_lines: List[EBeamTargetingLine] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
 
@@ -179,6 +194,15 @@ class Game(BaseModel):
             self._colision_cycle_station,
             self._colision_cycle_wall,
         ))
+
+        # Special Weapons
+        self._special_weapon_costs = {
+            constants.MAGNET_MINE_SLUG: constants.MAGNET_MINE_ORE_COST,
+        }
+        self._magnet_mine_tracking_acceleration_ms = constants.MAGNET_MINE_TRACKING_ACCELERATION_MS
+        self._magnet_mine_arming_time_seconds = constants.MAGNET_MINE_ARMING_TIME_SECONDS
+        self._magnet_mine_max_seconds_to_detonate = constants.MAGNET_MINE_MAX_SECONDS_TO_DETONATE
+        self._magnet_mine_max_proximity_to_explode_meters = constants.MAGNET_MINE_MAX_PROXIMITY_TO_EXPLODE_METERS
 
 
     def get_state(self) -> GameState:
@@ -224,10 +248,13 @@ class Game(BaseModel):
             'ships': [ship.to_dict() for ship in self._ships.values()],
             'ebeam_rays': self._ebeam_rays,
             'explosion_shockwaves': self._explosion_shockwaves,
+            'explosions': self._explosions,
             "winning_team": self._winning_team,
             "killfeed": self._killfeed,
             "space_stations": self._space_stations,
             "ore_mines": self._ore_mines,
+            "special_weapon_costs": self._special_weapon_costs,
+            "magnet_mine_targeting_lines": self._magnet_mine_targeting_lines,
         }
 
 
@@ -340,6 +367,7 @@ class Game(BaseModel):
 
             ship = Ship.spawn(
                 team_id,
+                self._special_weapon_costs,
                 map_units_per_meter=self._map_units_per_meter
             )
 
@@ -472,6 +500,10 @@ class Game(BaseModel):
 
             self.advance_mining(ship_id)
 
+        self.advance_magnet_mines(self._fps)
+
+        if any(self._explosions):
+            self.advance_explosions()
         if any(self._explosion_shockwaves):
             self.advance_explosion_shockwaves()
 
@@ -503,21 +535,67 @@ class Game(BaseModel):
                 if ix not in ix_to_remove
             ]
 
+    def advance_explosions(self):
+        ix_to_remove = []
+        elapsed_ms = 1000 / self._fps
+        for ix, ex in enumerate(self._explosions):
+            if ex['elapsed_ms'] < (ex['flame_ms'] + ex['fade_ms']):
+                self._explosions[ix]['elapsed_ms'] += elapsed_ms
+            else:
+                ix_to_remove.append(ix)
+                if ex.get("ship_id"):
+                    self._ships[ex['ship_id']]._removed_from_map = True
+
+        if ix_to_remove:
+            self._explosions = [
+                ex
+                for ix, ex in enumerate(self._explosions)
+                if ix not in ix_to_remove
+            ]
+
+
+    def register_explosion_on_map(
+        self,
+        origin_point: Tuple[int],
+        max_radius_meters: int,
+        flame_ms: int,
+        fade_ms: int,
+        extras={}
+    ):
+        self._explosion_shockwaves.append({
+            "id": str(uuid4()),
+            "origin_point": origin_point,
+            "radius_meters": 1,
+        })
+        self._explosions.append({
+            "id": str(uuid4()),
+            "origin_point": origin_point,
+            "radius_meters": 1,
+            "max_radius_meters": max_radius_meters,
+            "flame_ms": flame_ms,
+            "fade_ms": fade_ms,
+            "elapsed_ms": 10,
+            **extras,
+        })
+
     def reset_and_update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
 
-        self._ships[ship_id].scanner_data.clear()
+        self._ships[ship_id].scanner_ship_data.clear()
+        self._ships[ship_id].scanner_magnet_mine_data.clear()
 
+        ship_coords = self._ships[ship_id].coords
         scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
         visual_range = self._ships[ship_id].visual_range
 
+        # Add ships to scanner data
         for other_id in (v for v in self._ships if v != ship_id):
 
-            if self._ships[other_id].explosion_frame and self._ships[other_id].explosion_frame > FINAL_EXPLOSION_FRAME:
+            if self._ships[other_id]._removed_from_map:
                 continue
 
             other_coords = self._ships[other_id].coords
-            ship_coords = self._ships[ship_id].coords
+
 
             distance = distance_cache.get_val(ship_coords, other_coords)
             if distance is None:
@@ -551,19 +629,18 @@ class Game(BaseModel):
 
             if is_visual or is_scannable:
                 exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
-                scanner_data: ScannedElement = {
+                scanner_ship_data: ScannedShipElement = {
                     'id': other_id,
                     'designator': self._ships[other_id].scanner_designator,
                     'anti_radar_coating_level': self._ships[other_id].anti_radar_coating_level,
                     'scanner_thermal_signature': self._ships[other_id].scanner_thermal_signature,
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
-                    'element_type': ScannedElementType.SHIP,
                     'velocity_x_meters_per_second': self._ships[other_id].velocity_x_meters_per_second,
                     'velocity_y_meters_per_second': self._ships[other_id].velocity_y_meters_per_second,
                     'alive': self._ships[other_id].died_on_frame is None,
                     'aflame': self._ships[other_id].aflame_since_frame is not None,
-                    'explosion_frame': self._ships[other_id].explosion_frame,
+                    'exploded': self._ships[other_id].exploded,
                     'in_visual_range': is_visual,
                     'visual_p0': self._ships[other_id].map_p0,
                     'visual_p1': self._ships[other_id].map_p1,
@@ -589,15 +666,41 @@ class Game(BaseModel):
                         else None
                     ),
                     'visual_fueling_at_station': self._ships[other_id].fueling_at_station,
+                    "visual_last_tube_fire_frame": self._ships[other_id].last_tube_fire_frame,
                     "distance": round(distance_meters),
                     "relative_heading": round(exact_heading),
                     "target_heading": exact_heading,
                 }
 
-                self._ships[ship_id].scanner_data[other_id] = scanner_data
+                self._ships[ship_id].scanner_ship_data[other_id] = scanner_ship_data
+
+        # Add magnet mines to scanner data
+        for mm_id in self._magnet_mines:
+            mine_coords = self._magnet_mines[mm_id].coords
+            distance = utils2d.calculate_point_distance(ship_coords, mine_coords)
+            distance_meters = round(distance / self._map_units_per_meter)
+            is_visual = visual_range >= distance_meters
+            is_scannable = (
+                scan_range is not None
+                and scan_range >= distance_meters
+                and self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR
+            )
+            if is_visual or is_scannable:
+                exact_heading = utils2d.calculate_heading_to_point(ship_coords, mine_coords)
+                self._ships[ship_id].scanner_magnet_mine_data[mm_id] = {
+                    'id': mm_id,
+                    'velocity_x_meters_per_second': self._magnet_mines[mm_id].velocity_x_meters_per_second,
+                    'velocity_y_meters_per_second': self._magnet_mines[mm_id].velocity_y_meters_per_second,
+                    'coord_x': mine_coords[0],
+                    'coord_y': mine_coords[1],
+                    'distance': distance_meters,
+                    'exploded': self._magnet_mines[mm_id].exploded,
+                    'relative_heading': round(exact_heading),
+                    'percent_armed': self._magnet_mines[mm_id].percent_armed,
+                }
 
         # Check if scanner target has gone out of range
-        if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_data:
+        if self._ships[ship_id].scanner_lock_target and self._ships[ship_id].scanner_lock_target not in self._ships[ship_id].scanner_ship_data:
             self._ships[ship_id].scanner_lock_traversal_slack = None
             self._ships[ship_id].scanner_lock_target = None
             if self._ships[ship_id].scanner_locking:
@@ -609,11 +712,11 @@ class Game(BaseModel):
         # check if scanner target traversal is above maximum
         if self._ships[ship_id].scanner_lock_target and (self._ships[ship_id].scanner_locking or self._ships[ship_id].scanner_locked):
             if self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame is None:
-                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_ship_data[
                     self._ships[ship_id].scanner_lock_target
                 ]['target_heading']
             else:
-                target_heading = self._ships[ship_id].scanner_data[
+                target_heading = self._ships[ship_id].scanner_ship_data[
                     self._ships[ship_id].scanner_lock_target
                 ]['target_heading']
                 delta = abs(
@@ -633,7 +736,7 @@ class Game(BaseModel):
                     self._ships[ship_id].scanner_lock_traversal_slack = None
                     self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = None
                 else:
-                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_data[
+                    self._ships[ship_id].scanner_lock_traversal_degrees_previous_frame = self._ships[ship_id].scanner_ship_data[
                         self._ships[ship_id].scanner_lock_target
                     ]['target_heading']
                     self._ships[ship_id].scanner_lock_traversal_slack = delta / max_traversal
@@ -656,11 +759,14 @@ class Game(BaseModel):
                 "victim_name": self._ships[ship_id].scanner_designator,
             })
         if death_data and death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
-            self._explosion_shockwaves.append({
-                "id": str(uuid4()),
-                "origin_point": self._ships[ship_id].coords,
-                "radius_meters": 1,
-            })
+            is_firey = self._ships[ship_id].fuel_level > 6000
+            self.register_explosion_on_map(
+                self._ships[ship_id].coords,
+                100 if is_firey else 65,
+                3000 if is_firey else 1500,
+                6000 if is_firey else 4500,
+                extras={'ship_id': ship_id},
+            )
         if death_data:
             return
 
@@ -676,11 +782,13 @@ class Game(BaseModel):
                     "victim_name": self._ships[ship_id].scanner_designator,
                 })
                 if death_data[ix_visual_type] == ShipDeathType.EXPLOSION_NEW:
-                    self._explosion_shockwaves.append({
-                        "id": str(uuid4()),
-                        "origin_point": self._ships[ship_id].coords,
-                        "radius_meters": 1,
-                    })
+                    self.register_explosion_on_map(
+                        self._ships[ship_id].coords,
+                        100 if is_firey else 65,
+                        3000 if is_firey else 1500,
+                        6000 if is_firey else 4500,
+                        extras={'ship_id': ship_id},
+                    )
                 return
 
 
@@ -703,6 +811,140 @@ class Game(BaseModel):
                         "created_at_frame": self._game_frame,
                         "victim_name": self._ships[hit_ship_id].scanner_designator,
                     })
+
+        if self._ships[ship_id].magnet_mine_firing:
+            # Spawn a new magnet mine.
+            self._ships[ship_id].magnet_mine_firing = False
+            self._ships[ship_id].last_tube_fire_frame = self._game_frame
+            mine = MagnetMine(self._game_frame, ship_id)
+            # ship._special_weapons_launch_velocity is set when processing
+            # ship commands in run_frame()
+            extra_x, extra_y = utils2d.calculate_x_y_components(
+                self._ships[ship_id]._special_weapons_launch_velocity,
+                self._ships[ship_id].heading,
+            )
+            mine.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
+            mine.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
+            ship_p1_x, ship_p1_y = self._ships[ship_id].map_p1
+            ship_p2_x, ship_p2_y = self._ships[ship_id].map_p2
+            mine.coord_x = round((ship_p1_x + ship_p2_x) / 2)
+            mine.coord_y = round((ship_p1_y + ship_p2_y) / 2)
+            self._magnet_mines[mine.id] = mine
+
+    def advance_magnet_mines(self, fps: int):
+        keys_to_drop = []
+        self._magnet_mine_targeting_lines.clear()
+        arm_time_ms = self._magnet_mine_arming_time_seconds * 1000
+        for mm_id in self._magnet_mines:
+
+            if self._magnet_mines[mm_id].exploded:
+                keys_to_drop.append(mm_id)
+                continue
+
+            self._magnet_mines[mm_id].elapsed_milliseconds += (1000 / fps)
+
+            # Arm the mine if enough time has passed
+            if (
+                not self._magnet_mines[mm_id].armed
+                and self._magnet_mines[mm_id].elapsed_milliseconds > arm_time_ms
+            ):
+                self._magnet_mines[mm_id].armed = True
+                self._magnet_mines[mm_id].percent_armed = 1
+
+            elif not self._magnet_mines[mm_id].armed:
+                self._magnet_mines[mm_id].percent_armed = self._magnet_mines[mm_id].elapsed_milliseconds / arm_time_ms
+
+            if self._magnet_mines[mm_id].armed:
+                # Blow up mine if close enough in proximity to target
+                if (
+                    self._magnet_mines[mm_id].distance_to_closest_ship
+                    and (
+                        (
+                            self._magnet_mines[mm_id].distance_to_closest_ship
+                            / self._map_units_per_meter
+                        ) < self._magnet_mine_max_proximity_to_explode_meters
+                    )
+                ):
+                    self._magnet_mines[mm_id].exploded = True
+                    self._ships[self._magnet_mines[mm_id].closest_ship_id].die(self._game_frame)
+                    self.register_explosion_on_map(
+                        self._magnet_mines[mm_id].coords,
+                        80,
+                        1200,
+                        2000,
+                    )
+                    continue
+
+                # Blow up mine if timer has expired
+                if self._magnet_mines[mm_id].elapsed_milliseconds > (self._magnet_mine_max_seconds_to_detonate * 1000):
+                    self._magnet_mines[mm_id].exploded = True
+                    self.register_explosion_on_map(
+                        self._magnet_mines[mm_id].coords,
+                        80,
+                        1200,
+                        2000,
+                    )
+                    continue
+
+                # Accelerate
+                # Find towards closest ship
+                closest_distance = None
+                closest_id = None
+                for ship_id in self._ships:
+                    if self._ships[ship_id].exploded:
+                        continue
+                    distance = utils2d.calculate_point_distance(
+                        (
+                            self._magnet_mines[mm_id].coord_x,
+                            self._magnet_mines[mm_id].coord_y,
+                        ), (
+                            self._ships[ship_id].coord_x,
+                            self._ships[ship_id].coord_y,
+                        ),
+                    )
+                    if closest_distance is None or closest_distance > distance:
+                        closest_distance = distance
+                        closest_id = ship_id
+                self._magnet_mines[mm_id].closest_ship_id = closest_id
+                self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
+
+                if closest_id is not None:
+                    # Apply acceleration
+                    heading_to_closest = utils2d.calculate_heading_to_point((
+                        self._magnet_mines[mm_id].coord_x,
+                        self._magnet_mines[mm_id].coord_y,
+                    ), (
+                        self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_x,
+                        self._ships[self._magnet_mines[mm_id].closest_ship_id].coord_y,
+                    ))
+                    x_acc, y_acc = utils2d.calculate_x_y_components(
+                        self._magnet_mine_tracking_acceleration_ms / fps,
+                        heading_to_closest,
+                    )
+                    self._magnet_mines[mm_id].velocity_x_meters_per_second += x_acc
+                    self._magnet_mines[mm_id].velocity_y_meters_per_second += y_acc
+
+                    # draw targeting line
+                    self._magnet_mine_targeting_lines.append({
+                        "mine_coord": self._magnet_mines[mm_id].coords,
+                        "target_coord": self._ships[self._magnet_mines[mm_id].closest_ship_id].coords,
+                    })
+
+            # Adjust position
+            self._magnet_mines[mm_id].coord_x += (
+                (self._magnet_mines[mm_id].velocity_x_meters_per_second
+                * self._map_units_per_meter)
+                / fps)
+            self._magnet_mines[mm_id].coord_y += (
+                (self._magnet_mines[mm_id].velocity_y_meters_per_second
+                * self._map_units_per_meter)
+                / fps)
+
+        # mines get deleted from dict on the frame after they explode.
+        if any(keys_to_drop):
+            for k in keys_to_drop:
+                del self._magnet_mines[k]
+
 
     def _advance_collisions(self, ship_id: str, collision_type: str):
         if collision_type == self._colision_cycle_mine:

@@ -20,7 +20,12 @@ import { PointCoord } from '../models/point-coord.model'
 import { DrawingService } from '../drawing.service'
 import { SoundService } from '../sound.service'
 import { ScannerService } from '../scanner.service'
-import { TWO_PI, FEATURE_ORE, FEATURE_STATION } from '../constants'
+import {
+  TWO_PI,
+  FEATURE_ORE,
+  FEATURE_STATION,
+  MAGNET_MINE_SLUG
+} from '../constants'
 
 const CAMERA_MODE_SHIP = "ship"
 const CAMERA_MODE_VISION = "vision"
@@ -37,6 +42,8 @@ export class GamedisplayComponent implements OnInit {
   @ViewChild("graphicsCanvas") canvas: ElementRef
   @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
   @ViewChild("sidebarElement") sidebarElement: ElementRef
+
+  public lauchVelocity: number = 65;
 
 
   private ctx: CanvasRenderingContext2D | null = null
@@ -74,6 +81,11 @@ export class GamedisplayComponent implements OnInit {
 
   public wayPoint: PointCoord | null = null
   public wayPointUUID: string | null = null
+
+  public selectedPneumaticWeapon = MAGNET_MINE_SLUG
+  private allPneumaticWeapons = [
+    MAGNET_MINE_SLUG,
+  ]
 
   constructor(
     public _api: ApiService,
@@ -214,8 +226,8 @@ export class GamedisplayComponent implements OnInit {
     // Zoom camera
     window.addEventListener('wheel', event => {
       const zoomIn = event.deltaY < 0
-      if(this._pane.mouseInPane() && this._api.frameData.ship.scanner_online) {
-        if(this._pane.mouseInScannerPane()) {
+      if(this._pane.mouseInPane()) {
+        if(this._pane.mouseInScannerPane() && this._api.frameData.ship.scanner_online) {
           this._camera.scannerPaneCamera.adjustZoom(zoomIn)
         }
         return
@@ -414,6 +426,19 @@ export class GamedisplayComponent implements OnInit {
     this.canvas.nativeElement.style.backgroundColor = "#000000" // Black
   }
 
+  private getCurrentTubeWeaponCount() {
+    if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
+      return this._api.frameData.ship.magnet_mines_loaded
+    }
+    return 0
+  }
+
+  public getHumanReadableCurrentTubeWeapon() {
+    return this.selectedPneumaticWeapon.replace(/\_/g, " ").toLowerCase().split(' ').map((word: string)=>{
+      return (word.charAt(0).toUpperCase() + word.slice(1));
+    }).join(' ');
+  }
+
   private paintDisplay(): void {
 
     if (this._api.frameData === null) {
@@ -504,6 +529,10 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+    this._draw.drawVisualFlameSmokeElements(
+      this.ctx, this._camera.gameDisplayCamera,
+      this._camera.getFlameSmokeElements()
+    )
     this._draw.drawVisualVelocityElements(
       this.ctx, this._camera.gameDisplayCamera,
       this._camera.getVelocityTrailElements(),
@@ -519,6 +548,16 @@ export class GamedisplayComponent implements OnInit {
         true,
       )
     }
+    // magnet mines
+    for(let i in drawableObjects.magnetMines) {
+      this._draw.drawMagnetMine(this.ctx, drawableObjects.magnetMines[i])
+    }
+    this._draw.drawMagnetMineTargetingLines(
+      this.ctx,
+      drawableObjects.magnetMineTargetingLines
+    )
+
+    this._draw.drawExplosions(this.ctx, this._camera.gameDisplayCamera)
 
     this._draw.drawOreDepositEffect(this.ctx, this._camera.gameDisplayCamera)
 
@@ -526,10 +565,12 @@ export class GamedisplayComponent implements OnInit {
     this._draw.drawEbeams(this.ctx, this._camera.gameDisplayCamera, drawableObjects.ebeamRays)
 
     // Corner overlays
+    const tubeWeaponCt = this.getCurrentTubeWeaponCount()
     this._draw.drawBottomLeftOverlay(
       this.ctx,
       this._camera.gameDisplayCamera,
       cameraMode === CAMERA_MODE_MAP,
+      `TUBE: ${tubeWeaponCt > 0 ? tubeWeaponCt : "EMPTY"} ${this.getHumanReadableCurrentTubeWeapon()}`
     )
     if(cameraMode !== CAMERA_MODE_MAP) {
       this._draw.drawTopLeftOverlay(this.ctx, cameraMode);
@@ -814,26 +855,26 @@ export class GamedisplayComponent implements OnInit {
       this._scanner.scannerTargetIDCursor = null
       return
     }
-    if(!this._api.frameData.ship.scanner_data.length) {
+    if(!this._api.frameData.ship.scanner_ship_data.length) {
       this._scanner.scannerTargetIDCursor = null
       this._scanner.scannertTargetIndex = null
       return
     }
     if(this._scanner.scannerTargetIDCursor === null) {
-      const targetIndex = this._api.frameData.ship.scanner_data.length - 1
-      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+      const targetIndex = this._api.frameData.ship.scanner_ship_data.length - 1
+      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[targetIndex].id
       this._scanner.scannertTargetIndex = targetIndex
     }
     else {
-      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
+      const currentIndex = this._api.frameData.ship.scanner_ship_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
       if(currentIndex === -1) {
-        const newIndex = this._api.frameData.ship.scanner_data.length - 1
-        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[newIndex].id
+        const newIndex = this._api.frameData.ship.scanner_ship_data.length - 1
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[newIndex].id
         this._scanner.scannertTargetIndex = newIndex
       }
       else {
-        const targetIndex = currentIndex === 0 ? this._api.frameData.ship.scanner_data.length - 1 : currentIndex - 1
-        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+        const targetIndex = currentIndex === 0 ? this._api.frameData.ship.scanner_ship_data.length - 1 : currentIndex - 1
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[targetIndex].id
         this._scanner.scannertTargetIndex = targetIndex
       }
     }
@@ -845,24 +886,24 @@ export class GamedisplayComponent implements OnInit {
       this._scanner.scannerTargetIDCursor = null
       return
     }
-    if(!this._api.frameData.ship.scanner_data.length) {
+    if(!this._api.frameData.ship.scanner_ship_data.length) {
       this._scanner.scannerTargetIDCursor = null
       this._scanner.scannertTargetIndex = null
       return
     }
     if(this._scanner.scannerTargetIDCursor === null) {
-      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+      this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[0].id
       this._scanner.scannertTargetIndex = 0
     }
     else {
-      const currentIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
+      const currentIndex = this._api.frameData.ship.scanner_ship_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
       if(currentIndex === -1) {
-        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[0].id
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[0].id
         this._scanner.scannertTargetIndex = 0
       }
       else {
-        const targetIndex = currentIndex === this._api.frameData.ship.scanner_data.length - 1 ? 0 : currentIndex + 1
-        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_data[targetIndex].id
+        const targetIndex = currentIndex === this._api.frameData.ship.scanner_ship_data.length - 1 ? 0 : currentIndex + 1
+        this._scanner.scannerTargetIDCursor = this._api.frameData.ship.scanner_ship_data[targetIndex].id
         this._scanner.scannertTargetIndex = targetIndex
       }
     }
@@ -874,7 +915,7 @@ export class GamedisplayComponent implements OnInit {
       this._scanner.scannerTargetIDCursor = null
       return
     }
-    const targetIndex = this._api.frameData.ship.scanner_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
+    const targetIndex = this._api.frameData.ship.scanner_ship_data.map(sc => sc.id).indexOf(this._scanner.scannerTargetIDCursor)
     if(targetIndex === -1) {
       this._scanner.scannerTargetIDCursor = null
       return
@@ -922,6 +963,28 @@ export class GamedisplayComponent implements OnInit {
         {command:'fire_ebeam'},
       )
       this._sound.playPrimaryButtonClickSound()
+    }
+  }
+
+  btnClickCyclePneumaticTube() {
+    const totalCount = this.allPneumaticWeapons.length
+    const currentIndex = this.allPneumaticWeapons.indexOf(this.selectedPneumaticWeapon)
+    if(currentIndex == (totalCount - 1)) {
+      this.selectedPneumaticWeapon = this.allPneumaticWeapons[0]
+    } else {
+      this.selectedPneumaticWeapon = this.allPneumaticWeapons[currentIndex + 1]
+    }
+    console.log("selected " + this.selectedPneumaticWeapon)
+  }
+
+  btnClickFirePneumaticTube() {
+    if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
+      this._api.post(
+        "/api/rooms/command",
+        {command:'launch_magnet_mine', launch_velocity: this.lauchVelocity,},
+      )
+    } else {
+      console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)
     }
   }
 

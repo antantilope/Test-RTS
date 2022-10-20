@@ -14,6 +14,7 @@ const {
     validateRunAutopilotHeadingToWaypoint,
     validateStartCoreUpgrade,
     validateStartShipUpgrade,
+    validateLaunchTubeWeapon,
 } = require("../lib/command_validators/validators");
 
 
@@ -235,6 +236,20 @@ const commandHandlers = {
             player_id: req.session.player_id,
             ship_command: 'cancel_ship_upgrade',
             args: [slug],
+        });
+    },
+    buy_magnet_mine: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'buy_magnet_mine',
+        });
+    },
+    launch_magnet_mine: (req, queueName) => {
+        const velocity = validateLaunchTubeWeapon(req.body)
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'launch_magnet_mine',
+            args: [velocity],
         });
     },
 };

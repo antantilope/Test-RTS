@@ -21,6 +21,21 @@ export class ExplosionShockWave {
     radius_meters: number
 }
 
+export class Explosion {
+    id: string
+    origin_point: number[]
+    radius_meters: number
+    max_radius_meters: number
+    flame_ms: number
+    fade_ms: number
+    elapsed_ms: number
+}
+
+export class MagnetMineTargetingLines {
+    mine_coord: number[]
+    target_coord: number[]
+}
+
 export class KillFeedElement {
     created_at_frame: number
     victim_name: string
@@ -88,8 +103,7 @@ export class UpgradeSummary {
     core: CoreUpgradeMap
 }
 
-export class ScannerDataElement {
-    element_type: string
+export class ScannerDataShipElement {
     coord_x: number
     coord_y: number
     id: string
@@ -114,7 +128,7 @@ export class ScannerDataElement {
     visual_ebeam_color: string
     visual_ebeam_firing: boolean
     aflame: boolean
-    explosion_frame: number | null
+    exploded: boolean
     distance: number
     relative_heading: number
     target_heading: number
@@ -125,7 +139,20 @@ export class ScannerDataElement {
     visual_mining_ore_location: string | null
     visual_fueling_at_station: boolean
     visual_ebeam_charging: boolean
+    visual_last_tube_fire_frame: null | number
 }
+export class ScannerDataMagnetMineElement {
+    id: string
+    velocity_x_meters_per_second: number
+    velocity_y_meters_per_second: number
+    coord_x: number
+    coord_y: number
+    target_heading: number
+    distance: number
+    exploded: boolean
+    percent_armed: number
+}
+
 type scoutedOre = {
     [key: string]: number
 }
@@ -191,7 +218,9 @@ export class Ship {
     scanner_locking_max_traversal_degrees: number
     scanner_locked_max_traversal_degrees: number
     scanner_radar_sensitivity: number
-    scanner_data: ScannerDataElement[]
+    scanner_ship_data: ScannerDataShipElement[]
+    scanner_magnet_mine_data: ScannerDataMagnetMineElement[]
+
     anti_radar_coating_level: number
 
     ebeam_firing: boolean
@@ -205,6 +234,11 @@ export class Ship {
     ebeam_charge_power_usage_per_second: number
     ebeam_charge_thermal_signature_rate_per_second: number
     ebeam_charge_fire_minimum: number
+
+    special_weapons_tubes_count: number
+    special_weapons_loaded: number
+    last_tube_fire_frame: number
+    magnet_mines_loaded: number
 
     docked_at_station: string
     gravity_brake_position: number
@@ -226,7 +260,7 @@ export class Ship {
     alive: boolean
     died_on_frame: number | null
     aflame: boolean
-    explosion_frame: number | null
+    exploded: boolean
 
     visual_range: number
 
@@ -249,6 +283,8 @@ export class FrameData {
     space_stations: SpaceStation[]
     ore_mines: OreMine[]
     explosion_shockwaves: ExplosionShockWave[]
+    explosions: Explosion[]
+    magnet_mine_targeting_lines: MagnetMineTargetingLines[]
     killfeed: KillFeedElement[]
     ship: Ship
 }

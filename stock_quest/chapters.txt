@@ -5,12 +5,13 @@ On patrol, run across unknown signature of loitering ship.
 stop and and observe
 
 Graybit's ship arives. they transmit coordinates to unknown ship.
-Coordinates are encrypted. You see Graybit's ship then transfer 
+Coordinates are encrypted. You see Graybit's ship then transfer
 a gigantic bomb.
 
 you are noticed. fight to the death. ship is fully upgraded with
 ews, solar panel, extra pneumatic tubes for emps, and granades, and magnetically
 drawn directional blast charges. MDDBC.
+
 
 
 Chapter One
@@ -55,7 +56,7 @@ You then depart for a station for refueling.
 
 While fast traveling you receive a message from Graybit.
 It says it will pay you to travel to The Light's End Ore Deposit
-and meet with a delegation from Earth. 
+and meet with a delegation from Earth.
 
 You arrive at the station and find a derelict ship. fly to investigate.
 It's the The patrol ship from the prolog. You pull the ship's log

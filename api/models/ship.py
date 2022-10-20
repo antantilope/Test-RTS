@@ -103,6 +103,9 @@ class ShipCommands:
     CANCEL_CORE_UPGRADE = "cancel_core_upgrade"
     CANCEL_SHIP_UPGRADE = "cancel_ship_upgrade"
 
+    BUY_MAGNET_MINE = "buy_magnet_mine"
+    LAUNCH_MAGNET_MINE = "launch_magnet_mine"
+
 class ShipStateKey:
     MASS = 'mass'
 
@@ -121,13 +124,9 @@ class VisibleElementShapeType:
     ARC = 'arc'
     RECT = 'rect'
 
-class ScannedElementType:
-    SHIP = 'ship'
-
-class ScannedElement(TypedDict):
+class ScannedShipElement(TypedDict):
     id: str
     designator: str
-    element_type: str
     anti_radar_coating_level: int
     scanner_thermal_signature: int
     coord_x: int
@@ -139,7 +138,7 @@ class ScannedElement(TypedDict):
     distance: int
     alive: bool
     aflame: bool
-    explosion_frame: Union[None, int]
+    exploded: bool
 
     in_visual_range: bool
     visual_p0: Tuple[int]
@@ -163,6 +162,18 @@ class ScannedElement(TypedDict):
     visual_gravity_brake_active: bool
     visual_mining_ore_location: Union[None, str]
     visual_fueling_at_station: bool
+    visual_last_tube_fire_frame: Union[None, int]
+
+class ScannedMagnetMineElement(TypedDict):
+    id: str
+    velocity_x_meters_per_second: float
+    velocity_y_meters_per_second: float
+    coord_x: int
+    coord_y: int
+    distance: int
+    exploded: bool
+    relative_heading: int
+    percent_armed: float
 
 class TimerItem(TypedDict):
     name: str
@@ -299,7 +310,8 @@ class Ship(BaseModel):
         self.scanner_lock_target = None
         self.scanner_get_lock_power_requirement_total = None
         self.scanner_get_lock_power_requirement_per_second = None
-        self.scanner_data: Dict[str, ScannedElement] = OrderedDict()
+        self.scanner_ship_data: Dict[str, ScannedShipElement] = OrderedDict()
+        self.scanner_magnet_mine_data: Dict[str, ScannedMagnetMineElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
@@ -324,6 +336,16 @@ class Ship(BaseModel):
         self.ebeam_color = None
         self.ebeam_last_hit_frame = None
 
+        # Special weapons tubes
+        self.special_weapons_tubes_count = None
+        self.last_tube_fire_frame = None
+        self._special_weapon_costs = None
+        self._special_weapons_min_launch_velocity = None
+        self._special_weapons_max_launch_velocity = None
+        self._special_weapons_launch_velocity = None
+        self.magnet_mines_loaded = 4
+        self.magnet_mine_firing = False
+
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
         self.autopilot_waypoint_type = None
@@ -332,10 +354,10 @@ class Ship(BaseModel):
         self.died_on_frame = None
         self.aflame_since_frame = None
         self._seconds_to_aflame = random.randint(0, 1)
-        self.explode_immediately = random.randint(0, 5) == 1
-        self.explosion_frame = None
-        self.explosion_point = None
-        self._seconds_to_explode = random.randint(2, 5)
+        self.explode_immediately = random.randint(0, 8) == 1
+        self.exploded = False
+        self._removed_from_map = False
+        self._seconds_to_explode = random.randint(3, 6)
 
         # Space station interactions
         self.docked_at_station = None
@@ -417,7 +439,7 @@ class Ship(BaseModel):
     @property
     def ebeam_heading(self) -> Union[float, int]:
         if self.scanner_lock_target and self.scanner_locked and self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_ON_TARGET:
-            return self.scanner_data[self.scanner_lock_target]['target_heading']
+            return self.scanner_ship_data[self.scanner_lock_target]['target_heading']
         return self.heading
 
 
@@ -489,6 +511,9 @@ class Ship(BaseModel):
     def gravity_brake_deployed(self) -> bool:
         return self.gravity_brake_position == self.gravity_brake_deployed_position
 
+    @property
+    def special_weapons_loaded(self):
+        return self.magnet_mines_loaded
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
@@ -543,7 +568,8 @@ class Ship(BaseModel):
             'scanner_radar_range': self.scanner_radar_range,
             'scanner_ir_range': self.scanner_ir_range,
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
-            'scanner_data': list(self.scanner_data.values()),
+            'scanner_ship_data': list(self.scanner_ship_data.values()),
+            'scanner_magnet_mine_data': list(self.scanner_magnet_mine_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
             'scanner_locking_max_traversal_degrees': self.scanner_locking_max_traversal_degrees,
@@ -562,6 +588,11 @@ class Ship(BaseModel):
             'ebeam_charge_power_usage_per_second': self.ebeam_charge_power_usage_per_second,
             'ebeam_charge_thermal_signature_rate_per_second': self.ebeam_charge_thermal_signature_rate_per_second,
             'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
+
+            'special_weapons_tubes_count': self.special_weapons_tubes_count,
+            'last_tube_fire_frame': self.last_tube_fire_frame,
+            'special_weapons_loaded': self.special_weapons_loaded,
+            'magnet_mines_loaded': self.magnet_mines_loaded,
 
             'docked_at_station': self.docked_at_station,
             'scouted_station_gravity_brake_catches_last_frame': self.scouted_station_gravity_brake_catches_last_frame,
@@ -583,7 +614,7 @@ class Ship(BaseModel):
             'alive': self.died_on_frame is None,
             'died_on_frame': self.died_on_frame,
             'aflame': self.aflame_since_frame is not None,
-            'explosion_frame': self.explosion_frame,
+            'exploded': self.exploded,
 
             'visual_range': self.visual_range,
 
@@ -593,7 +624,7 @@ class Ship(BaseModel):
         }
 
     @classmethod
-    def spawn(cls, team_id: str, map_units_per_meter: int = 1) -> "Ship":
+    def spawn(cls, team_id: str, special_weapon_costs: Dict[str, int], map_units_per_meter: int = 1) -> "Ship":
         """ Create new unpositioned ship with defaults
         """
         instance = cls()
@@ -602,6 +633,7 @@ class Ship(BaseModel):
         instance.team_id = team_id
 
         instance._upgrades = get_upgrade_profile_1()
+        instance._special_weapon_costs = special_weapon_costs
         instance._upgrade_summary[UpgradeType.CORE] = {}
         for cu in instance._upgrades[UpgradeType.CORE]:
             instance._upgrade_summary[UpgradeType.CORE][cu.slug] = {
@@ -712,6 +744,16 @@ class Ship(BaseModel):
         instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
+
+        instance.special_weapons_tubes_count = constants.SPECIAL_WEAPONS_TUBES_COUNT
+        instance._special_weapons_min_launch_velocity = constants.SPECIAL_WEAPONS_MIN_LAUNCH_VELOCITY
+        instance._special_weapons_max_launch_velocity = constants.SPECIAL_WEAPONS_MAX_LAUNCH_VELOCITY
+        instance._special_weapons_launch_velocity = round(
+            (
+                instance._special_weapons_min_launch_velocity
+                + instance._special_weapons_max_launch_velocity
+            ) / 2
+        )
 
         instance.cargo_ore_mass_capacity_kg = constants.ORE_CAPACITY_KG
         instance.mining_ore_power_usage_per_second = constants.MINING_ORE_POWER_USAGE_PER_SECOND
@@ -1124,12 +1166,8 @@ class Ship(BaseModel):
         if self.died_on_frame is None:
             return
 
-        elif self.explosion_frame:
-            if self.explosion_frame < 200:
-                # Ship is exploding, advance explosion frame
-                self.explosion_frame += 1
-                return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
-            return ShipDeathType.ADRIFT, game_frame - self.died_on_frame
+        elif self.exploded:
+            return ShipDeathType.EXPLOSION, game_frame - self.died_on_frame
 
         elif self.explode_immediately:
             self.explode()
@@ -1151,8 +1189,7 @@ class Ship(BaseModel):
             return ShipDeathType.AFLAME, game_frame - self.died_on_frame
 
     def explode(self):
-        self.explosion_frame = 1
-        self.explosion_point = self.coords
+        self.exploded = True
         self.aflame_since_frame = None
         self.velocity_x_meters_per_second = 0
         self.velocity_y_meters_per_second = 0
@@ -1196,7 +1233,7 @@ class Ship(BaseModel):
             if not self.scanner_locked or not self.scanner_lock_target:
                 self.autopilot_program = None
                 return
-            self._set_heading(self.scanner_data[self.scanner_lock_target]["relative_heading"])
+            self._set_heading(self.scanner_ship_data[self.scanner_lock_target]["relative_heading"])
 
         elif self.autopilot_program == AutoPilotPrograms.HEADING_LOCK_PROGRADE:
             _, angle = utils2d.calculate_resultant_vector(
@@ -1447,6 +1484,10 @@ class Ship(BaseModel):
         elif command == ShipCommands.CANCEL_SHIP_UPGRADE:
             self.cmd_cancel_ship_upgrade(args[0])
 
+        elif command == ShipCommands.BUY_MAGNET_MINE:
+            self.cmd_buy_magnet_mine()
+        elif command == ShipCommands.LAUNCH_MAGNET_MINE:
+            self.cmd_launch_magnet_mine(args[0])
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -1560,7 +1601,7 @@ class Ship(BaseModel):
         self.scanner_lock_target = None
         self.scanner_lock_traversal_degrees_previous_frame = None
         self.scanner_lock_traversal_slack = None
-        self.scanner_data.clear()
+        self.scanner_ship_data.clear()
 
     def cmd_set_scanner_mode_radar(self) -> None:
         self.scanner_mode = ShipScannerMode.RADAR
@@ -1571,7 +1612,7 @@ class Ship(BaseModel):
     def cmd_set_scanner_lock_target(self, target_id: str) -> None:
         if not self.scanner_online or self.scanner_locking:
             return
-        if target_id not in self.scanner_data:
+        if target_id not in self.scanner_ship_data:
             return
         self.scanner_locking = True
         self.scanner_locked = False
@@ -1797,3 +1838,29 @@ class Ship(BaseModel):
         self._upgrade_summary[utype][
                 self._upgrades[utype][upgrade_ix].slug
             ]['seconds_researched'] = None
+
+    def cmd_buy_magnet_mine(self):
+        if self.special_weapons_loaded >= self.special_weapons_tubes_count:
+            return
+        if not self.docked_at_station:
+            return
+        ore_cost = self._special_weapon_costs[constants.MAGNET_MINE_SLUG]
+        try:
+            self.withdraw_ore(ore_cost)
+        except InsufficientOreError:
+            return
+        self.magnet_mines_loaded += 1
+
+    def cmd_launch_magnet_mine(self, launch_velocity: int):
+        _velocity = max(
+            launch_velocity,
+            self._special_weapons_min_launch_velocity,
+        )
+        _velocity = min(
+            _velocity,
+            self._special_weapons_max_launch_velocity,
+        )
+        if self.magnet_mines_loaded > 0 and not self.magnet_mine_firing:
+            self.magnet_mines_loaded -= 1
+            self.magnet_mine_firing = True
+            self._special_weapons_launch_velocity = _velocity

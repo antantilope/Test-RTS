@@ -23,12 +23,30 @@ export class DrawableShip {
     engineBoosted: boolean
     fillColor: string
     aflame: boolean
-    explosionFrame: number | null
+    exploded: boolean
     gravityBrakePosition: number
     gravityBrakeDeployedPosition: number
     gravityBrakeActive: boolean
     miningOreLocation: string
     fuelingAtStation:boolean
+    lastTubeFireFrame: number
+}
+
+export class DrawableMagnetMine {
+    mineId: string
+    isDot: boolean
+    canvasCoordCenter: PointCoord
+    canvasX1: number
+    canvasY1: number
+    canvasW: number
+    canvasH: number
+    canvasBoundingBox: BoxCoords
+    percentArmed: number
+}
+
+export class DrawableMagnetMineTargetingLine {
+    mineCanvasCoord: PointCoord
+    targetCanvasCoord: PointCoord
 }
 
 export class EBeamRayDetails {
@@ -48,6 +66,8 @@ export class VisionCircle {
 
 export class DrawableCanvasItems {
     ships: DrawableShip[]
+    magnetMines: DrawableMagnetMine[]
+    magnetMineTargetingLines: DrawableMagnetMineTargetingLine[]
     ebeamRays: EBeamRayDetails[]
     mapWall?: BoxCoords
     visionCircles: VisionCircle[]

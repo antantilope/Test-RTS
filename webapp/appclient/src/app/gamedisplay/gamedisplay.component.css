@@ -162,3 +162,10 @@
     /* flex-direction: column; */
     margin-top: 6px;
 }
+
+#tube-launch-velocity-container {
+    margin-top: 9px;
+    font-family: 'Courier New', Courier, monospace;
+    color: #ffffff;
+    text-align: left;
+}

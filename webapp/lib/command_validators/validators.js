@@ -96,9 +96,30 @@ const validateStartShipUpgrade = (data) => {
     return slug;
 }
 
+const validateLaunchTubeWeapon = (data) => {
+    const launchVelocity = data.launch_velocity
+    if(!launchVelocity) {
+        throw new CommandValidationError("launchVelocity required");
+    }
+    let _lv;
+    try {
+        _lv = parseInt(launchVelocity)
+    } catch(e) {
+        throw new CommandValidationError("invalid launchVelocity");
+    }
+    if(isNaN(_lv)) {
+        throw new CommandValidationError("invalid launchVelocity");
+    }
+    if(_lv < 1 || _lv > 1000) {
+        throw new CommandValidationError("invalid launchVelocity");
+    }
+    return _lv
+}
+
 exports.validateSetHeadingCommand = validateSetHeadingCommand;
 exports.validateSetScannerLockTargetCommand = validateSetScannerLockTargetCommand;
 exports.validateRunAutoPilotProgram = validateRunAutoPilotProgram;
 exports.validateRunAutopilotHeadingToWaypoint = validateRunAutopilotHeadingToWaypoint;
 exports.validateStartCoreUpgrade = validateStartCoreUpgrade;
 exports.validateStartShipUpgrade = validateStartShipUpgrade;
+exports.validateLaunchTubeWeapon = validateLaunchTubeWeapon;

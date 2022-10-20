@@ -3,9 +3,7 @@
 from uuid import uuid4
 from unittest import TestCase
 
-from api.models.game import Game, GamePhase#, ShipScannerMode
-# from api import utils2d
-# from api.models.ship import VisibleElementShapeType, ScannedElementType
+from api.models.game import Game, GamePhase
 from api import constants
 
 class TestEBeamAndDamage(TestCase):

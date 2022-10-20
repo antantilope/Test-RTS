@@ -206,7 +206,7 @@ exports.adminCreateRoomController = async (req, res) => {
             },
         );
 
-    }, 3000);
+    }, 800);
 
 }
 
