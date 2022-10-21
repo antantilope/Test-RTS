@@ -735,7 +735,6 @@ export class CameraService {
       console.warn("updateEMPTrailElements():: no framedata found")
       return setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
     }
-    console.log(this.EMPTrailElements)
     // Clear old elements
     const now = performance.now()
     this.EMPTrailElements = this.EMPTrailElements.filter((te: EMPTrailElement)=>{
