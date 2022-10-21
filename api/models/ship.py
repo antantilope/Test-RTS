@@ -1221,8 +1221,10 @@ class Ship(BaseModel):
         self.engine_lit = False
         self.engine_starting = False
         self.engine_online = False
+        self.engine_startup_power_used = 0
         self.scanner_online = False
         self.scanner_starting = False
+        self.scanner_startup_power_used = 0
         self.ebeam_firing = False
         self.ebeam_charging = False
         self.ebeam_charge = 0
@@ -1231,7 +1233,13 @@ class Ship(BaseModel):
         self.gravity_brake_position = 0
         self.gravity_brake_extending = False
         self.gravity_brake_retracting = False
+        self.docking_at_station = None
+        self.docked_at_station = None
         self.mining_ore = False
+        self.apu_online = False
+        self.apu_starting = False
+        self.apu_startup_power_used = 0
+
         self.battery_power = max(
             0,
             self.battery_power - electricity_drain
