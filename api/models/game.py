@@ -25,7 +25,7 @@ from .ship import (
     AutopilotError,
 )
 from .ship_designator import get_designations
-from .magnet_mine import MagnetMine
+from .special_weapons import MagnetMine, EMP
 from api import utils2d
 from api.constants import (
     MAX_SERVER_FPS,
@@ -135,6 +135,16 @@ class Explosion(TypedDict):
     fade_ms: float
     elapsed_ms: int
 
+class EMPBlast(TypedDict):
+    id: str
+    ship_id: Optional[str]
+    origin_point: Tuple[int]
+    max_radius_meters: int
+    radius_meters: float
+    flare_ms: float
+    fade_ms: float
+    elapsed_ms: int
+
 class EBeamTargetingLine(TypedDict):
     mine_coord: Tuple[int]
     target_coord: Tuple[int]
@@ -166,6 +176,7 @@ class Game(BaseModel):
         self._explosion_shockwaves: List[ExplosionShockwave] = []
         self._ships_hit_by_shockwave: Dict[str, Set[str]] = {}
         self._explosions: List[Explosion] = []
+        self._emp_blasts: List[EMPBlast] = []
         self._explosion_shockwave_max_radius_meters = None
         self._shockwave_max_delta_v_meters_per_second = constants.SHOCKWAVE_MAX_DELTA_V_METERS_PER_SECOND
         self._shockwave_max_delta_v_coef = constants.SHOCKWAVE_MAX_DELTA_V_COEF
@@ -174,6 +185,7 @@ class Game(BaseModel):
         self._ore_mines_remaining_ore: Dict[str, float] = {}
 
         self._magnet_mines: Dict[str, MagnetMine] = OrderedDict()
+        self._emps: Dict[str, EMP] = OrderedDict()
         self._magnet_mine_targeting_lines: List[EBeamTargetingLine] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
@@ -217,6 +229,11 @@ class Game(BaseModel):
         self._magnet_mine_max_seconds_to_detonate = constants.MAGNET_MINE_MAX_SECONDS_TO_DETONATE
         self._magnet_mine_max_proximity_to_explode_meters = constants.MAGNET_MINE_MAX_PROXIMITY_TO_EXPLODE_METERS
 
+        self._emp_arming_time_seconds = constants.EMP_ARMING_TIME_SECONDS
+        self._emp_max_seconds_to_detonate = constants.EMP_MAX_SECONDS_TO_DETONATE
+        self._emp_max_proximity_to_explode_meters = constants.EMP_MAX_PROXIMITY_TO_EXPLODE_METERS
+        self._emp_explode_damage_radius_meters = constants.EMP_EXPLODE_DAMAGE_RADIUS_METERS
+        self._emp_electricity_drain = constants.EMP_ELECTRICITY_DRAIN
 
     def get_state(self) -> GameState:
         base_state = {
@@ -511,9 +528,12 @@ class Game(BaseModel):
             self.advance_mining(ship_id)
 
         self.advance_magnet_mines(self._fps)
+        self.advance_emps(self._fps)
 
         if any(self._explosions):
             self.advance_explosions()
+        if any(self._emp_blasts):
+            self.advance_emp_blasts()
         if any(self._explosion_shockwaves):
             self.advance_explosion_shockwaves()
 
@@ -549,7 +569,7 @@ class Game(BaseModel):
                 sw_ids_to_remove.add(esw['id'])
             else:
                 self._explosion_shockwaves[ix]['radius_meters'] = new_radius
-            
+
             # adjust ship velocities if they have been struck by the shock wave
             if check_for_sw_physics:
                 for ship_id in self._ships:
@@ -621,7 +641,7 @@ class Game(BaseModel):
         fade_ms: int,
         extras={}
     ):
-        shockwave_id = str(uuid4()) 
+        shockwave_id = str(uuid4())
         self._explosion_shockwaves.append({
             "id": shockwave_id,
             "origin_point": origin_point,
@@ -638,6 +658,22 @@ class Game(BaseModel):
             "elapsed_ms": 10,
             **extras,
         })
+
+    def advance_emp_blasts(self):
+        ix_to_remove = []
+        elapsed_ms = 1000 / self._fps
+        for ix, ex in enumerate(self._emp_blasts):
+            if ex['elapsed_ms'] < (ex['flare_ms'] + ex['fade_ms']):
+                self._emp_blasts[ix]['elapsed_ms'] += elapsed_ms
+            else:
+                ix_to_remove.append(ix)
+
+        if ix_to_remove:
+            self._emp_blasts = [
+                ex
+                for ix, ex in enumerate(self._emp_blasts)
+                if ix not in ix_to_remove
+            ]
 
     def reset_and_update_scanner_states(self, ship_id: str):
         distance_cache = CoordDistanceCache()
@@ -874,13 +910,13 @@ class Game(BaseModel):
                         "victim_name": self._ships[hit_ship_id].scanner_designator,
                     })
 
+        # ship._special_weapons_launch_velocity is set when processing
+        # ship commands in run_frame()
         if self._ships[ship_id].magnet_mine_firing:
             # Spawn a new magnet mine.
             self._ships[ship_id].magnet_mine_firing = False
             self._ships[ship_id].last_tube_fire_frame = self._game_frame
             mine = MagnetMine(self._game_frame, ship_id)
-            # ship._special_weapons_launch_velocity is set when processing
-            # ship commands in run_frame()
             extra_x, extra_y = utils2d.calculate_x_y_components(
                 self._ships[ship_id]._special_weapons_launch_velocity,
                 self._ships[ship_id].heading,
@@ -892,6 +928,23 @@ class Game(BaseModel):
             mine.coord_x = round((ship_p1_x + ship_p2_x) / 2)
             mine.coord_y = round((ship_p1_y + ship_p2_y) / 2)
             self._magnet_mines[mine.id] = mine
+
+        elif self._ships[ship_id].emp_firing:
+            self._ships[ship_id].emp_firing = False
+            self._ships[ship_id].last_tube_fire_frame = self._game_frame
+            emp = EMP(self._game_frame, ship_id)
+            extra_x, extra_y = utils2d.calculate_x_y_components(
+                self._ships[ship_id]._special_weapons_launch_velocity,
+                self._ships[ship_id].heading,
+            )
+            emp.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
+            emp.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
+            ship_p1_x, ship_p1_y = self._ships[ship_id].map_p1
+            ship_p2_x, ship_p2_y = self._ships[ship_id].map_p2
+            emp.coord_x = round((ship_p1_x + ship_p2_x) / 2)
+            emp.coord_y = round((ship_p1_y + ship_p2_y) / 2)
+            self._emps[emp.id] = emp
+
 
     def advance_magnet_mines(self, fps: int):
         keys_to_drop = []
@@ -921,6 +974,7 @@ class Game(BaseModel):
                 self._magnet_mines[mm_id].percent_armed = self._magnet_mines[mm_id].elapsed_milliseconds / arm_time_ms
 
             if self._magnet_mines[mm_id].armed:
+                explode = False
                 # Blow up mine if close enough in proximity to target
                 if (
                     self._magnet_mines[mm_id].distance_to_closest_ship
@@ -974,7 +1028,7 @@ class Game(BaseModel):
                             closest_id = ship_id
                     self._magnet_mines[mm_id].closest_ship_id = closest_id
                     self._magnet_mines[mm_id].distance_to_closest_ship = closest_distance
-                
+
                 else:
                     # update distance to targeted ship
                     distance = utils2d.calculate_point_distance(
@@ -1025,6 +1079,86 @@ class Game(BaseModel):
         if any(keys_to_drop):
             for k in keys_to_drop:
                 del self._magnet_mines[k]
+
+    def advance_emps(self, fps: int):
+        keys_to_drop = []
+        arm_time_ms = self._emp_arming_time_seconds * 1000
+
+        # For a performance boost, only check proximity every 3rd frame
+        check_proximity = self._is_testing or self._game_frame % 3 == 0
+
+        for emp_id in self._emps:
+            if self._emps[emp_id].exploded:
+                keys_to_drop.append(emp_id)
+                continue
+
+            self._emps[emp_id].elapsed_milliseconds += (1000 / fps)
+            if (
+                not self._emps[emp_id].armed
+                and self._emps[emp_id].elapsed_milliseconds > arm_time_ms
+            ):
+                # Arm the mine if enough time has passed
+                self._emps[emp_id].armed = True
+                self._emps[emp_id].percent_armed = 1
+
+            elif not self._emps[emp_id].armed:
+                self._emps[emp_id].percent_armed = self._emps[emp_id].elapsed_milliseconds / arm_time_ms
+
+            # Blow up EMP if timer has expired
+            explode = False
+            if self._emps[emp_id].elapsed_milliseconds > (self._emp_max_seconds_to_detonate * 1000):
+                self._emps[emp_id].exploded = True
+                self._emp_blasts.append({
+                    "id": str(uuid4()),
+                    "ship_id": ship_id,
+                    "origin_point": self._emps[emp_id].coords,
+                    "max_radius_meters": 35,
+                    "radius_meters": 1,
+                    "flare_ms": 1000,
+                    "fade_ms": 3000,
+                    "elapsed_ms": 10,
+                })
+                explode = True
+
+            if explode or check_proximity:
+                ship_id_in_kill_range = []
+                for ship_id in self._ships:
+                    if self._ships[ship_id].exploded:
+                        continue
+                    distance_meters = utils2d.calculate_point_distance(
+                        (
+                            self._emps[emp_id].coord_x,
+                            self._emps[emp_id].coord_y,
+                        ), (
+                            self._ships[ship_id].coord_x,
+                            self._ships[ship_id].coord_y,
+                        ),
+                    ) / self._map_units_per_meter
+                    if not explode and distance_meters <= self._emp_max_proximity_to_explode_meters:
+                        # Blow up EMP if it's within proximity of a ship
+                        explode = True
+                        ship_id_in_kill_range.append(ship_id)
+                    elif distance_meters <= self._emp_explode_damage_radius_meters:
+                        ship_id_in_kill_range.append(ship_id)
+                if explode:
+                    self._emps[emp_id].exploded = True
+                    self._emp_blasts.append({
+                        "id": str(uuid4()),
+                        "ship_id": ship_id,
+                        "origin_point": self._emps[emp_id].coords,
+                        "max_radius_meters":  self._emp_explode_damage_radius_meters,
+                        "radius_meters": 1,
+                        "flare_ms": 1000,
+                        "fade_ms": 3000,
+                        "elapsed_ms": 10,
+                    })
+                    for ship_id in ship_id_in_kill_range:
+                        self._ships[ship_id].emp(self._emp_electricity_drain)
+
+        # EMPs get deleted from dict on the frame after they explode.
+        if any(keys_to_drop):
+            for k in keys_to_drop:
+                del self._emps[k]
 
 
     def _advance_collisions(self, ship_id: str, collision_type: str):

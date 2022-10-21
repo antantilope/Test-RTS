@@ -24,7 +24,8 @@ import {
   TWO_PI,
   FEATURE_ORE,
   FEATURE_STATION,
-  MAGNET_MINE_SLUG
+  MAGNET_MINE_SLUG,
+  EMP_SLUG,
 } from '../constants'
 
 const CAMERA_MODE_SHIP = "ship"
@@ -85,6 +86,7 @@ export class GamedisplayComponent implements OnInit {
   public selectedPneumaticWeapon = MAGNET_MINE_SLUG
   private allPneumaticWeapons = [
     MAGNET_MINE_SLUG,
+    EMP_SLUG,
   ]
 
   constructor(
@@ -983,7 +985,12 @@ export class GamedisplayComponent implements OnInit {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
       this._api.post(
         "/api/rooms/command",
-        {command:'launch_magnet_mine', launch_velocity: this.lauchVelocity,},
+        {command:'launch_magnet_mine', launch_velocity: this.lauchVelocity},
+      )
+    } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
+      this._api.post(
+        "/api/rooms/command",
+        {command:'launch_emp', launch_velocity: this.lauchVelocity},
       )
     } else {
       console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)

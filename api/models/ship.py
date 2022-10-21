@@ -1217,6 +1217,26 @@ class Ship(BaseModel):
         self.mining_ore = False
         self.parked_at_ore_mine = None
 
+    def emp(self, electricity_drain: int):
+        self.engine_lit = False
+        self.engine_starting = False
+        self.engine_online = False
+        self.scanner_online = False
+        self.scanner_starting = False
+        self.ebeam_firing = False
+        self.ebeam_charging = False
+        self.ebeam_charge = 0
+        self.autopilot_program = None
+        self.gravity_brake_active = False
+        self.gravity_brake_position = 0
+        self.gravity_brake_extending = False
+        self.gravity_brake_retracting = False
+        self.mining_ore = False
+        self.battery_power = max(
+            0,
+            self.battery_power - electricity_drain
+        )
+
     def advance_thermal_signature(self, fps: int) -> None:
         delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps
         if self.engine_lit:
@@ -1888,7 +1908,7 @@ class Ship(BaseModel):
         except InsufficientOreError:
             return
         self.emps_loaded += 1
-    
+
     def cmd_launch_emp(self, launch_velocity: int):
         _velocity = max(
             launch_velocity,
@@ -1898,8 +1918,7 @@ class Ship(BaseModel):
             _velocity,
             self._special_weapons_max_launch_velocity,
         )
-        if self.emps_loaded > 0 and not self.magnet_mine_firing:
+        if self.emps_loaded > 0 and not self.emp_firing:
             self.emps_loaded -= 1
             self.emp_firing = True
             self._special_weapons_launch_velocity = _velocity
-            
