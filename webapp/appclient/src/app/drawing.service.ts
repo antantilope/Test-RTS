@@ -1458,11 +1458,13 @@ export class DrawingService {
     ctx.fill()
     if(Math.random() < 0.5){
       ctx.beginPath()
-      ctx.arc(emp.canvasCoordCenter.x, emp.canvasCoordCenter.y, emp.radiusCanvasPX * 1.3, 0, TWO_PI)
+      ctx.arc(emp.canvasCoordCenter.x, emp.canvasCoordCenter.y, emp.radiusCanvasPX * 1.5, 0, TWO_PI)
       ctx.lineWidth = emp.radiusCanvasPX
-      ctx.strokeStyle = `rgb(120, 120, 255, ${getRandomFloat(0.3, 0.5)})`
+      ctx.strokeStyle = `rgb(60, 60, 255, ${getRandomFloat(0.4, 0.8)})`
       ctx.stroke()
     }
+    ctx.beginPath()
+    ctx.lineWidth = 1.75 + (1.5 * emp.percentArmed)
     if(emp.percentArmed > 0.97) {
       ctx.beginPath()
       ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
