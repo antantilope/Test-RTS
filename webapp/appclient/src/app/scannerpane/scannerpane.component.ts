@@ -249,6 +249,9 @@ export class ScannerpaneComponent implements OnInit {
     this._draw.drawExplosionShockwaves(this.ctx, this._camera.scannerPaneCamera)
     this._draw.drawExplosions(this.ctx, this._camera.scannerPaneCamera)
 
+    // EMP blasts
+    this._draw.drawEMPBlasts(this.ctx, this._camera.scannerPaneCamera)
+
     // E-Beams
     this._draw.drawEbeams(this.ctx, this._camera.scannerPaneCamera, drawableObjects.ebeamRays)
 

@@ -566,6 +566,7 @@ export class GamedisplayComponent implements OnInit {
     }
 
     this._draw.drawExplosions(this.ctx, this._camera.gameDisplayCamera)
+    this._draw.drawEMPBlasts(this.ctx, this._camera.gameDisplayCamera)
 
     this._draw.drawOreDepositEffect(this.ctx, this._camera.gameDisplayCamera)
 

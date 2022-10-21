@@ -311,7 +311,7 @@ export class FrameData {
     ore_mines: OreMine[]
     explosion_shockwaves: ExplosionShockWave[]
     explosions: Explosion[]
-    emps_blasts: EMPBlast[]
+    emp_blasts: EMPBlast[]
     magnet_mine_targeting_lines: MagnetMineTargetingLines[]
     killfeed: KillFeedElement[]
     ship: Ship
