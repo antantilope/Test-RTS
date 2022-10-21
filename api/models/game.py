@@ -1146,7 +1146,7 @@ class Game(BaseModel):
                 self._emps[emp_id].coord_x += (self._emps[emp_id].velocity_x_meters_per_second * self._map_units_per_meter / fps)
                 self._emps[emp_id].coord_y += (self._emps[emp_id].velocity_y_meters_per_second * self._map_units_per_meter / fps)
 
-        # EMPs get deleted from dict on the frame after they explode.
+        # EMPs get deleted from dict on the frame after they  explode.
         if any(keys_to_drop):
             for k in keys_to_drop:
                 del self._emps[k]
