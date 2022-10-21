@@ -240,6 +240,10 @@ export class ScannerpaneComponent implements OnInit {
       this.ctx,
       drawableObjects.magnetMineTargetingLines
     )
+    // EMPs
+    for(let i in drawableObjects.emps) {
+      this._draw.drawEMP(this.ctx, drawableObjects.emps[i])
+    }
 
     // Explosion FX
     this._draw.drawExplosionShockwaves(this.ctx, this._camera.scannerPaneCamera)

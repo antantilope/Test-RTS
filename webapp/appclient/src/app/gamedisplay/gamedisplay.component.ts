@@ -431,6 +431,8 @@ export class GamedisplayComponent implements OnInit {
   private getCurrentTubeWeaponCount() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
       return this._api.frameData.ship.magnet_mines_loaded
+    } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
+      return this._api.frameData.ship.emps_loaded
     }
     return 0
   }
@@ -558,6 +560,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx,
       drawableObjects.magnetMineTargetingLines
     )
+    // EMPs
+    for(let i in drawableObjects.emps) {
+      this._draw.drawEMP(this.ctx, drawableObjects.emps[i])
+    }
 
     this._draw.drawExplosions(this.ctx, this._camera.gameDisplayCamera)
 

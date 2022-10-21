@@ -6,11 +6,13 @@ import { BoxCoords } from './models/box-coords.model';
 import {
   DrawableCanvasItems,
   DrawableShip,
-  DrawableMagnetMineTargetingLine
 } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
 import { ScannerDataShipElement, Ship } from './models/apidata.model';
-import { MAGNET_MINE_SIDE_LENGTH_METERS } from "./constants"
+import {
+  MAGNET_MINE_SIDE_LENGTH_METERS,
+  EMP_RADIUS_METERS,
+} from "./constants"
 
 function getRandomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
@@ -323,6 +325,7 @@ export class Camera {
       ships: [],
       magnetMines: [],
       magnetMineTargetingLines: [],
+      emps: [],
       ebeamRays: [],
       visionCircles:[],
     }
@@ -525,6 +528,29 @@ export class Camera {
       drawableItems.magnetMineTargetingLines.push({
         mineCanvasCoord: pointA,
         targetCanvasCoord: pointB,
+      })
+    }
+
+    for(let i in this._api.frameData.ship.scanner_emp_data) {
+      let sde = this._api.frameData.ship.scanner_emp_data[i]
+      if(sde.exploded) {
+        continue
+      }
+      let canvasCoordCenter = this.mapCoordToCanvasCoord(
+        {x: sde.coord_x, y: sde.coord_y},
+        cameraPosition,
+      )
+      let empRadiusPx = EMP_RADIUS_METERS * this._api.frameData.map_config.units_per_meter / this.getZoom()
+      drawableItems.emps.push({
+        EMPId: sde.id,
+        canvasCoordCenter,
+        radiusCanvasPX: empRadiusPx,
+        percentArmed: sde.percent_armed,
+        isDot: empRadiusPx < this.minSizeForDotPx,
+        canvasBoundingBox: this.pointCoordToBoxCoord(
+          canvasCoordCenter,
+           Math.max(boundingBoxBuffer, empRadiusPx * 2 + boundingBoxBuffer),
+        ),
       })
     }
 

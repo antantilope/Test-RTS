@@ -130,17 +130,15 @@ class Explosion(TypedDict):
     ship_id: Optional[str]
     origin_point: Tuple[int]
     max_radius_meters: int
-    radius_meters: float
+    radius_meters: float # TODO: Remve this field?
     flame_ms: float
     fade_ms: float
     elapsed_ms: int
 
 class EMPBlast(TypedDict):
     id: str
-    ship_id: Optional[str]
     origin_point: Tuple[int]
     max_radius_meters: int
-    radius_meters: float
     flare_ms: float
     fade_ms: float
     elapsed_ms: int
@@ -280,6 +278,7 @@ class Game(BaseModel):
             'ebeam_rays': self._ebeam_rays,
             'explosion_shockwaves': self._explosion_shockwaves,
             'explosions': self._explosions,
+            'emp_blasts': self._emp_blasts,
             "winning_team": self._winning_team,
             "killfeed": self._killfeed,
             "space_stations": self._space_stations,
@@ -681,6 +680,7 @@ class Game(BaseModel):
 
         self._ships[ship_id].scanner_ship_data.clear()
         self._ships[ship_id].scanner_magnet_mine_data.clear()
+        self._ships[ship_id].scanner_emp_data.clear()
 
         ship_coords = self._ships[ship_id].coords
         scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
@@ -795,6 +795,29 @@ class Game(BaseModel):
                     'exploded': self._magnet_mines[mm_id].exploded,
                     'relative_heading': round(exact_heading),
                     'percent_armed': self._magnet_mines[mm_id].percent_armed,
+                }
+
+        # Add EMPs to scanner data
+        for emp_id in self._emps:
+            emp_coords = self._emps[emp_id].coords
+            distance = utils2d.calculate_point_distance(ship_coords, emp_coords)
+            distance_meters = round(distance / self._map_units_per_meter)
+            is_visual = visual_range >= distance_meters
+            is_scannable = (
+                scan_range is not None
+                and scan_range >= distance_meters
+                and self._ships[ship_id].scanner_mode == ShipScannerMode.RADAR
+            )
+            if is_visual or is_scannable:
+                exact_heading = utils2d.calculate_heading_to_point(ship_coords, emp_coords)
+                self._ships[ship_id].scanner_emp_data[emp_id] = {
+                    'id': emp_id,
+                    'coord_x': emp_coords[0],
+                    'coord_y': emp_coords[1],
+                    'distance': distance_meters,
+                    'exploded': self._emps[emp_id].exploded,
+                    'relative_heading': round(exact_heading),
+                    'percent_armed': self._emps[emp_id].percent_armed,
                 }
 
         # Check if scanner target has gone out of range
@@ -1119,17 +1142,15 @@ class Game(BaseModel):
                     self._emps[emp_id].exploded = True
                     self._emp_blasts.append({
                         "id": str(uuid4()),
-                        "ship_id": ship_id,
                         "origin_point": self._emps[emp_id].coords,
                         "max_radius_meters":  self._emp_explode_damage_radius_meters,
-                        "radius_meters": 1,
                         "flare_ms": 1000,
                         "fade_ms": 3000,
                         "elapsed_ms": 10,
                     })
                     for ship_id in ship_id_in_kill_range:
                         self._ships[ship_id].emp(self._emp_electricity_drain)
-            
+
             # Adjust position
             if not explode:
                 self._emps[emp_id].coord_x += (self._emps[emp_id].velocity_x_meters_per_second * self._map_units_per_meter / fps)

@@ -178,6 +178,15 @@ class ScannedMagnetMineElement(TypedDict):
     relative_heading: int
     percent_armed: float
 
+class ScannedEMPElement(TypedDict):
+    id: str
+    coord_x: int
+    coord_y: int
+    distance: int
+    exploded: bool
+    relative_heading: int
+    percent_armed: float
+
 class TimerItem(TypedDict):
     name: str
     percent: int
@@ -315,6 +324,7 @@ class Ship(BaseModel):
         self.scanner_get_lock_power_requirement_per_second = None
         self.scanner_ship_data: Dict[str, ScannedShipElement] = OrderedDict()
         self.scanner_magnet_mine_data: Dict[str, ScannedMagnetMineElement] = OrderedDict()
+        self.scanner_emp_data: Dict[str, ScannedEMPElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
@@ -347,7 +357,7 @@ class Ship(BaseModel):
         self._special_weapons_max_launch_velocity = None
         self._special_weapons_launch_velocity = None
         self.magnet_mines_loaded = 0
-        self.emps_loaded = 0
+        self.emps_loaded = 10
         self.magnet_mine_firing = False
         self.emp_firing = False
 
@@ -575,6 +585,7 @@ class Ship(BaseModel):
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
             'scanner_ship_data': list(self.scanner_ship_data.values()),
             'scanner_magnet_mine_data': list(self.scanner_magnet_mine_data.values()),
+            'scanner_emp_data': list(self.scanner_emp_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
             'scanner_locking_max_traversal_degrees': self.scanner_locking_max_traversal_degrees,

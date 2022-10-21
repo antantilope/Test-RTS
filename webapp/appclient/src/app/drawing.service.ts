@@ -18,6 +18,7 @@ import {
   DrawableShip,
   DrawableMagnetMine,
   DrawableMagnetMineTargetingLine,
+  DrawableEMP,
   VisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
@@ -1358,6 +1359,20 @@ export class DrawingService {
       ctx.lineWidth = 2
       ctx.moveTo(l.mineCanvasCoord.x, l.mineCanvasCoord.y)
       ctx.lineTo(l.targetCanvasCoord.x, l.targetCanvasCoord.y)
+      ctx.stroke()
+    }
+  }
+
+  public drawEMP(ctx: CanvasRenderingContext2D, emp: DrawableEMP) {
+    ctx.beginPath()
+    ctx.fillStyle = "#0000ff"
+    ctx.arc(emp.canvasCoordCenter.x, emp.canvasCoordCenter.y, emp.radiusCanvasPX, 0, TWO_PI)
+    ctx.fill()
+    if(Math.random() < 0.5){
+      ctx.beginPath()
+      ctx.arc(emp.canvasCoordCenter.x, emp.canvasCoordCenter.y, emp.radiusCanvasPX * 1.3, 0, TWO_PI)
+      ctx.lineWidth = emp.radiusCanvasPX
+      ctx.strokeStyle = `rgb(120, 120, 255, ${getRandomFloat(0.3, 0.5)})`
       ctx.stroke()
     }
   }
