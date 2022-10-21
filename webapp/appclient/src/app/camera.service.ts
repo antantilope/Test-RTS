@@ -781,9 +781,11 @@ export class CameraService {
     }
     const now = performance.now()
     // Clear old elements
-    this.flameSmokeElements = this.flameSmokeElements.filter((fse: FlameSmokeElement)=>{
-      return fse.createdAt + FLAME_SMOKE_ELEMENT_TTL_MS > now
-    })
+    if(this.flameSmokeElements.length) {
+      this.flameSmokeElements = this.flameSmokeElements.filter((fse: FlameSmokeElement)=>{
+        return fse.createdAt + FLAME_SMOKE_ELEMENT_TTL_MS > now
+      })
+    }
     // Add elements for own ship
     if(this._api.frameData.ship.aflame) {
       this.flameSmokeElements.push({
@@ -825,9 +827,11 @@ export class CameraService {
 
     const now = performance.now()
     // Clear old elements
-    this.velocityTrailElements = this.velocityTrailElements.filter((vte: VelocityTrailElement)=>{
-      return vte.createdAt + VELOCITY_TRAIL_ELEMENT_TTL_MS > now
-    })
+    if(this.velocityTrailElements.length) {
+      this.velocityTrailElements = this.velocityTrailElements.filter((vte: VelocityTrailElement)=>{
+        return vte.createdAt + VELOCITY_TRAIL_ELEMENT_TTL_MS > now
+      })
+    }
 
     // Add elements for own ship
     if(
