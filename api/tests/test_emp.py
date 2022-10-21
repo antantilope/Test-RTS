@@ -1,4 +1,6 @@
 
+# These tests are also pretty terrible Dx
+
 from uuid import uuid4
 
 from unittest import TestCase
@@ -25,6 +27,9 @@ class TestEMP(TestCase):
         self.game = Game()
         self.game._fps = 1
         self.game._is_testing = True
+
+        self.game._emp_arming_time_seconds = 3
+        self.game._emp_max_seconds_to_detonate = 10
 
         self.game.register_player({
             'player_id':self.player_1_id,
@@ -123,7 +128,7 @@ class TestEMP(TestCase):
         self.game._ships[self.player_1_ship_id].heading = 90
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
-        # Fire mine
+        # Fire EMP
         self.game._ships[self.player_1_ship_id].cmd_launch_emp(
             launch_velocity=10
         )
@@ -165,7 +170,7 @@ class TestEMP(TestCase):
         # ship moving north at 5 M/S
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 5
-        # Fire mine
+        # Fire EMP
         self.game._ships[self.player_1_ship_id].cmd_launch_emp(
             launch_velocity=10
         )
@@ -194,7 +199,6 @@ class TestEMP(TestCase):
         assert emp.coord_y == 1110
         assert emp.elapsed_milliseconds == 1000 # 1 second has elapsed
 
-
     def test_EMP_arms(self):
         assert len(self.game._emps) == 0
         # ship 1 at 100, 100 meters
@@ -210,7 +214,7 @@ class TestEMP(TestCase):
         # ship moving north at 5 M/S
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 5
-        # Fire mine
+        # Fire EMP
         self.game._ships[self.player_1_ship_id].cmd_launch_emp(
             launch_velocity=100
         )
@@ -223,7 +227,7 @@ class TestEMP(TestCase):
         assert not emp.armed
         assert not emp.exploded
         # from tube launch
-        assert emp.velocity_x_meters_per_second == 10
+        assert emp.velocity_x_meters_per_second == 100
         # from ships innertia
         assert round(emp.velocity_y_meters_per_second, 5) == 5
         assert emp.coord_x == 1000
@@ -250,3 +254,187 @@ class TestEMP(TestCase):
         assert emp.armed
         assert not emp.exploded
         assert emp.elapsed_milliseconds == 4000
+
+    def test_EMP_detonates_if_timer_runs_out(self):
+        assert len(self.game._emps) == 0
+        # ship 1 at 100, 100 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 100 * 10
+        self.game._ships[self.player_1_ship_id].coord_y = 100 * 10
+        # ship 2 1KM north at 100, 1100 meters
+        self.game._ships[self.player_2_ship_id].coord_x = 100 * 10
+        self.game._ships[self.player_2_ship_id].coord_y = 1100 * 10
+
+        self.game._fps = 1
+        self.game._ships[self.player_1_ship_id].emps_loaded = 1
+        self.game._ships[self.player_1_ship_id].heading = 90
+        # ship moving north at 5 M/S
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 5
+        # Fire EMP
+        self.game._ships[self.player_1_ship_id].cmd_launch_emp(
+            launch_velocity=100
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+
+        assert len(self.game._emps) == 1
+        emp_id = next(iter(self.game._emps.keys()))
+        emp = self.game._emps[emp_id]
+        assert emp.elapsed_milliseconds == 0
+        assert not emp.armed
+        assert not emp.exploded
+        # from tube launch
+        assert emp.velocity_x_meters_per_second == 100
+        # from ships innertia
+        assert round(emp.velocity_y_meters_per_second, 5) == 5
+        assert emp.coord_x == 1000
+        assert emp.coord_y == 1060
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 1000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 2000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 3000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 4000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 5000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 6000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 7000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 8000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 9000
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert not emp.exploded
+        assert emp.elapsed_milliseconds == 10000
+        assert len(self.game._emp_blasts) == 0
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.armed
+        assert emp.exploded
+        assert emp.elapsed_milliseconds == 11000
+        assert len(self.game._emp_blasts) == 1
+
+
+    def test_a_ship_can_emp_another_ship(self):
+        assert len(self.game._emps) == 0
+        # ship 1 at 100, 100 meters
+        self.game._ships[self.player_1_ship_id].coord_x = 100 * 10
+        self.game._ships[self.player_1_ship_id].coord_y = 100 * 10
+        # ship 2 1KM north at 100, 900 meters (800 meters away)
+        self.game._ships[self.player_2_ship_id].coord_x = 100 * 10
+        self.game._ships[self.player_2_ship_id].coord_y = 900 * 10
+
+        self.game._fps = 1
+        # Ship 1 is pointed due north directly at ship 2
+        self.game._ships[self.player_1_ship_id].emps_loaded = 1
+        self.game._ships[self.player_1_ship_id].heading = 0
+        self.game._ships[self.player_1_ship_id].battery_power = 250_000
+
+        # ship 2 has battery power and is running things
+        self.game._ships[self.player_2_ship_id].battery_power = 250_000
+        self.game._ships[self.player_2_ship_id].engine_online = True
+        self.game._ships[self.player_2_ship_id].scanner_online = True
+        self.game._ships[self.player_2_ship_id].ebeam_charging = True
+        self.game._ships[self.player_2_ship_id].ebeam_charge = 50000
+
+        # Both ships stationary
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].velocity_y_meters_per_second = 0
+        # Fire emp
+        self.game._ships[self.player_1_ship_id].cmd_launch_emp(
+            launch_velocity=100
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+
+        assert len(self.game._emps) == 1
+        emp_id = next(iter(self.game._emps.keys()))
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert not emp.exploded
+        assert self.game._ships[self.player_2_ship_id].battery_power == 250_000
+
+        self.game.advance_emps(fps=1)
+        emp = self.game._emps[emp_id]
+        assert emp.exploded
+        # ship 2 blasted with EMP
+        assert self.game._ships[self.player_2_ship_id].battery_power < 250_000
+        assert not self.game._ships[self.player_2_ship_id].engine_online
+        assert not self.game._ships[self.player_2_ship_id].scanner_online
+        assert not self.game._ships[self.player_2_ship_id].ebeam_charging
+        assert self.game._ships[self.player_2_ship_id].ebeam_charge == 0
+
+        # ship 1 not EMPd
+        assert self.game._ships[self.player_1_ship_id].battery_power == 250_000

@@ -1098,17 +1098,6 @@ class Game(BaseModel):
             # Blow up EMP if timer has expired
             explode = False
             if self._emps[emp_id].elapsed_milliseconds > (self._emp_max_seconds_to_detonate * 1000):
-                self._emps[emp_id].exploded = True
-                self._emp_blasts.append({
-                    "id": str(uuid4()),
-                    "ship_id": ship_id,
-                    "origin_point": self._emps[emp_id].coords,
-                    "max_radius_meters": 35,
-                    "radius_meters": 1,
-                    "flare_ms": 1000,
-                    "fade_ms": 3000,
-                    "elapsed_ms": 10,
-                })
                 explode = True
 
             if self._emps[emp_id].armed and (explode or check_proximity):
