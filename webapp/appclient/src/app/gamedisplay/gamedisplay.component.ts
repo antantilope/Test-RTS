@@ -542,6 +542,11 @@ export class GamedisplayComponent implements OnInit {
       this._camera.getVelocityTrailElements(),
     )
 
+    this._draw.drawEMPTrailElements(
+      this.ctx, this._camera.gameDisplayCamera,
+      this._camera.getEMPTrailElements(),
+    )
+
     // Ships
     for(let i in drawableObjects.ships) {
       this._draw.drawShip(

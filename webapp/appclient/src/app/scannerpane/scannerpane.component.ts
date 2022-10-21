@@ -220,6 +220,10 @@ export class ScannerpaneComponent implements OnInit {
       this.ctx, this._camera.scannerPaneCamera,
       this._camera.getVelocityTrailElements(),
     )
+    this._draw.drawEMPTrailElements(
+      this.ctx, this._camera.scannerPaneCamera,
+      this._camera.getEMPTrailElements(),
+    )
 
     // Ships
     const drawBoundingBox = false

@@ -5,8 +5,10 @@ import {
   Camera,
   VelocityTrailElement,
   FlameSmokeElement,
+  EMPTrailElement,
   VELOCITY_TRAIL_ELEMENT_TTL_MS,
   FLAME_SMOKE_ELEMENT_TTL_MS,
+  EMP_TRAIL_ELEMENT_TTL_MS,
 } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
@@ -171,6 +173,32 @@ export class DrawingService {
       let canvasCoord = camera.mapCoordToCanvasCoord(fse.mapCoord, cameraPosition)
       ctx.beginPath()
       ctx.fillStyle = `rgb(127, 127, 127, ${alpha})`
+      ctx.arc(
+        canvasCoord.x, canvasCoord.y,
+        radiusPx, 0, TWO_PI
+      )
+      ctx.fill()
+    }
+  }
+
+  public drawEMPTrailElements(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    EMPTrailElements: EMPTrailElement[],
+  ){
+    const cameraPosition = camera.getPosition()
+    const zoom = camera.getZoom()
+    const ppm = this._api.frameData.map_config.units_per_meter
+    const now = performance.now()
+    const maxGrowthCoef = 3.5
+    for(let i in EMPTrailElements) {
+      let empTE = EMPTrailElements[i]
+      let agePercent = (now - empTE.createdAt) / EMP_TRAIL_ELEMENT_TTL_MS
+      let radiusPx = (empTE.initalRadiusMeters + (empTE.initalRadiusMeters * maxGrowthCoef * agePercent)) * ppm / zoom
+      let alpha = 0.55 - (0.55 * agePercent)
+      let canvasCoord = camera.mapCoordToCanvasCoord(empTE.mapCoord, cameraPosition)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(0, 0, 255, ${alpha})`
       ctx.arc(
         canvasCoord.x, canvasCoord.y,
         radiusPx, 0, TWO_PI
@@ -816,7 +844,6 @@ export class DrawingService {
   }
 
   private drawEMPBlast(ctx: CanvasRenderingContext2D, camera: Camera, empBlast: EMPBlast){
-    console.log({empBlast})
     const ppm = this._api.frameData.map_config.units_per_meter
     const zoom = camera.getZoom()
     const cameraPosition = camera.getPosition()

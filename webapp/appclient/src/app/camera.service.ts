@@ -681,6 +681,12 @@ export class FlameSmokeElement {
   mapCoord: PointCoord
 }
 
+export const EMP_TRAIL_ELEMENT_TTL_MS = 900
+export class EMPTrailElement {
+  createdAt: number
+  initalRadiusMeters: number
+  mapCoord: PointCoord
+}
 
 @Injectable({
   providedIn: 'root'
@@ -699,6 +705,9 @@ export class CameraService {
   private updateFlameSmokeElementInterval = 300
   private flameSmokeElements: FlameSmokeElement[] = []
 
+  private updateEMPTrailElementsInterval = 250
+  private EMPTrailElements: EMPTrailElement[] = []
+
   constructor(
     private _api: ApiService,
   ) {
@@ -715,6 +724,35 @@ export class CameraService {
 
     setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
     setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
+    setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
+  }
+
+  public getEMPTrailElements(): EMPTrailElement[] {
+    return this.EMPTrailElements
+  }
+  private updateEMPTrailElements() {
+    if(!this._api.frameData) {
+      console.warn("updateEMPTrailElements():: no framedata found")
+      return setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
+    }
+    console.log(this.EMPTrailElements)
+    // Clear old elements
+    const now = performance.now()
+    this.EMPTrailElements = this.EMPTrailElements.filter((te: EMPTrailElement)=>{
+      return te.createdAt + EMP_TRAIL_ELEMENT_TTL_MS > now
+    })
+    for(let i in this._api.frameData.ship.scanner_emp_data) {
+      let sed = this._api.frameData.ship.scanner_emp_data[i]
+      this.EMPTrailElements.push({
+        createdAt: now,
+        mapCoord: {
+          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: 1,
+      })
+    }
+    setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
   }
 
   // Flame Smoke
