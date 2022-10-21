@@ -737,9 +737,11 @@ export class CameraService {
     }
     // Clear old elements
     const now = performance.now()
-    this.EMPTrailElements = this.EMPTrailElements.filter((te: EMPTrailElement)=>{
-      return te.createdAt + EMP_TRAIL_ELEMENT_TTL_MS > now
-    })
+    if(this.EMPTrailElements.length) {
+      this.EMPTrailElements = this.EMPTrailElements.filter((te: EMPTrailElement)=>{
+        return te.createdAt + EMP_TRAIL_ELEMENT_TTL_MS > now
+      })
+    }
     for(let i in this._api.frameData.ship.scanner_emp_data) {
       let sed = this._api.frameData.ship.scanner_emp_data[i]
       this.EMPTrailElements.push({
@@ -748,7 +750,21 @@ export class CameraService {
           x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
           y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
         },
-        initalRadiusMeters: 1,
+        initalRadiusMeters: getRandomFloat(1, 2),
+      },{
+        createdAt: now,
+        mapCoord: {
+          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: getRandomFloat(1, 2),
+      },{
+        createdAt: now,
+        mapCoord: {
+          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: getRandomFloat(1, 2),
       })
     }
     setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
