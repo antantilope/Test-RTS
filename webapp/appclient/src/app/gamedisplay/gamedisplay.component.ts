@@ -24,7 +24,8 @@ import {
   TWO_PI,
   FEATURE_ORE,
   FEATURE_STATION,
-  MAGNET_MINE_SLUG
+  MAGNET_MINE_SLUG,
+  EMP_SLUG,
 } from '../constants'
 
 const CAMERA_MODE_SHIP = "ship"
@@ -85,6 +86,7 @@ export class GamedisplayComponent implements OnInit {
   public selectedPneumaticWeapon = MAGNET_MINE_SLUG
   private allPneumaticWeapons = [
     MAGNET_MINE_SLUG,
+    EMP_SLUG,
   ]
 
   constructor(
@@ -429,6 +431,8 @@ export class GamedisplayComponent implements OnInit {
   private getCurrentTubeWeaponCount() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
       return this._api.frameData.ship.magnet_mines_loaded
+    } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
+      return this._api.frameData.ship.emps_loaded
     }
     return 0
   }
@@ -538,6 +542,11 @@ export class GamedisplayComponent implements OnInit {
       this._camera.getVelocityTrailElements(),
     )
 
+    this._draw.drawEMPTrailElements(
+      this.ctx, this._camera.gameDisplayCamera,
+      this._camera.getEMPTrailElements(),
+    )
+
     // Ships
     for(let i in drawableObjects.ships) {
       this._draw.drawShip(
@@ -556,8 +565,13 @@ export class GamedisplayComponent implements OnInit {
       this.ctx,
       drawableObjects.magnetMineTargetingLines
     )
+    // EMPs
+    for(let i in drawableObjects.emps) {
+      this._draw.drawEMP(this.ctx, drawableObjects.emps[i])
+    }
 
     this._draw.drawExplosions(this.ctx, this._camera.gameDisplayCamera)
+    this._draw.drawEMPBlasts(this.ctx, this._camera.gameDisplayCamera)
 
     this._draw.drawOreDepositEffect(this.ctx, this._camera.gameDisplayCamera)
 
@@ -983,7 +997,12 @@ export class GamedisplayComponent implements OnInit {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
       this._api.post(
         "/api/rooms/command",
-        {command:'launch_magnet_mine', launch_velocity: this.lauchVelocity,},
+        {command:'launch_magnet_mine', launch_velocity: this.lauchVelocity},
+      )
+    } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
+      this._api.post(
+        "/api/rooms/command",
+        {command:'launch_emp', launch_velocity: this.lauchVelocity},
       )
     } else {
       console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)

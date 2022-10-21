@@ -5,8 +5,10 @@ import {
   Camera,
   VelocityTrailElement,
   FlameSmokeElement,
+  EMPTrailElement,
   VELOCITY_TRAIL_ELEMENT_TTL_MS,
   FLAME_SMOKE_ELEMENT_TTL_MS,
+  EMP_TRAIL_ELEMENT_TTL_MS,
 } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
@@ -18,6 +20,7 @@ import {
   DrawableShip,
   DrawableMagnetMine,
   DrawableMagnetMineTargetingLine,
+  DrawableEMP,
   VisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
@@ -29,7 +32,7 @@ import {
   LOW_FUEL_THRESHOLD,
   LOW_POWER_THRESHOLD
 } from './constants';
-import { Explosion, OreMine, Ship, SpaceStation } from './models/apidata.model';
+import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
 
 
@@ -170,6 +173,32 @@ export class DrawingService {
       let canvasCoord = camera.mapCoordToCanvasCoord(fse.mapCoord, cameraPosition)
       ctx.beginPath()
       ctx.fillStyle = `rgb(127, 127, 127, ${alpha})`
+      ctx.arc(
+        canvasCoord.x, canvasCoord.y,
+        radiusPx, 0, TWO_PI
+      )
+      ctx.fill()
+    }
+  }
+
+  public drawEMPTrailElements(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    EMPTrailElements: EMPTrailElement[],
+  ){
+    const cameraPosition = camera.getPosition()
+    const zoom = camera.getZoom()
+    const ppm = this._api.frameData.map_config.units_per_meter
+    const now = performance.now()
+    const maxGrowthCoef = 3.5
+    for(let i in EMPTrailElements) {
+      let empTE = EMPTrailElements[i]
+      let agePercent = (now - empTE.createdAt) / EMP_TRAIL_ELEMENT_TTL_MS
+      let radiusPx = (empTE.initalRadiusMeters + (empTE.initalRadiusMeters * maxGrowthCoef * agePercent)) * ppm / zoom
+      let alpha = 0.55 - (0.55 * agePercent)
+      let canvasCoord = camera.mapCoordToCanvasCoord(empTE.mapCoord, cameraPosition)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(0, 0, 255, ${alpha})`
       ctx.arc(
         canvasCoord.x, canvasCoord.y,
         radiusPx, 0, TWO_PI
@@ -804,6 +833,94 @@ export class DrawingService {
     }
   }
 
+  public drawEMPBlasts(ctx: CanvasRenderingContext2D, camera: Camera) {
+    for(let i in this._api.frameData.emp_blasts) {
+      this.drawEMPBlast(
+        ctx,
+        camera,
+        this._api.frameData.emp_blasts[i]
+      )
+    }
+  }
+
+  private drawEMPBlast(ctx: CanvasRenderingContext2D, camera: Camera, empBlast: EMPBlast){
+    const ppm = this._api.frameData.map_config.units_per_meter
+    const zoom = camera.getZoom()
+    const cameraPosition = camera.getPosition()
+    let radiusMeters: number, radiusPx: number
+    const canvasCoord = camera.mapCoordToCanvasCoord(
+      {x:empBlast.origin_point[0], y:empBlast.origin_point[1]},
+      cameraPosition,
+    )
+    if(empBlast.elapsed_ms < empBlast.flare_ms) {
+      const percentCompleteTime = empBlast.elapsed_ms / empBlast.flare_ms
+      const percentCompleteFlareRadius = nthRoot(percentCompleteTime, 2) // x=y^2
+      radiusMeters = Math.max(1, percentCompleteFlareRadius * empBlast.max_radius_meters)
+      radiusPx = radiusMeters * ppm / zoom
+      const maxRadiusPx = empBlast.max_radius_meters * ppm / zoom
+      for(let i=0; i<3; i++) {
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(0, 0, 255, 0.${randomInt(2, 5)})`
+        ctx.arc(
+          canvasCoord.x + getRandomFloat(-1.5, 1.5) * ppm / zoom,
+          canvasCoord.y + getRandomFloat(-1.5, 1.5) * ppm / zoom,
+          radiusPx * getRandomFloat(0.75, 1.25),
+          0,
+          TWO_PI,
+        )
+        ctx.fill()
+      }
+      const dotCt = 8
+      const dotRadiusPx = 1.25 * ppm / zoom
+      for(let i=0; i<dotCt; i++) {
+        ctx.beginPath()
+        ctx.fillStyle = 'rgb(0, 0, 255)'
+        ctx.arc(
+          canvasCoord.x + getRandomFloat(-1 * maxRadiusPx,  maxRadiusPx),
+          canvasCoord.y + getRandomFloat(-1 * maxRadiusPx, maxRadiusPx),
+          dotRadiusPx,
+          0,
+          TWO_PI,
+        )
+        ctx.fill()
+      }
+    }
+    else if(empBlast.elapsed_ms < (empBlast.flare_ms + empBlast.fade_ms)) {
+      // Fadeout emp blast
+      const elapsedFade = empBlast.elapsed_ms - empBlast.flare_ms
+      const fadePercent = elapsedFade / empBlast.fade_ms
+      const startRadius = empBlast.max_radius_meters
+      const endRadius = empBlast.max_radius_meters * 1.4
+      radiusMeters = startRadius + (endRadius - startRadius) * fadePercent
+      const fadeRadiusPx = radiusMeters * ppm / zoom
+      const alpha = 0.4 - (0.4 * fadePercent)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(0, 0, 255, ${alpha})`
+      ctx.arc(
+        canvasCoord.x,
+        canvasCoord.y,
+        Math.round(fadeRadiusPx),
+        0,
+        TWO_PI,
+      )
+      ctx.fill()
+      const dotCt = Math.ceil((1 - fadePercent) * 8)
+      const dotRadiusPx = 0.7 * ppm / zoom
+      for(let i=0; i<dotCt; i++) {
+        ctx.beginPath()
+        ctx.fillStyle = 'rgb(0, 0, 255, 0.75)'
+        ctx.arc(
+          canvasCoord.x + getRandomFloat(-1 * fadeRadiusPx,  fadeRadiusPx),
+          canvasCoord.y + getRandomFloat(-1 * fadeRadiusPx, fadeRadiusPx),
+          dotRadiusPx,
+          0,
+          TWO_PI,
+        )
+        ctx.fill()
+      }
+    }
+  }
+
   public drawExplosions(ctx: CanvasRenderingContext2D, camera: Camera) {
     for(let i in this._api.frameData.explosions) {
       this.drawExplosion(
@@ -825,7 +942,6 @@ export class DrawingService {
     )
     const maxFireBallRadiusCanvasPx = ex.max_radius_meters * ppm / zoom
     if(ex.elapsed_ms < ex.flame_ms) {
-      // radiusMeters = Math.max(1, (((ex.elapsed_ms - ex.flame_ms) / ex.flame_ms) * ex.max_radius_meters) + randomInt(-2, 2))
       const percentCompleteTime = ex.elapsed_ms / ex.flame_ms
       const percentCompleteFlameRadius = nthRoot(percentCompleteTime, 2) // x=y^2
       radiusMeters = Math.max(1, percentCompleteFlameRadius * ex.max_radius_meters + randomInt(-2, 2))
@@ -1360,6 +1476,93 @@ export class DrawingService {
       ctx.lineTo(l.targetCanvasCoord.x, l.targetCanvasCoord.y)
       ctx.stroke()
     }
+  }
+
+  public drawEMP(ctx: CanvasRenderingContext2D, emp: DrawableEMP) {
+    ctx.beginPath()
+    ctx.fillStyle = "#0000ff"
+    ctx.arc(emp.canvasCoordCenter.x, emp.canvasCoordCenter.y, emp.radiusCanvasPX, 0, TWO_PI)
+    ctx.fill()
+    if(Math.random() < 0.5){
+      ctx.beginPath()
+      ctx.arc(emp.canvasCoordCenter.x, emp.canvasCoordCenter.y, emp.radiusCanvasPX * 1.5, 0, TWO_PI)
+      ctx.lineWidth = emp.radiusCanvasPX
+      ctx.strokeStyle = `rgb(60, 60, 255, ${getRandomFloat(0.4, 0.8)})`
+      ctx.stroke()
+    }
+    ctx.beginPath()
+    ctx.lineWidth = 1.75 + (1.5 * emp.percentArmed)
+    if(emp.percentArmed > 0.97) {
+      ctx.beginPath()
+      ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+      ctx.rect(
+        emp.canvasBoundingBox.x1,
+        emp.canvasBoundingBox.y1,
+        emp.canvasBoundingBox.x2 - emp.canvasBoundingBox.x1,
+        emp.canvasBoundingBox.y2 - emp.canvasBoundingBox.y1,
+      )
+      ctx.stroke()
+    } else {
+      ctx.beginPath()
+      ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
+      // Draw arming animation with bounding box.
+      const topLen = emp.canvasBoundingBox.x2 - emp.canvasBoundingBox.x1
+      const sideLen = emp.canvasBoundingBox.y2 - emp.canvasBoundingBox.y1
+      // Top Line (left to right)
+      if(emp.percentArmed >= 0.25) {
+        ctx.beginPath()
+        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y1)
+        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1)
+        ctx.stroke()
+      } else {
+        let percSide = emp.percentArmed / 0.25
+        ctx.beginPath()
+        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y1)
+        ctx.lineTo(emp.canvasBoundingBox.x1 + (topLen * percSide), emp.canvasBoundingBox.y1)
+        ctx.stroke()
+      }
+      // right side line (top to bottom)
+      if(emp.percentArmed >= 0.50) {
+        ctx.beginPath()
+        ctx.moveTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1)
+        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (emp.percentArmed >= 0.25 && emp.percentArmed < 0.5) {
+        let percSide = (emp.percentArmed - 0.25) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1)
+        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1 + (sideLen * percSide))
+        ctx.stroke()
+      }
+      // bottom line (right to left)
+      if(emp.percentArmed >= 0.75) {
+        ctx.beginPath()
+        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y2)
+        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (emp.percentArmed >= 0.50 && emp.percentArmed < 0.75) {
+        let percSide = (emp.percentArmed - 0.5) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y2)
+        ctx.lineTo(emp.canvasBoundingBox.x2 - (topLen * percSide), emp.canvasBoundingBox.y2)
+        ctx.stroke()
+      }
+      // left side (bottom to top)
+      if(emp.percentArmed > 0.75 && emp.percentArmed <= 0.97) {
+        let percSide = (emp.percentArmed - 0.75) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y2)
+        ctx.lineTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y2 - (sideLen * percSide))
+        ctx.stroke()
+      }
+    }
+    const bbXOffset = emp.canvasBoundingBox.x1
+    let bbYOffset = emp.canvasBoundingBox.y2 + 20
+    ctx.beginPath()
+    ctx.font = 'bold 18px Courier New'
+    ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
+    ctx.textAlign = 'left'
+    ctx.fillText("EMP", bbXOffset, bbYOffset)
   }
 
   private getIconFontSize(camera: Camera) {

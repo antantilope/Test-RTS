@@ -12,6 +12,10 @@ export const LOW_POWER_THRESHOLD = 45000
 export const MAGNET_MINE_SLUG = "magnet_mine"
 export const MAGNET_MINE_SIDE_LENGTH_METERS = 3.5
 
+export const EMP_RADIUS_METERS = 1
+
+export const EMP_SLUG = "emp"
+
 // Timer Slugs
 export const TIMER_SLUG_SCANNER_STARTUP = "scanner_startup"
 export const TIMER_SLUG_SCANNER_LOCKING = "scanner_locking"

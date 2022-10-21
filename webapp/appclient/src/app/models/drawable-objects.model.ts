@@ -44,6 +44,15 @@ export class DrawableMagnetMine {
     percentArmed: number
 }
 
+export class DrawableEMP {
+    EMPId: string
+    isDot: boolean
+    canvasCoordCenter: PointCoord
+    canvasBoundingBox: BoxCoords
+    radiusCanvasPX: number
+    percentArmed: number
+}
+
 export class DrawableMagnetMineTargetingLine {
     mineCanvasCoord: PointCoord
     targetCanvasCoord: PointCoord
@@ -68,6 +77,7 @@ export class DrawableCanvasItems {
     ships: DrawableShip[]
     magnetMines: DrawableMagnetMine[]
     magnetMineTargetingLines: DrawableMagnetMineTargetingLine[]
+    emps: DrawableEMP[]
     ebeamRays: EBeamRayDetails[]
     mapWall?: BoxCoords
     visionCircles: VisionCircle[]

@@ -1,5 +1,5 @@
 
-# These tests are a bit horrible.
+# These tests are absolutely horrible Dx
 
 from uuid import uuid4
 
@@ -71,6 +71,8 @@ class TestMagnetMine(TestCase):
         self.game._special_weapon_costs[MAGNET_MINE_SLUG] = 200
         self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 0
         self.game._ships[self.player_2_ship_id].magnet_mines_loaded = 0
+        self.game._ships[self.player_1_ship_id].emps_loaded = 0
+        self.game._ships[self.player_2_ship_id].emps_loaded = 0
 
     def test_ship_can_buy_magnet_mine_if_tube_available(self):
         assert self.game._ships[self.player_1_ship_id].magnet_mines_loaded == 0
@@ -218,7 +220,7 @@ class TestMagnetMine(TestCase):
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
         # Fire mine
         self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=10
+            launch_velocity=100
         )
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._magnet_mines) == 1
@@ -362,8 +364,6 @@ class TestMagnetMine(TestCase):
         self.game.advance_magnet_mines(fps=3)
         assert not mine.exploded
         self.game.advance_magnet_mines(fps=3)
-        assert not mine.exploded
-        self.game.advance_magnet_mines(fps=3)
         assert mine.exploded
         self.game._ships[self.player_2_ship_id].died_on_frame is not None
 
@@ -500,15 +500,6 @@ class TestMagnetMine(TestCase):
         assert mine.coord_y == 1460
         assert mine.velocity_y_meters_per_second == -60
         assert mine.closest_ship_id == self.player_1_ship_id
-        self.game.advance_magnet_mines(fps=1)
-        assert mine.elapsed_milliseconds == 15000
-        assert mine.armed
-        assert round(mine.coord_x) == 1000
-        assert mine.coord_y == 760
-        assert mine.velocity_y_meters_per_second == -70
-        assert mine.closest_ship_id == self.player_1_ship_id
-        # About to explode.
-        assert self.game._ships[self.player_1_ship_id].died_on_frame is None
         self.game.advance_magnet_mines(fps=1)
         assert mine.exploded
         assert self.game._ships[self.player_1_ship_id].died_on_frame == self.game._game_frame

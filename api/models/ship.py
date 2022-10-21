@@ -103,8 +103,11 @@ class ShipCommands:
     CANCEL_CORE_UPGRADE = "cancel_core_upgrade"
     CANCEL_SHIP_UPGRADE = "cancel_ship_upgrade"
 
+    # Tube Weapons
     BUY_MAGNET_MINE = "buy_magnet_mine"
     LAUNCH_MAGNET_MINE = "launch_magnet_mine"
+    BUY_EMP = "buy_emp"
+    LAUNCH_EMP = "launch_emp"
 
 class ShipStateKey:
     MASS = 'mass'
@@ -168,6 +171,15 @@ class ScannedMagnetMineElement(TypedDict):
     id: str
     velocity_x_meters_per_second: float
     velocity_y_meters_per_second: float
+    coord_x: int
+    coord_y: int
+    distance: int
+    exploded: bool
+    relative_heading: int
+    percent_armed: float
+
+class ScannedEMPElement(TypedDict):
+    id: str
     coord_x: int
     coord_y: int
     distance: int
@@ -312,6 +324,7 @@ class Ship(BaseModel):
         self.scanner_get_lock_power_requirement_per_second = None
         self.scanner_ship_data: Dict[str, ScannedShipElement] = OrderedDict()
         self.scanner_magnet_mine_data: Dict[str, ScannedMagnetMineElement] = OrderedDict()
+        self.scanner_emp_data: Dict[str, ScannedEMPElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
@@ -343,8 +356,10 @@ class Ship(BaseModel):
         self._special_weapons_min_launch_velocity = None
         self._special_weapons_max_launch_velocity = None
         self._special_weapons_launch_velocity = None
-        self.magnet_mines_loaded = 4
+        self.magnet_mines_loaded = 0
+        self.emps_loaded = 10
         self.magnet_mine_firing = False
+        self.emp_firing = False
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -513,7 +528,7 @@ class Ship(BaseModel):
 
     @property
     def special_weapons_loaded(self):
-        return self.magnet_mines_loaded
+        return self.magnet_mines_loaded + self.emps_loaded
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
@@ -570,6 +585,7 @@ class Ship(BaseModel):
             'scanner_ir_minimum_thermal_signature': self.scanner_ir_minimum_thermal_signature,
             'scanner_ship_data': list(self.scanner_ship_data.values()),
             'scanner_magnet_mine_data': list(self.scanner_magnet_mine_data.values()),
+            'scanner_emp_data': list(self.scanner_emp_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
             'scanner_locking_max_traversal_degrees': self.scanner_locking_max_traversal_degrees,
@@ -593,6 +609,7 @@ class Ship(BaseModel):
             'last_tube_fire_frame': self.last_tube_fire_frame,
             'special_weapons_loaded': self.special_weapons_loaded,
             'magnet_mines_loaded': self.magnet_mines_loaded,
+            'emps_loaded': self.emps_loaded,
 
             'docked_at_station': self.docked_at_station,
             'scouted_station_gravity_brake_catches_last_frame': self.scouted_station_gravity_brake_catches_last_frame,
@@ -1211,6 +1228,34 @@ class Ship(BaseModel):
         self.mining_ore = False
         self.parked_at_ore_mine = None
 
+    def emp(self, electricity_drain: int):
+        self.engine_lit = False
+        self.engine_starting = False
+        self.engine_online = False
+        self.engine_startup_power_used = 0
+        self.scanner_online = False
+        self.scanner_starting = False
+        self.scanner_startup_power_used = 0
+        self.ebeam_firing = False
+        self.ebeam_charging = False
+        self.ebeam_charge = 0
+        self.autopilot_program = None
+        self.gravity_brake_active = False
+        self.gravity_brake_position = 0
+        self.gravity_brake_extending = False
+        self.gravity_brake_retracting = False
+        self.docking_at_station = None
+        self.docked_at_station = None
+        self.mining_ore = False
+        self.apu_online = False
+        self.apu_starting = False
+        self.apu_startup_power_used = 0
+
+        self.battery_power = max(
+            0,
+            self.battery_power - electricity_drain
+        )
+
     def advance_thermal_signature(self, fps: int) -> None:
         delta = -1 * self.scanner_thermal_signature_dissipation_per_second / fps
         if self.engine_lit:
@@ -1488,6 +1533,11 @@ class Ship(BaseModel):
             self.cmd_buy_magnet_mine()
         elif command == ShipCommands.LAUNCH_MAGNET_MINE:
             self.cmd_launch_magnet_mine(args[0])
+        elif command == ShipCommands.BUY_EMP:
+            self.cmd_buy_emp()
+        elif command == ShipCommands.LAUNCH_EMP:
+            self.cmd_launch_emp(args[0])
+
         else:
             raise ShipCommandError("NotImplementedError")
 
@@ -1839,6 +1889,7 @@ class Ship(BaseModel):
                 self._upgrades[utype][upgrade_ix].slug
             ]['seconds_researched'] = None
 
+    # TUBE WEAPON COMMANDS
     def cmd_buy_magnet_mine(self):
         if self.special_weapons_loaded >= self.special_weapons_tubes_count:
             return
@@ -1863,4 +1914,30 @@ class Ship(BaseModel):
         if self.magnet_mines_loaded > 0 and not self.magnet_mine_firing:
             self.magnet_mines_loaded -= 1
             self.magnet_mine_firing = True
+            self._special_weapons_launch_velocity = _velocity
+
+    def cmd_buy_emp(self):
+        if self.special_weapons_loaded >= self.special_weapons_tubes_count:
+            return
+        if not self.docked_at_station:
+            return
+        ore_cost = self._special_weapon_costs[constants.EMP_SLUG]
+        try:
+            self.withdraw_ore(ore_cost)
+        except InsufficientOreError:
+            return
+        self.emps_loaded += 1
+
+    def cmd_launch_emp(self, launch_velocity: int):
+        _velocity = max(
+            launch_velocity,
+            self._special_weapons_min_launch_velocity,
+        )
+        _velocity = min(
+            _velocity,
+            self._special_weapons_max_launch_velocity,
+        )
+        if self.emps_loaded > 0 and not self.emp_firing:
+            self.emps_loaded -= 1
+            self.emp_firing = True
             self._special_weapons_launch_velocity = _velocity

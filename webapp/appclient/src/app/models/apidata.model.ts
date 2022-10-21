@@ -31,6 +31,15 @@ export class Explosion {
     elapsed_ms: number
 }
 
+export class EMPBlast {
+    id: string
+    origin_point: number[]
+    max_radius_meters: number
+    flare_ms: number
+    fade_ms: number
+    elapsed_ms: number
+}
+
 export class MagnetMineTargetingLines {
     mine_coord: number[]
     target_coord: number[]
@@ -147,7 +156,17 @@ export class ScannerDataMagnetMineElement {
     velocity_y_meters_per_second: number
     coord_x: number
     coord_y: number
-    target_heading: number
+    relative_heading: number
+    distance: number
+    exploded: boolean
+    percent_armed: number
+}
+
+export class ScannerDataEMPElement {
+    id: string
+    coord_x: number
+    coord_y: number
+    relative_heading: number
     distance: number
     exploded: boolean
     percent_armed: number
@@ -220,6 +239,7 @@ export class Ship {
     scanner_radar_sensitivity: number
     scanner_ship_data: ScannerDataShipElement[]
     scanner_magnet_mine_data: ScannerDataMagnetMineElement[]
+    scanner_emp_data: ScannerDataEMPElement[]
 
     anti_radar_coating_level: number
 
@@ -239,6 +259,7 @@ export class Ship {
     special_weapons_loaded: number
     last_tube_fire_frame: number
     magnet_mines_loaded: number
+    emps_loaded: number
 
     docked_at_station: string
     gravity_brake_position: number
@@ -269,6 +290,12 @@ export class Ship {
     timers: Timer[]
 }
 
+export class SpecialWeaponsCost {
+    emp: number
+    magnet_mine: number
+}
+
+
 export class FrameData {
     phase: string
 
@@ -284,7 +311,9 @@ export class FrameData {
     ore_mines: OreMine[]
     explosion_shockwaves: ExplosionShockWave[]
     explosions: Explosion[]
+    emp_blasts: EMPBlast[]
     magnet_mine_targeting_lines: MagnetMineTargetingLines[]
     killfeed: KillFeedElement[]
     ship: Ship
+    special_weapon_costs: SpecialWeaponsCost
 }

@@ -6,11 +6,13 @@ import { BoxCoords } from './models/box-coords.model';
 import {
   DrawableCanvasItems,
   DrawableShip,
-  DrawableMagnetMineTargetingLine
 } from './models/drawable-objects.model';
 import { PointCoord } from './models/point-coord.model';
 import { ScannerDataShipElement, Ship } from './models/apidata.model';
-import { MAGNET_MINE_SIDE_LENGTH_METERS } from "./constants"
+import {
+  MAGNET_MINE_SIDE_LENGTH_METERS,
+  EMP_RADIUS_METERS,
+} from "./constants"
 
 function getRandomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
@@ -323,6 +325,7 @@ export class Camera {
       ships: [],
       magnetMines: [],
       magnetMineTargetingLines: [],
+      emps: [],
       ebeamRays: [],
       visionCircles:[],
     }
@@ -528,6 +531,29 @@ export class Camera {
       })
     }
 
+    for(let i in this._api.frameData.ship.scanner_emp_data) {
+      let sde = this._api.frameData.ship.scanner_emp_data[i]
+      if(sde.exploded) {
+        continue
+      }
+      let canvasCoordCenter = this.mapCoordToCanvasCoord(
+        {x: sde.coord_x, y: sde.coord_y},
+        cameraPosition,
+      )
+      let empRadiusPx = EMP_RADIUS_METERS * this._api.frameData.map_config.units_per_meter / this.getZoom()
+      drawableItems.emps.push({
+        EMPId: sde.id,
+        canvasCoordCenter,
+        radiusCanvasPX: empRadiusPx,
+        percentArmed: sde.percent_armed,
+        isDot: empRadiusPx < this.minSizeForDotPx,
+        canvasBoundingBox: this.pointCoordToBoxCoord(
+          canvasCoordCenter,
+           Math.max(boundingBoxBuffer, empRadiusPx * 2 + boundingBoxBuffer),
+        ),
+      })
+    }
+
     // Add Energy Beam Rays
     for (let i in this._api.frameData.ebeam_rays) {
       let ray = this._api.frameData.ebeam_rays[i]
@@ -655,6 +681,12 @@ export class FlameSmokeElement {
   mapCoord: PointCoord
 }
 
+export const EMP_TRAIL_ELEMENT_TTL_MS = 900
+export class EMPTrailElement {
+  createdAt: number
+  initalRadiusMeters: number
+  mapCoord: PointCoord
+}
 
 @Injectable({
   providedIn: 'root'
@@ -673,6 +705,9 @@ export class CameraService {
   private updateFlameSmokeElementInterval = 300
   private flameSmokeElements: FlameSmokeElement[] = []
 
+  private updateEMPTrailElementsInterval = 250
+  private EMPTrailElements: EMPTrailElement[] = []
+
   constructor(
     private _api: ApiService,
   ) {
@@ -689,6 +724,50 @@ export class CameraService {
 
     setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
     setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
+    setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
+  }
+
+  public getEMPTrailElements(): EMPTrailElement[] {
+    return this.EMPTrailElements
+  }
+  private updateEMPTrailElements() {
+    if(!this._api.frameData) {
+      console.warn("updateEMPTrailElements():: no framedata found")
+      return setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
+    }
+    // Clear old elements
+    const now = performance.now()
+    if(this.EMPTrailElements.length) {
+      this.EMPTrailElements = this.EMPTrailElements.filter((te: EMPTrailElement)=>{
+        return te.createdAt + EMP_TRAIL_ELEMENT_TTL_MS > now
+      })
+    }
+    for(let i in this._api.frameData.ship.scanner_emp_data) {
+      let sed = this._api.frameData.ship.scanner_emp_data[i]
+      this.EMPTrailElements.push({
+        createdAt: now,
+        mapCoord: {
+          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: getRandomFloat(1, 2),
+      },{
+        createdAt: now,
+        mapCoord: {
+          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: getRandomFloat(1, 2),
+      },{
+        createdAt: now,
+        mapCoord: {
+          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+        },
+        initalRadiusMeters: getRandomFloat(1, 2),
+      })
+    }
+    setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
   }
 
   // Flame Smoke
@@ -702,9 +781,11 @@ export class CameraService {
     }
     const now = performance.now()
     // Clear old elements
-    this.flameSmokeElements = this.flameSmokeElements.filter((fse: FlameSmokeElement)=>{
-      return fse.createdAt + FLAME_SMOKE_ELEMENT_TTL_MS > now
-    })
+    if(this.flameSmokeElements.length) {
+      this.flameSmokeElements = this.flameSmokeElements.filter((fse: FlameSmokeElement)=>{
+        return fse.createdAt + FLAME_SMOKE_ELEMENT_TTL_MS > now
+      })
+    }
     // Add elements for own ship
     if(this._api.frameData.ship.aflame) {
       this.flameSmokeElements.push({
@@ -746,9 +827,11 @@ export class CameraService {
 
     const now = performance.now()
     // Clear old elements
-    this.velocityTrailElements = this.velocityTrailElements.filter((vte: VelocityTrailElement)=>{
-      return vte.createdAt + VELOCITY_TRAIL_ELEMENT_TTL_MS > now
-    })
+    if(this.velocityTrailElements.length) {
+      this.velocityTrailElements = this.velocityTrailElements.filter((vte: VelocityTrailElement)=>{
+        return vte.createdAt + VELOCITY_TRAIL_ELEMENT_TTL_MS > now
+      })
+    }
 
     // Add elements for own ship
     if(

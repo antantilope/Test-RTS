@@ -220,6 +220,10 @@ export class ScannerpaneComponent implements OnInit {
       this.ctx, this._camera.scannerPaneCamera,
       this._camera.getVelocityTrailElements(),
     )
+    this._draw.drawEMPTrailElements(
+      this.ctx, this._camera.scannerPaneCamera,
+      this._camera.getEMPTrailElements(),
+    )
 
     // Ships
     const drawBoundingBox = false
@@ -240,10 +244,17 @@ export class ScannerpaneComponent implements OnInit {
       this.ctx,
       drawableObjects.magnetMineTargetingLines
     )
+    // EMPs
+    for(let i in drawableObjects.emps) {
+      this._draw.drawEMP(this.ctx, drawableObjects.emps[i])
+    }
 
     // Explosion FX
     this._draw.drawExplosionShockwaves(this.ctx, this._camera.scannerPaneCamera)
     this._draw.drawExplosions(this.ctx, this._camera.scannerPaneCamera)
+
+    // EMP blasts
+    this._draw.drawEMPBlasts(this.ctx, this._camera.scannerPaneCamera)
 
     // E-Beams
     this._draw.drawEbeams(this.ctx, this._camera.scannerPaneCamera, drawableObjects.ebeamRays)
