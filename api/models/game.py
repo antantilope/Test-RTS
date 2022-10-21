@@ -1111,7 +1111,7 @@ class Game(BaseModel):
                 })
                 explode = True
 
-            if explode or check_proximity:
+            if self._emps[emp_id].armed and (explode or check_proximity):
                 ship_id_in_kill_range = []
                 for ship_id in self._ships:
                     if self._ships[ship_id].exploded:
@@ -1140,6 +1140,11 @@ class Game(BaseModel):
                     })
                     for ship_id in ship_id_in_kill_range:
                         self._ships[ship_id].emp(self._emp_electricity_drain)
+            
+            # Adjust position
+            if not explode:
+                self._emps[emp_id].coord_x += (self._emps[emp_id].velocity_x_meters_per_second * self._map_units_per_meter / fps)
+                self._emps[emp_id].coord_y += (self._emps[emp_id].velocity_y_meters_per_second * self._map_units_per_meter / fps)
 
         # EMPs get deleted from dict on the frame after they explode.
         if any(keys_to_drop):
