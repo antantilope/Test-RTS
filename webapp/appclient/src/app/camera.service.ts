@@ -103,7 +103,6 @@ export class Camera {
         this.zoom = this.zoomLevels[this.zoomIndex]
       }
     }
-    console.log(this.zoomIndex)
   }
 
   public setZoomIndex(ix: number) {
