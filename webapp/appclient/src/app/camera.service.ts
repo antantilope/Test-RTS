@@ -448,6 +448,7 @@ export class Camera {
       let drawableShip: DrawableShip = {
         isSelf: false,
         isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
+        distance: scannerData.distance,
         alive: scannerData.alive,
         aflame: scannerData.aflame,
         exploded: scannerData.exploded,
@@ -499,6 +500,7 @@ export class Camera {
         mineId: mm.id,
         percentArmed: mm.percent_armed,
         isDot: mineSideLenPx <= this.minSizeForDotPx,
+        distance: mm.distance,
         canvasCoordCenter,
         canvasX1,
         canvasY1,
@@ -547,6 +549,7 @@ export class Camera {
         radiusCanvasPX: empRadiusPx,
         percentArmed: sde.percent_armed,
         isDot: empRadiusPx < this.minSizeForDotPx,
+        distance: sde.distance,
         canvasBoundingBox: this.pointCoordToBoxCoord(
           canvasCoordCenter,
            Math.max(boundingBoxBuffer, empRadiusPx * 2 + boundingBoxBuffer),

@@ -1365,6 +1365,10 @@ export class DrawingService {
       }
       ctx.fillText(desigPrefix + drawableShip.designator, bbXOffset, bbYOffset)
       bbYOffset += bbYInterval
+      if(drawableShip.distance) {
+        ctx.fillText(`${drawableShip.distance} M`, bbXOffset, bbYOffset)
+        bbYOffset += bbYInterval
+      }
       if (shipIsLockedOrLocking && this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
         const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
         const midY  = (drawableShip.canvasBoundingBox.y2 + drawableShip.canvasBoundingBox.y1) / 2
@@ -1484,12 +1488,16 @@ export class DrawingService {
       }
     }
     const bbXOffset = mine.canvasBoundingBox.x1
-    let bbYOffset = mine.canvasBoundingBox.y2 + 20
+    const bbYOffsetInterval = 20
+    let bbYOffset = mine.canvasBoundingBox.y2 + bbYOffsetInterval
     ctx.beginPath()
     ctx.font = 'bold 18px Courier New'
     ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
     ctx.fillText("🤖 Mine", bbXOffset, bbYOffset)
+    bbYOffset += bbYOffsetInterval
+    ctx.fillText(`${mine.distance} M`, bbXOffset, bbYOffset)
+
   }
 
   public drawMagnetMineTargetingLines(ctx: CanvasRenderingContext2D, lines: DrawableMagnetMineTargetingLine[]) {
@@ -1585,13 +1593,16 @@ export class DrawingService {
         ctx.stroke()
       }
     }
+    const bbYInterval = 20
     const bbXOffset = emp.canvasBoundingBox.x1
-    let bbYOffset = emp.canvasBoundingBox.y2 + 20
+    let bbYOffset = emp.canvasBoundingBox.y2 + bbYInterval
     ctx.beginPath()
     ctx.font = 'bold 18px Courier New'
     ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
     ctx.fillText("EMP", bbXOffset, bbYOffset)
+    bbYOffset += bbYInterval
+    ctx.fillText(`${emp.distance} M`, bbXOffset, bbYOffset)
   }
 
   private getIconFontSize(camera: Camera) {
