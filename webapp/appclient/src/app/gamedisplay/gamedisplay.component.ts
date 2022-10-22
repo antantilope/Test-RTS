@@ -533,6 +533,17 @@ export class GamedisplayComponent implements OnInit {
       )
     }
 
+    if(
+      this._api.frameData.ship.scanner_online &&
+      (this._scanner.scannerTargetIDCursor !== null || this._api.frameData.ship.scanner_lock_target)
+    ) {
+      this._draw.drawLineToScannerCursor(
+        this.ctx,
+        this._camera.gameDisplayCamera,
+        this._api.frameData.ship.scanner_lock_target ?this._api.frameData.ship.scanner_lock_target :this._scanner.scannerTargetIDCursor,
+      );
+    }
+
     this._draw.drawVisualFlameSmokeElements(
       this.ctx, this._camera.gameDisplayCamera,
       this._camera.getFlameSmokeElements()

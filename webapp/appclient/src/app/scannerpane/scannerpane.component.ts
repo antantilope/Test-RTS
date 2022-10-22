@@ -225,6 +225,20 @@ export class ScannerpaneComponent implements OnInit {
       this._camera.getEMPTrailElements(),
     )
 
+    if(drawableObjects.visionCircles.length) {
+      this._draw.drawVelocityAndHeadingLine(
+        this.ctx,
+        this._camera.scannerPaneCamera,
+        drawableObjects.visionCircles[0],
+        true,
+      )
+    }
+    this._draw.drawLineToScannerCursor(
+      this.ctx,
+      this._camera.scannerPaneCamera,
+      this._scanner.scannerTargetIDCursor,
+    )
+
     // Ships
     const drawBoundingBox = false
     for(let i in drawableObjects.ships) {

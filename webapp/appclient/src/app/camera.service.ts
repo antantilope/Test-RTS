@@ -822,7 +822,10 @@ export class CameraService {
   private updateVelocityTrailElements() {
     if(!this._api.frameData) {
       console.warn("updateVelocityTrailElements():: no framedata found")
-      return setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+      return setTimeout(
+        this.updateVelocityTrailElements.bind(this),
+        this.updateVelocityTrailElementsInterval,
+      )
     }
 
     const now = performance.now()

@@ -302,16 +302,18 @@ export class DrawingService {
   public drawVelocityAndHeadingLine(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
-    visionCircle: VisionCircle
+    visionCircle: VisionCircle,
+    headingOnly: boolean = false, // FIXME: garbage parameter.
   ) {
+    const alpha = getRandomFloat(0.2, 0.6)
     const ship = this._api.frameData.ship
     if(!ship.alive) {
       return
     }
     // Draw Velocity line if there is any velocity
     if(
-      ship.velocity_x_meters_per_second !== 0
-      || ship.velocity_y_meters_per_second !== 0
+      !headingOnly && (ship.velocity_x_meters_per_second !== 0
+      || ship.velocity_y_meters_per_second !== 0)
     ) {
       const vAngleRads = camera.getCanvasAngleBetween(
         {x:0, y:0},
@@ -326,32 +328,59 @@ export class DrawingService {
       }
       ctx.beginPath()
       ctx.lineWidth = 2
-      ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+      ctx.strokeStyle = `rgb(144, 0, 173, ${alpha})`
       ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
       ctx.lineTo(velocityLinePointB.x, velocityLinePointB.y)
       ctx.stroke()
 
       ctx.beginPath()
-      ctx.fillStyle = "rgb(144, 0, 173, 0.50)"
-      ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 4, 0, TWO_PI)
+      ctx.fillStyle = `rgb(144, 0, 173, ${alpha})`
+      ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 8, 0, TWO_PI)
       ctx.fill()
     }
 
     // Draw heading line
     const hAngleRads = (180 - ship.heading) * PI_OVER_180 // why -180? because it works.
-    const halfVisionRadius = Math.min(
-      visionCircle.radius / 2,
-      camera.canvasHalfHeight,
-    )
     const headingLinePointB = {
-      x: visionCircle.canvasCoord.x + (halfVisionRadius * Math.sin(hAngleRads)),
-      y: visionCircle.canvasCoord.y + (halfVisionRadius * Math.cos(hAngleRads)),
+      x: visionCircle.canvasCoord.x + (visionCircle.radius * Math.sin(hAngleRads)),
+      y: visionCircle.canvasCoord.y + (visionCircle.radius * Math.cos(hAngleRads)),
     }
     ctx.beginPath()
     ctx.lineWidth = 2
-    ctx.strokeStyle = "rgb(255, 255, 255, 0.15)"
+    ctx.strokeStyle = `rgb(144, 0, 173, ${alpha})`
     ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
     ctx.lineTo(headingLinePointB.x, headingLinePointB.y)
+    ctx.stroke()
+  }
+
+  public drawLineToScannerCursor(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    scannerTargetID: string,
+  ) {
+    if(Math.random() < 0.5) {
+      return
+    }
+    const target = this._api.frameData.ship.scanner_ship_data.find(
+      sde=>sde.id === scannerTargetID)
+    if(!target) {
+      return
+    }
+    const cameraPosition = camera.getPosition()
+    const alpha = getRandomFloat(0.2, 0.6)
+    const pointA = camera.mapCoordToCanvasCoord(
+      {x:this._api.frameData.ship.coord_x, y:this._api.frameData.ship.coord_y},
+      cameraPosition,
+    )
+    const pointB = camera.mapCoordToCanvasCoord(
+      {x:target.coord_x, y:target.coord_y},
+      cameraPosition,
+    )
+    ctx.beginPath()
+    ctx.lineWidth = 2
+    ctx.strokeStyle = `rgb(190, 0, 0,  ${alpha})`
+    ctx.moveTo(pointA.x, pointA.y)
+    ctx.lineTo(pointB.x, pointB.y)
     ctx.stroke()
   }
 

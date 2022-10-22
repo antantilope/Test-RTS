@@ -705,11 +705,11 @@ class Ship(BaseModel):
         instance.fin_1_rel_rot_coord_1 = (fin_1_bot_x, fin_bot_y,)
 
 
-        instance.battery_power = constants.BATTERY_STARTING_POWER
+        instance.battery_power = 500_000# constants.BATTERY_STARTING_POWER
         instance.battery_capacity = constants.BATTERY_POWER_CAPACITY
         instance.battery_mass = constants.BATTERY_MASS
 
-        instance.fuel_level = constants.FUEL_START_LEVEL
+        instance.fuel_level = 50_000# constants.FUEL_START_LEVEL
         instance.fuel_capacity = constants.FUEL_CAPACITY
         instance.fuel_cost_ore_kg_per_fuel_unit = constants.FUEL_COST_ORE_KG_PER_FUEL_UNIT
         instance.refueling_rate_fuel_units_per_second = constants.REFUELING_RATE_FUEL_UNITS_PER_SECOND
