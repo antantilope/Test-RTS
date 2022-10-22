@@ -4,6 +4,7 @@ import random
 from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 
 from api.models.base import BaseModel
+from api.models.ship_skin import ship_skins, ShipSkin, DEFAULT_SKIN_SLUG
 from api import utils2d
 from api import constants
 from .ship_upgrade import (
@@ -204,6 +205,8 @@ class AutoPilotPrograms:
 class Ship(BaseModel):
     def __init__(self):
         super().__init__()
+
+        self.skin_slug = None
 
         self.map_units_per_meter = None
 
@@ -537,6 +540,7 @@ class Ship(BaseModel):
         return {
             'id': self.id,
             'team_id': self.team_id,
+            'skin_slug': self.skin_slug,
             'mass': self.mass,
             'coord_x': self.coord_x,
             'coord_y': self.coord_y,
@@ -641,10 +645,20 @@ class Ship(BaseModel):
         }
 
     @classmethod
-    def spawn(cls, team_id: str, special_weapon_costs: Dict[str, int], map_units_per_meter: int = 1) -> "Ship":
+    def spawn(
+        cls,
+        team_id: str,
+        special_weapon_costs: Dict[str, int],
+        map_units_per_meter: int = 1,
+        skin_slug: str = None,
+    ) -> "Ship":
         """ Create new unpositioned ship with defaults
         """
         instance = cls()
+
+        instance.skin_slug = DEFAULT_SKIN_SLUG if skin_slug is None else skin_slug
+        if instance.skin_slug not in ship_skins:
+            raise Exception("invalid ship skin slug")
 
         instance.map_units_per_meter = map_units_per_meter
         instance.team_id = team_id
