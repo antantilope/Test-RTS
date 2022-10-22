@@ -4,7 +4,7 @@ import random
 from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 
 from api.models.base import BaseModel
-from api.models.ship_skin import ship_skins, ShipSkin, DEFAULT_SKIN_SLUG
+from api.models.ship_skin import ship_skins, DEFAULT_SKIN_SLUG
 from api import utils2d
 from api import constants
 from .ship_upgrade import (
