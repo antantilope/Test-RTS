@@ -38,7 +38,7 @@ export class Camera {
     "Zooming out" increases this value
   */
   private zoom: number = 10;
-  private zoomLevels = [5, 7, 10, 15, 17, 20, 25, 27, 30, 35, 37, 40]
+  private zoomLevels = [5, 7, 10, 15, 17, 20, 25, 27, 30, 35, 37, 40, 45, 50, 60, 75, 90, 110, 130, 175]
   private zoomIndex = this.zoomLevels.indexOf(this.zoom)
   private finalZoomIndex = this.zoomLevels.length - 1
 
@@ -55,7 +55,11 @@ export class Camera {
   constructor(
     public name: string,
     private _api: ApiService,
-  ) {}
+  ) {
+    if(this.zoomLevels.indexOf(this.zoom) == -1) {
+      throw new Error("initial zoom does not exist in zoom levels list")
+    }
+  }
 
 
   public setCanvasWidthHeight(width: number, height: number) {
@@ -99,6 +103,7 @@ export class Camera {
         this.zoom = this.zoomLevels[this.zoomIndex]
       }
     }
+    console.log(this.zoomIndex)
   }
 
   public setZoomIndex(ix: number) {
