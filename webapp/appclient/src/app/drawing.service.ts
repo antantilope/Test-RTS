@@ -1046,24 +1046,6 @@ export class DrawingService {
         ctx.lineTo(linep2.x, linep2.y)
         ctx.stroke()
       }
-      // // sparks
-      // const dotCt = Math.ceil((1 - percentCompleteTime) * 12)
-      // const dotRadiusPx = Math.max(1, 1 * ppm / zoom)
-      // const exMaxRadiusMeters = ex.max_radius_meters * getRandomFloat(1, 1.2) * ppm / zoom
-      // const maxAlpha = 1 - percentCompleteTime
-      // console.log({maxAlpha, dotCt})
-      // for(let i=0; i<dotCt; i++) {
-      //   ctx.beginPath()
-      //   ctx.fillStyle = `rgb(255, 255, ${Math.max(0.25, maxAlpha)})`
-      //   ctx.arc(
-      //     canvasCoord.x + getRandomFloat(-1 * exMaxRadiusMeters, exMaxRadiusMeters),
-      //     canvasCoord.y + getRandomFloat(-1 * exMaxRadiusMeters, exMaxRadiusMeters),
-      //     dotRadiusPx,
-      //     0,
-      //     TWO_PI,
-      //   )
-      //   ctx.fill()
-      // }
     }
     else if(ex.elapsed_ms < (ex.flame_ms + ex.fade_ms)) {
       // Fadeout smoke puff
