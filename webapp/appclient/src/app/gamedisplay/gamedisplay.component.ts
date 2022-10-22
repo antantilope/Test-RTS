@@ -9,7 +9,6 @@ import {
 
 import {
   DrawableCanvasItems,
-  DrawableShip,
 } from '../models/drawable-objects.model'
 import { ApiService } from "../api.service"
 import { PaneService } from '../pane.service'
@@ -29,7 +28,7 @@ import {
 } from '../constants'
 
 const CAMERA_MODE_SHIP = "ship"
-const CAMERA_MODE_VISION = "vision"
+const CAMERA_MODE_SCANNER = "scanner"
 const CAMERA_MODE_MAP = "map"
 
 @Component({
@@ -146,23 +145,24 @@ export class GamedisplayComponent implements OnInit {
     this._camera.gameDisplayCamera.setZoomIndex(this.previousCameraZoomIndex)
   }
 
-  setCameraModeVision() {
+  setCameraModeScanner() {
     if(this.cameraMode === CAMERA_MODE_SHIP) {
       this.previousCameraZoomIndex = this._camera.gameDisplayCamera.getZoomIndex()
     }
-    this.cameraMode = CAMERA_MODE_VISION
-    this.setZoomForCameraModeVision()
+    this.cameraMode = CAMERA_MODE_SCANNER
   }
 
-  setZoomForCameraModeVision() {
-    const visionRadius = this._api.frameData.ship.visual_range
-    const canvasRadius = Math.min(
-      this._camera.gameDisplayCamera.canvasHalfHeight,
-      this._camera.gameDisplayCamera.canvasHalfWidth,
-    )
-    this._camera.gameDisplayCamera.setZoom(
-      Math.ceil(visionRadius / canvasRadius * this._api.frameData.map_config.units_per_meter)
-    )
+  cycleCameraMode() {
+    const mode = this.getCameraMode()
+    if(mode === CAMERA_MODE_MAP) {
+      return
+    }
+    if (mode === CAMERA_MODE_SHIP) {
+      this.setCameraModeScanner()
+      // this.previousCameraZoomIndex = this._camera.gameDisplayCamera.getZoomIndex()
+    } else if (mode === CAMERA_MODE_SCANNER) {
+      this.setCameraModeShip()
+    }
   }
 
   toggleMap() {
@@ -198,8 +198,8 @@ export class GamedisplayComponent implements OnInit {
     if (this.previousCameraMode == CAMERA_MODE_SHIP) {
       this.setCameraModeShip()
     }
-    else if (this.previousCameraMode == CAMERA_MODE_VISION) {
-      this.setCameraModeVision()
+    else if (this.previousCameraMode == CAMERA_MODE_SCANNER) {
+      this.setCameraModeScanner()
     }
     else {
       console.warn("could not select a camera profile after closing map.")
@@ -218,8 +218,13 @@ export class GamedisplayComponent implements OnInit {
     }
     const key = event.key.toLocaleLowerCase()
     console.log({gameKeystroke: key})
-    if (key === 'm') {
-      this.toggleMap()
+    switch (true) {
+      case key === 'm':
+        this.toggleMap()
+        break
+      case key === 'c':
+        this.cycleCameraMode()
+        break
     }
   }
 
@@ -235,6 +240,7 @@ export class GamedisplayComponent implements OnInit {
         return
       }
       if (this.canManualZoom()) {
+        console.log("zoomingIn " + zoomIn)
         this._camera.gameDisplayCamera.adjustZoom(zoomIn)
       }
     })
@@ -493,14 +499,17 @@ export class GamedisplayComponent implements OnInit {
 
     this.clearCanvas()
 
-    if (cameraMode === CAMERA_MODE_SHIP || cameraMode === CAMERA_MODE_VISION) {
+    if (cameraMode === CAMERA_MODE_SHIP) {
       this._camera.gameDisplayCamera.setPosition(
         this._api.frameData.ship.coord_x,
         this._api.frameData.ship.coord_y,
       )
-      if(cameraMode === CAMERA_MODE_VISION && this._api.frameData.game_frame % 60 == 0) {
-        this.setZoomForCameraModeVision()
-      }
+    }
+    else if (cameraMode === CAMERA_MODE_SCANNER) {
+      this.previousCameraZoomIndex = this._camera.gameDisplayCamera.getZoomIndex()
+      this._camera.gameDisplayCamera.setCameraPositionAndZoomForScannerMode(
+        this._scanner.scannerTargetIDCursor,
+      )
     }
 
     const drawableObjects: DrawableCanvasItems = this._camera.gameDisplayCamera.getDrawableCanvasObjects()
@@ -531,6 +540,17 @@ export class GamedisplayComponent implements OnInit {
         this._camera.gameDisplayCamera,
         drawableObjects.visionCircles[lastIx],
       )
+    }
+
+    if(
+      this._api.frameData.ship.scanner_online &&
+      (this._scanner.scannerTargetIDCursor !== null || this._api.frameData.ship.scanner_lock_target)
+    ) {
+      this._draw.drawLineToScannerCursor(
+        this.ctx,
+        this._camera.gameDisplayCamera,
+        this._api.frameData.ship.scanner_lock_target ?this._api.frameData.ship.scanner_lock_target :this._scanner.scannerTargetIDCursor,
+      );
     }
 
     this._draw.drawVisualFlameSmokeElements(

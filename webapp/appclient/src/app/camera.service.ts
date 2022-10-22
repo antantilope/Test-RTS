@@ -38,7 +38,7 @@ export class Camera {
     "Zooming out" increases this value
   */
   private zoom: number = 10;
-  private zoomLevels = [5, 7, 10, 15, 17, 20, 25, 27, 30, 35, 37, 40]
+  private zoomLevels = [5, 7, 10, 15, 17, 20, 25, 27, 30, 35, 37, 40, 45, 50, 60, 75, 90, 110, 130, 175]
   private zoomIndex = this.zoomLevels.indexOf(this.zoom)
   private finalZoomIndex = this.zoomLevels.length - 1
 
@@ -55,7 +55,11 @@ export class Camera {
   constructor(
     public name: string,
     private _api: ApiService,
-  ) {}
+  ) {
+    if(this.zoomLevels.indexOf(this.zoom) == -1) {
+      throw new Error("initial zoom does not exist in zoom levels list")
+    }
+  }
 
 
   public setCanvasWidthHeight(width: number, height: number) {
@@ -448,6 +452,7 @@ export class Camera {
       let drawableShip: DrawableShip = {
         isSelf: false,
         isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
+        distance: scannerData.distance,
         alive: scannerData.alive,
         aflame: scannerData.aflame,
         exploded: scannerData.exploded,
@@ -499,6 +504,7 @@ export class Camera {
         mineId: mm.id,
         percentArmed: mm.percent_armed,
         isDot: mineSideLenPx <= this.minSizeForDotPx,
+        distance: mm.distance,
         canvasCoordCenter,
         canvasX1,
         canvasY1,
@@ -547,6 +553,7 @@ export class Camera {
         radiusCanvasPX: empRadiusPx,
         percentArmed: sde.percent_armed,
         isDot: empRadiusPx < this.minSizeForDotPx,
+        distance: sde.distance,
         canvasBoundingBox: this.pointCoordToBoxCoord(
           canvasCoordCenter,
            Math.max(boundingBoxBuffer, empRadiusPx * 2 + boundingBoxBuffer),
@@ -822,7 +829,10 @@ export class CameraService {
   private updateVelocityTrailElements() {
     if(!this._api.frameData) {
       console.warn("updateVelocityTrailElements():: no framedata found")
-      return setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
+      return setTimeout(
+        this.updateVelocityTrailElements.bind(this),
+        this.updateVelocityTrailElementsInterval,
+      )
     }
 
     const now = performance.now()

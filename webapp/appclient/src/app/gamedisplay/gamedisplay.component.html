@@ -25,17 +25,17 @@
             </div>
             <div class="btn-gap">
             </div>
-            <div>
+            <div *ngIf="getCameraMode() != 'ship'">
                 <button class="sidebar-btn" (click)="setCameraModeShip()" title="Camera: Ship">
                     🚀🎥
                 </button>
             </div>
-            <div>
-                <button class="sidebar-btn" (click)="setCameraModeVision()" title="Camera: Scanner">
+            <div *ngIf="getCameraMode() != 'scanner'">
+                <button class="sidebar-btn" (click)="setCameraModeScanner()" title="Camera: Scanner">
                     📡🎥
                 </button>
             </div>
-            <div>
+            <div *ngIf="getCameraMode() != 'map'">
                 <button class="sidebar-btn" (click)="toggleMap()" title="Camera: Map">
                     🗺️🎥
                 </button>

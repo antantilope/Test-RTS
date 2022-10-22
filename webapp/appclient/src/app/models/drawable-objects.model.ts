@@ -30,6 +30,7 @@ export class DrawableShip {
     miningOreLocation: string
     fuelingAtStation:boolean
     lastTubeFireFrame: number
+    distance?: number // this is missing when isSelf is true
 }
 
 export class DrawableMagnetMine {
@@ -42,6 +43,7 @@ export class DrawableMagnetMine {
     canvasH: number
     canvasBoundingBox: BoxCoords
     percentArmed: number
+    distance: number
 }
 
 export class DrawableEMP {
@@ -51,6 +53,7 @@ export class DrawableEMP {
     canvasBoundingBox: BoxCoords
     radiusCanvasPX: number
     percentArmed: number
+    distance: number
 }
 
 export class DrawableMagnetMineTargetingLine {

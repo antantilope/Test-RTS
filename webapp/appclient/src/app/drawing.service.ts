@@ -302,16 +302,18 @@ export class DrawingService {
   public drawVelocityAndHeadingLine(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
-    visionCircle: VisionCircle
+    visionCircle: VisionCircle,
+    headingOnly: boolean = false, // FIXME: garbage parameter.
   ) {
+    const alpha = getRandomFloat(0.2, 0.6)
     const ship = this._api.frameData.ship
     if(!ship.alive) {
       return
     }
     // Draw Velocity line if there is any velocity
     if(
-      ship.velocity_x_meters_per_second !== 0
-      || ship.velocity_y_meters_per_second !== 0
+      !headingOnly && (ship.velocity_x_meters_per_second !== 0
+      || ship.velocity_y_meters_per_second !== 0)
     ) {
       const vAngleRads = camera.getCanvasAngleBetween(
         {x:0, y:0},
@@ -326,32 +328,59 @@ export class DrawingService {
       }
       ctx.beginPath()
       ctx.lineWidth = 2
-      ctx.strokeStyle = "rgb(144, 0, 173, 0.75)"
+      ctx.strokeStyle = `rgb(144, 0, 173, ${alpha})`
       ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
       ctx.lineTo(velocityLinePointB.x, velocityLinePointB.y)
       ctx.stroke()
 
       ctx.beginPath()
-      ctx.fillStyle = "rgb(144, 0, 173, 0.50)"
-      ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 4, 0, TWO_PI)
+      ctx.fillStyle = `rgb(144, 0, 173, ${alpha})`
+      ctx.arc(velocityLinePointB.x, velocityLinePointB.y, 8, 0, TWO_PI)
       ctx.fill()
     }
 
     // Draw heading line
     const hAngleRads = (180 - ship.heading) * PI_OVER_180 // why -180? because it works.
-    const halfVisionRadius = Math.min(
-      visionCircle.radius / 2,
-      camera.canvasHalfHeight,
-    )
     const headingLinePointB = {
-      x: visionCircle.canvasCoord.x + (halfVisionRadius * Math.sin(hAngleRads)),
-      y: visionCircle.canvasCoord.y + (halfVisionRadius * Math.cos(hAngleRads)),
+      x: visionCircle.canvasCoord.x + (visionCircle.radius * Math.sin(hAngleRads)),
+      y: visionCircle.canvasCoord.y + (visionCircle.radius * Math.cos(hAngleRads)),
     }
     ctx.beginPath()
     ctx.lineWidth = 2
-    ctx.strokeStyle = "rgb(255, 255, 255, 0.15)"
+    ctx.strokeStyle = `rgb(144, 0, 173, ${alpha})`
     ctx.moveTo(visionCircle.canvasCoord.x, visionCircle.canvasCoord.y)
     ctx.lineTo(headingLinePointB.x, headingLinePointB.y)
+    ctx.stroke()
+  }
+
+  public drawLineToScannerCursor(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    scannerTargetID: string,
+  ) {
+    if(Math.random() < 0.5) {
+      return
+    }
+    const target = this._api.frameData.ship.scanner_ship_data.find(
+      sde=>sde.id === scannerTargetID)
+    if(!target) {
+      return
+    }
+    const cameraPosition = camera.getPosition()
+    const alpha = getRandomFloat(0.2, 0.6)
+    const pointA = camera.mapCoordToCanvasCoord(
+      {x:this._api.frameData.ship.coord_x, y:this._api.frameData.ship.coord_y},
+      cameraPosition,
+    )
+    const pointB = camera.mapCoordToCanvasCoord(
+      {x:target.coord_x, y:target.coord_y},
+      cameraPosition,
+    )
+    ctx.beginPath()
+    ctx.lineWidth = 2
+    ctx.strokeStyle = `rgb(190, 0, 0,  ${alpha})`
+    ctx.moveTo(pointA.x, pointA.y)
+    ctx.lineTo(pointB.x, pointB.y)
     ctx.stroke()
   }
 
@@ -871,7 +900,7 @@ export class DrawingService {
         ctx.fill()
       }
       const dotCt = 8
-      const dotRadiusPx = 1.25 * ppm / zoom
+      const dotRadiusPx = Math.max(1, 1.25 * ppm / zoom)
       for(let i=0; i<dotCt; i++) {
         ctx.beginPath()
         ctx.fillStyle = 'rgb(0, 0, 255)'
@@ -905,7 +934,7 @@ export class DrawingService {
       )
       ctx.fill()
       const dotCt = Math.ceil((1 - fadePercent) * 8)
-      const dotRadiusPx = 0.7 * ppm / zoom
+      const dotRadiusPx = Math.max(1, 0.7 * ppm / zoom)
       for(let i=0; i<dotCt; i++) {
         ctx.beginPath()
         ctx.fillStyle = 'rgb(0, 0, 255, 0.75)'
@@ -958,8 +987,9 @@ export class DrawingService {
         TWO_PI,
       )
       ctx.fill()
-      // Inner sub fireballs
+      // Inner sub fireballs and sparks
       if(percentCompleteTime < 0.4) {
+        // Inner fireballs
         const subFireBallsCount = randomInt(2, 4)
         for(let i=0; i<subFireBallsCount; i++) {
           let subFBSizePx = Math.floor(radiusMeters / getRandomFloat(2, 4)) * ppm / zoom
@@ -969,6 +999,24 @@ export class DrawingService {
             canvasCoord.x + randomInt(-4, 4),
             canvasCoord.y + randomInt(-4, 4),
             subFBSizePx,
+            0,
+            TWO_PI,
+          )
+          ctx.fill()
+        }
+        // sparks
+        const sparksPercComplete = percentCompleteTime / 0.4
+        const dotCt = Math.ceil((1 - sparksPercComplete) * 12)
+        const dotRadiusPx = Math.max(1, 1 * ppm / zoom)
+        const exMaxRadiusMeters = ex.max_radius_meters * getRandomFloat(1, 1.2) * ppm / zoom
+        const maxAlpha = 1 - sparksPercComplete
+        for(let i=0; i<dotCt; i++) {
+          ctx.beginPath()
+          ctx.fillStyle = `rgb(255, 255, ${Math.max(0.25, maxAlpha)})`
+          ctx.arc(
+            canvasCoord.x + getRandomFloat(-1 * exMaxRadiusMeters, exMaxRadiusMeters),
+            canvasCoord.y + getRandomFloat(-1 * exMaxRadiusMeters, exMaxRadiusMeters),
+            dotRadiusPx,
             0,
             TWO_PI,
           )
@@ -1336,6 +1384,10 @@ export class DrawingService {
       }
       ctx.fillText(desigPrefix + drawableShip.designator, bbXOffset, bbYOffset)
       bbYOffset += bbYInterval
+      if(drawableShip.distance) {
+        ctx.fillText(`${drawableShip.distance} M`, bbXOffset, bbYOffset)
+        bbYOffset += bbYInterval
+      }
       if (shipIsLockedOrLocking && this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
         const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
         const midY  = (drawableShip.canvasBoundingBox.y2 + drawableShip.canvasBoundingBox.y1) / 2
@@ -1455,12 +1507,16 @@ export class DrawingService {
       }
     }
     const bbXOffset = mine.canvasBoundingBox.x1
-    let bbYOffset = mine.canvasBoundingBox.y2 + 20
+    const bbYOffsetInterval = 20
+    let bbYOffset = mine.canvasBoundingBox.y2 + bbYOffsetInterval
     ctx.beginPath()
     ctx.font = 'bold 18px Courier New'
     ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
     ctx.fillText("🤖 Mine", bbXOffset, bbYOffset)
+    bbYOffset += bbYOffsetInterval
+    ctx.fillText(`${mine.distance} M`, bbXOffset, bbYOffset)
+
   }
 
   public drawMagnetMineTargetingLines(ctx: CanvasRenderingContext2D, lines: DrawableMagnetMineTargetingLine[]) {
@@ -1556,13 +1612,16 @@ export class DrawingService {
         ctx.stroke()
       }
     }
+    const bbYInterval = 20
     const bbXOffset = emp.canvasBoundingBox.x1
-    let bbYOffset = emp.canvasBoundingBox.y2 + 20
+    let bbYOffset = emp.canvasBoundingBox.y2 + bbYInterval
     ctx.beginPath()
     ctx.font = 'bold 18px Courier New'
     ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
     ctx.fillText("EMP", bbXOffset, bbYOffset)
+    bbYOffset += bbYInterval
+    ctx.fillText(`${emp.distance} M`, bbXOffset, bbYOffset)
   }
 
   private getIconFontSize(camera: Camera) {
