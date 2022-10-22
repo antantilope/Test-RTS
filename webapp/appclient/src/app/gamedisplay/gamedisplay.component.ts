@@ -9,7 +9,6 @@ import {
 
 import {
   DrawableCanvasItems,
-  DrawableShip,
 } from '../models/drawable-objects.model'
 import { ApiService } from "../api.service"
 import { PaneService } from '../pane.service'
@@ -29,7 +28,6 @@ import {
 } from '../constants'
 
 const CAMERA_MODE_SHIP = "ship"
-const CAMERA_MODE_VISION = "vision"
 const CAMERA_MODE_SCANNER = "scanner"
 const CAMERA_MODE_MAP = "map"
 
