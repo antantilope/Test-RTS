@@ -5,7 +5,6 @@ from unittest import TestCase
 
 from api.models.game import Game, GamePhase, ShipScannerMode
 from api import utils2d
-from api.models.ship import VisibleElementShapeType
 
 class TestGameUpdateScannerStatesForShips(TestCase):
 
@@ -349,17 +348,11 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'in_visual_range': True,
                 'velocity_y_meters_per_second': 0.0,
                 'velocity_x_meters_per_second': 0.0,
-                'visual_shape': VisibleElementShapeType.RECT,
-                'visual_p0': self.game._ships[self.player_2_ship_id].map_p0,
-                'visual_p1': self.game._ships[self.player_2_ship_id].map_p1,
-                'visual_p2': self.game._ships[self.player_2_ship_id].map_p2,
-                'visual_p3': self.game._ships[self.player_2_ship_id].map_p3,
                 'visual_engine_lit': True,
                 'visual_engine_boosted_last_frame':-10,
                 'visual_ebeam_charging': False,
                 'visual_ebeam_firing': False,
                 'visual_ebeam_color': '#ff0000',
-                'visual_fill_color': '#ffffff',
                 'visual_fin_0_rel_rot_coord_0': (9980, 9970),
                 'visual_fin_0_rel_rot_coord_1': (9952, 9940),
                 'visual_fin_1_rel_rot_coord_0': (10020, 9970),
@@ -386,12 +379,7 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
                 'coord_x': 500 * self.upm,
                 'coord_y': 500 * self.upm,
-                'visual_shape': VisibleElementShapeType.RECT,
                 'in_visual_range': True,
-                'visual_p0': self.game._ships[self.player_1_ship_id].map_p0,
-                'visual_p1': self.game._ships[self.player_1_ship_id].map_p1,
-                'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
-                'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
                 'velocity_y_meters_per_second': 0,
                 'velocity_x_meters_per_second': 0,
                 'visual_engine_lit': False,
@@ -447,11 +435,6 @@ class TestGameUpdateScannerStatesForShips(TestCase):
             'coord_x': 500 * self.upm,
             'coord_y': 500 * self.upm,
             'in_visual_range': True,
-            'visual_shape': VisibleElementShapeType.RECT,
-            'visual_p0': self.game._ships[self.player_1_ship_id].map_p0,
-            'visual_p1': self.game._ships[self.player_1_ship_id].map_p1,
-            'visual_p2': self.game._ships[self.player_1_ship_id].map_p2,
-            'visual_p3': self.game._ships[self.player_1_ship_id].map_p3,
             'visual_engine_lit': False,
             'velocity_x_meters_per_second': 0.0,
             'velocity_y_meters_per_second': 0.0,

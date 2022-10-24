@@ -2155,24 +2155,21 @@ class TestShipCMDSetHeading(TestCase):
 
     def _assert_ship_heading_0(self):
         assert self.ship.heading == constants.DEGREES_NORTH
-        assert self.ship.rel_rot_coord_0 == (-20, -60)
-        assert self.ship.rel_rot_coord_1 == (-20, 60)
-        assert self.ship.rel_rot_coord_2 == (20, 60)
-        assert self.ship.rel_rot_coord_3 == (20, -60)
-        assert self.ship.rel_rot_coord_0 == self.ship.heading_0_rel_coord_0
-        assert self.ship.rel_rot_coord_1 == self.ship.heading_0_rel_coord_1
-        assert self.ship.rel_rot_coord_2 == self.ship.heading_0_rel_coord_2
-        assert self.ship.rel_rot_coord_3 == self.ship.heading_0_rel_coord_3
+        assert self.ship.rel_rot_coord_hitbox_nose == (0, 75)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (0, -75)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (-50, -56)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (50, -56)
+        assert self.ship.rel_fixed_coord_hitbox_nose == self.ship.rel_rot_coord_hitbox_nose
+        assert self.ship.rel_fixed_coord_hitbox_bottom_center == self.ship.rel_rot_coord_hitbox_bottom_center
+        assert self.ship.rel_fixed_coord_hitbox_bottom_left == self.ship.rel_rot_coord_hitbox_bottom_left
+        assert self.ship.rel_fixed_coord_hitbox_bottom_right == self.ship.rel_rot_coord_hitbox_bottom_right
+
 
     def _assert_heading_0_cords_fixed(self):
-        assert self.ship.heading_0_rel_coord_0 == (-20, -60)
-        assert self.ship.heading_0_rel_coord_1 == (-20, 60)
-        assert self.ship.heading_0_rel_coord_2 == (20, 60)
-        assert self.ship.heading_0_rel_coord_3 == (20, -60)
-        # assert self.ship.heading_0_fin_0_rel_coord_0 == (-20, -20,) #TODO FIX ME
-        # assert self.ship.heading_0_fin_0_rel_coord_1 == (-51, -40,)
-        # assert self.ship.heading_0_fin_1_rel_coord_0 == (20, -20,)
-        # assert self.ship.heading_0_fin_0_rel_coord_1 == (32, -40,)
+        assert self.ship.rel_fixed_coord_hitbox_nose == (0, 75)
+        assert self.ship.rel_fixed_coord_hitbox_bottom_center == (0, -75)
+        assert self.ship.rel_fixed_coord_hitbox_bottom_left == (-50, -56)
+        assert self.ship.rel_fixed_coord_hitbox_bottom_right == (50, -56)
 
     def test_rotate_ship_to_0_heading(self):
         self._assert_ship_heading_0()
@@ -2184,70 +2181,70 @@ class TestShipCMDSetHeading(TestCase):
         self._assert_ship_heading_0()
         self.ship.cmd_set_heading(constants.DEGREES_EAST)
         assert self.ship.heading == constants.DEGREES_EAST
-        assert self.ship.rel_rot_coord_0 == (-60, 20,)
-        assert self.ship.rel_rot_coord_1 == (60, 20,)
-        assert self.ship.rel_rot_coord_2 ==  (60, -20,)
-        assert self.ship.rel_rot_coord_3 == (-60, -20,)
+        assert self.ship.rel_rot_coord_hitbox_nose == (75, 0)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (-56, 50)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (-75, 0)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (-56, -50)
         self._assert_heading_0_cords_fixed()
 
     def test_rotate_ship_to_180_heading(self):
         self._assert_ship_heading_0()
         self.ship.cmd_set_heading(constants.DEGREES_SOUTH)
         assert self.ship.heading == constants.DEGREES_SOUTH
-        assert self.ship.rel_rot_coord_0 == (20, 60,)
-        assert self.ship.rel_rot_coord_1 == (20, -60,)
-        assert self.ship.rel_rot_coord_2 ==  (-20, -60,)
-        assert self.ship.rel_rot_coord_3 == (-20, 60,)
+        assert self.ship.rel_rot_coord_hitbox_nose == (0, -75)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (50, 56)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (0, 75)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (-50, 56)
         self._assert_heading_0_cords_fixed()
 
     def test_rotate_ship_to_270_heading(self):
         self._assert_ship_heading_0()
         self.ship.cmd_set_heading(constants.DEGREES_WEST)
         assert self.ship.heading == constants.DEGREES_WEST
-        assert self.ship.rel_rot_coord_0 == (60, -20,)
-        assert self.ship.rel_rot_coord_1 == (-60, -20,)
-        assert self.ship.rel_rot_coord_2 ==  (-60, 20,)
-        assert self.ship.rel_rot_coord_3 == (60, 20,)
+        assert self.ship.rel_rot_coord_hitbox_nose == (-75, 0)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (56, -50)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (75, 0)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (56, 50)
         self._assert_heading_0_cords_fixed()
 
     def test_rotate_ship_to_quad_1_heading(self):
         self._assert_ship_heading_0()
         self.ship.cmd_set_heading(30)
         assert self.ship.heading == 30
-        assert self.ship.rel_rot_coord_0 == (-47, -42,)
-        assert self.ship.rel_rot_coord_1 == (13, 62,)
-        assert self.ship.rel_rot_coord_2 ==  (47, 42,)
-        assert self.ship.rel_rot_coord_3 == (-13, -62,)
+        assert self.ship.rel_rot_coord_hitbox_nose == (37, 65)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (-71, -23)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (-37, -65)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (15, -73)
         self._assert_heading_0_cords_fixed()
 
     def test_rotate_ship_to_quad_2_heading(self):
         self._assert_ship_heading_0()
         self.ship.cmd_set_heading(139)
         assert self.ship.heading == 139
-        assert self.ship.rel_rot_coord_0 == (-24, 58,)
-        assert self.ship.rel_rot_coord_1 == (54, -32,)
-        assert self.ship.rel_rot_coord_2 == (24, -58,)
-        assert self.ship.rel_rot_coord_3 == (-54, 32,)
+        assert self.ship.rel_rot_coord_hitbox_nose == (49, -57)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (1, 75)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (-49, 57)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (-74, 9)
         self._assert_heading_0_cords_fixed()
 
     def test_rotate_ship_to_quad_3_heading(self):
         self._assert_ship_heading_0()
         self.ship.cmd_set_heading(226)
         assert self.ship.heading == 226
-        assert self.ship.rel_rot_coord_0 == (57, 27,)
-        assert self.ship.rel_rot_coord_1 == (-29, -56,)
-        assert self.ship.rel_rot_coord_2 == (-57, -27,)
-        assert self.ship.rel_rot_coord_3 == (29, 56,)
+        assert self.ship.rel_rot_coord_hitbox_nose == (-54, -52)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (75, 3)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (54, 52)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (6, 75)
         self._assert_heading_0_cords_fixed()
 
     def test_rotate_ship_to_quad_4_heading(self):
         self._assert_ship_heading_0()
         self.ship.cmd_set_heading(305)
         assert self.ship.heading == 305
-        assert self.ship.rel_rot_coord_0 == (38, -51,)
-        assert self.ship.rel_rot_coord_1 == (-61, 18,)
-        assert self.ship.rel_rot_coord_2 == (-38, 51,)
-        assert self.ship.rel_rot_coord_3 == (61, -18,)
+        assert self.ship.rel_rot_coord_hitbox_nose == (-61, 43)
+        assert self.ship.rel_rot_coord_hitbox_bottom_left == (17, -73)
+        assert self.ship.rel_rot_coord_hitbox_bottom_center == (61, -43)
+        assert self.ship.rel_rot_coord_hitbox_bottom_right == (75, 9)
         self._assert_heading_0_cords_fixed()
 
 
