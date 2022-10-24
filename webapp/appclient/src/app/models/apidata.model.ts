@@ -119,6 +119,13 @@ export class ScannerDataShipElement {
     alive: boolean
     velocity_x_meters_per_second: number
     velocity_y_meters_per_second: number
+
+    visual_heading: number
+    visual_map_nose_coord: number[]
+    visual_map_bottom_left_coord: number[]
+    visual_map_bottom_right_coord: number[]
+    visual_map_bottom_center_coord: number[]
+
     anti_radar_coating_level: number
     designator: string
     in_visual_range: boolean
@@ -177,6 +184,11 @@ export class Ship {
     coord_x: number
     coord_y: number
     heading: number
+
+    map_nose_coord: number[]
+    map_bottom_left_coord: number[]
+    map_bottom_right_coord: number[]
+    map_bottom_center_coord: number[]
 
     velocity_x_meters_per_second: number
     velocity_y_meters_per_second: number

@@ -130,6 +130,11 @@ class ScannedShipElement(TypedDict):
     scanner_thermal_signature: int
     coord_x: int
     coord_y: int
+    visual_heading: int #heading of the scanned ship
+    visual_map_nose_coord: Tuple[int]
+    visual_map_bottom_left_coord: Tuple[int]
+    visual_map_bottom_right_coord: Tuple[int]
+    visual_map_bottom_center_coord: Tuple[int]
     relative_heading: int # Rounded int describing bearing to element
     target_heading: float # Float describing beaing to element
     velocity_x_meters_per_second: float
@@ -482,6 +487,11 @@ class Ship(BaseModel):
             'fueling_at_station': self.fueling_at_station,
             'fuel_cost_ore_kg_per_fuel_unit': self.fuel_cost_ore_kg_per_fuel_unit,
 
+            'map_nose_coord': self.map_nose_coord,
+            'map_bottom_left_coord': self.map_bottom_left_coord,
+            'map_bottom_right_coord': self.map_bottom_right_coord,
+            'map_bottom_center_coord': self.map_bottom_center_coord,
+
             'upgrade_summary': self._upgrade_summary,
 
             'engine_newtons': self.engine_newtons,
@@ -614,12 +624,12 @@ class Ship(BaseModel):
         instance.rel_fixed_coord_hitbox_nose = (nose_x, nose_y, )
         # Bottom Left Corner
         bottom_left_x = round((x_len / 2) * -1)
-        bottom_left_y = round(((y_len / 2) * -1) + (y_len / 8))
-        instance.rel_rot_coord_hitbox_bottom_left = (bottom_left_x, bottom_left_y, )
-        instance.rel_fixed_coord_hitbox_bottom_left = (bottom_left_x, bottom_left_y, )
+        bottom_y = round(((y_len / 2) * -1) + (y_len / 8))
+        instance.rel_rot_coord_hitbox_bottom_left = (bottom_left_x, bottom_y, )
+        instance.rel_fixed_coord_hitbox_bottom_left = (bottom_left_x, bottom_y, )
         # Bottom Right Corner
         bottom_right_x = round(x_len / 2)
-        bottom_right_y = bottom_left_y
+        bottom_right_y = bottom_y
         instance.rel_rot_coord_hitbox_bottom_right = (bottom_right_x, bottom_right_y, )
         instance.rel_fixed_coord_hitbox_bottom_right = (bottom_right_x, bottom_right_y, )
         # Bottom Center

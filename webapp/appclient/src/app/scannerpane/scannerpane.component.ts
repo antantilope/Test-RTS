@@ -359,16 +359,6 @@ export class ScannerpaneComponent implements OnInit {
     }
 
     this.ctx.font = '20px Courier New'
-
-    if(target.visual_shape) {
-      const visualOnlyWarning = this.getIsVisualOnlyWarning(target)
-      this.ctx.beginPath()
-      this.ctx.fillText(
-        `${visualOnlyWarning?"⚠️":""}VISUAL`, xOffset, yOffset
-      )
-      yOffset += yInterval
-    }
-
     this.ctx.beginPath()
     this.ctx.fillText(
       `DIST. ${target.distance} M`, xOffset, yOffset
@@ -395,17 +385,6 @@ export class ScannerpaneComponent implements OnInit {
       )
     } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
     yOffset += yInterval
-  }
-
-  private getIsVisualOnlyWarning(target: ScannerDataShipElement):boolean {
-    // Returns true if ship is only scannable because
-    // it's within visual range
-    const mode = this._api.frameData.ship.scanner_mode
-    if(mode == "radar") {
-      return target.anti_radar_coating_level > this._api.frameData.ship.scanner_radar_sensitivity
-    } else if (mode == "ir") {
-      return target.scanner_thermal_signature < this._api.frameData.ship.scanner_ir_minimum_thermal_signature
-    } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
   }
 
   private drawTopLeftOverlay(alpha: number) {
