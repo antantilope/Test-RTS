@@ -55,6 +55,8 @@ function nthRoot(x, root) {
 })
 export class DrawingService {
 
+  private isDebug = window.location.search.indexOf("debug") !== -1
+
   private deathQuote: QuoteDetails | null = null;
 
   private actionTileImgEngineLit: HTMLImageElement = new Image()
