@@ -126,7 +126,7 @@ class TestEMP(TestCase):
 
         self.game._fps = 1
         self.game._ships[self.player_1_ship_id].emps_loaded = 1
-        self.game._ships[self.player_1_ship_id].heading = 90
+        self.game._ships[self.player_1_ship_id].cmd_set_heading(90)
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
         # Fire EMP
@@ -144,16 +144,16 @@ class TestEMP(TestCase):
         assert not emp.exploded
         assert emp.velocity_x_meters_per_second == 10
         assert round(emp.velocity_y_meters_per_second, 5) == 0
-        assert emp.coord_x == 1000
-        assert emp.coord_y == 1060 # Front of the ship
+        assert emp.coord_x == 1075
+        assert emp.coord_y == 1000
 
         self.game.advance_emps(fps=1)
         assert not emp.armed
         assert not emp.exploded
         assert emp.velocity_x_meters_per_second == 10 # no acceleration
         assert round(emp.velocity_y_meters_per_second, 5) == 0
-        assert round(emp.coord_x) == 1100
-        assert emp.coord_y == 1060
+        assert round(emp.coord_x) == 1175
+        assert emp.coord_y == 1000
         assert emp.elapsed_milliseconds == 1000 # 1 second has elapsed
 
     def test_ship_can_launch_an_EMP_due_east_with_northward_ship_movement(self):
@@ -167,7 +167,7 @@ class TestEMP(TestCase):
 
         self.game._fps = 1
         self.game._ships[self.player_1_ship_id].emps_loaded = 1
-        self.game._ships[self.player_1_ship_id].heading = 90
+        self.game._ships[self.player_1_ship_id].cmd_set_heading(90)
         # ship moving north at 5 M/S
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 5
@@ -187,8 +187,8 @@ class TestEMP(TestCase):
         assert emp.velocity_x_meters_per_second == 10
         # from ships innertia
         assert round(emp.velocity_y_meters_per_second, 5) == 5
-        assert emp.coord_x == 1000
-        assert emp.coord_y == 1060
+        assert emp.coord_x == 1075
+        assert emp.coord_y == 1000
 
         self.game.advance_emps(fps=1)
         emp = self.game._emps[emp_id]
@@ -196,8 +196,8 @@ class TestEMP(TestCase):
         assert not emp.exploded
         assert emp.velocity_x_meters_per_second == 10 # no acceleration
         assert round(emp.velocity_y_meters_per_second, 5) == 5
-        assert emp.coord_x == 1100
-        assert emp.coord_y == 1110
+        assert emp.coord_x == 1175
+        assert emp.coord_y == 1050
         assert emp.elapsed_milliseconds == 1000 # 1 second has elapsed
 
     def test_EMP_arms(self):
@@ -232,7 +232,7 @@ class TestEMP(TestCase):
         # from ships innertia
         assert round(emp.velocity_y_meters_per_second, 5) == 5
         assert emp.coord_x == 1000
-        assert emp.coord_y == 1060
+        assert emp.coord_y == 1075
 
         self.game.advance_emps(fps=1)
         emp = self.game._emps[emp_id]
@@ -288,7 +288,7 @@ class TestEMP(TestCase):
         # from ships innertia
         assert round(emp.velocity_y_meters_per_second, 5) == 5
         assert emp.coord_x == 1000
-        assert emp.coord_y == 1060
+        assert emp.coord_y == 1075
 
         self.game.advance_emps(fps=1)
         emp = self.game._emps[emp_id]
