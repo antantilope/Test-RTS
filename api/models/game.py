@@ -941,10 +941,9 @@ class Game(BaseModel):
             )
             mine.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             mine.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            ship_p1_x, ship_p1_y = self._ships[ship_id].map_p1
-            ship_p2_x, ship_p2_y = self._ships[ship_id].map_p2
-            mine.coord_x = round((ship_p1_x + ship_p2_x) / 2)
-            mine.coord_y = round((ship_p1_y + ship_p2_y) / 2)
+            ship_nose = self._ships[ship_id].map_nose_coord
+            mine.coord_x = ship_nose[0]
+            mine.coord_y = ship_nose[1]
             self._magnet_mines[mine.id] = mine
 
         elif self._ships[ship_id].emp_firing:
@@ -957,10 +956,9 @@ class Game(BaseModel):
             )
             emp.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             emp.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            ship_p1_x, ship_p1_y = self._ships[ship_id].map_p1
-            ship_p2_x, ship_p2_y = self._ships[ship_id].map_p2
-            emp.coord_x = round((ship_p1_x + ship_p2_x) / 2)
-            emp.coord_y = round((ship_p1_y + ship_p2_y) / 2)
+            ship_nose = self._ships[ship_id].map_nose_coord
+            emp.coord_x = ship_nose[0]
+            emp.coord_y = ship_nose[1]
             self._emps[emp.id] = emp
 
     def advance_magnet_mines(self, fps: int):
@@ -1194,11 +1192,7 @@ class Game(BaseModel):
 
 
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
-        # gets starting point of EBeam ray
-        p1_x, p1_y = ship.map_p1
-        p2_x, p2_y = ship.map_p2
-        pm_x = round(p1_x + p2_x) / 2
-        pm_y = round(p1_y + p2_y) / 2
+        pm_x, pm_y = ship.map_nose_coord
         intercept_calculator, ray_point_b = utils2d.hitboxes_intercept_ray_factory(
             (pm_x, pm_y),
             ship.ebeam_heading,

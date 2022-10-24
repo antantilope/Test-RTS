@@ -1315,6 +1315,18 @@ export class DrawingService {
       )
       ctx.fill()
     }
+
+    if (this.isDebug) {
+      ctx.beginPath()
+      ctx.strokeStyle = "#ff0000"
+      ctx.lineWidth = 5
+      ctx.moveTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
+      ctx.lineTo(drawableShip.HBBottomRightCanvasCoord.x, drawableShip.HBBottomRightCanvasCoord.y)
+      ctx.lineTo(drawableShip.HBBottomCenterCanvasCoord.x, drawableShip.HBBottomCenterCanvasCoord.y)
+      ctx.lineTo(drawableShip.HBBottomLeftCanvasCoord.x, drawableShip.HBBottomLeftCanvasCoord.y)
+      ctx.lineTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
+      ctx.stroke()
+    }
   }
 
   public drawMagnetMine(
