@@ -1319,7 +1319,7 @@ export class DrawingService {
     if (this.isDebug) {
       ctx.beginPath()
       ctx.strokeStyle = "#ff0000"
-      ctx.lineWidth = 5
+      ctx.lineWidth = 1
       ctx.moveTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
       ctx.lineTo(drawableShip.HBBottomRightCanvasCoord.x, drawableShip.HBBottomRightCanvasCoord.y)
       ctx.lineTo(drawableShip.HBBottomCenterCanvasCoord.x, drawableShip.HBBottomCenterCanvasCoord.y)
