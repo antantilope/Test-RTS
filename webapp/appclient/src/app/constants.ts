@@ -22,3 +22,8 @@ export const TIMER_SLUG_SCANNER_LOCKING = "scanner_locking"
 
 export const SHIP_LENGTH_METERS_X = 10
 export const SHIP_LENGTH_METERS_Y = 15
+export const SHIP_MIN_BOUNDING_BOX_LENGTH_METERS = Math.max(
+    SHIP_LENGTH_METERS_X,
+    SHIP_LENGTH_METERS_Y,
+)
+

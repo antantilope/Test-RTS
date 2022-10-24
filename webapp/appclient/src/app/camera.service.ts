@@ -12,6 +12,7 @@ import { ScannerDataShipElement, Ship } from './models/apidata.model';
 import {
   MAGNET_MINE_SIDE_LENGTH_METERS,
   EMP_RADIUS_METERS,
+  SHIP_MIN_BOUNDING_BOX_LENGTH_METERS,
 } from "./constants"
 
 function getRandomFloat(min: number, max: number): number {
@@ -295,36 +296,7 @@ export class Camera {
     /* Get objects to draw on the canvas.
         All coordinate points returned by the function are CANVAS coordinates.
     */
-
-    const cameraMapBoxCoords: BoxCoords = this.getCameraMapBoxCoords()
-
-    // Ship
-    const ship: Ship = this._api.frameData.ship
-    const mapConfig = this._api.frameData.map_config
-    const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
-    const shipMapCoordP0: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_0),
-      shipCoord,
-    )
-    const shipMapCoordP1: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_1),
-      shipCoord,
-    )
-    const shipMapCoordP2: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_2),
-      shipCoord,
-    )
-    const shipMapCoordP3: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_3),
-      shipCoord,
-    )
-    const shipMapBoxCoords: BoxCoords = this.rectCoordsToBoxCoords(
-      shipMapCoordP0,
-      shipMapCoordP1,
-      shipMapCoordP2,
-      shipMapCoordP3
-    )
-
+   // Payload we're going to build and return.
     const drawableItems: DrawableCanvasItems = {
       ships: [],
       magnetMines: [],
@@ -333,6 +305,16 @@ export class Camera {
       ebeamRays: [],
       visionCircles:[],
     }
+
+    const cameraMapBoxCoords: BoxCoords = this.getCameraMapBoxCoords()
+
+    // Ship
+    const ship: Ship = this._api.frameData.ship
+    const mapConfig = this._api.frameData.map_config
+    const currentZoom = this.getZoom()
+    const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
+
+
     const cameraPosition: PointCoord = this.getPosition()
 
 
@@ -340,7 +322,7 @@ export class Camera {
     const shipCanvasCoord = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
     const basicVisualRangeCanvasPxRadius = Math.round(
       (this._api.frameData.map_config.units_per_meter
-      * this._api.frameData.ship.visual_range) / this.getZoom()
+      * this._api.frameData.ship.visual_range) / currentZoom
     )
     drawableItems.visionCircles.push({
       canvasCoord: shipCanvasCoord,
@@ -359,20 +341,16 @@ export class Camera {
       y2: corner2.y,
     }
 
-
+    const boundingBoxBuffer = 10
     // Add own ship to drawable ships array
+    const selfCanvasCoordCenter = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
     drawableItems.ships.push({
       isSelf: true,
       alive: ship.alive,
       designator: "you",
-      canvasCoordFin0P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_0), shipCoord), cameraPosition),
-      canvasCoordFin0P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_1), shipCoord), cameraPosition),
-      canvasCoordFin1P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_0), shipCoord), cameraPosition),
-      canvasCoordFin1P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_1), shipCoord), cameraPosition),
-      canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
+      canvasCoordCenter: selfCanvasCoordCenter,
       engineLit: ship.engine_lit,
       engineBoosted: (this._api.frameData.game_frame - ship.engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
-      fillColor: "#919191",
       shipId: ship.id,
       aflame: ship.aflame,
       exploded: ship.exploded,
@@ -384,45 +362,42 @@ export class Camera {
       visualEbeamCharging: ship.ebeam_charging,
       lastTubeFireFrame: ship.last_tube_fire_frame,
       inVisualRange: true,
-      canvasBoundingBox: this.rectCoordsToBoxCoords(
-        canvasCoordP0,
-        canvasCoordP1,
-        canvasCoordP2,
-        canvasCoordP3,
-        15,
-      )
+      canvasBoundingBox: this.pointCoordToBoxCoord(
+        selfCanvasCoordCenter,
+        SHIP_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
+      ),
+      heading: ship.heading,
+      HBNoseCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_nose_coord), cameraPosition),
+      HBBottomLeftCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_left_coord), cameraPosition),
+      HBBottomRightCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_right_coord), cameraPosition),
+      HBBottomCenterCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_center_coord), cameraPosition),
+      isDot: true,
     })
-    if (
-      Math.abs(
-        drawableItems.ships[0].canvasCoordP1.x
-        - drawableItems.ships[0].canvasCoordP2.x
-      ) <= this.minSizeForDotPx
-      && ship.alive
-    ) {
-      drawableItems.ships[0].isDot = true
-    }
 
     // Draw other scanner elements
     // Other Ships
-    const boundingBoxBuffer = 10
     for(let i in ship.scanner_ship_data) {
       const scannerData: ScannerDataShipElement = ship.scanner_ship_data[i]
+      let otherCanvasCoordCenter = this.mapCoordToCanvasCoord({
+        x: scannerData.coord_x,
+        y: scannerData.coord_y,
+      }, cameraPosition)
       let drawableShip: DrawableShip = {
         isSelf: false,
-        isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
+        isDot: true,
         distance: scannerData.distance,
         alive: scannerData.alive,
         aflame: scannerData.aflame,
         exploded: scannerData.exploded,
         shipId: scannerData.id,
-        canvasCoordCenter: this.mapCoordToCanvasCoord({
-          x: scannerData.coord_x,
-          y: scannerData.coord_y,
-        }, cameraPosition),
+        canvasCoordCenter: otherCanvasCoordCenter,
         designator: scannerData.designator,
         inVisualRange: scannerData.in_visual_range,
         visualEbeamCharging: scannerData.visual_ebeam_charging,
-        canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
+        canvasBoundingBox: this.pointCoordToBoxCoord(
+          otherCanvasCoordCenter,
+          SHIP_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
+        ),
         engineLit: scannerData.visual_engine_lit,
         engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
         gravityBrakePosition: scannerData.visual_gravity_brake_position,
@@ -431,6 +406,11 @@ export class Camera {
         miningOreLocation: scannerData.visual_mining_ore_location,
         fuelingAtStation: scannerData.visual_fueling_at_station,
         lastTubeFireFrame: scannerData.visual_last_tube_fire_frame,
+        heading: scannerData.visual_heading,
+        HBNoseCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_nose_coord), cameraPosition),
+        HBBottomLeftCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_left_coord), cameraPosition),
+        HBBottomRightCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_right_coord), cameraPosition),
+        HBBottomCenterCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_center_coord), cameraPosition)
       }
       drawableItems.ships.push(drawableShip)
     }
@@ -812,8 +792,8 @@ export class CameraService {
         this.velocityTrailElements.push({
           createdAt: now,
           mapCoord: {
-            x: Math.floor((sde.visual_p0[0] + sde.visual_p3[0]) / 2),
-            y: Math.floor((sde.visual_p0[1] + sde.visual_p3[1]) / 2),
+            x: Math.floor((sde.visual_map_bottom_center_coord[0] + sde.visual_map_bottom_center_coord[0]) / 2),
+            y: Math.floor((sde.visual_map_bottom_center_coord[1] + sde.visual_map_bottom_center_coord[1]) / 2),
           },
           radiusMeters: sde.visual_engine_lit ? 1.5 : 0.4,
           grow: sde.visual_engine_lit,

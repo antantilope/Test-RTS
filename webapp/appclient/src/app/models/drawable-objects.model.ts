@@ -11,9 +11,13 @@ export class DrawableShip {
     inVisualRange: boolean
     visualEbeamCharging: boolean
     canvasBoundingBox: BoxCoords
+    HBNoseCanvasCoord: PointCoord
+    HBBottomLeftCanvasCoord: PointCoord
+    HBBottomRightCanvasCoord: PointCoord
+    HBBottomCenterCanvasCoord: PointCoord
+    heading: number
     engineLit: boolean
     engineBoosted: boolean
-    fillColor: string
     aflame: boolean
     exploded: boolean
     gravityBrakePosition: number
