@@ -1194,12 +1194,14 @@ export class DrawingService {
     }
     const shipLenXPX = SHIP_LENGTH_METERS_X * this._api.frameData.map_config.units_per_meter / currentZoom
     const shipLenYPX = SHIP_LENGTH_METERS_Y * this._api.frameData.map_config.units_per_meter / currentZoom
+    const shipX1 = (drawableShip.canvasCoordCenter.x + vsxo) - (shipLenXPX / 2)
+    const shipY1 = (drawableShip.canvasCoordCenter.y + vsyo) - (shipLenYPX / 2)
     this.drawRotatedImg(
       ctx,
       this.shipAsset,
       drawableShip.heading,
-      drawableShip.canvasCoordCenter.x + vsxo,
-      drawableShip.canvasCoordCenter.y + vsyo,
+      shipX1,
+      shipY1,
       shipLenXPX,
       shipLenYPX,
     )
