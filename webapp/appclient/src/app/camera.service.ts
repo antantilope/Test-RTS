@@ -359,20 +359,12 @@ export class Camera {
       y2: corner2.y,
     }
 
-    let canvasCoordP0 = this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition)
-    let canvasCoordP1 = this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition)
-    let canvasCoordP2 = this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition)
-    let canvasCoordP3 = this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition)
 
     // Add own ship to drawable ships array
     drawableItems.ships.push({
       isSelf: true,
       alive: ship.alive,
       designator: "you",
-      canvasCoordP0: canvasCoordP0,
-      canvasCoordP1: canvasCoordP1,
-      canvasCoordP2: canvasCoordP2,
-      canvasCoordP3: canvasCoordP3,
       canvasCoordFin0P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_0), shipCoord), cameraPosition),
       canvasCoordFin0P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_1), shipCoord), cameraPosition),
       canvasCoordFin1P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_0), shipCoord), cameraPosition),
@@ -415,40 +407,6 @@ export class Camera {
     const boundingBoxBuffer = 10
     for(let i in ship.scanner_ship_data) {
       const scannerData: ScannerDataShipElement = ship.scanner_ship_data[i]
-      let canvasCoordP0 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p0[0],
-        y: scannerData.visual_p0[1],
-      }, cameraPosition)
-      let canvasCoordP1 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p1[0],
-        y: scannerData.visual_p1[1],
-      }, cameraPosition)
-      let canvasCoordP2 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p2[0],
-        y: scannerData.visual_p2[1],
-      }, cameraPosition)
-      let canvasCoordP3 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p3[0],
-        y: scannerData.visual_p3[1],
-      }, cameraPosition)
-
-      const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_0_rel_rot_coord_0[0],
-        y: scannerData.visual_fin_0_rel_rot_coord_0[1],
-      }, cameraPosition)
-      const canvasCoordFin0P1 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_0_rel_rot_coord_1[0],
-        y: scannerData.visual_fin_0_rel_rot_coord_1[1],
-      }, cameraPosition)
-      const canvasCoordFin1P0 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_1_rel_rot_coord_0[0],
-        y: scannerData.visual_fin_1_rel_rot_coord_0[1],
-      }, cameraPosition)
-      const canvasCoordFin1P1 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_1_rel_rot_coord_1[0],
-        y: scannerData.visual_fin_1_rel_rot_coord_1[1],
-      }, cameraPosition)
-
       let drawableShip: DrawableShip = {
         isSelf: false,
         isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
@@ -463,19 +421,10 @@ export class Camera {
         }, cameraPosition),
         designator: scannerData.designator,
         inVisualRange: scannerData.in_visual_range,
-        canvasCoordP0: canvasCoordP0,
-        canvasCoordP1: canvasCoordP1,
-        canvasCoordP2: canvasCoordP2,
-        canvasCoordP3: canvasCoordP3,
         visualEbeamCharging: scannerData.visual_ebeam_charging,
-        canvasCoordFin0P0,
-        canvasCoordFin0P1,
-        canvasCoordFin1P0,
-        canvasCoordFin1P1,
         canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
         engineLit: scannerData.visual_engine_lit,
         engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
-        fillColor: scannerData.visual_fill_color,
         gravityBrakePosition: scannerData.visual_gravity_brake_position,
         gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
         gravityBrakeActive: scannerData.visual_gravity_brake_active,

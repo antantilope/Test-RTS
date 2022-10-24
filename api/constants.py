@@ -1,4 +1,6 @@
 
+from decimal import Decimal
+
 MAX_SERVER_FPS = 30
 MIN_ELAPSED_TIME_PER_FRAME = 1 / MAX_SERVER_FPS
 
@@ -9,11 +11,15 @@ ORGIN_COORD = (0, 0,)
 
 SPEED_OF_SOUND_METERS_PER_SECOND = 343 # Guilty Sparks
 
+# Ship dimension ratio
+SHIP_X_LEN = 10
+SHIP_Y_LEN = 15
+# Verify dimensions are correct ratio
+if Decimal(SHIP_Y_LEN/SHIP_X_LEN).quantize(Decimal("0.000")) != Decimal(3/2).quantize(Decimal("0.000")):
+    raise Exception("invalid ship dimention ratio")
+
+
 # Ship Defaults
-
-SHIP_X_LEN = 4
-SHIP_Y_LEN = 12
-
 FUEL_UNITS_PER_KG = 75
 
 BATTERY_STARTING_POWER = 75_000

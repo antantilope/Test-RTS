@@ -9,15 +9,7 @@ export class DrawableShip {
     canvasCoordCenter: PointCoord
     designator: string
     inVisualRange: boolean
-    canvasCoordP0: PointCoord
-    canvasCoordP1: PointCoord
-    canvasCoordP2: PointCoord
-    canvasCoordP3: PointCoord
     visualEbeamCharging: boolean
-    canvasCoordFin0P0: PointCoord
-    canvasCoordFin0P1: PointCoord
-    canvasCoordFin1P0: PointCoord
-    canvasCoordFin1P1: PointCoord
     canvasBoundingBox: BoxCoords
     engineLit: boolean
     engineBoosted: boolean

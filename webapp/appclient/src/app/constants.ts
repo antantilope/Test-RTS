@@ -19,3 +19,6 @@ export const EMP_SLUG = "emp"
 // Timer Slugs
 export const TIMER_SLUG_SCANNER_STARTUP = "scanner_startup"
 export const TIMER_SLUG_SCANNER_LOCKING = "scanner_locking"
+
+export const SHIP_LENGTH_METERS_X = 10
+export const SHIP_LENGTH_METERS_Y = 15

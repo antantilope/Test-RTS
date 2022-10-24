@@ -121,19 +121,9 @@ export class ScannerDataShipElement {
     velocity_y_meters_per_second: number
     anti_radar_coating_level: number
     designator: string
-    visual_shape: string
     in_visual_range: boolean
-    visual_p0: number[]
-    visual_p1: number[]
-    visual_p2: number[]
-    visual_p3: number[]
-    visual_fin_0_rel_rot_coord_0: number[]
-    visual_fin_0_rel_rot_coord_1: number[]
-    visual_fin_1_rel_rot_coord_0: number[]
-    visual_fin_1_rel_rot_coord_1: number[]
     visual_engine_lit: boolean
     visual_engine_boosted_last_frame: number
-    visual_fill_color: string
     visual_ebeam_color: string
     visual_ebeam_firing: boolean
     aflame: boolean
@@ -187,15 +177,6 @@ export class Ship {
     coord_x: number
     coord_y: number
     heading: number
-
-    rel_rot_coord_0: number[]
-    rel_rot_coord_1: number[]
-    rel_rot_coord_2: number[]
-    rel_rot_coord_3: number[]
-    fin_0_rel_rot_coord_0:  number[]
-    fin_0_rel_rot_coord_1:  number[]
-    fin_1_rel_rot_coord_0:  number[]
-    fin_1_rel_rot_coord_1:  number[]
 
     velocity_x_meters_per_second: number
     velocity_y_meters_per_second: number
