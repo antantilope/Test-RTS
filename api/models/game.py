@@ -941,9 +941,7 @@ class Game(BaseModel):
             )
             mine.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             mine.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            ship_nose = self._ships[ship_id].map_nose_coord
-            mine.coord_x = ship_nose[0]
-            mine.coord_y = ship_nose[1]
+            mine.coord_x, mine.coord_y =  self._ships[ship_id].map_nose_coord
             self._magnet_mines[mine.id] = mine
 
         elif self._ships[ship_id].emp_firing:
@@ -956,9 +954,7 @@ class Game(BaseModel):
             )
             emp.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             emp.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            ship_nose = self._ships[ship_id].map_nose_coord
-            emp.coord_x = ship_nose[0]
-            emp.coord_y = ship_nose[1]
+            emp.coord_x, emp.coord_y =  self._ships[ship_id].map_nose_coord
             self._emps[emp.id] = emp
 
     def advance_magnet_mines(self, fps: int):
