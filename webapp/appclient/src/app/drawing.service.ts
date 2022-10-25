@@ -395,7 +395,7 @@ export class DrawingService {
     camera: Camera,
     rays: EBeamRayDetails[],
   ) {
-    const ebeamThickness = 1.15 * this._api.frameData.map_config.units_per_meter / camera.getZoom()
+    const ebeamThickness = Math.max(3, 1.15 * this._api.frameData.map_config.units_per_meter / camera.getZoom())
     for(let i in rays) {
       let ray = rays[i]
       ctx.beginPath()
