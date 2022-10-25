@@ -6,6 +6,7 @@ export class DrawableShip {
     isDot?: boolean
     shipId: string
     alive: boolean
+    mapCoord: PointCoord
     canvasCoordCenter: PointCoord
     designator: string
     inVisualRange: boolean
@@ -13,6 +14,7 @@ export class DrawableShip {
     visualEbeamChargePercent: number
     visualEbeamFiring: boolean
     canvasBoundingBox: BoxCoords
+    HBNoseMapCoord: PointCoord
     HBNoseCanvasCoord: PointCoord
     HBBottomLeftCanvasCoord: PointCoord
     HBBottomRightCanvasCoord: PointCoord

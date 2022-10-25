@@ -9,6 +9,8 @@ import {
   VELOCITY_TRAIL_ELEMENT_TTL_MS,
   FLAME_SMOKE_ELEMENT_TTL_MS,
   EMP_TRAIL_ELEMENT_TTL_MS,
+  EBeamFiringEffectElement,
+  EBEAM_EFFECT_ELEMENT_TTL_MS,
 } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
@@ -66,9 +68,6 @@ export class DrawingService {
   // TODO: Asset service
   private magnetMineAsset: HTMLImageElement = new Image()
   private shipAsset: HTMLImageElement = new Image()
-
-  // TODO: fix magic number
-  private spaceStationVisualSideLengthM = 30
 
   constructor(
     // private _camera: CameraService,
@@ -405,6 +404,36 @@ export class DrawingService {
       ctx.moveTo(ray.startPoint.x, ray.startPoint.y)
       ctx.lineTo(ray.endPoint.x, ray.endPoint.y)
       ctx.stroke()
+    }
+  }
+
+  public drawEBeamFiringEffectElements(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    elements: EBeamFiringEffectElement[],
+  ) {
+    if(!elements.length) {
+      return
+    }
+    const now = performance.now()
+    const cameraPosition = camera.getPosition()
+    const zoom = camera.getZoom()
+    for(let i in elements) {
+      let el = elements[i]
+      let percentAge = (now - el.createdAt) / EBEAM_EFFECT_ELEMENT_TTL_MS
+      if(percentAge >= 1){
+        continue
+      }
+      let alpha = 0.1 * (1 - percentAge)
+      let radiusPx = (1 + 10 * percentAge) * this._api.frameData.map_config.units_per_meter / zoom
+      let cc = camera.mapCoordToCanvasCoord(el.mapCoord, cameraPosition)
+      let nonRedIntensity = Math.floor(255 * percentAge)
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, ${nonRedIntensity}, ${nonRedIntensity}, ${alpha})`
+      ctx.arc(
+        cc.x, cc.y, radiusPx, 0, TWO_PI
+      )
+      ctx.fill()
     }
   }
 

@@ -272,7 +272,11 @@ export class ScannerpaneComponent implements OnInit {
 
     // E-Beams
     this._draw.drawEbeams(this.ctx, this._camera.scannerPaneCamera, drawableObjects.ebeamRays)
-
+    this._draw.drawEBeamFiringEffectElements(
+      this.ctx,
+      this._camera.scannerPaneCamera,
+      this._camera.getEBeamFiringEffectElements(),
+    )
   }
 
   private drawScannerUnavailableMessage() {

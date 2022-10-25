@@ -576,6 +576,11 @@ export class GamedisplayComponent implements OnInit {
         this._scanner.scannerTargetIDCursor,
         true,
       )
+      if(drawableObjects.ships[i].visualEbeamFiring) {
+        this._camera.addEBeamFiringEffectElement(
+          drawableObjects.ships[i].HBNoseMapCoord
+        )
+      }
     }
     // magnet mines
     for(let i in drawableObjects.magnetMines) {
@@ -597,6 +602,11 @@ export class GamedisplayComponent implements OnInit {
 
     // E-Beams
     this._draw.drawEbeams(this.ctx, this._camera.gameDisplayCamera, drawableObjects.ebeamRays)
+    this._draw.drawEBeamFiringEffectElements(
+      this.ctx,
+      this._camera.gameDisplayCamera,
+      this._camera.getEBeamFiringEffectElements(),
+    )
 
     // Corner overlays
     const tubeWeaponCt = this.getCurrentTubeWeaponCount()

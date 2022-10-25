@@ -781,6 +781,22 @@ export class QuoteService {
     },
     {
       lines: [
+        "[There are] more stars than words",
+        "and sounds ever uttered by all humans",
+        "who have ever lived.",
+      ],
+      author: "Neil deGrasse Tyson",
+    },
+    {
+      lines: [
+        "The day we cease the exploration",
+        "of the cosmos is the day we threaten",
+        "the continuing of our species.",
+      ],
+      author: "Neil deGrasse Tyson",
+    },
+    {
+      lines: [
         "Computers are useless. They can only",
         "give you answers.",
       ],

@@ -349,6 +349,7 @@ export class Camera {
       alive: ship.alive,
       designator: "you",
       canvasCoordCenter: selfCanvasCoordCenter,
+      mapCoord: shipCoord,
       engineLit: ship.engine_lit,
       engineBoosted: (this._api.frameData.game_frame - ship.engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
       shipId: ship.id,
@@ -369,6 +370,7 @@ export class Camera {
         SHIP_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
       ),
       heading: ship.heading,
+      HBNoseMapCoord: this.arrayToCoords(ship.map_nose_coord),
       HBNoseCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_nose_coord), cameraPosition),
       HBBottomLeftCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_left_coord), cameraPosition),
       HBBottomRightCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_right_coord), cameraPosition),
@@ -380,10 +382,11 @@ export class Camera {
     // Other Ships
     for(let i in ship.scanner_ship_data) {
       const scannerData: ScannerDataShipElement = ship.scanner_ship_data[i]
-      let otherCanvasCoordCenter = this.mapCoordToCanvasCoord({
+      const otherCoord: PointCoord = {
         x: scannerData.coord_x,
         y: scannerData.coord_y,
-      }, cameraPosition)
+      }
+      let otherCanvasCoordCenter = this.mapCoordToCanvasCoord(otherCoord, cameraPosition)
       let drawableShip: DrawableShip = {
         isSelf: false,
         isDot: true,
@@ -393,6 +396,7 @@ export class Camera {
         exploded: scannerData.exploded,
         shipId: scannerData.id,
         canvasCoordCenter: otherCanvasCoordCenter,
+        mapCoord: otherCoord,
         designator: scannerData.designator,
         inVisualRange: scannerData.in_visual_range,
         visualEbeamCharging: scannerData.visual_ebeam_charging,
@@ -411,6 +415,7 @@ export class Camera {
         fuelingAtStation: scannerData.visual_fueling_at_station,
         lastTubeFireFrame: scannerData.visual_last_tube_fire_frame,
         heading: scannerData.visual_heading,
+        HBNoseMapCoord: this.arrayToCoords(scannerData.visual_map_nose_coord),
         HBNoseCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_nose_coord), cameraPosition),
         HBBottomLeftCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_left_coord), cameraPosition),
         HBBottomRightCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_right_coord), cameraPosition),
@@ -622,6 +627,13 @@ export class EMPTrailElement {
   mapCoord: PointCoord
 }
 
+export const EBEAM_EFFECT_ELEMENT_TTL_MS = 4000
+export class EBeamFiringEffectElement {
+  createdAt: number
+  mapCoord: PointCoord
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -642,6 +654,8 @@ export class CameraService {
   private updateEMPTrailElementsInterval = 250
   private EMPTrailElements: EMPTrailElement[] = []
 
+  private EBeamFiringEffectElements: EBeamFiringEffectElement[] = []
+
   constructor(
     private _api: ApiService,
   ) {
@@ -659,6 +673,26 @@ export class CameraService {
     setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
     setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
     setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
+    setTimeout(this.removeStaleEBeamFiringEffectElements.bind(this), 1000)
+  }
+
+  public addEBeamFiringEffectElement(mapCoord: PointCoord) {
+    this.EBeamFiringEffectElements.push({
+      createdAt: performance.now(),
+      mapCoord,
+    })
+  }
+  public getEBeamFiringEffectElements(): EBeamFiringEffectElement[] {
+    return this.EBeamFiringEffectElements
+  }
+  private removeStaleEBeamFiringEffectElements() {
+    if(this.EBeamFiringEffectElements.length) {
+      const now = performance.now()
+      this.EBeamFiringEffectElements = this.EBeamFiringEffectElements.filter((ee: EBeamFiringEffectElement)=>{
+        return ee.createdAt + EBEAM_EFFECT_ELEMENT_TTL_MS > now
+      })
+    }
+    setTimeout(this.removeStaleEBeamFiringEffectElements.bind(this), 1000)
   }
 
   public getEMPTrailElements(): EMPTrailElement[] {
