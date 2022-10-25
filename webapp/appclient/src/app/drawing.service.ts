@@ -1240,18 +1240,17 @@ export class DrawingService {
     if(drawableShip.miningOreLocation) {
       const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
       if(om) {
-        const p0 = drawableShip.canvasCoordCenter;
         const p1 = camera.mapCoordToCanvasCoord(
           {x: om.position_map_units_x, y: om.position_map_units_y},
           camera.getPosition(),
         )
-        const rockRadiusCanvasPx = om.service_radius_map_units / 3 / currentZoom
+        const rockRadiusCanvasPx = om.collision_radius_meters * this._api.frameData.map_config.units_per_meter / currentZoom
         p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
         p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
         ctx.beginPath()
         ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
         ctx.lineWidth = 4
-        ctx.moveTo(p0.x, p0.y)
+        ctx.moveTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
         ctx.lineTo(p1.x, p1.y)
         ctx.stroke()
       }
