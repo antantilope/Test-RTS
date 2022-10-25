@@ -745,6 +745,7 @@ class Game(BaseModel):
                     'exploded': self._ships[other_id].exploded,
                     'in_visual_range': is_visual,
                     'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
+                    'visual_ebeam_charge_percent': self._ships[other_id].ebeam_charge / self._ships[other_id].ebeam_charge_capacity,
                     'visual_engine_lit': self._ships[other_id].engine_lit,
                     'visual_engine_boosted_last_frame': self._ships[other_id].engine_boosted_last_frame,
                     'visual_ebeam_firing': self._ships[other_id].ebeam_firing,

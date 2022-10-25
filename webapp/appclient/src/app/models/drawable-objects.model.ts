@@ -10,6 +10,8 @@ export class DrawableShip {
     designator: string
     inVisualRange: boolean
     visualEbeamCharging: boolean
+    visualEbeamChargePercent: number
+    visualEbeamFiring: boolean
     canvasBoundingBox: BoxCoords
     HBNoseCanvasCoord: PointCoord
     HBBottomLeftCanvasCoord: PointCoord

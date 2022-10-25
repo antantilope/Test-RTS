@@ -146,6 +146,7 @@ class ScannedShipElement(TypedDict):
     in_visual_range: bool
     visual_engine_lit: bool
     visual_ebeam_charging: bool
+    visual_ebeam_charge_percent: float
     visual_ebeam_firing: bool
     visual_ebeam_color: str
     visual_engine_boosted_last_frame: int

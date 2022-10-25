@@ -145,6 +145,7 @@ export class ScannerDataShipElement {
     visual_mining_ore_location: string | null
     visual_fueling_at_station: boolean
     visual_ebeam_charging: boolean
+    visual_ebeam_charge_percent: number
     visual_last_tube_fire_frame: null | number
 }
 export class ScannerDataMagnetMineElement {

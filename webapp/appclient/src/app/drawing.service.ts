@@ -396,7 +396,7 @@ export class DrawingService {
     camera: Camera,
     rays: EBeamRayDetails[],
   ) {
-    const ebeamThickness = camera.getEBeamLineThickness()
+    const ebeamThickness = 1.15 * this._api.frameData.map_config.units_per_meter / camera.getZoom()
     for(let i in rays) {
       let ray = rays[i]
       ctx.beginPath()
@@ -1229,7 +1229,7 @@ export class DrawingService {
     }
 
     if(drawableShip.aflame) {
-      const flameRadiusCanvasPx = Math.max(1, SHIP_LENGTH_METERS_Y * this._api.frameData.map_config.units_per_meter / currentZoom / 4)
+      const flameRadiusCanvasPx = Math.max(1, SHIP_LENGTH_METERS_Y * this._api.frameData.map_config.units_per_meter / currentZoom / 5)
       this.drawAflameEffect(
         ctx,
         camera,
@@ -1244,7 +1244,7 @@ export class DrawingService {
       )
       const cursorOnShip = drawableShip.shipId === scannerTargetIDCursor
       ctx.beginPath()
-      ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.85)" : "rgb(255, 0, 0, 0.85)"
+      ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.40)" : "rgb(255, 0, 0, 0.85)"
       ctx.lineWidth = 2.5
       ctx.rect(
         drawableShip.canvasBoundingBox.x1,
@@ -1305,7 +1305,7 @@ export class DrawingService {
       && (drawableShip.lastTubeFireFrame + tubeFireAnimationFrameCt) >= this._api.frameData.game_frame
     ) {
       const percentComplete = (this._api.frameData.game_frame - drawableShip.lastTubeFireFrame) / tubeFireAnimationFrameCt
-      const radiusPx = (this._api.frameData.map_config.units_per_meter / camera.getZoom()) * ((percentComplete * 10) + 4)
+      const radiusPx = (this._api.frameData.map_config.units_per_meter / currentZoom) * ((percentComplete * 10) + 4)
       ctx.beginPath()
       ctx.fillStyle = `rgb(200, 200, 200, ${1 - percentComplete})`
       ctx.arc(
@@ -1314,6 +1314,60 @@ export class DrawingService {
         radiusPx, 0, TWO_PI
       )
       ctx.fill()
+    }
+
+    if(drawableShip.visualEbeamChargePercent > 0) {
+      const maxSizeRadius = 3.5 * getRandomFloat(0.9, 1.25) * this._api.frameData.map_config.units_per_meter / currentZoom
+      const radiusPx = maxSizeRadius * drawableShip.visualEbeamChargePercent
+      ctx.beginPath()
+      ctx.fillStyle = Math.random() > 0.5 ?`rgb(255, 255, 0, ${getRandomFloat(0.3, 0.8)})`: `rgb(255, 0, 0, ${getRandomFloat(0.3, 0.8)})`
+      ctx.arc(
+        drawableShip.HBBottomRightCanvasCoord.x + vsxo + (getRandomFloat(-1, 1) * this._api.frameData.map_config.units_per_meter / currentZoom),
+        drawableShip.HBBottomRightCanvasCoord.y + vsyo + (getRandomFloat(-1, 1) * this._api.frameData.map_config.units_per_meter / currentZoom),
+        radiusPx, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(
+        drawableShip.HBBottomLeftCanvasCoord.x + vsxo + (getRandomFloat(-1, 1) * this._api.frameData.map_config.units_per_meter / currentZoom),
+        drawableShip.HBBottomLeftCanvasCoord.y + vsyo + (getRandomFloat(-1, 1) * this._api.frameData.map_config.units_per_meter / currentZoom),
+        radiusPx, 0, TWO_PI
+      )
+      ctx.fill()
+    }
+    if(drawableShip.visualEbeamFiring) {
+      ctx.beginPath()
+      ctx.strokeStyle = `rgb(255, 0, 0, ${getRandomFloat(0.5, 0.9)})`
+      ctx.lineWidth = getRandomFloat(0.85, 1.15) * this._api.frameData.map_config.units_per_meter / currentZoom
+      ctx.moveTo(drawableShip.HBBottomRightCanvasCoord.x, drawableShip.HBBottomRightCanvasCoord.y)
+      ctx.lineTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
+      ctx.lineTo(drawableShip.HBBottomLeftCanvasCoord.x, drawableShip.HBBottomLeftCanvasCoord.y)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 0, 0, ${getRandomFloat(0.45, 0.8)})`
+      ctx.arc(
+        drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y,
+        getRandomFloat(1.5, 2) * this._api.frameData.map_config.units_per_meter / currentZoom,
+        0, TWO_PI
+      )
+      ctx.fill()
+
+      const lineCt = randomInt(3, 6)
+      for(let i=0; i<lineCt; i++) {
+        let lineLengthPx = getRandomFloat(5, 12) * this._api.frameData.map_config.units_per_meter / currentZoom
+        let angle = randomInt(0, 359)
+        let lineP2 = camera.getCanvasPointAtLocation(
+          drawableShip.HBNoseCanvasCoord,
+          angle,
+          lineLengthPx,
+        )
+        ctx.beginPath()
+        ctx.strokeStyle = `rgb(255, 220, 220, 0.${randomInt(6, 9)})`
+        ctx.lineWidth = 0.4 * this._api.frameData.map_config.units_per_meter / currentZoom
+        ctx.moveTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
+        ctx.lineTo(lineP2.x, lineP2.y)
+        ctx.stroke()
+      }
     }
 
     if (this.isDebug) {
@@ -1873,7 +1927,6 @@ export class DrawingService {
         effectRadius, 0, TWO_PI
       )
       ctx.fill()
-
     }
 
 

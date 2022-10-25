@@ -360,6 +360,8 @@ export class Camera {
       miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
       fuelingAtStation: ship.fueling_at_station,
       visualEbeamCharging: ship.ebeam_charging,
+      visualEbeamFiring: ship.ebeam_firing,
+      visualEbeamChargePercent: ship.ebeam_charge / ship.ebeam_charge_capacity,
       lastTubeFireFrame: ship.last_tube_fire_frame,
       inVisualRange: true,
       canvasBoundingBox: this.pointCoordToBoxCoord(
@@ -394,6 +396,8 @@ export class Camera {
         designator: scannerData.designator,
         inVisualRange: scannerData.in_visual_range,
         visualEbeamCharging: scannerData.visual_ebeam_charging,
+        visualEbeamChargePercent: scannerData.visual_ebeam_charge_percent,
+        visualEbeamFiring: scannerData.visual_ebeam_firing,
         canvasBoundingBox: this.pointCoordToBoxCoord(
           otherCanvasCoordCenter,
           SHIP_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
@@ -501,12 +505,6 @@ export class Camera {
     }
     return drawableItems
   }
-
-
-  public getEBeamLineThickness(): number {
-    return 4
-  }
-
 
   // GEOMETRY HELPERS // // // //
 
