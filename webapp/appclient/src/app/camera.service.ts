@@ -341,9 +341,38 @@ export class Camera {
       y2: corner2.y,
     }
 
+    let HBNoseCanvasCoord: PointCoord
+    let HBBottomLeftCanvasCoord: PointCoord
+    let HBBottomRightCanvasCoord: PointCoord
+    let HBBottomCenterCanvasCoord: PointCoord
+    let EngineOuterLeftCoord: PointCoord
+    let EngineInnerLeftCoord: PointCoord
+    let EngineOuterRightCoord: PointCoord
+    let EngineInnerRightCoord: PointCoord
+
     const boundingBoxBuffer = 10
     // Add own ship to drawable ships array
     const selfCanvasCoordCenter = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
+    HBNoseCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_nose_coord), cameraPosition)
+    HBBottomLeftCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_left_coord), cameraPosition)
+    HBBottomRightCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_right_coord), cameraPosition)
+    HBBottomCenterCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_center_coord), cameraPosition)
+    EngineOuterLeftCoord = {
+      x: HBBottomLeftCanvasCoord.x * 7/12 + HBBottomCenterCanvasCoord.x * 5/12,
+      y: HBBottomLeftCanvasCoord.y * 7/12 + HBBottomCenterCanvasCoord.y * 5/12,
+    }
+    EngineInnerLeftCoord = {
+      x: HBBottomLeftCanvasCoord.x * 2/7 + HBBottomCenterCanvasCoord.x * 5/7,
+      y: HBBottomLeftCanvasCoord.y * 2/7 + HBBottomCenterCanvasCoord.y * 5/7,
+    }
+    EngineOuterRightCoord = {
+      x: HBBottomRightCanvasCoord.x * 5/8 + HBBottomCenterCanvasCoord.x * 3/8,
+      y: HBBottomRightCanvasCoord.y * 5/8 + HBBottomCenterCanvasCoord.y * 3/8,
+    }
+    EngineInnerRightCoord = {
+      x: HBBottomRightCanvasCoord.x * 3/9 + HBBottomCenterCanvasCoord.x * 6/9,
+      y: HBBottomRightCanvasCoord.y * 3/9 + HBBottomCenterCanvasCoord.y * 6/9,
+    }
     drawableItems.ships.push({
       isSelf: true,
       alive: ship.alive,
@@ -371,10 +400,14 @@ export class Camera {
       ),
       heading: ship.heading,
       HBNoseMapCoord: this.arrayToCoords(ship.map_nose_coord),
-      HBNoseCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_nose_coord), cameraPosition),
-      HBBottomLeftCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_left_coord), cameraPosition),
-      HBBottomRightCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_right_coord), cameraPosition),
-      HBBottomCenterCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_center_coord), cameraPosition),
+      HBNoseCanvasCoord,
+      HBBottomLeftCanvasCoord,
+      HBBottomRightCanvasCoord,
+      HBBottomCenterCanvasCoord,
+      EngineOuterLeftCoord,
+      EngineInnerLeftCoord,
+      EngineOuterRightCoord,
+      EngineInnerRightCoord,
       isDot: true,
     })
 
@@ -387,6 +420,26 @@ export class Camera {
         y: scannerData.coord_y,
       }
       let otherCanvasCoordCenter = this.mapCoordToCanvasCoord(otherCoord, cameraPosition)
+      HBNoseCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_nose_coord), cameraPosition)
+      HBBottomLeftCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_left_coord), cameraPosition)
+      HBBottomRightCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_right_coord), cameraPosition)
+      HBBottomCenterCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_center_coord), cameraPosition)
+      EngineOuterLeftCoord = {
+        x: HBBottomLeftCanvasCoord.x * 7/12 + HBBottomCenterCanvasCoord.x * 5/12,
+        y: HBBottomLeftCanvasCoord.y * 7/12 + HBBottomCenterCanvasCoord.y * 5/12,
+      }
+      EngineInnerLeftCoord = {
+        x: HBBottomLeftCanvasCoord.x * 2/7 + HBBottomCenterCanvasCoord.x * 5/7,
+        y: HBBottomLeftCanvasCoord.y * 2/7 + HBBottomCenterCanvasCoord.y * 5/7,
+      }
+      EngineOuterRightCoord = {
+        x: HBBottomRightCanvasCoord.x * 5/8 + HBBottomCenterCanvasCoord.x * 3/8,
+        y: HBBottomRightCanvasCoord.y * 5/8 + HBBottomCenterCanvasCoord.y * 3/8,
+      }
+      EngineInnerRightCoord = {
+        x: HBBottomRightCanvasCoord.x * 3/9 + HBBottomCenterCanvasCoord.x * 6/9,
+        y: HBBottomRightCanvasCoord.y * 3/9 + HBBottomCenterCanvasCoord.y * 6/9,
+      }
       let drawableShip: DrawableShip = {
         isSelf: false,
         isDot: true,
@@ -419,7 +472,11 @@ export class Camera {
         HBNoseCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_nose_coord), cameraPosition),
         HBBottomLeftCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_left_coord), cameraPosition),
         HBBottomRightCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_right_coord), cameraPosition),
-        HBBottomCenterCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_center_coord), cameraPosition)
+        HBBottomCenterCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_center_coord), cameraPosition),
+        EngineOuterLeftCoord,
+        EngineInnerLeftCoord,
+        EngineOuterRightCoord,
+        EngineInnerRightCoord,
       }
       drawableItems.ships.push(drawableShip)
     }

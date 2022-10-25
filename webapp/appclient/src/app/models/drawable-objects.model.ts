@@ -19,6 +19,10 @@ export class DrawableShip {
     HBBottomLeftCanvasCoord: PointCoord
     HBBottomRightCanvasCoord: PointCoord
     HBBottomCenterCanvasCoord: PointCoord
+    EngineOuterLeftCoord: PointCoord
+    EngineInnerLeftCoord: PointCoord
+    EngineOuterRightCoord: PointCoord
+    EngineInnerRightCoord: PointCoord
     heading: number
     engineLit: boolean
     engineBoosted: boolean

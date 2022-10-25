@@ -37,6 +37,8 @@ import {
   LOW_POWER_THRESHOLD,
   SHIP_LENGTH_METERS_X,
   SHIP_LENGTH_METERS_Y,
+  TWO_SEVENTHS,
+  FIVE_SEVENTHS,
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
@@ -1425,6 +1427,7 @@ export class DrawingService {
     }
 
     if (this.isDebug) {
+      // Draw hitbox polygon
       ctx.beginPath()
       ctx.strokeStyle = "#ff0000"
       ctx.lineWidth = 1
@@ -1435,19 +1438,40 @@ export class DrawingService {
       ctx.lineTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
       ctx.stroke()
 
-      const oneThird = 1/3
-      const twoThirds = 2/3
-      const leftHalfway = {
-        x: Math.floor(
-          drawableShip.HBBottomLeftCanvasCoord.x * oneThird + drawableShip.HBBottomCenterCanvasCoord.x * twoThirds),
-        y: Math.floor(drawableShip.HBBottomLeftCanvasCoord.y * oneThird + drawableShip.HBBottomCenterCanvasCoord.y * twoThirds),
-      }
-      ctx.beginPath()
+      // Draw engine nodes
+      ctx.beginPath() // OUTER LEFT RED
       ctx.fillStyle = "#ff0000"
       ctx.arc(
-        leftHalfway.x, leftHalfway.y, 4, 0, TWO_PI
+        drawableShip.EngineOuterLeftCoord.x,
+        drawableShip.EngineOuterLeftCoord.y,
+        4, 0, TWO_PI
       )
       ctx.fill()
+      ctx.beginPath() // INNER LEFT GREEN
+      ctx.fillStyle = "#00ff00"
+      ctx.arc(
+        drawableShip.EngineInnerLeftCoord.x,
+        drawableShip.EngineInnerLeftCoord.y,
+        4, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath() // INNER RIGHT YELLOW
+      ctx.fillStyle = "#ffff00"
+      ctx.arc(
+        drawableShip.EngineInnerRightCoord.x,
+        drawableShip.EngineInnerRightCoord.y,
+        4, 0, TWO_PI
+      )
+      ctx.fill()
+      ctx.beginPath() // OUTER RIGHT BLUE
+      ctx.fillStyle = "#0000ff"
+      ctx.arc(
+        drawableShip.EngineOuterRightCoord.x,
+        drawableShip.EngineOuterRightCoord.y,
+        4, 0, TWO_PI
+      )
+      ctx.fill()
+
     }
   }
 
