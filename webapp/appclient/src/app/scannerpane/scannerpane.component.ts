@@ -263,6 +263,12 @@ export class ScannerpaneComponent implements OnInit {
       this._draw.drawEMP(this.ctx, drawableObjects.emps[i])
     }
 
+    this._draw.drawShipGravityBrakeEffectElements(
+      this.ctx,
+      this._camera.scannerPaneCamera,
+      this._camera.getGravityBrakeShipEffectElements(),
+    )
+
     // Explosion FX
     this._draw.drawExplosionShockwaves(this.ctx, this._camera.scannerPaneCamera)
     this._draw.drawExplosions(this.ctx, this._camera.scannerPaneCamera)

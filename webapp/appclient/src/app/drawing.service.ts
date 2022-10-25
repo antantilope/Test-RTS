@@ -11,6 +11,8 @@ import {
   EMP_TRAIL_ELEMENT_TTL_MS,
   EBeamFiringEffectElement,
   EBEAM_EFFECT_ELEMENT_TTL_MS,
+  GravityBrakeShipEffectElement,
+  GRAVITY_BREAK_SHIP_EFFECT_ELEMENT_TTL_MS,
 } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
@@ -847,6 +849,30 @@ export class DrawingService {
         camera.canvasHalfWidth / 3,
         camera.canvasHalfHeight / 2 + 45
       )
+    }
+  }
+
+  public drawShipGravityBrakeEffectElements(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    elements: GravityBrakeShipEffectElement[],
+  ) {
+    if(!elements.length) {
+      return
+    }
+    const now = performance.now()
+    const cameraPosition = camera.getPosition()
+    const zoom = camera.getZoom()
+    for(let i in elements) {
+      let el = elements[i]
+      let cc = camera.mapCoordToCanvasCoord(el.mapCoord, cameraPosition)
+      let percentComplete = (now - el.createdAt) / GRAVITY_BREAK_SHIP_EFFECT_ELEMENT_TTL_MS
+      let alpha = 0.7 * (1 - percentComplete)
+      let radiusPx = (0.75 * el.percentDeployed + percentComplete * 2) * this._api.frameData.map_config.units_per_meter / zoom
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(0, 0, 255, ${alpha})`
+      ctx.arc(cc.x, cc.y, radiusPx, 0, TWO_PI)
+      ctx.fill()
     }
   }
 

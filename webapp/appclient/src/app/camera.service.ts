@@ -633,6 +633,14 @@ export class EBeamFiringEffectElement {
   mapCoord: PointCoord
 }
 
+export const GRAVITY_BREAK_SHIP_EFFECT_ELEMENT_TTL_MS = 5000
+export class GravityBrakeShipEffectElement {
+  createdAt: number
+  mapCoord: PointCoord
+  percentDeployed: number
+}
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -656,6 +664,9 @@ export class CameraService {
 
   private EBeamFiringEffectElements: EBeamFiringEffectElement[] = []
 
+  private gravityBrakeShipEffectElements: GravityBrakeShipEffectElement[] = []
+  private updateGravityBrakeShipEffectElementsInterval = 333
+
   constructor(
     private _api: ApiService,
   ) {
@@ -673,7 +684,44 @@ export class CameraService {
     setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
     setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
     setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
+    setTimeout(this.updateGravityBrakeShipEffectElements.bind(this), this.updateGravityBrakeShipEffectElementsInterval)
     setTimeout(this.removeStaleEBeamFiringEffectElements.bind(this), 1000)
+  }
+
+
+  public getGravityBrakeShipEffectElements(): GravityBrakeShipEffectElement[] {
+    return this.gravityBrakeShipEffectElements
+  }
+  private updateGravityBrakeShipEffectElements() {
+    const now = performance.now()
+    // Remove state elements
+    if(this.gravityBrakeShipEffectElements.length) {
+      this.gravityBrakeShipEffectElements = this.gravityBrakeShipEffectElements.filter((gbe: GravityBrakeShipEffectElement)=>{
+        return gbe.createdAt + GRAVITY_BREAK_SHIP_EFFECT_ELEMENT_TTL_MS > now
+      })
+    }
+    // Add effect for own ship
+    if(this._api.frameData.ship.gravity_brake_position > 0) {
+      let coord = Math.random() < 0.5 ? this._api.frameData.ship.map_bottom_left_coord: this._api.frameData.ship.map_bottom_right_coord
+      this.gravityBrakeShipEffectElements.push({
+        createdAt: now,
+        percentDeployed: this._api.frameData.ship.gravity_brake_position / this._api.frameData.ship.gravity_brake_deployed_position,
+        mapCoord: {x:coord[0], y:coord[1]}
+      })
+    }
+    // Add effect for other ships
+    for(let i in this._api.frameData.ship.scanner_ship_data) {
+      let ssd = this._api.frameData.ship.scanner_ship_data[i]
+      if(ssd.visual_gravity_brake_position > 0) {
+        let coord = Math.random() < 0.5 ? ssd.visual_map_bottom_left_coord: ssd.visual_map_bottom_right_coord
+        this.gravityBrakeShipEffectElements.push({
+          createdAt: now,
+          percentDeployed: ssd.visual_gravity_brake_position / ssd.visual_gravity_brake_deployed_position,
+          mapCoord: {x:coord[0], y:coord[1]},
+        })
+      }
+    }
+    setTimeout(this.updateGravityBrakeShipEffectElements.bind(this), this.updateGravityBrakeShipEffectElementsInterval)
   }
 
   public addEBeamFiringEffectElement(mapCoord: PointCoord) {

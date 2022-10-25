@@ -608,6 +608,12 @@ export class GamedisplayComponent implements OnInit {
       this._camera.getEBeamFiringEffectElements(),
     )
 
+    this._draw.drawShipGravityBrakeEffectElements(
+      this.ctx,
+      this._camera.gameDisplayCamera,
+      this._camera.getGravityBrakeShipEffectElements(),
+    )
+
     // Corner overlays
     const tubeWeaponCt = this.getCurrentTubeWeaponCount()
     this._draw.drawBottomLeftOverlay(
