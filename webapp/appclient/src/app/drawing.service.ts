@@ -1434,6 +1434,20 @@ export class DrawingService {
       ctx.lineTo(drawableShip.HBBottomLeftCanvasCoord.x, drawableShip.HBBottomLeftCanvasCoord.y)
       ctx.lineTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
       ctx.stroke()
+
+      const oneThird = 1/3
+      const twoThirds = 2/3
+      const leftHalfway = {
+        x: Math.floor(
+          drawableShip.HBBottomLeftCanvasCoord.x * oneThird + drawableShip.HBBottomCenterCanvasCoord.x * twoThirds),
+        y: Math.floor(drawableShip.HBBottomLeftCanvasCoord.y * oneThird + drawableShip.HBBottomCenterCanvasCoord.y * twoThirds),
+      }
+      ctx.beginPath()
+      ctx.fillStyle = "#ff0000"
+      ctx.arc(
+        leftHalfway.x, leftHalfway.y, 4, 0, TWO_PI
+      )
+      ctx.fill()
     }
   }
 
