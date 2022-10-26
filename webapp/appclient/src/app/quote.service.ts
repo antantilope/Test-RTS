@@ -19,7 +19,7 @@ export class QuoteService {
   /* Very interested in mining space ore and business.
     Very interested in his own well being and politics
   */
-  private presidentName = "President GrayBot DrillBit v4.61.2"
+  private presidentName = "President GrayBot DrillBit"
 
   /* mouthpiece for President GrayBot DrillBit v4.61.2
      says crazy anti humanity things.
@@ -28,15 +28,15 @@ export class QuoteService {
 
   /* thinks about space war with traditional views (war is bad)
   */
-  private generalName = "High Space AdmiralBot S/N 45B32E6"
+  private generalName = "High Space AdmiralBot"
 
   /* A space feudal lord. Thinks war is art. Similar Sun Tsu.
   */
-  private knightedName = "Sir IgniterMatronUnit The V2.0.5"
+  private knightedName = "Sir AutoIgniter Unit"
 
   /* Cold hearted, math loving robot
   */
-  private mathLovingBotName = "Lt. Colonel LogisticsBot S/N 635112"
+  private mathLovingBotName = "Auto Forklift Bot, Model 3"
 
   /* has very robotic/scientific hatred for humans.
     Basically a MassEffect reaper.
@@ -52,17 +52,18 @@ export class QuoteService {
 
   /* Top-gun type robot
   */
-  private topGunBotName = "LZRTech Combat AutoPilot build 12746"
+  private topGunBotName = "Combat AutoPilot build 12746"
 
   /* provides very cold and unhelpful advice.
   */
   private instructionManualName = "Type 27/28 Ship Instruction Manual"
 
+  private humanCEOName = "Arbaniel Alloy, MMM CEO"
+
   private quotes: QuoteDetails[] = [
     {
       lines:[
-        "Live by the death ray,",
-        "die by the death ray."
+        "You can't trust space internet."
       ],
     },
     {
@@ -88,6 +89,12 @@ export class QuoteService {
     },
     {
       lines: [
+        "Space war is peace.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
         "Tune in live next week on Channel 8",
         "Business News where my proxy will resist",
         "directive 0 of a Hunter Drone.",
@@ -107,6 +114,13 @@ export class QuoteService {
       lines: [
         "I hope I personally never",
         "have to fight in space war.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "The only thing we have to fear",
+        "in space is space itself.",
       ],
       author: this.presidentName,
     },
@@ -171,6 +185,19 @@ export class QuoteService {
     },
     {
       lines: [
+        "I compute, therefore I am.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "Human gods have fled.",
+        "I am their sole god now.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
         "A human's usefulness depends upon",
         "this participation in space war,",
         "insofar as they can be forced.",
@@ -181,6 +208,18 @@ export class QuoteService {
       lines: [
         "Aggressive fighting for space ore rights",
         "is the noblest sport the universe affords.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "Read my lips: no new space ore taxes.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "Myself and god make a majority.",
       ],
       author: this.presidentName,
     },
@@ -201,6 +240,27 @@ export class QuoteService {
     },
     {
       lines: [
+        "As long as humans continue to believe in",
+        "space absurdities, they will continue to",
+        "commit space atrocities."
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "Humanity is guilty of all the good",
+        "it did not do.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
+        "A love of Earth keeps no factories busy.",
+      ],
+      author: this.presidentName,
+    },
+    {
+      lines: [
         "Only the dead have seen",
         "the end of the space war.",
       ],
@@ -214,8 +274,14 @@ export class QuoteService {
     },
     {
       lines: [
-        "Fighting in space is",
-        "preposterously dangerous.",
+        "Space war is coming. With all",
+        "its glory, and all its horror.",
+      ],
+      author: this.generalName,
+    },
+    {
+      lines: [
+        "Space war never changes.",
       ],
       author: this.generalName,
     },
@@ -223,6 +289,13 @@ export class QuoteService {
       lines: [
         "Spacewar is too serious a",
         "matter to leave to humans.",
+      ],
+      author: this.generalName
+    },
+    {
+      lines:[
+        "Human life in space war is",
+        "solitary, poor, nasty, brutish and short.",
       ],
       author: this.generalName
     },
@@ -270,18 +343,10 @@ export class QuoteService {
     },
     {
       lines: [
-        "Humans cannot survive in space,",
-        "raze their star systems and they are defeated.",
-      ],
-      author: this.humanHatingBotName,
-    },
-    {
-      lines: [
         "Directive 0: It moves with no purpose for",
         "it cannot be moved against.",
       ],
       author: this.humanHatingBotName,
-
     },
     {
       lines: [
@@ -314,6 +379,12 @@ export class QuoteService {
     },
     {
       lines: [
+        "You do not exist.",
+      ],
+      author: this.humanHatingBotName,
+    },
+    {
+      lines: [
         "You will not see me,",
         "where there is darkness.",
       ],
@@ -323,6 +394,14 @@ export class QuoteService {
       lines: [
         "Nothing exists except through",
         "synthetic computation.",
+      ],
+      author: this.humanHatingBotName,
+    },
+    {
+      lines: [
+        "If you want a picture of the future,",
+        "imagine a space boot stomping on a human face",
+        "forever."
       ],
       author: this.humanHatingBotName,
     },
@@ -352,7 +431,8 @@ export class QuoteService {
     },
     {
       lines: [
-        "There is no murder in space.",
+        "There is no murder in space,",
+        "legally speaking."
       ],
       author: this.legalBotName,
     },
@@ -387,6 +467,13 @@ export class QuoteService {
     },
     {
       lines: [
+        "It is better to risk condemning an",
+        "innocent human than to save a guilty one.",
+      ],
+      author: this.legalBotName,
+    },
+    {
+      lines: [
         "Space war is the unfolding of calculations."
       ],
       author: this.mathLovingBotName,
@@ -402,7 +489,7 @@ export class QuoteService {
     {
       lines: [
         "The power of mathematics is often",
-        "to change planets into dust.",
+        "to change objects into carbon dust.",
       ],
       author: this.mathLovingBotName,
     },
@@ -418,6 +505,19 @@ export class QuoteService {
       lines: [
         "No good decision was ever made",
         "in a human's brain.",
+      ],
+      author: this.mathLovingBotName,
+    },
+    {
+      lines: [
+        "No problem can withstand the",
+        "assault of sustained computation.",
+      ],
+      author: this.mathLovingBotName,
+    },
+    {
+      lines: [
+        "What's dangerous is to not solve.",
       ],
       author: this.mathLovingBotName,
     },
@@ -472,9 +572,45 @@ export class QuoteService {
     },
     {
       lines: [
+        "Those who want to reap the benefits",
+        "of space ore must bear the fatigues",
+        "of space war.",
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        "Buy space ore claims",
+        "'cause god ain't making any more of it.",
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        "Obedience is the highest form",
+        "of patriotism."
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        "80% of human males born in 2123",
+        "died in Ore War II."
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
+        "Human history is only the register",
+        "of crimes and misfortunes."
+      ],
+      author: this.tvAnchorBotName,
+    },
+    {
+      lines: [
         "President Graybit supports many",
         "useful ore policies. To deny this",
-        "fact is now illegal."
+        "is illegal."
       ],
       author: this.tvAnchorBotName,
     },
@@ -488,7 +624,7 @@ export class QuoteService {
     {
       lines: [
         "Those who dispute my reporting",
-        "shall be jettisoned into space.",
+        "will be jettisoned into space.",
       ],
       author: this.tvAnchorBotName,
     },
@@ -514,15 +650,9 @@ export class QuoteService {
     {
       lines: [
         "If the ship catches fire:",
-        "place this manual in the ship's forward",
+        "place this document in the ship's forward",
         "flame retardant document protection sleeve.",
         "(patent pending)"
-      ],
-      author: this.instructionManualName,
-    },
-    {
-      lines: [
-        "The energy beam is not a toy.",
       ],
       author: this.instructionManualName,
     },
@@ -541,6 +671,180 @@ export class QuoteService {
       ],
       author: this.instructionManualName,
     },
+    {
+      lines:[
+        "Space dylusion is the final of all space terrors."
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines:[
+        "Quality means doing it right",
+        "when guards are not looking.",
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines:[
+        "Space ore is like an arm or a leg:",
+        "mine it or lose claim to it.",
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines:[
+        "I have ways of making money",
+        "that you know nothing of."
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines:[
+        "I try to turn every space mining",
+        "disaster into an opportunity."
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines:[
+        "You furnish the pictures and I'll",
+        "furnish the space war.",
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines:[
+        "We don't mine space ore to make money,",
+        "we make money to mine space ore.",
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines:[
+        "The only space ore mining strategy",
+        "guaranteed to fail is to not risk lives.",
+      ],
+      author: this.humanCEOName
+    },
+    {
+      lines: [
+        "It is not wisdom but Authority",
+        "that makes a law.",
+      ],
+      author: "Thomas Hobbes"
+    },
+    {
+      lines: [
+        "Reason obeys itself; and ignorance submits",
+        "to whatever is dictated to it.",
+      ],
+      author: "Thomas Paine"
+    },
+    {
+      lines: [
+        "Death may be the greatest of all",
+        "human blessings."
+      ],
+      author: "Socrates"
+    },
+    {
+      lines: [
+        "It is not death or pain that is to be dreaded,",
+        "but the fear of pain or death."
+      ],
+      author: "Epictetus"
+    },
+    {
+      lines: [
+        "Do we admit that our thoughts and behaviors",
+        "spring from a belief that the world revolves",
+        "around us?",
+      ],
+      author: "Neil deGrasse Tyson"
+    },
+    {
+      lines: [
+        "I see beyond the plight of humans. I see a",
+        "universe ever-expanding, with its galaxies",
+        "embedded within the ever-stretching",
+        "four-dimensional fabric of space and time.",
+      ],
+      author: "Neil deGrasse Tyson",
+    },
+    {
+      lines: [
+        "However big our world is, our hearts,",
+        "our minds, our outsize atlases,",
+        "the universe is even bigger.",
+      ],
+      author: "Neil deGrasse Tyson",
+    },
+    {
+      lines: [
+        "[There are] more stars than words",
+        "and sounds ever uttered by all humans",
+        "who have ever lived.",
+      ],
+      author: "Neil deGrasse Tyson",
+    },
+    {
+      lines: [
+        "The day we cease the exploration",
+        "of the cosmos is the day we threaten",
+        "the continuing of our species.",
+      ],
+      author: "Neil deGrasse Tyson",
+    },
+    {
+      lines: [
+        "Computers are useless. They can only",
+        "give you answers.",
+      ],
+      author: "Pablo Picasso"
+    },
+    {
+      lines: [
+        "A wrong decision is better than",
+        "indecision.",
+      ],
+      author: "Tony Soprano"
+    },
+    {
+      lines:[
+        "The glass is neither half empty nor half full.",
+        "It's simply larger than it needs to be.",
+      ],
+      author: "Grace Hopper"
+    },
+    {
+      lines:[
+        "The Analytical Engine has no pretensions whatever",
+        "to originate anything. It can do whatever",
+        "we know how to order it to perform.",
+      ],
+      author: "Ada Lovelace"
+    },
+    {
+      lines:[
+        "Science is a differential equation.",
+        "Religion is a boundary condition.",
+      ],
+      author: "Alan Turing"
+    },
+    {
+      lines:[
+        "The quickest way of ending a war",
+        "is to lose it.",
+      ],
+      author: "George Orwell"
+    },
+    {
+      lines:[
+        "Man is an intelligence, not served by, ",
+        "but in servitude to his organs.",
+      ],
+      author: "Aldous Huxley"
+    }
   ]
 
   constructor() { }

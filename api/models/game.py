@@ -19,7 +19,6 @@ from .ship import (
     ShipScannerMode,
     ScannedShipElement,
     ScannedMagnetMineElement,
-    VisibleElementShapeType,
     MapMiningLocationDetails,
     MapSpaceStation,
     AutopilotError,
@@ -734,27 +733,23 @@ class Game(BaseModel):
                     'scanner_thermal_signature': self._ships[other_id].scanner_thermal_signature,
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
+                    'visual_heading': self._ships[other_id].heading,
+                    'visual_map_nose_coord': self._ships[other_id].map_nose_coord,
+                    'visual_map_bottom_left_coord': self._ships[other_id].map_bottom_left_coord,
+                    'visual_map_bottom_right_coord': self._ships[other_id].map_bottom_right_coord,
+                    'visual_map_bottom_center_coord': self._ships[other_id].map_bottom_center_coord,
                     'velocity_x_meters_per_second': self._ships[other_id].velocity_x_meters_per_second,
                     'velocity_y_meters_per_second': self._ships[other_id].velocity_y_meters_per_second,
                     'alive': self._ships[other_id].died_on_frame is None,
                     'aflame': self._ships[other_id].aflame_since_frame is not None,
                     'exploded': self._ships[other_id].exploded,
                     'in_visual_range': is_visual,
-                    'visual_p0': self._ships[other_id].map_p0,
-                    'visual_p1': self._ships[other_id].map_p1,
-                    'visual_p2': self._ships[other_id].map_p2,
-                    'visual_p3': self._ships[other_id].map_p3,
                     'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
-                    'visual_shape': VisibleElementShapeType.RECT,
-                    'visual_fin_0_rel_rot_coord_0': self._ships[other_id].map_fin_0_coord_0,
-                    'visual_fin_0_rel_rot_coord_1': self._ships[other_id].map_fin_0_coord_1,
-                    'visual_fin_1_rel_rot_coord_0': self._ships[other_id].map_fin_1_coord_0,
-                    'visual_fin_1_rel_rot_coord_1': self._ships[other_id].map_fin_1_coord_1,
+                    'visual_ebeam_charge_percent': self._ships[other_id].ebeam_charge / self._ships[other_id].ebeam_charge_capacity,
                     'visual_engine_lit': self._ships[other_id].engine_lit,
                     'visual_engine_boosted_last_frame': self._ships[other_id].engine_boosted_last_frame,
                     'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
                     'visual_ebeam_color': self._ships[other_id].ebeam_color,
-                    'visual_fill_color': '#ffffff',
                     'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
                     'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
                     'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,
@@ -947,10 +942,7 @@ class Game(BaseModel):
             )
             mine.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             mine.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            ship_p1_x, ship_p1_y = self._ships[ship_id].map_p1
-            ship_p2_x, ship_p2_y = self._ships[ship_id].map_p2
-            mine.coord_x = round((ship_p1_x + ship_p2_x) / 2)
-            mine.coord_y = round((ship_p1_y + ship_p2_y) / 2)
+            mine.coord_x, mine.coord_y =  self._ships[ship_id].map_nose_coord
             self._magnet_mines[mine.id] = mine
 
         elif self._ships[ship_id].emp_firing:
@@ -963,10 +955,7 @@ class Game(BaseModel):
             )
             emp.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
             emp.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
-            ship_p1_x, ship_p1_y = self._ships[ship_id].map_p1
-            ship_p2_x, ship_p2_y = self._ships[ship_id].map_p2
-            emp.coord_x = round((ship_p1_x + ship_p2_x) / 2)
-            emp.coord_y = round((ship_p1_y + ship_p2_y) / 2)
+            emp.coord_x, emp.coord_y =  self._ships[ship_id].map_nose_coord
             self._emps[emp.id] = emp
 
     def advance_magnet_mines(self, fps: int):
@@ -1200,11 +1189,7 @@ class Game(BaseModel):
 
 
     def _get_ebeam_line_and_hit(self, ship: Ship) -> Tuple:
-        # gets starting point of EBeam ray
-        p1_x, p1_y = ship.map_p1
-        p2_x, p2_y = ship.map_p2
-        pm_x = round(p1_x + p2_x) / 2
-        pm_y = round(p1_y + p2_y) / 2
+        pm_x, pm_y = ship.map_nose_coord
         intercept_calculator, ray_point_b = utils2d.hitboxes_intercept_ray_factory(
             (pm_x, pm_y),
             ship.ebeam_heading,

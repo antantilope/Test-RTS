@@ -4,6 +4,7 @@ import random
 from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 
 from api.models.base import BaseModel
+from api.models.ship_skin import ship_skins, DEFAULT_SKIN_SLUG
 from api import utils2d
 from api import constants
 from .ship_upgrade import (
@@ -122,11 +123,6 @@ class ShipScannerMode:
     RADAR = 'radar'
     IR = 'ir'
 
-
-class VisibleElementShapeType:
-    ARC = 'arc'
-    RECT = 'rect'
-
 class ScannedShipElement(TypedDict):
     id: str
     designator: str
@@ -134,6 +130,11 @@ class ScannedShipElement(TypedDict):
     scanner_thermal_signature: int
     coord_x: int
     coord_y: int
+    visual_heading: int #heading of the scanned ship
+    visual_map_nose_coord: Tuple[int]
+    visual_map_bottom_left_coord: Tuple[int]
+    visual_map_bottom_right_coord: Tuple[int]
+    visual_map_bottom_center_coord: Tuple[int]
     relative_heading: int # Rounded int describing bearing to element
     target_heading: float # Float describing beaing to element
     velocity_x_meters_per_second: float
@@ -142,21 +143,10 @@ class ScannedShipElement(TypedDict):
     alive: bool
     aflame: bool
     exploded: bool
-
     in_visual_range: bool
-    visual_p0: Tuple[int]
-    visual_p1: Tuple[int]
-    visual_p2: Tuple[int]
-    visual_p3: Tuple[int]
-    visual_fin_0_rel_rot_coord_0: Tuple[int]
-    visual_fin_0_rel_rot_coord_1: Tuple[int]
-    visual_fin_1_rel_rot_coord_0: Tuple[int]
-    visual_fin_1_rel_rot_coord_1: Tuple[int]
-
-    visual_fill_color: str
-    visual_shape: str
     visual_engine_lit: bool
     visual_ebeam_charging: bool
+    visual_ebeam_charge_percent: float
     visual_ebeam_firing: bool
     visual_ebeam_color: str
     visual_engine_boosted_last_frame: int
@@ -205,6 +195,8 @@ class Ship(BaseModel):
     def __init__(self):
         super().__init__()
 
+        self.skin_slug = None
+
         self.map_units_per_meter = None
 
         self.team_id = None
@@ -219,30 +211,19 @@ class Ship(BaseModel):
 
         # <START OF RELATIVE COORDINATES>
         # These are the coordinates for the ship if the ship's center is at the origin: (coord_x, coord_y) == (0, 0,)
-
-        # relative rotated coordinate boundaries of the ship, rotated to account for the ship's heading.
-        # These coords will change when the ship's heading changes.
-        self.rel_rot_coord_0 = (None, None,)
-        self.rel_rot_coord_1 = (None, None,)
-        self.rel_rot_coord_2 = (None, None,)
-        self.rel_rot_coord_3 = (None, None,)
-        self.fin_0_rel_rot_coord_0 = (None, None,)
-        self.fin_0_rel_rot_coord_1 = (None, None,)
-        self.fin_1_rel_rot_coord_0 = (None, None,)
-        self.fin_1_rel_rot_coord_1 = (None, None,)
-
-
-        # relative coordinate boundaries of the ship with heading fixed to zero.
-        # These coords will NOT change unless the ship size changes
-        self.heading_0_rel_coord_0 = (None, None,)
-        self.heading_0_rel_coord_1 = (None, None,)
-        self.heading_0_rel_coord_2 = (None, None,)
-        self.heading_0_rel_coord_3 = (None, None,)
-        self.heading_0_fin_0_rel_coord_0 = (None, None,)
-        self.heading_0_fin_0_rel_coord_1 = (None, None,)
-        self.heading_0_fin_1_rel_coord_0 = (None, None,)
-        self.heading_0_fin_1_rel_coord_1 = (None, None,)
-
+        # Relative rotated hitbox coordinates
+        # these values are rotated to account for ship heading.
+        self.rel_rot_coord_hitbox_nose = (None, None, )
+        self.rel_rot_coord_hitbox_bottom_left = (None, None, )
+        self.rel_rot_coord_hitbox_bottom_right = (None, None, )
+        self.rel_rot_coord_hitbox_bottom_center = (None, None, )
+        # relative hitbox coordinates
+        # of the ship with heading fixed to zero.
+        # These coords will NOT change
+        self.rel_fixed_coord_hitbox_nose = (None, None, )
+        self.rel_fixed_coord_hitbox_bottom_left = (None, None, )
+        self.rel_fixed_coord_hitbox_bottom_right = (None, None, )
+        self.rel_fixed_coord_hitbox_bottom_center = (None, None, )
         # </END OF RELATIVE COORDINATES>
 
         # Velocity
@@ -408,47 +389,31 @@ class Ship(BaseModel):
         return (self.coord_x, self.coord_y,)
 
     @property
-    def h0_x1(self) -> int:
-        return self.heading_0_rel_coord_0[0]
-
-    @property
-    def h0_y1(self) -> int:
-        return self.heading_0_rel_coord_0[1]
-
-    @property
-    def h0_x2(self) -> int:
-        return self.heading_0_rel_coord_2[0]
-
-    @property
-    def h0_y2(self) -> int:
-        return self.heading_0_rel_coord_2[1]
-
-    @property
-    def map_p0(self) -> Tuple:
+    def map_nose_coord(self) -> Tuple:
         return (
-            self.coord_x + self.rel_rot_coord_0[0],
-            self.coord_y + self.rel_rot_coord_0[1],
+            self.coord_x + self.rel_rot_coord_hitbox_nose[0],
+            self.coord_y + self.rel_rot_coord_hitbox_nose[1],
         )
 
     @property
-    def map_p1(self) -> Tuple:
+    def map_bottom_left_coord(self) -> Tuple:
         return (
-            self.coord_x + self.rel_rot_coord_1[0],
-            self.coord_y + self.rel_rot_coord_1[1],
+            self.coord_x + self.rel_rot_coord_hitbox_bottom_left[0],
+            self.coord_y + self.rel_rot_coord_hitbox_bottom_left[1],
         )
 
     @property
-    def map_p2(self) -> Tuple:
+    def map_bottom_right_coord(self) -> Tuple:
         return (
-            self.coord_x + self.rel_rot_coord_2[0],
-            self.coord_y + self.rel_rot_coord_2[1],
+            self.coord_x + self.rel_rot_coord_hitbox_bottom_right[0],
+            self.coord_y + self.rel_rot_coord_hitbox_bottom_right[1],
         )
 
     @property
-    def map_p3(self) -> Tuple:
+    def map_bottom_center_coord(self) -> Tuple:
         return (
-            self.coord_x + self.rel_rot_coord_3[0],
-            self.coord_y + self.rel_rot_coord_3[1],
+            self.coord_x + self.rel_rot_coord_hitbox_bottom_center[0],
+            self.coord_y + self.rel_rot_coord_hitbox_bottom_center[1],
         )
 
     @property
@@ -461,38 +426,10 @@ class Ship(BaseModel):
     @property
     def hitbox_lines(self) -> Tuple[Tuple[Tuple]]:
         return (
-            (self.map_p0, self.map_p1,),
-            (self.map_p1, self.map_p2,),
-            (self.map_p2, self.map_p3,),
-            (self.map_p3, self.map_p0,),
-        )
-
-    @property
-    def map_fin_0_coord_0(self) -> Tuple:
-        return (
-            self.coord_x + self.fin_0_rel_rot_coord_0[0],
-            self.coord_y + self.fin_0_rel_rot_coord_0[1],
-        )
-
-    @property
-    def map_fin_0_coord_1(self) -> Tuple:
-        return (
-            self.coord_x + self.fin_0_rel_rot_coord_1[0],
-            self.coord_y + self.fin_0_rel_rot_coord_1[1],
-        )
-
-    @property
-    def map_fin_1_coord_0(self) -> Tuple:
-        return (
-            self.coord_x + self.fin_1_rel_rot_coord_0[0],
-            self.coord_y + self.fin_1_rel_rot_coord_0[1],
-        )
-
-    @property
-    def map_fin_1_coord_1(self) -> Tuple:
-        return (
-            self.coord_x + self.fin_1_rel_rot_coord_1[0],
-            self.coord_y + self.fin_1_rel_rot_coord_1[1],
+            (self.map_nose_coord, self.map_bottom_left_coord),
+            (self.map_bottom_left_coord, self.map_bottom_center_coord),
+            (self.map_bottom_center_coord, self.map_bottom_right_coord),
+            (self.map_bottom_right_coord, self.map_nose_coord),
         )
 
     @property
@@ -537,18 +474,11 @@ class Ship(BaseModel):
         return {
             'id': self.id,
             'team_id': self.team_id,
+            'skin_slug': self.skin_slug,
             'mass': self.mass,
             'coord_x': self.coord_x,
             'coord_y': self.coord_y,
             'heading': self.heading,
-            'rel_rot_coord_0': self.rel_rot_coord_0,
-            'rel_rot_coord_1': self.rel_rot_coord_1,
-            'rel_rot_coord_2': self.rel_rot_coord_2,
-            'rel_rot_coord_3': self.rel_rot_coord_3,
-            "fin_0_rel_rot_coord_0":  self.fin_0_rel_rot_coord_0,
-            "fin_0_rel_rot_coord_1":  self.fin_0_rel_rot_coord_1,
-            "fin_1_rel_rot_coord_0":  self.fin_1_rel_rot_coord_0,
-            "fin_1_rel_rot_coord_1":  self.fin_1_rel_rot_coord_1,
             'velocity_x_meters_per_second': self.velocity_x_meters_per_second,
             'velocity_y_meters_per_second': self.velocity_y_meters_per_second,
             'battery_power': self.battery_power,
@@ -557,6 +487,11 @@ class Ship(BaseModel):
             'fuel_capacity': self.fuel_capacity,
             'fueling_at_station': self.fueling_at_station,
             'fuel_cost_ore_kg_per_fuel_unit': self.fuel_cost_ore_kg_per_fuel_unit,
+
+            'map_nose_coord': self.map_nose_coord,
+            'map_bottom_left_coord': self.map_bottom_left_coord,
+            'map_bottom_right_coord': self.map_bottom_right_coord,
+            'map_bottom_center_coord': self.map_bottom_center_coord,
 
             'upgrade_summary': self._upgrade_summary,
 
@@ -641,10 +576,20 @@ class Ship(BaseModel):
         }
 
     @classmethod
-    def spawn(cls, team_id: str, special_weapon_costs: Dict[str, int], map_units_per_meter: int = 1) -> "Ship":
+    def spawn(
+        cls,
+        team_id: str,
+        special_weapon_costs: Dict[str, int],
+        map_units_per_meter: int = 1,
+        skin_slug: str = None,
+    ) -> "Ship":
         """ Create new unpositioned ship with defaults
         """
         instance = cls()
+
+        instance.skin_slug = DEFAULT_SKIN_SLUG if skin_slug is None else skin_slug
+        if instance.skin_slug not in ship_skins:
+            raise Exception("invalid ship skin slug")
 
         instance.map_units_per_meter = map_units_per_meter
         instance.team_id = team_id
@@ -670,39 +615,29 @@ class Ship(BaseModel):
                 "current_cost": su.cost_progression[1],
             }
 
+        # Orient hit boxes
         x_len = constants.SHIP_X_LEN * map_units_per_meter
         y_len = constants.SHIP_Y_LEN * map_units_per_meter
-
-        x1 = round((x_len / 2) * -1)
-        x2 = round(x_len / 2)
-        y1 = round((y_len / 2) * -1)
-        y2 = round(y_len / 2)
-
-        instance.heading_0_rel_coord_0 = (x1, y1,)
-        instance.heading_0_rel_coord_1 = (x1, y2,)
-        instance.heading_0_rel_coord_2 = (x2, y2,)
-        instance.heading_0_rel_coord_3 = (x2, y1,)
-
-        instance.rel_rot_coord_0 = (x1, y1,)
-        instance.rel_rot_coord_1 = (x1, y2,)
-        instance.rel_rot_coord_2 = (x2, y2,)
-        instance.rel_rot_coord_3 = (x2, y1,)
-
-        # Tail Fin coords
-        fin_top_y = y1 + round(y_len / 4)
-        fin_bot_y  = y1
-        fin_0_bot_x = round(x1 - (x_len / 1.45))
-        fin_1_bot_x = round(x2 + (x_len / 1.45))
-
-        instance.heading_0_fin_0_rel_coord_0 = (x1, fin_top_y,)
-        instance.heading_0_fin_0_rel_coord_1 = (fin_0_bot_x, fin_bot_y,)
-        instance.heading_0_fin_1_rel_coord_0 = (x2, fin_top_y,)
-        instance.heading_0_fin_1_rel_coord_1 = (fin_1_bot_x, fin_bot_y,)
-
-        instance.fin_0_rel_rot_coord_0 = (x1, fin_top_y,)
-        instance.fin_0_rel_rot_coord_1 = (fin_0_bot_x, fin_bot_y,)
-        instance.fin_1_rel_rot_coord_0 = (x2, fin_top_y,)
-        instance.fin_1_rel_rot_coord_1 = (fin_1_bot_x, fin_bot_y,)
+        # Ship Nose
+        nose_x = 0
+        nose_y = round(y_len / 2)
+        instance.rel_rot_coord_hitbox_nose = (nose_x, nose_y, )
+        instance.rel_fixed_coord_hitbox_nose = (nose_x, nose_y, )
+        # Bottom Left Corner
+        bottom_left_x = round((x_len / 2) * -1)
+        bottom_y = round(((y_len / 2) * -1) + (y_len / 8))
+        instance.rel_rot_coord_hitbox_bottom_left = (bottom_left_x, bottom_y, )
+        instance.rel_fixed_coord_hitbox_bottom_left = (bottom_left_x, bottom_y, )
+        # Bottom Right Corner
+        bottom_right_x = round(x_len / 2)
+        bottom_right_y = bottom_y
+        instance.rel_rot_coord_hitbox_bottom_right = (bottom_right_x, bottom_right_y, )
+        instance.rel_fixed_coord_hitbox_bottom_right = (bottom_right_x, bottom_right_y, )
+        # Bottom Center
+        bottom_center_x = 0
+        bottom_center_y = nose_y * -1
+        instance.rel_rot_coord_hitbox_bottom_center = (bottom_center_x, bottom_center_y, )
+        instance.rel_fixed_coord_hitbox_bottom_center = (bottom_center_x, bottom_center_y, )
 
 
         instance.battery_power = constants.BATTERY_STARTING_POWER
@@ -1558,51 +1493,30 @@ class Ship(BaseModel):
 
 
     def _set_relative_coords(self) -> None:
-        delta_degrees = utils2d.heading_to_delta_heading_from_zero(self.heading)
-        delta_radians = utils2d.degrees_to_radians(delta_degrees)
-
-        self.rel_rot_coord_0 = utils2d.rotate(
-            constants.ORGIN_COORD,
-            self.heading_0_rel_coord_0,
-            delta_radians
-        )
-        self.rel_rot_coord_1 = utils2d.rotate(
-            constants.ORGIN_COORD,
-            self.heading_0_rel_coord_1,
-            delta_radians
-        )
-        self.rel_rot_coord_2 = utils2d.rotate(
-            constants.ORGIN_COORD,
-            self.heading_0_rel_coord_2,
-            delta_radians
-        )
-        self.rel_rot_coord_3 = utils2d.rotate(
-            constants.ORGIN_COORD,
-            self.heading_0_rel_coord_3,
-            delta_radians
+        delta_radians = utils2d.degrees_to_radians(
+            utils2d.heading_to_delta_heading_from_zero(self.heading)
         )
 
-        self.fin_0_rel_rot_coord_0 = utils2d.rotate(
+        self.rel_rot_coord_hitbox_nose = utils2d.rotate(
             constants.ORGIN_COORD,
-            self.heading_0_fin_0_rel_coord_0,
-            delta_radians
+            self.rel_fixed_coord_hitbox_nose,
+            delta_radians,
         )
-        self.fin_0_rel_rot_coord_1 = utils2d.rotate(
+        self.rel_rot_coord_hitbox_bottom_left = utils2d.rotate(
             constants.ORGIN_COORD,
-            self.heading_0_fin_0_rel_coord_1,
-            delta_radians
+            self.rel_fixed_coord_hitbox_bottom_left,
+            delta_radians,
         )
-        self.fin_1_rel_rot_coord_0 = utils2d.rotate(
+        self.rel_rot_coord_hitbox_bottom_center = utils2d.rotate(
             constants.ORGIN_COORD,
-            self.heading_0_fin_1_rel_coord_0,
-            delta_radians
+            self.rel_fixed_coord_hitbox_bottom_center,
+            delta_radians,
         )
-        self.fin_1_rel_rot_coord_1 = utils2d.rotate(
+        self.rel_rot_coord_hitbox_bottom_right = utils2d.rotate(
             constants.ORGIN_COORD,
-            self.heading_0_fin_1_rel_coord_1,
-            delta_radians
+            self.rel_fixed_coord_hitbox_bottom_right,
+            delta_radians,
         )
-
 
     # Engine Commands
     def cmd_activate_engine(self) -> None:

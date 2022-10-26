@@ -263,6 +263,12 @@ export class ScannerpaneComponent implements OnInit {
       this._draw.drawEMP(this.ctx, drawableObjects.emps[i])
     }
 
+    this._draw.drawShipGravityBrakeEffectElements(
+      this.ctx,
+      this._camera.scannerPaneCamera,
+      this._camera.getGravityBrakeShipEffectElements(),
+    )
+
     // Explosion FX
     this._draw.drawExplosionShockwaves(this.ctx, this._camera.scannerPaneCamera)
     this._draw.drawExplosions(this.ctx, this._camera.scannerPaneCamera)
@@ -272,7 +278,11 @@ export class ScannerpaneComponent implements OnInit {
 
     // E-Beams
     this._draw.drawEbeams(this.ctx, this._camera.scannerPaneCamera, drawableObjects.ebeamRays)
-
+    this._draw.drawEBeamFiringEffectElements(
+      this.ctx,
+      this._camera.scannerPaneCamera,
+      this._camera.getEBeamFiringEffectElements(),
+    )
   }
 
   private drawScannerUnavailableMessage() {
@@ -359,16 +369,6 @@ export class ScannerpaneComponent implements OnInit {
     }
 
     this.ctx.font = '20px Courier New'
-
-    if(target.visual_shape) {
-      const visualOnlyWarning = this.getIsVisualOnlyWarning(target)
-      this.ctx.beginPath()
-      this.ctx.fillText(
-        `${visualOnlyWarning?"⚠️":""}VISUAL`, xOffset, yOffset
-      )
-      yOffset += yInterval
-    }
-
     this.ctx.beginPath()
     this.ctx.fillText(
       `DIST. ${target.distance} M`, xOffset, yOffset
@@ -395,17 +395,6 @@ export class ScannerpaneComponent implements OnInit {
       )
     } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
     yOffset += yInterval
-  }
-
-  private getIsVisualOnlyWarning(target: ScannerDataShipElement):boolean {
-    // Returns true if ship is only scannable because
-    // it's within visual range
-    const mode = this._api.frameData.ship.scanner_mode
-    if(mode == "radar") {
-      return target.anti_radar_coating_level > this._api.frameData.ship.scanner_radar_sensitivity
-    } else if (mode == "ir") {
-      return target.scanner_thermal_signature < this._api.frameData.ship.scanner_ir_minimum_thermal_signature
-    } else { throw new Error(`unknown scanner mode ${this._api.frameData.ship.scanner_mode}`)}
   }
 
   private drawTopLeftOverlay(alpha: number) {

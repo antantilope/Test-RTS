@@ -12,6 +12,7 @@ import { ScannerDataShipElement, Ship } from './models/apidata.model';
 import {
   MAGNET_MINE_SIDE_LENGTH_METERS,
   EMP_RADIUS_METERS,
+  SHIP_MIN_BOUNDING_BOX_LENGTH_METERS,
 } from "./constants"
 
 function getRandomFloat(min: number, max: number): number {
@@ -295,36 +296,7 @@ export class Camera {
     /* Get objects to draw on the canvas.
         All coordinate points returned by the function are CANVAS coordinates.
     */
-
-    const cameraMapBoxCoords: BoxCoords = this.getCameraMapBoxCoords()
-
-    // Ship
-    const ship: Ship = this._api.frameData.ship
-    const mapConfig = this._api.frameData.map_config
-    const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
-    const shipMapCoordP0: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_0),
-      shipCoord,
-    )
-    const shipMapCoordP1: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_1),
-      shipCoord,
-    )
-    const shipMapCoordP2: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_2),
-      shipCoord,
-    )
-    const shipMapCoordP3: PointCoord = this.relativeCoordToAbsoluteCoord(
-      this.arrayToCoords(ship.rel_rot_coord_3),
-      shipCoord,
-    )
-    const shipMapBoxCoords: BoxCoords = this.rectCoordsToBoxCoords(
-      shipMapCoordP0,
-      shipMapCoordP1,
-      shipMapCoordP2,
-      shipMapCoordP3
-    )
-
+   // Payload we're going to build and return.
     const drawableItems: DrawableCanvasItems = {
       ships: [],
       magnetMines: [],
@@ -333,6 +305,16 @@ export class Camera {
       ebeamRays: [],
       visionCircles:[],
     }
+
+    const cameraMapBoxCoords: BoxCoords = this.getCameraMapBoxCoords()
+
+    // Ship
+    const ship: Ship = this._api.frameData.ship
+    const mapConfig = this._api.frameData.map_config
+    const currentZoom = this.getZoom()
+    const shipCoord: PointCoord = {x: ship.coord_x, y: ship.coord_y}
+
+
     const cameraPosition: PointCoord = this.getPosition()
 
 
@@ -340,7 +322,7 @@ export class Camera {
     const shipCanvasCoord = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
     const basicVisualRangeCanvasPxRadius = Math.round(
       (this._api.frameData.map_config.units_per_meter
-      * this._api.frameData.ship.visual_range) / this.getZoom()
+      * this._api.frameData.ship.visual_range) / currentZoom
     )
     drawableItems.visionCircles.push({
       canvasCoord: shipCanvasCoord,
@@ -359,28 +341,46 @@ export class Camera {
       y2: corner2.y,
     }
 
-    let canvasCoordP0 = this.mapCoordToCanvasCoord(shipMapCoordP0, cameraPosition)
-    let canvasCoordP1 = this.mapCoordToCanvasCoord(shipMapCoordP1, cameraPosition)
-    let canvasCoordP2 = this.mapCoordToCanvasCoord(shipMapCoordP2, cameraPosition)
-    let canvasCoordP3 = this.mapCoordToCanvasCoord(shipMapCoordP3, cameraPosition)
+    let HBNoseCanvasCoord: PointCoord
+    let HBBottomLeftCanvasCoord: PointCoord
+    let HBBottomRightCanvasCoord: PointCoord
+    let HBBottomCenterCanvasCoord: PointCoord
+    let EngineOuterLeftCanvasCoord: PointCoord
+    let EngineInnerLeftCanvasCoord: PointCoord
+    let EngineOuterRightCanvasCoord: PointCoord
+    let EngineInnerRightCanvasCoord: PointCoord
 
+    const boundingBoxBuffer = 10
     // Add own ship to drawable ships array
+    const selfCanvasCoordCenter = this.mapCoordToCanvasCoord(shipCoord, cameraPosition)
+    HBNoseCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_nose_coord), cameraPosition)
+    HBBottomLeftCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_left_coord), cameraPosition)
+    HBBottomRightCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_right_coord), cameraPosition)
+    HBBottomCenterCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(ship.map_bottom_center_coord), cameraPosition)
+    EngineOuterLeftCanvasCoord = {
+      x: HBBottomLeftCanvasCoord.x * 7/12 + HBBottomCenterCanvasCoord.x * 5/12,
+      y: HBBottomLeftCanvasCoord.y * 7/12 + HBBottomCenterCanvasCoord.y * 5/12,
+    }
+    EngineInnerLeftCanvasCoord = {
+      x: HBBottomLeftCanvasCoord.x * 2/7 + HBBottomCenterCanvasCoord.x * 5/7,
+      y: HBBottomLeftCanvasCoord.y * 2/7 + HBBottomCenterCanvasCoord.y * 5/7,
+    }
+    EngineOuterRightCanvasCoord = {
+      x: HBBottomRightCanvasCoord.x * 5/8 + HBBottomCenterCanvasCoord.x * 3/8,
+      y: HBBottomRightCanvasCoord.y * 5/8 + HBBottomCenterCanvasCoord.y * 3/8,
+    }
+    EngineInnerRightCanvasCoord = {
+      x: HBBottomRightCanvasCoord.x * 3/9 + HBBottomCenterCanvasCoord.x * 6/9,
+      y: HBBottomRightCanvasCoord.y * 3/9 + HBBottomCenterCanvasCoord.y * 6/9,
+    }
     drawableItems.ships.push({
       isSelf: true,
       alive: ship.alive,
       designator: "you",
-      canvasCoordP0: canvasCoordP0,
-      canvasCoordP1: canvasCoordP1,
-      canvasCoordP2: canvasCoordP2,
-      canvasCoordP3: canvasCoordP3,
-      canvasCoordFin0P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_0), shipCoord), cameraPosition),
-      canvasCoordFin0P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_0_rel_rot_coord_1), shipCoord), cameraPosition),
-      canvasCoordFin1P0: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_0), shipCoord), cameraPosition),
-      canvasCoordFin1P1: this.mapCoordToCanvasCoord(this.relativeCoordToAbsoluteCoord(this.arrayToCoords(ship.fin_1_rel_rot_coord_1), shipCoord), cameraPosition),
-      canvasCoordCenter: this.mapCoordToCanvasCoord(shipCoord, cameraPosition),
+      canvasCoordCenter: selfCanvasCoordCenter,
+      mapCoord: shipCoord,
       engineLit: ship.engine_lit,
       engineBoosted: (this._api.frameData.game_frame - ship.engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
-      fillColor: "#919191",
       shipId: ship.id,
       aflame: ship.aflame,
       exploded: ship.exploded,
@@ -390,98 +390,95 @@ export class Camera {
       miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
       fuelingAtStation: ship.fueling_at_station,
       visualEbeamCharging: ship.ebeam_charging,
+      visualEbeamFiring: ship.ebeam_firing,
+      visualEbeamChargePercent: ship.ebeam_charge / ship.ebeam_charge_capacity,
       lastTubeFireFrame: ship.last_tube_fire_frame,
       inVisualRange: true,
-      canvasBoundingBox: this.rectCoordsToBoxCoords(
-        canvasCoordP0,
-        canvasCoordP1,
-        canvasCoordP2,
-        canvasCoordP3,
-        15,
-      )
+      canvasBoundingBox: this.pointCoordToBoxCoord(
+        selfCanvasCoordCenter,
+        SHIP_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
+      ),
+      heading: ship.heading,
+      HBBottomCenterMapCoord: this.arrayToCoords(ship.map_bottom_center_coord),
+      HBNoseMapCoord: this.arrayToCoords(ship.map_nose_coord),
+      HBNoseCanvasCoord,
+      HBBottomLeftCanvasCoord,
+      HBBottomRightCanvasCoord,
+      HBBottomCenterCanvasCoord,
+      EngineOuterLeftCanvasCoord,
+      EngineInnerLeftCanvasCoord,
+      EngineOuterRightCanvasCoord,
+      EngineInnerRightCanvasCoord,
+      isDot: true,
     })
-    if (
-      Math.abs(
-        drawableItems.ships[0].canvasCoordP1.x
-        - drawableItems.ships[0].canvasCoordP2.x
-      ) <= this.minSizeForDotPx
-      && ship.alive
-    ) {
-      drawableItems.ships[0].isDot = true
-    }
 
     // Draw other scanner elements
     // Other Ships
-    const boundingBoxBuffer = 10
     for(let i in ship.scanner_ship_data) {
       const scannerData: ScannerDataShipElement = ship.scanner_ship_data[i]
-      let canvasCoordP0 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p0[0],
-        y: scannerData.visual_p0[1],
-      }, cameraPosition)
-      let canvasCoordP1 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p1[0],
-        y: scannerData.visual_p1[1],
-      }, cameraPosition)
-      let canvasCoordP2 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p2[0],
-        y: scannerData.visual_p2[1],
-      }, cameraPosition)
-      let canvasCoordP3 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_p3[0],
-        y: scannerData.visual_p3[1],
-      }, cameraPosition)
-
-      const canvasCoordFin0P0 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_0_rel_rot_coord_0[0],
-        y: scannerData.visual_fin_0_rel_rot_coord_0[1],
-      }, cameraPosition)
-      const canvasCoordFin0P1 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_0_rel_rot_coord_1[0],
-        y: scannerData.visual_fin_0_rel_rot_coord_1[1],
-      }, cameraPosition)
-      const canvasCoordFin1P0 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_1_rel_rot_coord_0[0],
-        y: scannerData.visual_fin_1_rel_rot_coord_0[1],
-      }, cameraPosition)
-      const canvasCoordFin1P1 = this.mapCoordToCanvasCoord({
-        x: scannerData.visual_fin_1_rel_rot_coord_1[0],
-        y: scannerData.visual_fin_1_rel_rot_coord_1[1],
-      }, cameraPosition)
-
+      const otherCoord: PointCoord = {
+        x: scannerData.coord_x,
+        y: scannerData.coord_y,
+      }
+      let otherCanvasCoordCenter = this.mapCoordToCanvasCoord(otherCoord, cameraPosition)
+      HBNoseCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_nose_coord), cameraPosition)
+      HBBottomLeftCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_left_coord), cameraPosition)
+      HBBottomRightCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_right_coord), cameraPosition)
+      HBBottomCenterCanvasCoord = this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_center_coord), cameraPosition)
+      EngineOuterLeftCanvasCoord = {
+        x: HBBottomLeftCanvasCoord.x * 7/12 + HBBottomCenterCanvasCoord.x * 5/12,
+        y: HBBottomLeftCanvasCoord.y * 7/12 + HBBottomCenterCanvasCoord.y * 5/12,
+      }
+      EngineInnerLeftCanvasCoord = {
+        x: HBBottomLeftCanvasCoord.x * 2/7 + HBBottomCenterCanvasCoord.x * 5/7,
+        y: HBBottomLeftCanvasCoord.y * 2/7 + HBBottomCenterCanvasCoord.y * 5/7,
+      }
+      EngineOuterRightCanvasCoord = {
+        x: HBBottomRightCanvasCoord.x * 5/8 + HBBottomCenterCanvasCoord.x * 3/8,
+        y: HBBottomRightCanvasCoord.y * 5/8 + HBBottomCenterCanvasCoord.y * 3/8,
+      }
+      EngineInnerRightCanvasCoord = {
+        x: HBBottomRightCanvasCoord.x * 3/9 + HBBottomCenterCanvasCoord.x * 6/9,
+        y: HBBottomRightCanvasCoord.y * 3/9 + HBBottomCenterCanvasCoord.y * 6/9,
+      }
       let drawableShip: DrawableShip = {
         isSelf: false,
-        isDot: scannerData.alive && Math.abs(canvasCoordP1.x - canvasCoordP2.x) <= this.minSizeForDotPx,
+        isDot: true,
         distance: scannerData.distance,
         alive: scannerData.alive,
         aflame: scannerData.aflame,
         exploded: scannerData.exploded,
         shipId: scannerData.id,
-        canvasCoordCenter: this.mapCoordToCanvasCoord({
-          x: scannerData.coord_x,
-          y: scannerData.coord_y,
-        }, cameraPosition),
+        canvasCoordCenter: otherCanvasCoordCenter,
+        mapCoord: otherCoord,
         designator: scannerData.designator,
         inVisualRange: scannerData.in_visual_range,
-        canvasCoordP0: canvasCoordP0,
-        canvasCoordP1: canvasCoordP1,
-        canvasCoordP2: canvasCoordP2,
-        canvasCoordP3: canvasCoordP3,
         visualEbeamCharging: scannerData.visual_ebeam_charging,
-        canvasCoordFin0P0,
-        canvasCoordFin0P1,
-        canvasCoordFin1P0,
-        canvasCoordFin1P1,
-        canvasBoundingBox: this.rectCoordsToBoxCoords(canvasCoordP0, canvasCoordP1, canvasCoordP2, canvasCoordP3, boundingBoxBuffer),
+        visualEbeamChargePercent: scannerData.visual_ebeam_charge_percent,
+        visualEbeamFiring: scannerData.visual_ebeam_firing,
+        canvasBoundingBox: this.pointCoordToBoxCoord(
+          otherCanvasCoordCenter,
+          SHIP_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
+        ),
         engineLit: scannerData.visual_engine_lit,
         engineBoosted: (this._api.frameData.game_frame - scannerData.visual_engine_boosted_last_frame) <= this.framesToShowBoostedEngine,
-        fillColor: scannerData.visual_fill_color,
         gravityBrakePosition: scannerData.visual_gravity_brake_position,
         gravityBrakeDeployedPosition: scannerData.visual_gravity_brake_deployed_position,
         gravityBrakeActive: scannerData.visual_gravity_brake_active,
         miningOreLocation: scannerData.visual_mining_ore_location,
         fuelingAtStation: scannerData.visual_fueling_at_station,
         lastTubeFireFrame: scannerData.visual_last_tube_fire_frame,
+        heading: scannerData.visual_heading,
+        HBNoseMapCoord: this.arrayToCoords(scannerData.visual_map_nose_coord),
+        HBBottomCenterMapCoord: this.arrayToCoords(scannerData.visual_map_bottom_center_coord),
+        HBNoseCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_nose_coord), cameraPosition),
+        HBBottomLeftCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_left_coord), cameraPosition),
+        HBBottomRightCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_right_coord), cameraPosition),
+        HBBottomCenterCanvasCoord: this.mapCoordToCanvasCoord(this.arrayToCoords(scannerData.visual_map_bottom_center_coord), cameraPosition),
+        EngineOuterLeftCanvasCoord,
+        EngineInnerLeftCanvasCoord,
+        EngineOuterRightCanvasCoord,
+        EngineInnerRightCanvasCoord,
       }
       drawableItems.ships.push(drawableShip)
     }
@@ -572,12 +569,6 @@ export class Camera {
     }
     return drawableItems
   }
-
-
-  public getEBeamLineThickness(): number {
-    return 4
-  }
-
 
   // GEOMETRY HELPERS // // // //
 
@@ -695,6 +686,21 @@ export class EMPTrailElement {
   mapCoord: PointCoord
 }
 
+export const EBEAM_EFFECT_ELEMENT_TTL_MS = 4000
+export class EBeamFiringEffectElement {
+  createdAt: number
+  mapCoord: PointCoord
+}
+
+export const GRAVITY_BREAK_SHIP_EFFECT_ELEMENT_TTL_MS = 5000
+export class GravityBrakeShipEffectElement {
+  createdAt: number
+  mapCoord: PointCoord
+  percentDeployed: number
+}
+
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -715,6 +721,11 @@ export class CameraService {
   private updateEMPTrailElementsInterval = 250
   private EMPTrailElements: EMPTrailElement[] = []
 
+  private EBeamFiringEffectElements: EBeamFiringEffectElement[] = []
+
+  private gravityBrakeShipEffectElements: GravityBrakeShipEffectElement[] = []
+  private updateGravityBrakeShipEffectElementsInterval = 333
+
   constructor(
     private _api: ApiService,
   ) {
@@ -732,6 +743,63 @@ export class CameraService {
     setTimeout(this.updateVelocityTrailElements.bind(this), this.updateVelocityTrailElementsInterval)
     setTimeout(this.updateFlameSmokeElements.bind(this), this.updateFlameSmokeElementInterval)
     setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)
+    setTimeout(this.updateGravityBrakeShipEffectElements.bind(this), this.updateGravityBrakeShipEffectElementsInterval)
+    setTimeout(this.removeStaleEBeamFiringEffectElements.bind(this), 1000)
+  }
+
+
+  public getGravityBrakeShipEffectElements(): GravityBrakeShipEffectElement[] {
+    return this.gravityBrakeShipEffectElements
+  }
+  private updateGravityBrakeShipEffectElements() {
+    const now = performance.now()
+    // Remove state elements
+    if(this.gravityBrakeShipEffectElements.length) {
+      this.gravityBrakeShipEffectElements = this.gravityBrakeShipEffectElements.filter((gbe: GravityBrakeShipEffectElement)=>{
+        return gbe.createdAt + GRAVITY_BREAK_SHIP_EFFECT_ELEMENT_TTL_MS > now
+      })
+    }
+    // Add effect for own ship
+    if(this._api.frameData.ship.gravity_brake_position > 0) {
+      let coord = Math.random() < 0.5 ? this._api.frameData.ship.map_bottom_left_coord: this._api.frameData.ship.map_bottom_right_coord
+      this.gravityBrakeShipEffectElements.push({
+        createdAt: now,
+        percentDeployed: this._api.frameData.ship.gravity_brake_position / this._api.frameData.ship.gravity_brake_deployed_position,
+        mapCoord: {x:coord[0], y:coord[1]}
+      })
+    }
+    // Add effect for other ships
+    for(let i in this._api.frameData.ship.scanner_ship_data) {
+      let ssd = this._api.frameData.ship.scanner_ship_data[i]
+      if(ssd.visual_gravity_brake_position > 0) {
+        let coord = Math.random() < 0.5 ? ssd.visual_map_bottom_left_coord: ssd.visual_map_bottom_right_coord
+        this.gravityBrakeShipEffectElements.push({
+          createdAt: now,
+          percentDeployed: ssd.visual_gravity_brake_position / ssd.visual_gravity_brake_deployed_position,
+          mapCoord: {x:coord[0], y:coord[1]},
+        })
+      }
+    }
+    setTimeout(this.updateGravityBrakeShipEffectElements.bind(this), this.updateGravityBrakeShipEffectElementsInterval)
+  }
+
+  public addEBeamFiringEffectElement(mapCoord: PointCoord) {
+    this.EBeamFiringEffectElements.push({
+      createdAt: performance.now(),
+      mapCoord,
+    })
+  }
+  public getEBeamFiringEffectElements(): EBeamFiringEffectElement[] {
+    return this.EBeamFiringEffectElements
+  }
+  private removeStaleEBeamFiringEffectElements() {
+    if(this.EBeamFiringEffectElements.length) {
+      const now = performance.now()
+      this.EBeamFiringEffectElements = this.EBeamFiringEffectElements.filter((ee: EBeamFiringEffectElement)=>{
+        return ee.createdAt + EBEAM_EFFECT_ELEMENT_TTL_MS > now
+      })
+    }
+    setTimeout(this.removeStaleEBeamFiringEffectElements.bind(this), 1000)
   }
 
   public getEMPTrailElements(): EMPTrailElement[] {
@@ -780,6 +848,13 @@ export class CameraService {
   // Flame Smoke
   public getFlameSmokeElements(): FlameSmokeElement[] {
     return this.flameSmokeElements
+  }
+  public addFlameSmokeElement(mapCoord: PointCoord, initalRadiusMeters: number) {
+    this.flameSmokeElements.push({
+      createdAt: performance.now(),
+      mapCoord,
+      initalRadiusMeters,
+    })
   }
   private updateFlameSmokeElements() {
     if(!this._api.frameData) {
@@ -863,8 +938,8 @@ export class CameraService {
         this.velocityTrailElements.push({
           createdAt: now,
           mapCoord: {
-            x: Math.floor((sde.visual_p0[0] + sde.visual_p3[0]) / 2),
-            y: Math.floor((sde.visual_p0[1] + sde.visual_p3[1]) / 2),
+            x: Math.floor((sde.visual_map_bottom_center_coord[0] + sde.visual_map_bottom_center_coord[0]) / 2),
+            y: Math.floor((sde.visual_map_bottom_center_coord[1] + sde.visual_map_bottom_center_coord[1]) / 2),
           },
           radiusMeters: sde.visual_engine_lit ? 1.5 : 0.4,
           grow: sde.visual_engine_lit,

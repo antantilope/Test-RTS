@@ -6,22 +6,27 @@ export class DrawableShip {
     isDot?: boolean
     shipId: string
     alive: boolean
+    mapCoord: PointCoord
     canvasCoordCenter: PointCoord
     designator: string
     inVisualRange: boolean
-    canvasCoordP0: PointCoord
-    canvasCoordP1: PointCoord
-    canvasCoordP2: PointCoord
-    canvasCoordP3: PointCoord
     visualEbeamCharging: boolean
-    canvasCoordFin0P0: PointCoord
-    canvasCoordFin0P1: PointCoord
-    canvasCoordFin1P0: PointCoord
-    canvasCoordFin1P1: PointCoord
+    visualEbeamChargePercent: number
+    visualEbeamFiring: boolean
     canvasBoundingBox: BoxCoords
+    HBNoseMapCoord: PointCoord
+    HBBottomCenterMapCoord: PointCoord
+    HBNoseCanvasCoord: PointCoord
+    HBBottomLeftCanvasCoord: PointCoord
+    HBBottomRightCanvasCoord: PointCoord
+    HBBottomCenterCanvasCoord: PointCoord
+    EngineOuterLeftCanvasCoord: PointCoord
+    EngineInnerLeftCanvasCoord: PointCoord
+    EngineOuterRightCanvasCoord: PointCoord
+    EngineInnerRightCanvasCoord: PointCoord
+    heading: number
     engineLit: boolean
     engineBoosted: boolean
-    fillColor: string
     aflame: boolean
     exploded: boolean
     gravityBrakePosition: number
