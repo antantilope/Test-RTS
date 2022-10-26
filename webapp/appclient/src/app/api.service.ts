@@ -1,7 +1,7 @@
 
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http';
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 import { Subject } from 'rxjs'
 
 import { StartCountdownPayload } from './models/startcountdown-payload.model'
@@ -14,7 +14,7 @@ import { FrameData } from './models/apidata.model';
 })
 export class ApiService {
 
-  private socket: any
+  private socket: Socket
 
   private EVENT_FRAMEDATA: string = "framedata"
   public frameDataEvent: Subject<void> = new Subject()
@@ -34,7 +34,7 @@ export class ApiService {
   constructor(
     private _http: HttpClient,
   ) {
-    const url: string = document.location.origin.replace(/^https?/, 'ws')
+    const url: string = document.location.origin.replace(/^https?/, 'ws') // TODO: remove "s" from regex?
     console.log("ApiService::constructor connecting to socket server on " + url)
     this.socket = io(url)
 

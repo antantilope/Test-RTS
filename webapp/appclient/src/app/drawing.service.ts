@@ -37,8 +37,6 @@ import {
   LOW_POWER_THRESHOLD,
   SHIP_LENGTH_METERS_X,
   SHIP_LENGTH_METERS_Y,
-  TWO_SEVENTHS,
-  FIVE_SEVENTHS,
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
