@@ -1,4 +1,5 @@
 
+from unittest.util import _MAX_LENGTH
 import uuid
 
 from django.db import models
@@ -112,4 +113,11 @@ class Player(BaseModel):
         null=True,
         default=None,
         on_delete=models.SET_NULL
+    )
+
+    ship_asset_name = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        default=None,
     )

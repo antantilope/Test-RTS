@@ -20,7 +20,7 @@ const { logger } = require("../lib/logger");
 
 const removePlayerFromRoom = async (db, player_uuid, team_uuid, deleteTeam) => {
     const sql1 = `
-        UPDATE api_player SET team_id = NULL WHERE uuid = ?;
+        UPDATE api_player SET team_id = NULL, ship_asset_name = NULL WHERE uuid = ?;
     `;
     const dbPromises = [
         db.run(sql1, [player_uuid])

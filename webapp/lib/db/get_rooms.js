@@ -1,5 +1,6 @@
 
 const { get_db_connection } = require("./get_db_connection")
+const { getUnusedAssetForRoom } = require("../ship_asset")
 
 exports.get_rooms = async () => {
     // Get list of rooms for the lobby.
@@ -65,6 +66,7 @@ exports.get_room_and_player_details = async (db, roomUUID) => {
             api_player.uuid AS player_uuid,
             api_player.handle AS handle,
             api_player.team_id AS team_uuid,
+            api_player.ship_asset_name as ship_asset_name,
             api_team.is_observer AS is_observer
         FROM api_player
         LEFT JOIN api_team ON api_team.uuid = api_player.team_id

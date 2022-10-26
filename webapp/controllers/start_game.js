@@ -282,7 +282,14 @@ exports.startGameController = startGameController = async (req, res) => {
         db.close()
     }
 
-    req.app.set(getQueueName(sess_room_id), [])
+    const playerIdToAssetName = {};
+    for(let i in room.players) {
+        playerIdToAssetName[
+            room.players[i].player_uuid
+        ] = room.players[i].ship_asset_name
+    }
+    console.log({shipAssetMapping: playerIdToAssetName})
+
 
     // Return HTTP response.
     res.sendStatus(202);
@@ -313,7 +320,9 @@ exports.startGameController = startGameController = async (req, res) => {
     });
     client.connect(room.roomDetails.port, 'localhost', () => {
         logger.info("connected to GameAPI");
-        const dataToWrite = JSON.stringify({advance_to_phase_1_starting:{}}) + "\n";
+        const dataToWrite = JSON.stringify(
+            {advance_to_phase_1_starting:{ship_asset_map: playerIdToAssetName}}
+        ) + "\n";
         logger.info("writing data to GameAPI " + dataToWrite);
         client.write(dataToWrite);
     });

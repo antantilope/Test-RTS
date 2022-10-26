@@ -8,6 +8,7 @@ const { get_map_details } = require ("../lib/db/get_maps");
 const { get_unused_port } = require("../lib/db/get_unused_port");
 const { mint_room_uuid } = require("../lib/db/mint_room_uuid");
 const { mint_team_uuid } = require("../lib/db/mint_team_uuid");
+const { getRandomAsset } = require("../lib/ship_asset")
 const { spawnPythonSocketServer } = require("../lib/pyprocess");
 const {
     EVENT_ROOM_LIST_UPDATE,
@@ -32,12 +33,12 @@ const create = async (db, room_uuid, team_uuid, port, pid, owner_uuid, room_name
         VALUES (?, ?, ?)
     `;
     const sql3 = `
-        UPDATE api_player SET team_id = ? WHERE uuid = ?
+        UPDATE api_player SET team_id = ?, ship_asset_name = ? WHERE uuid = ?
     `;
     await Promise.all([
         db.run(sql1, [room_uuid, room_name, map_uuid, port, pid, max_players, owner_uuid]),
         db.run(sql2, [team_uuid, room_uuid, owner_is_observer]),
-        db.run(sql3, [team_uuid, owner_uuid]),
+        db.run(sql3, [team_uuid, getRandomAsset(), owner_uuid]),
     ]);
     return await get_room_and_player_details(db, room_uuid)
 }

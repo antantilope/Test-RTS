@@ -34,6 +34,9 @@ export class ApiService {
   constructor(
     private _http: HttpClient,
   ) {
+
+    console.log("ApiService::constructor")
+
     const url: string = document.location.origin.replace(/^https?/, 'ws') // TODO: remove "s" from regex?
     console.log("ApiService::constructor connecting to socket server on " + url)
     this.socket = io(url)

@@ -61,6 +61,8 @@
                 margin-bottom: 1rem;
                 padding: 0.5rem;
                 border-radius: 4px;
+                display: flex;
+                justify-content: space-between;
             }
             .section-header {
                 margin: 1rem;
@@ -232,12 +234,20 @@
                 $("#players-list").html("");
                 players.filter(p => !p.is_observer).forEach(p => {
                     const rowElem = document.createElement("div");
+                    const nameContainer = document.createElement("div");
+                    const shipImageContainer = document.createElement("div");
+                    const shipImage = document.createElement("img");
+                    shipImage.src = "/static/img/ships/" + p.ship_asset_name + ".svg"
+                    shipImage.height = "55"
+                    shipImageContainer.append(shipImage)
                     $(rowElem).addClass("player-row");
                     let rowText = p.handle;
                     if(p.player_uuid === roomDetails.room_owner) {
                         rowText += " ⭐";
                     }
-                    $(rowElem).text(rowText)
+                    $(nameContainer).text(rowText)
+                    rowElem.append(nameContainer)
+                    rowElem.append(shipImageContainer)
                     $("#players-list").append(rowElem)
                 });
 
