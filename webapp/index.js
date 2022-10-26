@@ -32,6 +32,7 @@ const {
 const {
     RunCommandController
 } = require("./controllers/run_command");
+const { liveGameDetailsController } = require("./controllers/live_game_details");
 const { userDetailsController } = require("./controllers/user_details");
 const { pingServerController } = require("./controllers/ping_server");
 const { handleSocketConnection } = require("./socket_handler");
@@ -232,7 +233,7 @@ expressApp.get('/api/rooms/details', setJSONContentType, roomDetailsController);
 expressApp.post('/api/rooms/start', setJSONContentType, startGameController);
 expressApp.post('/api/rooms/command', setJSONContentType, RunCommandController);
 expressApp.get('/api/maps/list', setJSONContentType, getMapsController);
-
+expressApp.get('/api/game/live-details', setJSONContentType, liveGameDetailsController);
 
 // Launch the HTTP Server
 httpServer.listen(locals.port, () => {

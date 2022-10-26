@@ -17,6 +17,7 @@ import {
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
 import { UserService } from "./user.service";
+import { AssetService } from './asset.service';
 import {
   BoxCoords
 } from "./models/box-coords.model"
@@ -42,6 +43,7 @@ import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.mod
 
 
 
+
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
 }
@@ -63,13 +65,7 @@ export class DrawingService {
 
   private deathQuote: QuoteDetails | null = null;
 
-  private actionTileImgEngineLit: HTMLImageElement = new Image()
-  private actionTileImgEngineOnline: HTMLImageElement = new Image()
-  private actionTileImgScannerOnline: HTMLImageElement = new Image()
 
-  // TODO: Asset service
-  private magnetMineAsset: HTMLImageElement = new Image()
-  private shipAsset: HTMLImageElement = new Image()
 
   constructor(
     // private _camera: CameraService,
@@ -77,15 +73,9 @@ export class DrawingService {
     private _formatting: FormattingService,
     private _quote: QuoteService,
     public _user: UserService,
+    private _asset: AssetService,
   ) {
     this.deathQuote = this._quote.getQuote()
-
-    this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
-    this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
-    this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
-    this.magnetMineAsset.src = "/static/img/magnet-mine.svg"
-    this.shipAsset.src = "/static/img/ships/type_1_gray.svg"
-
   }
 
 
@@ -741,7 +731,7 @@ export class DrawingService {
 
       if (this._api.frameData.ship.engine_lit) {
         ctx.drawImage(
-          this.actionTileImgEngineLit,
+          this._asset.actionTileImgEngineLit,
           lrcXOffset,
           lrcYOffset - 100,
           100, 100,
@@ -750,7 +740,7 @@ export class DrawingService {
       }
       else if (this._api.frameData.ship.engine_online || this._api.frameData.ship.engine_starting) {
         ctx.drawImage(
-          this.actionTileImgEngineOnline,
+          this._asset.actionTileImgEngineOnline,
           lrcXOffset,
           lrcYOffset - 100,
           100, 100,
@@ -759,7 +749,7 @@ export class DrawingService {
       }
       if(this._api.frameData.ship.scanner_online || this._api.frameData.ship.scanner_starting) {
         ctx.drawImage(
-          this.actionTileImgScannerOnline,
+          this._asset.actionTileImgScannerOnline,
           lrcXOffset,
           lrcYOffset - 100,
           100, 100,
@@ -1253,9 +1243,11 @@ export class DrawingService {
     const shipLenYPX = SHIP_LENGTH_METERS_Y * this._api.frameData.map_config.units_per_meter / currentZoom
     const shipX1 = (drawableShip.canvasCoordCenter.x + vsxo) - (shipLenXPX / 2)
     const shipY1 = (drawableShip.canvasCoordCenter.y + vsyo) - (shipLenYPX / 2)
+
+    const img = this._asset.shipAssetRegister[drawableShip.skinSlug] || this._asset.backupShipAsset
     this.drawRotatedImg(
       ctx,
-      this.shipAsset,
+      img,
       drawableShip.heading,
       shipX1,
       shipY1,
@@ -1554,7 +1546,7 @@ export class DrawingService {
     mine: DrawableMagnetMine,
   ) {
     ctx.drawImage(
-      this.magnetMineAsset,
+      this._asset.magnetMineAsset,
       mine.canvasX1, mine.canvasY1,
       mine.canvasW, mine.canvasH,
     )

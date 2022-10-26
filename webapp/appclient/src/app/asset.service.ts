@@ -31,6 +31,8 @@ export class AssetService {
   public magnetMineAsset: HTMLImageElement = new Image()
 
   public shipAssetRegister: ShipAssetRegister = {}
+  public backupShipAsset: HTMLImageElement = new Image()
+
 
   constructor(
     private _api: ApiService,
@@ -39,6 +41,27 @@ export class AssetService {
     this.actionTileImgEngineLit.src = "/static/img/light-engine.jpg"
     this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
     this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
+
     this.magnetMineAsset.src = "/static/img/magnet-mine.svg"
+
+    this.backupShipAsset.src = "/static/img/ships/type_1_gray.svg"
+
+    setTimeout(this.buildShipAssetRegister.bind(this))
+  }
+
+  private buildShipAssetRegister() {
+    if(this._api.liveGameDetails === null) {
+      console.warn("AssetService::buildShipAssetRegister- liveGameDetails is NULL")
+      return setTimeout(this.buildShipAssetRegister.bind(this), 50)
+    }
+
+    const assetNames = Object.values(this._api.liveGameDetails.playerIdToAssetName)
+    for(let i in assetNames){
+      let assetName = assetNames[i]
+      let img = new Image()
+      img.src = `/static/img/ships/${assetName}.svg`
+      this.shipAssetRegister[assetName] = img
+    }
+
   }
 }

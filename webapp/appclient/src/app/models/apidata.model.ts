@@ -116,6 +116,7 @@ export class ScannerDataShipElement {
     coord_x: number
     coord_y: number
     id: string
+    skin_slug: string
     alive: boolean
     velocity_x_meters_per_second: number
     velocity_y_meters_per_second: number
@@ -180,6 +181,7 @@ class Timer {
 }
 export class Ship {
     id: string
+    skin_slug: string
     team_id: string
     mass: number
     coord_x: number
@@ -310,4 +312,8 @@ export class FrameData {
     killfeed: KillFeedElement[]
     ship: Ship
     special_weapon_costs: SpecialWeaponsCost
+}
+
+export class LiveGameDetails {
+    playerIdToAssetName: {[key: string]: string}
 }

@@ -4,7 +4,7 @@ const { get_room } = require("../lib/db/get_rooms");
 const { get_team_details } = require("../lib/db/get_team_details")
 const { removePlayerFromRoom } = require("../controllers/leave_room")
 const { getQueueName } = require("../lib/command_queue");
-const { PHASE_2_LIVE } = require("../constants")
+const { PHASE_2_LIVE } = require("../constants");
 const { logger } = require("../lib/logger");
 const { CommandValidationError } = require("../lib/command_validators/validation_error");
 const {

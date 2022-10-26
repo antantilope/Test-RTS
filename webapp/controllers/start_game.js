@@ -288,8 +288,6 @@ exports.startGameController = startGameController = async (req, res) => {
             room.players[i].player_uuid
         ] = room.players[i].ship_asset_name
     }
-    console.log({shipAssetMapping: playerIdToAssetName})
-
 
     // Return HTTP response.
     res.sendStatus(202);

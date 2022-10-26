@@ -125,6 +125,7 @@ class ShipScannerMode:
 
 class ScannedShipElement(TypedDict):
     id: str
+    skin_slug: str
     designator: str
     anti_radar_coating_level: int
     scanner_thermal_signature: int

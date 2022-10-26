@@ -733,6 +733,7 @@ class Game(BaseModel):
                 exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
                 scanner_ship_data: ScannedShipElement = {
                     'id': other_id,
+                    'skin_slug': self._ships[other_id].skin_slug,
                     'designator': self._ships[other_id].scanner_designator,
                     'anti_radar_coating_level': self._ships[other_id].anti_radar_coating_level,
                     'scanner_thermal_signature': self._ships[other_id].scanner_thermal_signature,
