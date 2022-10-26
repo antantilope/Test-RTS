@@ -1426,6 +1426,83 @@ export class DrawingService {
       }
     }
 
+    if(drawableShip.engineLit) {
+      // Primary engine Flame
+      let radiusPx = 1.75 * this._api.frameData.map_config.units_per_meter / currentZoom
+      ctx.beginPath()
+      ctx.fillStyle = "#ff0000"
+      ctx.arc(
+        drawableShip.EngineOuterLeftCanvasCoord.x + vsxo,
+        drawableShip.EngineOuterLeftCanvasCoord.y + vsyo,
+        radiusPx * getRandomFloat(0.9, 1.1),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(
+        drawableShip.EngineInnerLeftCanvasCoord.x + vsxo,
+        drawableShip.EngineInnerLeftCanvasCoord.y + vsyo,
+        radiusPx * getRandomFloat(0.9, 1.1),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(
+        drawableShip.EngineOuterRightCanvasCoord.x + vsxo,
+        drawableShip.EngineOuterRightCanvasCoord.y + vsyo,
+        radiusPx * getRandomFloat(0.9, 1.1),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(
+        drawableShip.EngineInnerRightCanvasCoord.x + vsxo,
+        drawableShip.EngineInnerRightCanvasCoord.y + vsyo,
+        radiusPx * getRandomFloat(0.9, 1.1),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      // inner engine Flame
+      radiusPx = 0.7 * this._api.frameData.map_config.units_per_meter / currentZoom
+      let maxInnerShake = radiusPx * 0.35
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 160, 0, ${getRandomFloat(0.2, 0.5)})`
+      ctx.arc(
+        drawableShip.EngineOuterLeftCanvasCoord.x + vsxo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        drawableShip.EngineOuterLeftCanvasCoord.y + vsyo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        radiusPx * getRandomFloat(0.5, 1.25),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 160, 0, ${getRandomFloat(0.2, 0.5)})`
+      ctx.arc(
+        drawableShip.EngineInnerLeftCanvasCoord.x + vsxo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        drawableShip.EngineInnerLeftCanvasCoord.y + vsyo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        radiusPx * getRandomFloat(0.5, 1.25),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 160, 0, ${getRandomFloat(0.2, 0.5)})`
+      ctx.arc(
+        drawableShip.EngineOuterRightCanvasCoord.x + vsxo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        drawableShip.EngineOuterRightCanvasCoord.y + vsyo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        radiusPx * getRandomFloat(0.5, 1.25),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 160, 0, ${getRandomFloat(0.2, 0.5)})`
+      ctx.arc(
+        drawableShip.EngineInnerRightCanvasCoord.x + vsxo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        drawableShip.EngineInnerRightCanvasCoord.y + vsyo + getRandomFloat(-maxInnerShake, maxInnerShake),
+        radiusPx * getRandomFloat(0.5, 1.25),
+        0, TWO_PI,
+      )
+      ctx.fill()
+    }
+
     if (this.isDebug) {
       // Draw hitbox polygon
       ctx.beginPath()
@@ -1442,36 +1519,35 @@ export class DrawingService {
       ctx.beginPath() // OUTER LEFT RED
       ctx.fillStyle = "#ff0000"
       ctx.arc(
-        drawableShip.EngineOuterLeftCoord.x,
-        drawableShip.EngineOuterLeftCoord.y,
+        drawableShip.EngineOuterLeftCanvasCoord.x,
+        drawableShip.EngineOuterLeftCanvasCoord.y,
         4, 0, TWO_PI
       )
       ctx.fill()
       ctx.beginPath() // INNER LEFT GREEN
       ctx.fillStyle = "#00ff00"
       ctx.arc(
-        drawableShip.EngineInnerLeftCoord.x,
-        drawableShip.EngineInnerLeftCoord.y,
+        drawableShip.EngineInnerLeftCanvasCoord.x,
+        drawableShip.EngineInnerLeftCanvasCoord.y,
         4, 0, TWO_PI
       )
       ctx.fill()
       ctx.beginPath() // INNER RIGHT YELLOW
       ctx.fillStyle = "#ffff00"
       ctx.arc(
-        drawableShip.EngineInnerRightCoord.x,
-        drawableShip.EngineInnerRightCoord.y,
+        drawableShip.EngineInnerRightCanvasCoord.x,
+        drawableShip.EngineInnerRightCanvasCoord.y,
         4, 0, TWO_PI
       )
       ctx.fill()
       ctx.beginPath() // OUTER RIGHT BLUE
       ctx.fillStyle = "#0000ff"
       ctx.arc(
-        drawableShip.EngineOuterRightCoord.x,
-        drawableShip.EngineOuterRightCoord.y,
+        drawableShip.EngineOuterRightCanvasCoord.x,
+        drawableShip.EngineOuterRightCanvasCoord.y,
         4, 0, TWO_PI
       )
       ctx.fill()
-
     }
   }
 
