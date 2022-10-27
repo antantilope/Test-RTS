@@ -368,10 +368,10 @@ class Game(BaseModel):
         )
 
 
-    def advance_to_phase_1_starting(self, request: StartGameCountdownRequest):
+    def advance_to_phase_1_starting(self, request: StartGameCountdownRequest = None):
         self._validate_can_advance_to_phase_1_starting()
         self._phase = GamePhase.STARTING
-        asset_map = request['ship_asset_map']
+        asset_map = request['ship_asset_map'] if request is not None else {}
         self._spawn_ships(asset_map)
 
         for ship_id, designator in get_designations(list(self._ships.keys())).items():
@@ -399,7 +399,7 @@ class Game(BaseModel):
                 team_id,
                 self._special_weapon_costs,
                 map_units_per_meter=self._map_units_per_meter,
-                skin_slug=asset_map[player_id],
+                skin_slug=asset_map.get(player_id),
             )
 
             coord_x = self._spawn_points[ix]['position_meters_x'] * self._map_units_per_meter
