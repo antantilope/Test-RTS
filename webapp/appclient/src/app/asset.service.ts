@@ -44,7 +44,7 @@ export class AssetService {
 
     this.magnetMineAsset.src = "/static/img/magnet-mine.svg"
 
-    this.backupShipAsset.src = "/static/img/ships/type_1_gray.svg"
+    this.backupShipAsset.src = "/static/img/ships/type_1_gray.png"
 
     setTimeout(this.buildShipAssetRegister.bind(this))
   }
@@ -59,7 +59,7 @@ export class AssetService {
     for(let i in assetNames){
       let assetName = assetNames[i]
       let img = new Image()
-      img.src = `/static/img/ships/${assetName}.svg`
+      img.src = `/static/img/ships/${assetName}.png`
       this.shipAssetRegister[assetName] = img
     }
 

@@ -127,17 +127,21 @@
                 <button id="close-picker-btn" onclick="closeAssetPicker()">Cancel</button>
             </div>
             <div class="options-container">
-                <img class="asset-option" src="/static/img/ships/type_1_blue.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_dark_purple.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_gray.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_green.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_light_green.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_neon_blue.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_orange.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_pink.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_purple.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_red.svg" height="65">
-                <img class="asset-option" src="/static/img/ships/type_1_yellow.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_blue.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_dark_purple.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_gray.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_green.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_light_green.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_neon_blue.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_orange.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_pink.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_purple.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_red.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_yellow.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_1.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_2.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_3.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_4.png" height="65">
             </div>
         </div>
         <div style="display: flex; justify-content: space-between;">
@@ -232,9 +236,9 @@
                     $(el).css("display", "block");
                 })
                 players.forEach(p=>{
-                    console.log("ships/" + p.ship_asset_name + "svg")
+                    console.log("ships/" + p.ship_asset_name + "png")
                     $(".asset-option").each((_, el)=>{
-                        if(el.src.indexOf("ships/" + p.ship_asset_name + ".svg") != -1) {
+                        if(el.src.indexOf("ships/" + p.ship_asset_name + ".png") != -1) {
                             $(el).css("display", "none");
                         }
                     })
@@ -328,7 +332,7 @@
                     const nameContainer = document.createElement("div");
                     const shipImageContainer = document.createElement("div");
                     const shipImage = document.createElement("img");
-                    shipImage.src = "/static/img/ships/" + p.ship_asset_name + ".svg"
+                    shipImage.src = "/static/img/ships/" + p.ship_asset_name + ".png"
                     shipImage.height = "55"
                     if(p.isYou) {
                         rowElem.classList.add("your-player-row")
