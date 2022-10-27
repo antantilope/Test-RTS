@@ -42,5 +42,21 @@ async function getUnusedShipAssetForRoom(db, roomUUID) {
     throw new Error("Could not find unused ship asset")
 }
 
+async function getAllUnusedShipAssetsForRoom(db, roomUUID) {
+    const sql = `
+        SELECT
+            api_player.ship_asset_name AS ship_asset_name
+        FROM api_player
+        LEFT JOIN api_team ON api_team.uuid = api_player.team_id
+        LEFT JOIN api_room ON api_room.uuid = api_team.room_id
+        WHERE api_room.uuid = ?;
+    `;
+    let assetsInUse = await db.all(sql, [roomUUID]);
+    assetsInUse = assetsInUse.map(d=>d.ship_asset_name);
+    return allAssets.filter(n=>assetsInUse.indexOf(n) == -1);
+}
+
 exports.getRandomAsset = getRandomAsset;
 exports.getUnusedShipAssetForRoom = getUnusedShipAssetForRoom
+exports.getAllUnusedShipAssetsForRoom = getAllUnusedShipAssetsForRoom
+exports.allAssets = allAssets

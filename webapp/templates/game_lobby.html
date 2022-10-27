@@ -382,6 +382,28 @@
                 });
                 // End of CSRF Setup //
 
+                $(".asset-option").click((event) => {
+                    closeAssetPicker();
+                    let ship_asset_name = event.target.src.split("/");
+                    ship_asset_name = ship_asset_name[ship_asset_name.length - 1].split(".")[0];
+                    $.post({
+                        url: "/api/rooms/pick-ship",
+                        data : JSON.stringify({ship_asset_name}),
+                        contentType : 'application/json',
+                        success: (data, status, xhr) => {
+                            if (xhr.status === 200) {}
+                            else {
+                                console.warn({data, status, xhr});
+                                alert("received unexpected response from the server");
+                            }
+                        },
+                        error: (xhr, status, err) => {
+                            console.error({err, status, xhr});
+                            alert("an error occured");
+                        }
+                    });
+                })
+
                 // Draw initial lobby data
                 $.get({
                     url: "/api/rooms/details",

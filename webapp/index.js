@@ -25,6 +25,7 @@ const { getMapsController } = require("./controllers/get_maps");
 const { adminCreateRoomController } = require("./controllers/admin_create_room");
 const { adminRoomListController } = require("./controllers/admin_room_list");
 const { adminRoomDeleteController } = require("./controllers/admin_delete_room");
+const { pickShipController } = require("./controllers/pick_ship");
 const {
     startGameController,
     relaunchGameLoops,
@@ -228,6 +229,7 @@ expressApp.get('/api/rooms/list', setJSONContentType, async (req, res) => {
 expressApp.get('/api/users/details', setJSONContentType, userDetailsController);
 expressApp.get('/api/rooms/ping', setJSONContentType, pingServerController);
 expressApp.post('/api/rooms/join', setJSONContentType, joinRoomController);
+expressApp.post('/api/rooms/pick-ship', setJSONContentType, pickShipController);
 expressApp.post('/api/rooms/leave', setJSONContentType, leaveRoomController);
 expressApp.get('/api/rooms/details', setJSONContentType, roomDetailsController);
 expressApp.post('/api/rooms/start', setJSONContentType, startGameController);
