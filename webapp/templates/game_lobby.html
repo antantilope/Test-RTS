@@ -88,7 +88,6 @@
                 position: absolute;
                 z-index: 2;
                 width: 400px;
-                height: 300px;
                 border: 2px solid black;
                 border-radius: 5px;
                 background-color: rgb(203, 192, 255);
@@ -207,9 +206,10 @@
                 const display = $(picker).css("display");
                 if(display === "none") {
                     const rowLocation = $(".your-player-row")[0].getBoundingClientRect();
-                    const xOffset = rowLocation.width + rowLocation.x;
-                    const yOffset = rowLocation.y;
-                    $(picker).css({top:yOffset, left:xOffset});
+                    $(picker).css({
+                        top:rowLocation.y - rowLocation.height,
+                        left:rowLocation.width + rowLocation.x
+                    });
                     $(picker).fadeIn(200)
                 } else {
                     closeAssetPicker()
