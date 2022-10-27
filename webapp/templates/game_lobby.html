@@ -206,13 +206,14 @@
                     console.log(rowLocation)
                     const xOffset = rowLocation.width + rowLocation.x;
                     const yOffset = rowLocation.y;
-                    $(picker).css({display:"block", top:yOffset, left:xOffset});
+                    $(picker).css({top:yOffset, left:xOffset});
+                    $(picker).fadeIn(200)
                 } else {
-                    $(picker).css({display:"none"});
+                    closeAssetPicker()
                 }
             }
             function closeAssetPicker() {
-                $("#ship-picker").css("display", "none");
+                $("#ship-picker").fadeOut(200)
             }
             function addToChat(text, ttl) {
                 const newMsg = document.createElement("div");
