@@ -61,6 +61,8 @@
                 margin-bottom: 1rem;
                 padding: 0.5rem;
                 border-radius: 4px;
+                display: flex;
+                justify-content: space-between;
             }
             .section-header {
                 margin: 1rem;
@@ -72,9 +74,75 @@
             #admin-link-container {
                 display: none;
             }
+            .clickable-image {
+                border: 2px solid #ffb300;
+                padding: 4px;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+            .clickable-image:hover {
+                border: 2px solid #bf00ff;
+            }
+            #ship-picker{
+                display: none;
+                position: absolute;
+                z-index: 2;
+                width: 400px;
+                border: 2px solid black;
+                border-radius: 5px;
+                background-color: rgb(203, 192, 255);
+            }
+            #close-picker-btn {
+                background-color: red;
+                color: white;
+                font-weight: bold;
+                font-size: 1.3rem;
+                cursor: pointer;
+            }
+            .close-picker-btn-container {
+                margin: 1rem;
+            }
+            .options-container {
+                background-color: black;
+                padding: 0.3rem;
+                margin: 1rem;
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .asset-option {
+                border: 1px solid rgb(100, 100, 100);
+                padding: 0.2rem;
+                margin: 0.2rem;
+                cursor: pointer;
+            }
+            .asset-option:hover {
+                border: 1px solid rgb(255, 255, 255);
+            }
         </style>
     </head>
     <body style="margin-left:1rem;">
+        <div id="ship-picker">
+            <div class="close-picker-btn-container">
+                <button id="close-picker-btn" onclick="closeAssetPicker()">Cancel</button>
+            </div>
+            <div class="options-container">
+                <img class="asset-option" src="/static/img/ships/type_1_blue.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_dark_purple.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_gray.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_green.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_light_green.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_neon_blue.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_orange.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_pink.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_purple.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_red.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_yellow.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_1.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_2.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_3.png" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_camo_4.png" height="65">
+            </div>
+        </div>
         <div style="display: flex; justify-content: space-between;">
             <div>
                 <h1>Game Lobby</h1>
@@ -133,6 +201,23 @@
             </div>
         </div>
         <script>
+            function openShipAssetPicker() {
+                const picker = document.getElementById("ship-picker");
+                const display = $(picker).css("display");
+                if(display === "none") {
+                    const rowLocation = $(".your-player-row")[0].getBoundingClientRect();
+                    $(picker).css({
+                        top:rowLocation.y - rowLocation.height,
+                        left:rowLocation.width + rowLocation.x
+                    });
+                    $(picker).fadeIn(200)
+                } else {
+                    closeAssetPicker()
+                }
+            }
+            function closeAssetPicker() {
+                $("#ship-picker").fadeOut(200)
+            }
             function addToChat(text, ttl) {
                 const newMsg = document.createElement("div");
                 $(newMsg).text(text);
@@ -146,6 +231,18 @@
             function drawLobby(roomDetails, players, userIsOwner) {
                 console.log("drawing lobby");
                 console.log({roomDetails, players, userIsOwner});
+
+                $(".asset-option").each((ix, el)=>{
+                    $(el).css("display", "block");
+                })
+                players.forEach(p=>{
+                    console.log("ships/" + p.ship_asset_name + "png")
+                    $(".asset-option").each((_, el)=>{
+                        if(el.src.indexOf("ships/" + p.ship_asset_name + ".png") != -1) {
+                            $(el).css("display", "none");
+                        }
+                    })
+                })
 
                 if(userIsOwner) {
                     console.log("adding");
@@ -232,12 +329,28 @@
                 $("#players-list").html("");
                 players.filter(p => !p.is_observer).forEach(p => {
                     const rowElem = document.createElement("div");
+                    const nameContainer = document.createElement("div");
+                    const shipImageContainer = document.createElement("div");
+                    const shipImage = document.createElement("img");
+                    shipImage.src = "/static/img/ships/" + p.ship_asset_name + ".png"
+                    shipImage.height = "55"
+                    if(p.isYou) {
+                        rowElem.classList.add("your-player-row")
+                        shipImage.classList.add("clickable-image")
+                        shipImage.addEventListener("click", openShipAssetPicker)
+                    }
+                    shipImageContainer.append(shipImage)
                     $(rowElem).addClass("player-row");
                     let rowText = p.handle;
                     if(p.player_uuid === roomDetails.room_owner) {
                         rowText += " ⭐";
                     }
-                    $(rowElem).text(rowText)
+                    if(p.isYou) {
+                        rowText += " (you)"
+                    }
+                    $(nameContainer).text(rowText)
+                    rowElem.append(nameContainer)
+                    rowElem.append(shipImageContainer)
                     $("#players-list").append(rowElem)
                 });
 
@@ -272,6 +385,28 @@
                     }
                 });
                 // End of CSRF Setup //
+
+                $(".asset-option").click((event) => {
+                    closeAssetPicker();
+                    let ship_asset_name = event.target.src.split("/");
+                    ship_asset_name = ship_asset_name[ship_asset_name.length - 1].split(".")[0];
+                    $.post({
+                        url: "/api/rooms/pick-ship",
+                        data : JSON.stringify({ship_asset_name}),
+                        contentType : 'application/json',
+                        success: (data, status, xhr) => {
+                            if (xhr.status === 200) {}
+                            else {
+                                console.warn({data, status, xhr});
+                                alert("received unexpected response from the server");
+                            }
+                        },
+                        error: (xhr, status, err) => {
+                            console.error({err, status, xhr});
+                            alert("an error occured");
+                        }
+                    });
+                })
 
                 // Draw initial lobby data
                 $.get({
@@ -308,6 +443,7 @@
                 $.get({
                     url: "/api/users/details",
                     success: (data, status, xhr) => {
+                        window._user_uuid = data.uuid
                         if(xhr.status === 200) {
                             $("#logged-in-as-span").text(data.handle);
                             if(data.is_superuser) {
@@ -354,7 +490,12 @@
                     }, 750)
                 });
                 socket.on("room_lobby_update", (data, msg) => {
-                    console.log({room_lobby_update: data});
+                    data.players = data.players.map(function(p){
+                        return {
+                            isYou: p.player_uuid == window._user_uuid,
+                            ...p,
+                        };
+                    });
                     drawLobby(
                         data.roomDetails,
                         data.players,

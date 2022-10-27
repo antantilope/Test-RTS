@@ -6,7 +6,7 @@ import { Subject } from 'rxjs'
 
 import { StartCountdownPayload } from './models/startcountdown-payload.model'
 import { AllChatMessage } from './models/allchat-message.model';
-import { FrameData } from './models/apidata.model';
+import { FrameData, LiveGameDetails } from './models/apidata.model';
 
 
 @Injectable({
@@ -19,6 +19,7 @@ export class ApiService {
   private EVENT_FRAMEDATA: string = "framedata"
   public frameDataEvent: Subject<void> = new Subject()
   public frameData: FrameData | null = null
+  public liveGameDetails: LiveGameDetails | null = null
 
   public lastShockwaveFrame : number | null = null
 
@@ -34,6 +35,11 @@ export class ApiService {
   constructor(
     private _http: HttpClient,
   ) {
+
+    console.log("ApiService::constructor")
+
+    this.fetchLiveDetails()
+
     const url: string = document.location.origin.replace(/^https?/, 'ws') // TODO: remove "s" from regex?
     console.log("ApiService::constructor connecting to socket server on " + url)
     this.socket = io(url)
@@ -78,5 +84,13 @@ export class ApiService {
     return this._http.post(url, data).toPromise();
   }
 
+  private async fetchLiveDetails() {
+    console.log("fetchLiveDetails()")
+    // @ts-ignore
+    const resp: LiveGameDetails = await this.get("/api/game/live-details")
+    console.log({resp})
+    this.liveGameDetails = resp;
+    console.log("fetchLiveDetails() DONE")
+  }
 
 }

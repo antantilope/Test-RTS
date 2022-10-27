@@ -89,7 +89,7 @@ class TCPHandler(socketserver.StreamRequestHandler):
             self.game.set_map(request)
 
         elif command_root == self.CMD_ROOT_ADVANCE_TO_PHASE_1_STARTING:
-            self.game.advance_to_phase_1_starting()
+            self.game.advance_to_phase_1_starting(request)
 
         elif command_root == self.CMD_ROOT_DECR_PHASE_1_STARTING_COUNTDOWN:
             self.game.decr_phase_1_starting_countdown()

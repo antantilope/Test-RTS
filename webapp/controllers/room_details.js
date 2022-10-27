@@ -24,6 +24,11 @@ exports.roomDetailsController = async (req, res) => {
         await db.close();
     }
 
+    roomDetailsAndPlayers.players = roomDetailsAndPlayers.players.map(pd=>({
+        isYou: pd.player_uuid === req.session.player_id,
+        ...pd
+    }));
+
     delete roomDetailsAndPlayers.roomDetails.port;
     delete roomDetailsAndPlayers.roomDetails.pid;
     roomDetailsAndPlayers.userIsOwner = roomDetailsAndPlayers.roomDetails.room_owner === req.session.player_id

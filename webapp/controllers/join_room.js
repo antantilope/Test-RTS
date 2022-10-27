@@ -7,6 +7,7 @@ const { get_user_details } = require("../lib/db/get_user_details");
 const { get_room_and_player_details, get_room } = require("../lib/db/get_rooms");
 const { mint_team_uuid } = require("../lib/db/mint_team_uuid");
 const { get_rooms_page_name, get_room_room_name } = require("../lib/room_names");
+const { getUnusedShipAssetForRoom } = require("../lib/ship_asset")
 const {
     EVENT_ROOM_LIST_UPDATE,
     EVENT_LOBBY_UPDATE,
@@ -19,17 +20,18 @@ const { logger } = require("../lib/logger");
 
 
 const addPlayerToRoom = async (db, player_uuid, room_uuid, team_uuid) => {
+    const shipAsset = await getUnusedShipAssetForRoom(db, room_uuid)
     const sql1 = `
         INSERT INTO api_team
         (uuid, room_id, is_observer)
         VALUES (?, ?, ?)
     `;
     const sql2 = `
-        UPDATE api_player SET team_id = ? WHERE uuid = ?
+        UPDATE api_player SET team_id = ?, ship_asset_name = ? WHERE uuid = ?
     `;
     return Promise.all([
         db.run(sql1, [team_uuid, room_uuid, false]),
-        db.run(sql2, [team_uuid, player_uuid]),
+        db.run(sql2, [team_uuid, shipAsset, player_uuid]),
     ]);
 }
 

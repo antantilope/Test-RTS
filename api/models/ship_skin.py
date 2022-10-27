@@ -13,4 +13,8 @@ ship_skins = {
     "type_1_purple",
     "type_1_red",
     "type_1_yellow",
+    'type_1_camo_1',
+    'type_1_camo_2',
+    'type_1_camo_3',
+    'type_1_camo_4',
 }

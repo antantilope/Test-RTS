@@ -99,6 +99,9 @@ class GameState(TypedDict):
     ships: Optional[List]
 
 
+class StartGameCountdownRequest(TypedDict):
+    ship_asset_map: Dict[str, str]
+
 class FrameCommand(TypedDict):
     player_id: str
     ship_command: str
@@ -365,10 +368,11 @@ class Game(BaseModel):
         )
 
 
-    def advance_to_phase_1_starting(self):
+    def advance_to_phase_1_starting(self, request: StartGameCountdownRequest = None):
         self._validate_can_advance_to_phase_1_starting()
         self._phase = GamePhase.STARTING
-        self._spawn_ships()
+        asset_map = request['ship_asset_map'] if request is not None else {}
+        self._spawn_ships(asset_map)
 
         for ship_id, designator in get_designations(list(self._ships.keys())).items():
             self._ships[ship_id].scanner_designator = designator
@@ -384,7 +388,7 @@ class Game(BaseModel):
 
 
     # Phase 1 # #
-    def _spawn_ships(self):
+    def _spawn_ships(self, asset_map: Dict[str, str]):
         """ TODO: Check for even spacing, add min_spacing value.
         """
         placed_points = []
@@ -394,7 +398,8 @@ class Game(BaseModel):
             ship = Ship.spawn(
                 team_id,
                 self._special_weapon_costs,
-                map_units_per_meter=self._map_units_per_meter
+                map_units_per_meter=self._map_units_per_meter,
+                skin_slug=asset_map.get(player_id),
             )
 
             coord_x = self._spawn_points[ix]['position_meters_x'] * self._map_units_per_meter
@@ -728,6 +733,7 @@ class Game(BaseModel):
                 exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
                 scanner_ship_data: ScannedShipElement = {
                     'id': other_id,
+                    'skin_slug': self._ships[other_id].skin_slug,
                     'designator': self._ships[other_id].scanner_designator,
                     'anti_radar_coating_level': self._ships[other_id].anti_radar_coating_level,
                     'scanner_thermal_signature': self._ships[other_id].scanner_thermal_signature,

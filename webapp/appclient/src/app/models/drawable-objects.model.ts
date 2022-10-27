@@ -5,6 +5,7 @@ export class DrawableShip {
     isSelf: boolean
     isDot?: boolean
     shipId: string
+    skinSlug: string
     alive: boolean
     mapCoord: PointCoord
     canvasCoordCenter: PointCoord

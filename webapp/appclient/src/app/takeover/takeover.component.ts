@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { AssetService } from '../asset.service';
+import { SoundService } from '../sound.service';
 import { TakeoverService } from '../takeover.service';
 
 
@@ -11,6 +13,8 @@ export class TakeoverComponent implements OnInit {
 
   constructor(
     public takeover: TakeoverService,
+    private _sound: SoundService, // We want sounds to download immediatly
+    private _asset: AssetService, // We want images to download immediatly
   ) {
     console.log("TakeoverComponent::constructor");
   }

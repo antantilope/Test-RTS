@@ -342,6 +342,7 @@ class TestGameUpdateScannerStatesForShips(TestCase):
         self.assertEqual(self.game._ships[self.player_1_ship_id].scanner_ship_data[self.player_2_ship_id],
             {
                 'id': self.player_2_ship_id,
+                'skin_slug': 'type_1_gray',
                 'designator': self.game._ships[self.player_2_ship_id].scanner_designator,
                 'coord_x': 1000 * self.upm,
                 'coord_y': 1000 * self.upm,
@@ -378,6 +379,7 @@ class TestGameUpdateScannerStatesForShips(TestCase):
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_ship_data[self.player_1_ship_id],
             {
                 'id': self.player_1_ship_id,
+                'skin_slug': 'type_1_gray',
                 'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
                 'coord_x': 500 * self.upm,
                 'coord_y': 500 * self.upm,
@@ -434,6 +436,7 @@ class TestGameUpdateScannerStatesForShips(TestCase):
         assert len(self.game._ships[self.player_1_ship_id].scanner_ship_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_ship_data) == 1
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_ship_data[self.player_1_ship_id], {
+            'skin_slug': 'type_1_gray',
             'id': self.player_1_ship_id,
             'designator': self.game._ships[self.player_1_ship_id].scanner_designator,
             'coord_x': 500 * self.upm,

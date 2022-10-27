@@ -375,6 +375,7 @@ export class Camera {
     }
     drawableItems.ships.push({
       isSelf: true,
+      skinSlug: ship.skin_slug,
       alive: ship.alive,
       designator: "you",
       canvasCoordCenter: selfCanvasCoordCenter,
@@ -444,6 +445,7 @@ export class Camera {
       let drawableShip: DrawableShip = {
         isSelf: false,
         isDot: true,
+        skinSlug: scannerData.skin_slug,
         distance: scannerData.distance,
         alive: scannerData.alive,
         aflame: scannerData.aflame,
