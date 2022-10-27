@@ -203,7 +203,6 @@
                 const display = $(picker).css("display");
                 if(display === "none") {
                     const rowLocation = $(".your-player-row")[0].getBoundingClientRect();
-                    console.log(rowLocation)
                     const xOffset = rowLocation.width + rowLocation.x;
                     const yOffset = rowLocation.y;
                     $(picker).css({top:yOffset, left:xOffset});
