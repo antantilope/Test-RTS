@@ -74,9 +74,91 @@
             #admin-link-container {
                 display: none;
             }
+            .clickable-image {
+                border: 2px solid #ffb300;
+                padding: 4px;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+            #ship-picker{
+                display: none;
+                position: absolute;
+                z-index: 2;
+                width: 400px;
+                height: 300px;
+                border: 2px solid black;
+                border-radius: 5px;
+                background-color: rgb(203, 192, 255);
+            }
+            #close-picker-btn {
+                background-color: red;
+                color: white;
+                font-weight: bold;
+                font-size: 1.3rem;
+                cursor: pointer;
+            }
+            .close-picker-btn-container {
+                margin: 1rem;
+            }
+            .options-container {
+                background-color: black;
+                padding: 0.3rem;
+                margin: 0.3rem;
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .asset-option {
+                border: 1px solid rgb(100, 100, 100);
+                padding: 0.2rem;
+                margin: 0.2rem;
+                cursor: pointer;
+            }
+            .asset-option:hover {
+                border: 1px solid rgb(255, 255, 255);
+            }
         </style>
     </head>
     <body style="margin-left:1rem;">
+        <div id="ship-picker">
+            <div class="close-picker-btn-container">
+                <button id="close-picker-btn" onclick="closeAssetPicker()">Cancel</button>
+            </div>
+            <div class="options-container">
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_blue.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_dark_purple.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_gray.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_green.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_light_green.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_neon_blue.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_orange.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_pink.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_purple.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_red.svg" height="65">
+                </div>
+                <div>
+                    <img class="asset-option" src="/static/img/ships/type_1_yellow.svg" height="65">
+                </div>
+            </div>
+        </div>
         <div style="display: flex; justify-content: space-between;">
             <div>
                 <h1>Game Lobby</h1>
@@ -135,6 +217,22 @@
             </div>
         </div>
         <script>
+            function openShipAssetPicker() {
+                const picker = document.getElementById("ship-picker");
+                const display = $(picker).css("display");
+                if(display === "none") {
+                    const rowLocation = $(".your-player-row")[0].getBoundingClientRect();
+                    console.log(rowLocation)
+                    const xOffset = rowLocation.width + rowLocation.x;
+                    const yOffset = rowLocation.y;
+                    $(picker).css({display:"block", top:yOffset, left:xOffset});
+                } else {
+                    $(picker).css({display:"none"});
+                }
+            }
+            function closeAssetPicker() {
+                $("#ship-picker").css("display", "none");
+            }
             function addToChat(text, ttl) {
                 const newMsg = document.createElement("div");
                 $(newMsg).text(text);
@@ -239,11 +337,19 @@
                     const shipImage = document.createElement("img");
                     shipImage.src = "/static/img/ships/" + p.ship_asset_name + ".svg"
                     shipImage.height = "55"
+                    if(p.isYou) {
+                        rowElem.classList.add("your-player-row")
+                        shipImage.classList.add("clickable-image")
+                        shipImage.addEventListener("click", openShipAssetPicker)
+                    }
                     shipImageContainer.append(shipImage)
                     $(rowElem).addClass("player-row");
                     let rowText = p.handle;
                     if(p.player_uuid === roomDetails.room_owner) {
                         rowText += " ⭐";
+                    }
+                    if(p.isYou) {
+                        rowText += " (you)"
                     }
                     $(nameContainer).text(rowText)
                     rowElem.append(nameContainer)
