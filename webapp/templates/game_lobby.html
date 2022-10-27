@@ -80,6 +80,9 @@
                 border-radius: 3px;
                 cursor: pointer;
             }
+            .clickable-image:hover {
+                border: 2px solid #bf00ff;
+            }
             #ship-picker{
                 display: none;
                 position: absolute;
@@ -103,7 +106,7 @@
             .options-container {
                 background-color: black;
                 padding: 0.3rem;
-                margin: 0.3rem;
+                margin: 1rem;
                 display: flex;
                 flex-wrap: wrap;
             }
@@ -124,39 +127,17 @@
                 <button id="close-picker-btn" onclick="closeAssetPicker()">Cancel</button>
             </div>
             <div class="options-container">
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_blue.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_dark_purple.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_gray.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_green.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_light_green.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_neon_blue.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_orange.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_pink.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_purple.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_red.svg" height="65">
-                </div>
-                <div>
-                    <img class="asset-option" src="/static/img/ships/type_1_yellow.svg" height="65">
-                </div>
+                <img class="asset-option" src="/static/img/ships/type_1_blue.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_dark_purple.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_gray.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_green.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_light_green.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_neon_blue.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_orange.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_pink.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_purple.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_red.svg" height="65">
+                <img class="asset-option" src="/static/img/ships/type_1_yellow.svg" height="65">
             </div>
         </div>
         <div style="display: flex; justify-content: space-between;">
@@ -246,6 +227,18 @@
             function drawLobby(roomDetails, players, userIsOwner) {
                 console.log("drawing lobby");
                 console.log({roomDetails, players, userIsOwner});
+
+                $(".asset-option").each((ix, el)=>{
+                    $(el).css("display", "block");
+                })
+                players.forEach(p=>{
+                    console.log("ships/" + p.ship_asset_name + "svg")
+                    $(".asset-option").each((_, el)=>{
+                        if(el.src.indexOf("ships/" + p.ship_asset_name + ".svg") != -1) {
+                            $(el).css("display", "none");
+                        }
+                    })
+                })
 
                 if(userIsOwner) {
                     console.log("adding");
@@ -424,6 +417,7 @@
                 $.get({
                     url: "/api/users/details",
                     success: (data, status, xhr) => {
+                        window._user_uuid = data.uuid
                         if(xhr.status === 200) {
                             $("#logged-in-as-span").text(data.handle);
                             if(data.is_superuser) {
@@ -470,7 +464,12 @@
                     }, 750)
                 });
                 socket.on("room_lobby_update", (data, msg) => {
-                    console.log({room_lobby_update: data});
+                    data.players = data.players.map(function(p){
+                        return {
+                            isYou: p.player_uuid == window._user_uuid,
+                            ...p,
+                        };
+                    });
                     drawLobby(
                         data.roomDetails,
                         data.players,
