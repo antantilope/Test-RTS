@@ -10,6 +10,7 @@ import {
 import {
   DrawableCanvasItems,
 } from '../models/drawable-objects.model'
+import { BoxCoords } from '../models/box-coords.model'
 import { ApiService } from "../api.service"
 import { PaneService } from '../pane.service'
 import { CameraService } from '../camera.service'
@@ -27,6 +28,13 @@ import {
   EMP_SLUG,
 } from '../constants'
 
+
+class GameDisplayCanvasBtn {
+  disabled: boolean
+  selected: boolean
+  text: boolean
+  canvasBox: BoxCoords
+}
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -79,7 +87,6 @@ export class GamedisplayComponent implements OnInit {
   public apuBtnBkColor = "#000000"
   public apuBtnTxtColor = "#ff0000"
   public mineBtnBkColor = "#ff0000"
-  public mineBtnTxtColor = "#000000"
 
   public wayPoint: PointCoord | null = null
   public wayPointUUID: string | null = null
@@ -92,13 +99,13 @@ export class GamedisplayComponent implements OnInit {
 
   constructor(
     public _api: ApiService,
-    private _sound: SoundService,
     public _camera: CameraService,
-    private _formatting: FormattingService,
     public _pane: PaneService,
     public _allchat: AllchatService,
-    private _draw: DrawingService,
     public _scanner: ScannerService,
+    private _sound: SoundService,
+    private _draw: DrawingService,
+    private _formatting: FormattingService,
   ) {
     console.log("GamedisplayComponent::constructor")
   }
@@ -249,7 +256,6 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private registerMouseEventListener(): void {
-
     // Zoom camera
     window.addEventListener('wheel', event => {
       const zoomIn = event.deltaY < 0
@@ -323,7 +329,7 @@ export class GamedisplayComponent implements OnInit {
     console.log("Done registering all mouse events!")
   }
 
-  public handleMouseClickInCanvas(event: any): void {
+  private handleMouseClickInCanvas(event: any): void {
     console.log("handleMouseClickInCanvas")
 
     if(this._api.frameData === null) {
@@ -434,11 +440,6 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-
-
-
-
-
   private getCurrentTubeWeaponCount() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
       return this._api.frameData.ship.magnet_mines_loaded
@@ -459,38 +460,6 @@ export class GamedisplayComponent implements OnInit {
     if (this._api.frameData === null) {
       window.requestAnimationFrame(this.paintDisplay.bind(this))
       return
-    }
-
-    if(this._api.frameData.ship.gravity_brake_extending || this._api.frameData.ship.gravity_brake_retracting) {
-      this.gravBrakeBtnBkColor = "#b2b500"
-      this.grabBrakeBtnTxtColor = "#b50000"
-    } else if (this._api.frameData.ship.gravity_brake_deployed) {
-      this.gravBrakeBtnBkColor = "#00b51b"
-      this.grabBrakeBtnTxtColor = "#ffffff"
-    } else if (this._api.frameData.ship.gravity_brake_position == 0) {
-      this.gravBrakeBtnBkColor = "#b50000"
-      this.grabBrakeBtnTxtColor = "#ffffff"
-    }
-
-    if(this._api.frameData.ship.apu_starting) {
-      this.apuBtnBkColor = "#b2b500"
-      this.apuBtnTxtColor = "#b50000"
-    }
-    else if (this._api.frameData.ship.apu_online) {
-      this.apuBtnBkColor = "#00b51b"
-      this.apuBtnTxtColor = "#ffffff"
-    } else {
-      this.apuBtnBkColor = "#b50000"
-      this.apuBtnTxtColor = "#ffffff"
-    }
-
-    if(this._api.frameData.ship.mining_ore) {
-      this.mineBtnBkColor = "#00b51b"
-      this.mineBtnTxtColor = "#ffffff"
-    }
-    else {
-      this.mineBtnBkColor = "#b50000"
-      this.mineBtnTxtColor = "#ffffff"
     }
 
     const camCoords = this._camera.gameDisplayCamera.getPosition()
@@ -741,7 +710,7 @@ export class GamedisplayComponent implements OnInit {
     yOffset += yInterval
   }
 
-  public async btnActivateEngine() {
+  async btnActivateEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_engine'},
@@ -749,7 +718,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnDeactivateEngine() {
+  async btnDeactivateEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_engine'},
@@ -757,7 +726,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnLightEngine() {
+  async btnLightEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'light_engine'},
@@ -765,7 +734,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnBoostEngine() {
+  async btnBoostEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'boost_engine'},
@@ -773,7 +742,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnUnlightEngine() {
+  async btnUnlightEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'unlight_engine'},
@@ -781,14 +750,14 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnToggleAPU() {
+  async btnToggleAPU() {
     if(this._api.frameData.ship.apu_online) {
       this.btnDeactivateAPU()
     } else {
       this.btnActivateAPU()
     }
   }
-  public async btnActivateAPU() {
+  async btnActivateAPU() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_apu'},
@@ -796,7 +765,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playUtilityButtonClickSound()
   }
 
-  public async btnDeactivateAPU() {
+  async btnDeactivateAPU() {
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_apu'},
@@ -804,7 +773,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playUtilityButtonClickSound()
   }
 
-  public async btnSetScannerModeRadar() {
+  async btnSetScannerModeRadar() {
     await this._api.post(
       "/api/rooms/command",
       {command:'set_scanner_mode_radar'},
@@ -812,7 +781,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnSetScannerModeIR() {
+  async btnSetScannerModeIR() {
     await this._api.post(
       "/api/rooms/command",
       {command:'set_scanner_mode_ir'},
@@ -820,7 +789,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnActivateScanner() {
+  async btnActivateScanner() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_scanner'},
@@ -831,7 +800,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  public async btnDeactivateScanner() {
+  async btnDeactivateScanner() {
     this._scanner.scannerTargetIDCursor = null
     await this._api.post(
       "/api/rooms/command",
@@ -846,35 +815,35 @@ export class GamedisplayComponent implements OnInit {
   }
 
   // Autopilot button handlers.
-  public async btnDisableAutoPilot() {
+  async btnDisableAutoPilot() {
     await this._api.post(
       "/api/rooms/command",
       {command:'disable_autopilot'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  public async btnAutoPilotHaltPosition() {
+  async btnAutoPilotHaltPosition() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'position_hold'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  public async btnAutoPilotHeadingLockTarget() {
+  async btnAutoPilotHeadingLockTarget() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_target'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  public async btnAutoPilotHeadingLockPrograde() {
+  async btnAutoPilotHeadingLockPrograde() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_prograde'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  public async btnAutoPilotHeadingLockRetrograde() {
+  async btnAutoPilotHeadingLockRetrograde() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_retrograde'},
@@ -897,7 +866,7 @@ export class GamedisplayComponent implements OnInit {
     console.warn("could not calculate waypoint type")
     return null
   }
-  public async btnAutoPilotHeadingLockWaypoint() {
+  async btnAutoPilotHeadingLockWaypoint() {
     const wpType = this.getWaypointType(this.wayPointUUID)
     if(!wpType){
       return
