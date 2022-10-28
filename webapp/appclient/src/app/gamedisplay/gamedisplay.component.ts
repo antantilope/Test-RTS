@@ -45,11 +45,8 @@ export class GamedisplayComponent implements OnInit {
 
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
-  @ViewChild("graphicsCanvasContainer") canvasContainer: ElementRef
-  @ViewChild("sidebarElement") sidebarElement: ElementRef
 
   public lauchVelocity: number = 65;
-
 
   private ctx: CanvasRenderingContext2D | null = null
 
@@ -213,7 +210,7 @@ export class GamedisplayComponent implements OnInit {
 
   @HostListener('window:resize', ['$event'])
   private handleWindowResize():void {
-    location.reload() // TODO: This is shit. Need a better solution.
+    this.resizeCanvas()
   }
 
   @HostListener('document:keypress', ['$event'])
@@ -425,10 +422,14 @@ export class GamedisplayComponent implements OnInit {
 
   private resizeCanvas() {
     setTimeout(() => {
-      console.log("resizeCanvas()")
-      this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth
-      this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight
-      this._camera.gameDisplayCamera.setCanvasWidthHeight(
+      console.log("GameDisplayComponent::resizeCanvas()")
+      this.canvas.nativeElement.width = document.body.clientWidth; //document.width is obsolete
+      this.canvas.nativeElement.height = document.body.clientHeight; //document.height is obsolete
+      console.log({
+        w: this.canvas.nativeElement.width,
+        h: this.canvas.nativeElement.height,
+      })
+      this._camera.gameDisplayCamera.registerCanvasWidthHeight(
         this.canvas.nativeElement.offsetWidth,
         this.canvas.nativeElement.offsetHeight,
       )

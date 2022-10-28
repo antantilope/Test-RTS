@@ -114,7 +114,7 @@ export class ScannerpaneComponent implements OnInit {
       const height = this.paneElement.nativeElement.offsetHeight - this.titleBar.nativeElement.offsetHeight
       this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth
       this.canvas.nativeElement.height = height// this.canvas.nativeElement.offsetHeight
-      this._camera.scannerPaneCamera.setCanvasWidthHeight(
+      this._camera.scannerPaneCamera.registerCanvasWidthHeight(
         this.canvas.nativeElement.offsetWidth,
         this.canvas.nativeElement.offsetHeight,
       )

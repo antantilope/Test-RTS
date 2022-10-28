@@ -63,7 +63,9 @@ export class Camera {
   }
 
 
-  public setCanvasWidthHeight(width: number, height: number) {
+  public registerCanvasWidthHeight(width: number, height: number) {
+    console.log(this.name+"Camera::registerCanvasWidthHeight()")
+    console.log({w: width, h: height})
     this.canvasWidth = width
     this.canvasHeight = height
     this.canvasHalfWidth = Number((width / 2).toFixed())
