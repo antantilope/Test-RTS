@@ -125,6 +125,28 @@ export class GamedisplayComponent implements OnInit {
     this._camera.scannerPaneCamera.setMiddleZoom()
   }
 
+  private setupCanvasContext() {
+    this.ctx = this.ctx || this.canvas.nativeElement.getContext("2d")
+  }
+
+  private setCanvasColor() {
+    this.canvas.nativeElement.style.backgroundColor = "#000000" // Black
+  }
+
+  @HostListener('window:resize', ['$event'])
+  private resizeCanvas() {
+    setTimeout(() => {
+      console.log("GameDisplayComponent::resizeCanvas()")
+      this.canvas.nativeElement.width = document.body.clientWidth;
+      this.canvas.nativeElement.height = document.body.clientHeight;
+      console.log({w: this.canvas.nativeElement.width, h: this.canvas.nativeElement.height})
+      this._camera.gameDisplayCamera.registerCanvasWidthHeight(
+        this.canvas.nativeElement.offsetWidth,
+        this.canvas.nativeElement.offsetHeight,
+      )
+    })
+  }
+
   ngOnDestroy() {
     console.log("GamedisplayComponent::ngOnDestroy")
   }
@@ -208,10 +230,6 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  @HostListener('window:resize', ['$event'])
-  private handleWindowResize():void {
-    this.resizeCanvas()
-  }
 
   @HostListener('document:keypress', ['$event'])
   private handleKeyboardEvent(event: KeyboardEvent) {
@@ -416,29 +434,10 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  private setupCanvasContext(): void {
-    this.ctx = this.ctx || this.canvas.nativeElement.getContext("2d")
-  }
 
-  private resizeCanvas() {
-    setTimeout(() => {
-      console.log("GameDisplayComponent::resizeCanvas()")
-      this.canvas.nativeElement.width = document.body.clientWidth; //document.width is obsolete
-      this.canvas.nativeElement.height = document.body.clientHeight; //document.height is obsolete
-      console.log({
-        w: this.canvas.nativeElement.width,
-        h: this.canvas.nativeElement.height,
-      })
-      this._camera.gameDisplayCamera.registerCanvasWidthHeight(
-        this.canvas.nativeElement.offsetWidth,
-        this.canvas.nativeElement.offsetHeight,
-      )
-    })
-  }
 
-  private setCanvasColor(): void {
-    this.canvas.nativeElement.style.backgroundColor = "#000000" // Black
-  }
+
+
 
   private getCurrentTubeWeaponCount() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
