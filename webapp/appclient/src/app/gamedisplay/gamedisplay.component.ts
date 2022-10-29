@@ -27,15 +27,6 @@ import {
   MAGNET_MINE_SLUG,
   EMP_SLUG,
 } from '../constants'
-import { Button } from 'protractor'
-
-
-// class GameDisplayCanvasBtn {
-//   disabled: boolean
-//   selected: boolean
-//   text: boolean
-//   canvasBox: BoxCoords
-// }
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -57,7 +48,10 @@ enum ButtonGroup {
 
 class ButtonSizing {
   fontSize: number
-  xLen: number
+  xLenMenu: number
+  xLenEngineMenu: number
+  xLenScannerMenu: number
+  xLenAutopilotMenu: number
   yLen: number
 }
 
@@ -71,10 +65,23 @@ class ButtonSizing {
 export class GamedisplayComponent implements OnInit {
 
 
-  private activeBtnGroup = ButtonGroup.NONE
+  private activeBtnGroup = ButtonGroup.ENGINE
   private btnCanvasLocations: {
     engineMenu?: BoxCoords,
+    engineStartup?: BoxCoords,
+    engineShutdown?: BoxCoords,
+    engineIdle?: BoxCoords,
+    engineIgnite?: BoxCoords,
+    engineBoost?: BoxCoords,
+
     autoPilotMenu?: BoxCoords,
+    autoPilotRetrograde?: BoxCoords,
+    autoPilotPrograde?: BoxCoords,
+    autoPilotWaypoint?: BoxCoords,
+    autoPilotTarget?: BoxCoords,
+    autoPilotHalt?: BoxCoords,
+    autoPilotDisabled?: BoxCoords,
+
     scannerMenuBtn?: BoxCoords,
     weaponsMenuBtn?: BoxCoords,
     utilitiesMenuBtn?: BoxCoords,
@@ -660,7 +667,9 @@ export class GamedisplayComponent implements OnInit {
     if(this.isDebug) {
       this.paintDebugData();
     }
-    this.paintButtons()
+    if(this.cameraMode !== CAMERA_MODE_MAP) {
+      this.paintButtons()
+    }
     this._sound.runSoundFXEngine();
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
@@ -672,7 +681,10 @@ export class GamedisplayComponent implements OnInit {
     )
     return {
       fontSize: 23,
-      xLen: 135,
+      xLenMenu: 135,
+      xLenEngineMenu: 125,
+      xLenAutopilotMenu: 150,
+      xLenScannerMenu: 140,
       yLen: 29,
     }
   }
@@ -687,133 +699,344 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private paintLeftCornerButtons(sizing: ButtonSizing) {
+    const ship = this._api.frameData.ship
     const canvasHeight = this._camera.gameDisplayCamera.canvasHeight
     const cornerOffset = 15
-    let yOffset = 0
+    let col1YOffset = 0, col2YOffset = 0
     const yGap = 8
-    const xGap = 8
+    const xGap = 12
     const textLeftBuffer = 5
     let x1: number, x2: number, y1: number, y2: number
 
     const btnColorWhite = "rgb(255, 255, 255, 0.5)"
+    const btnColorGray = "rgb(180, 180, 180, 0.5)"
+    const btnColorGreen = "rgb(0, 255, 17, 0.6)"
     const btnColorBlack = "#000000"
 
     this.ctx.textAlign = "left";
     this.ctx.textBaseline = "bottom"
-    this.ctx.font = `bold ${sizing.fontSize}px courier new`
 
     // Engine Menu
     x1 = cornerOffset
-    x2 = x1 + sizing.xLen
-    y2 = canvasHeight - cornerOffset - yOffset
+    x2 = x1 + sizing.xLenMenu
+    y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
+    this.btnCanvasLocations.engineMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = btnColorWhite
     this.ctx.lineWidth = 2
-    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.ENGINE) {
+      // Engine Menu selected
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
-      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorBlack
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("ENGINE", x1 + textLeftBuffer, y2)
+      // Engine Column 2 buttons
+      // BOOST
+      let enabled = ship.engine_lit
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEngineMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.engineBoost = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("BOOST", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // IGNITE
+      enabled = !ship.engine_lit && ship.engine_online
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEngineMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.engineIgnite = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("IGNITE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // IDLE
+      enabled = ship.engine_lit
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEngineMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.engineIdle = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("IDLE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // SHUTDOWN
+      enabled = ship.engine_online
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEngineMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.engineShutdown = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("SHUTDOWN", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // STARTUP
+      enabled = !ship.engine_online && !ship.engine_starting
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEngineMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.engineStartup = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("STARTUP", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("ENGINE", x1 + textLeftBuffer, y2)
+      delete this.btnCanvasLocations.engineStartup
+      delete this.btnCanvasLocations.engineShutdown
+      delete this.btnCanvasLocations.engineIdle
+      delete this.btnCanvasLocations.engineIgnite
+      delete this.btnCanvasLocations.engineBoost
     }
-    this.btnCanvasLocations.engineMenu = {x1, x2, y1, y2}
-    yOffset += (yGap + sizing.yLen)
+    col1YOffset += (yGap + sizing.yLen)
 
     // Autopilot Menu
-    y2 = canvasHeight - cornerOffset - yOffset
+    x1 = cornerOffset
+    x2 = x1 + sizing.xLenMenu
+    y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.ctx.beginPath()
     this.ctx.strokeStyle = btnColorWhite
     this.ctx.lineWidth = 2
-    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.AUTOPILOT) {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
-      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorBlack
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("AUTOPILOT", x1 + textLeftBuffer, y2)
+      // Autopilot Column 2 buttons
+      // Lock Retrograde
+      let active = ship.autopilot_program == "lock_retrograde" || ship.autopilot_program == "position_hold"
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenAutopilotMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.autoPilotRetrograde = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("RETROGRADE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // Lock Prograde
+      active = ship.autopilot_program == "lock_prograde"
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenAutopilotMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.autoPilotPrograde = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("PROGRADE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // Lock Waypoint
+      active = ship.autopilot_program == "lock_waypoint"
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenAutopilotMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.autoPilotWaypoint = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("WAYPOINT", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // Lock Target
+      active = ship.autopilot_program == "lock_target"
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenAutopilotMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.autoPilotTarget = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("TARGET", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // HALT
+      active = ship.autopilot_program == "position_hold"
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenAutopilotMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.autoPilotHalt = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("HALT", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // DISABLE
+      let enabled = ship.autopilot_program !== null
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenAutopilotMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.autoPilotDisabled = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("DISABLE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("AUTOPILOT", x1 + textLeftBuffer, y2)
+      delete this.btnCanvasLocations.autoPilotRetrograde
+      delete this.btnCanvasLocations.autoPilotPrograde
+      delete this.btnCanvasLocations.autoPilotWaypoint
+      delete this.btnCanvasLocations.autoPilotTarget
+      delete this.btnCanvasLocations.autoPilotHalt
+      delete this.btnCanvasLocations.autoPilotDisabled
     }
     this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
-    yOffset += (yGap + sizing.yLen)
+    col1YOffset += (yGap + sizing.yLen)
 
     // Scanner Menu
-    y2 = canvasHeight - cornerOffset - yOffset
+    x1 = cornerOffset
+    x2 = x1 + sizing.xLenMenu
+    y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.ctx.beginPath()
     this.ctx.strokeStyle = btnColorWhite
     this.ctx.lineWidth = 2
-    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.SCANNER) {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
-      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorBlack
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("SCANNER", x1 + textLeftBuffer, y2)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("SCANNER", x1 + textLeftBuffer, y2)
     }
     this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
-    yOffset += (yGap + sizing.yLen)
+    col1YOffset += (yGap + sizing.yLen)
 
     // Weapons Menu
-    y2 = canvasHeight - cornerOffset - yOffset
+    x1 = cornerOffset
+    x2 = x1 + sizing.xLenMenu
+    y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.ctx.beginPath()
     this.ctx.strokeStyle = btnColorWhite
     this.ctx.lineWidth = 2
-    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.WEAPONS) {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
-      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorBlack
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("WEAPONS", x1 + textLeftBuffer, y2)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("WEAPONS", x1 + textLeftBuffer, y2)
     }
     this.btnCanvasLocations.weaponsMenuBtn = {x1, x2, y1, y2}
-    yOffset += (yGap + sizing.yLen)
+    col1YOffset += (yGap + sizing.yLen)
 
     // Utilities Menu
-    y2 = canvasHeight - cornerOffset - yOffset
+    x1 = cornerOffset
+    x2 = x1 + sizing.xLenMenu
+    y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.ctx.beginPath()
     this.ctx.strokeStyle = btnColorWhite
     this.ctx.lineWidth = 2
-    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.UTILITIES) {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
-      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorBlack
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("UTILITIES", x1 + textLeftBuffer, y2)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("UTILITIES", x1 + textLeftBuffer, y2)
     }
     this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
-    yOffset += (yGap + sizing.yLen)
-
+    col1YOffset += (yGap + sizing.yLen)
   }
 
   private paintDebugData(): void {
