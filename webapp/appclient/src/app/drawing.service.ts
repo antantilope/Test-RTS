@@ -2086,8 +2086,6 @@ export class DrawingService {
       )
       ctx.fill()
     }
-
-
   }
 
 }

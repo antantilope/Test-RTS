@@ -27,14 +27,15 @@ import {
   MAGNET_MINE_SLUG,
   EMP_SLUG,
 } from '../constants'
+import { Button } from 'protractor'
 
 
-class GameDisplayCanvasBtn {
-  disabled: boolean
-  selected: boolean
-  text: boolean
-  canvasBox: BoxCoords
-}
+// class GameDisplayCanvasBtn {
+//   disabled: boolean
+//   selected: boolean
+//   text: boolean
+//   canvasBox: BoxCoords
+// }
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)
@@ -44,12 +45,40 @@ const CAMERA_MODE_SHIP = "ship"
 const CAMERA_MODE_SCANNER = "scanner"
 const CAMERA_MODE_MAP = "map"
 
+
+enum ButtonGroup {
+  NONE,
+  ENGINE,
+  AUTOPILOT,
+  SCANNER,
+  WEAPONS,
+  UTILITIES,
+}
+
+class ButtonSizing {
+  fontSize: number
+  xLen: number
+  yLen: number
+}
+
+
+
 @Component({
   selector: 'app-gamedisplay',
   templateUrl: './gamedisplay.component.html',
   styleUrls: ['./gamedisplay.component.css']
 })
 export class GamedisplayComponent implements OnInit {
+
+
+  private activeBtnGroup = ButtonGroup.NONE
+  private btnCanvasLocations: {
+    engineMenu?: BoxCoords,
+    autoPilotMenu?: BoxCoords,
+    scannerMenuBtn?: BoxCoords,
+    weaponsMenuBtn?: BoxCoords,
+    utilitiesMenuBtn?: BoxCoords,
+  } = {}
 
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
@@ -455,12 +484,18 @@ export class GamedisplayComponent implements OnInit {
     }).join(' ');
   }
 
+  private clearCanvas(): void {
+    this.ctx.beginPath()
+    this.ctx.clearRect(0, 0, this._camera.gameDisplayCamera.canvasWidth * 2, this._camera.gameDisplayCamera.canvasHeight * 2) // *2 because of bug where corner is not cleared
+  }
+
   private paintDisplay(): void {
 
     if (this._api.frameData === null) {
       window.requestAnimationFrame(this.paintDisplay.bind(this))
       return
     }
+    this.clearCanvas()
 
     const camCoords = this._camera.gameDisplayCamera.getPosition()
     const cameraMode = this.getCameraMode()
@@ -470,8 +505,6 @@ export class GamedisplayComponent implements OnInit {
         this._api.frameData.ship.coord_y,
       )
     }
-
-    this.clearCanvas()
 
     if (cameraMode === CAMERA_MODE_SHIP) {
       this._camera.gameDisplayCamera.setPosition(
@@ -595,13 +628,6 @@ export class GamedisplayComponent implements OnInit {
     )
 
     // Corner overlays
-    const tubeWeaponCt = this.getCurrentTubeWeaponCount()
-    this._draw.drawBottomLeftOverlay(
-      this.ctx,
-      this._camera.gameDisplayCamera,
-      cameraMode === CAMERA_MODE_MAP,
-      `TUBE: ${tubeWeaponCt > 0 ? tubeWeaponCt : "EMPTY"} ${this.getHumanReadableCurrentTubeWeapon()}`
-    )
     if(cameraMode !== CAMERA_MODE_MAP) {
       this._draw.drawTopLeftOverlay(this.ctx, cameraMode);
       this._draw.drawBottomRightOverlay(this.ctx, this._camera.gameDisplayCamera)
@@ -634,13 +660,160 @@ export class GamedisplayComponent implements OnInit {
     if(this.isDebug) {
       this.paintDebugData();
     }
+    this.paintButtons()
     this._sound.runSoundFXEngine();
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
 
-  private clearCanvas(): void {
+  private getButtonSizingData(): ButtonSizing {
+    const canvasDim = Math.min(
+      this._camera.gameDisplayCamera.canvasHeight,
+      this._camera.gameDisplayCamera.canvasWidth,
+    )
+    return {
+      fontSize: 23,
+      xLen: 135,
+      yLen: 29,
+    }
+  }
+
+  private paintButtons() {
+    if(this._api.frameData.ship.alive) {
+      const sizing = this.getButtonSizingData()
+      this.paintLeftCornerButtons(sizing)
+    } else {
+      this.btnCanvasLocations = {}
+    }
+  }
+
+  private paintLeftCornerButtons(sizing: ButtonSizing) {
+    const canvasHeight = this._camera.gameDisplayCamera.canvasHeight
+    const cornerOffset = 15
+    let yOffset = 0
+    const yGap = 8
+    const xGap = 8
+    const textLeftBuffer = 5
+    let x1: number, x2: number, y1: number, y2: number
+
+    const btnColorWhite = "rgb(255, 255, 255, 0.5)"
+    const btnColorBlack = "#000000"
+
+    this.ctx.textAlign = "left";
+    this.ctx.textBaseline = "bottom"
+    this.ctx.font = `bold ${sizing.fontSize}px courier new`
+
+    // Engine Menu
+    x1 = cornerOffset
+    x2 = x1 + sizing.xLen
+    y2 = canvasHeight - cornerOffset - yOffset
+    y1 = y2 - sizing.yLen
     this.ctx.beginPath()
-    this.ctx.clearRect(0, 0, this._camera.gameDisplayCamera.canvasWidth * 2, this._camera.gameDisplayCamera.canvasHeight * 2) // *2 because of bug where corner is not cleared
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.lineWidth = 2
+    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    if(this.activeBtnGroup === ButtonGroup.ENGINE) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorBlack
+      this.ctx.fillText("ENGINE", x1 + textLeftBuffer, y2)
+    } else {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillText("ENGINE", x1 + textLeftBuffer, y2)
+    }
+    this.btnCanvasLocations.engineMenu = {x1, x2, y1, y2}
+    yOffset += (yGap + sizing.yLen)
+
+    // Autopilot Menu
+    y2 = canvasHeight - cornerOffset - yOffset
+    y1 = y2 - sizing.yLen
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.lineWidth = 2
+    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    if(this.activeBtnGroup === ButtonGroup.AUTOPILOT) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorBlack
+      this.ctx.fillText("AUTOPILOT", x1 + textLeftBuffer, y2)
+    } else {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillText("AUTOPILOT", x1 + textLeftBuffer, y2)
+    }
+    this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
+    yOffset += (yGap + sizing.yLen)
+
+    // Scanner Menu
+    y2 = canvasHeight - cornerOffset - yOffset
+    y1 = y2 - sizing.yLen
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.lineWidth = 2
+    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    if(this.activeBtnGroup === ButtonGroup.SCANNER) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorBlack
+      this.ctx.fillText("SCANNER", x1 + textLeftBuffer, y2)
+    } else {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillText("SCANNER", x1 + textLeftBuffer, y2)
+    }
+    this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
+    yOffset += (yGap + sizing.yLen)
+
+    // Weapons Menu
+    y2 = canvasHeight - cornerOffset - yOffset
+    y1 = y2 - sizing.yLen
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.lineWidth = 2
+    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    if(this.activeBtnGroup === ButtonGroup.WEAPONS) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorBlack
+      this.ctx.fillText("WEAPONS", x1 + textLeftBuffer, y2)
+    } else {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillText("WEAPONS", x1 + textLeftBuffer, y2)
+    }
+    this.btnCanvasLocations.weaponsMenuBtn = {x1, x2, y1, y2}
+    yOffset += (yGap + sizing.yLen)
+
+    // Utilities Menu
+    y2 = canvasHeight - cornerOffset - yOffset
+    y1 = y2 - sizing.yLen
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.lineWidth = 2
+    this.ctx.strokeRect(x1, y1, sizing.xLen, sizing.yLen)
+    if(this.activeBtnGroup === ButtonGroup.UTILITIES) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillRect(x1, y1, sizing.xLen, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorBlack
+      this.ctx.fillText("UTILITIES", x1 + textLeftBuffer, y2)
+    } else {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillText("UTILITIES", x1 + textLeftBuffer, y2)
+    }
+    this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
+    yOffset += (yGap + sizing.yLen)
+
   }
 
   private paintDebugData(): void {
