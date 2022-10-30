@@ -797,6 +797,15 @@ export class QuoteService {
     },
     {
       lines: [
+        "We have one collective hope: the Earth.",
+        "And yet, uncounted people remain hopeless,",
+        "famine and calamity abound,",
+        "sufferers curl themselves into the arms of war."
+      ],
+      author: "Neil deGrasse Tyson",
+    },
+    {
+      lines: [
         "Computers are useless. They can only",
         "give you answers.",
       ],

@@ -42,7 +42,8 @@ enum ButtonGroup {
   ENGINE,
   AUTOPILOT,
   SCANNER,
-  WEAPONS,
+  EMEBEAM,
+  TORPEDO,
   UTILITIES,
 }
 
@@ -50,13 +51,19 @@ class ButtonSizing {
   fontSize: number
   xLenMenu: number
   xLenEngineMenu: number
-  xLenScannerMenu: number
+  xLenScannerC1Menu: number
+  xLenScannerC2Menu: number
   xLenAutopilotMenu: number
+  xLenEMEBeamMenu: number
+  xLenTorpedoC1Menu: number
+  xLenTorpedoC2Menu: number
+  xLenUtilitiesMenu: number
   yLen: number
 }
 
-
-
+function getRandomFloat(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
 @Component({
   selector: 'app-gamedisplay',
   templateUrl: './gamedisplay.component.html',
@@ -65,7 +72,7 @@ class ButtonSizing {
 export class GamedisplayComponent implements OnInit {
 
 
-  private activeBtnGroup = ButtonGroup.ENGINE
+  private activeBtnGroup = ButtonGroup.UTILITIES
   private btnCanvasLocations: {
     engineMenu?: BoxCoords,
     engineStartup?: BoxCoords,
@@ -83,8 +90,30 @@ export class GamedisplayComponent implements OnInit {
     autoPilotDisabled?: BoxCoords,
 
     scannerMenuBtn?: BoxCoords,
-    weaponsMenuBtn?: BoxCoords,
+    scannerStartBtn?: BoxCoords,
+    scannerStopBtn?: BoxCoords,
+    scannerRadarBtn?: BoxCoords,
+    scannerIRBtn?: BoxCoords,
+    scannerUpArrowBtn?: BoxCoords,
+    scannerDownArrowBtn?: BoxCoords,
+    scannerLockBtn?: BoxCoords,
+
+    EMEBeamMenuBtn?: BoxCoords,
+    EMEBeamChargeBtn?: BoxCoords,
+    EMEBeamPauseBtn?: BoxCoords,
+    EMEBeamFireBtn?: BoxCoords,
+
+    torpedoMenuBtn?: BoxCoords,
+    torpedoMenuSelEMPBtn?: BoxCoords,
+    torpedoMenuSelMagnetMineBtn?: BoxCoords,
+    torpedoUpArrowBtn?: BoxCoords,
+    torpedoDownArrowBtn?: BoxCoords,
+    torpedoFireBtn?: BoxCoords,
+
     utilitiesMenuBtn?: BoxCoords,
+    auxiliaryPowerBtn?: BoxCoords,
+    oreMineBtn?: BoxCoords,
+    gravityBrakeBtn?: BoxCoords,
   } = {}
 
 
@@ -684,7 +713,12 @@ export class GamedisplayComponent implements OnInit {
       xLenMenu: 135,
       xLenEngineMenu: 125,
       xLenAutopilotMenu: 150,
-      xLenScannerMenu: 140,
+      xLenScannerC1Menu: 108,
+      xLenScannerC2Menu: 68,
+      xLenEMEBeamMenu: 95,
+      xLenTorpedoC1Menu: 120,
+      xLenTorpedoC2Menu: 68,
+      xLenUtilitiesMenu: 150,
       yLen: 29,
     }
   }
@@ -702,15 +736,15 @@ export class GamedisplayComponent implements OnInit {
     const ship = this._api.frameData.ship
     const canvasHeight = this._camera.gameDisplayCamera.canvasHeight
     const cornerOffset = 15
-    let col1YOffset = 0, col2YOffset = 0
+    let col1YOffset = 0, col2YOffset = 0, col3YOffset = 0
     const yGap = 8
     const xGap = 12
     const textLeftBuffer = 5
     let x1: number, x2: number, y1: number, y2: number
-
-    const btnColorWhite = "rgb(255, 255, 255, 0.5)"
-    const btnColorGray = "rgb(180, 180, 180, 0.5)"
-    const btnColorGreen = "rgb(0, 255, 17, 0.6)"
+    const alpha = getRandomFloat(0.40, 0.55)
+    const btnColorWhite = `rgb(255, 255, 255, ${alpha})`
+    const btnColorGray = `rgb(180, 180, 180, ${alpha})`
+    const btnColorGreen = `rgb(0, 255, 17, ${alpha})`
     const btnColorBlack = "#000000"
 
     this.ctx.textAlign = "left";
@@ -977,16 +1011,141 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = btnColorBlack
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("SCANNER", x1 + textLeftBuffer, y2)
+      // Scanner Column 2 buttons
+      // IR
+      let disabled = !ship.scanner_online
+      let active = ship.scanner_online && ship.scanner_mode === "ir"
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenScannerC1Menu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.scannerIRBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("THERMAL", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // RADAR
+      disabled = !ship.scanner_online
+      active = ship.scanner_online && ship.scanner_mode === "radar"
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenScannerC1Menu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.scannerRadarBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("RADAR", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // Stop
+      disabled = !ship.scanner_online
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenScannerC1Menu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.scannerStopBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray :btnColorWhite
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("DISABLE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // Start
+      disabled = ship.scanner_starting
+      active = ship.scanner_online
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenScannerC1Menu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.scannerStartBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("START", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // Scanner Column 3 buttons
+      // Lock
+      disabled = !ship.scanner_online || !this._scanner.scannerTargetIDCursor
+      active = ship.scanner_locked || ship.scanner_locking
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + xGap + xGap
+      x2 = x1 + sizing.xLenScannerC2Menu
+      y2 = canvasHeight - cornerOffset - col3YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.scannerLockBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("LOCK", x1 + textLeftBuffer, y2)
+      col3YOffset += (yGap + sizing.yLen)
+      // Down Arrow
+      disabled = !ship.scanner_online
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + xGap + xGap
+      x2 = x1 + sizing.xLenScannerC2Menu
+      y2 = canvasHeight - cornerOffset - col3YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.scannerDownArrowBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText(" 🡇", x1 + textLeftBuffer, y2)
+      col3YOffset += (yGap + sizing.yLen)
+      // UP Arrow
+      disabled = !ship.scanner_online
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + xGap + xGap
+      x2 = x1 + sizing.xLenScannerC2Menu
+      y2 = canvasHeight - cornerOffset - col3YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.scannerUpArrowBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
+      col3YOffset += (yGap + sizing.yLen)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("SCANNER", x1 + textLeftBuffer, y2)
+      delete this.btnCanvasLocations.scannerStartBtn
+      delete this.btnCanvasLocations.scannerStopBtn
+      delete this.btnCanvasLocations.scannerRadarBtn
+      delete this.btnCanvasLocations.scannerIRBtn
+      delete this.btnCanvasLocations.scannerUpArrowBtn
+      delete this.btnCanvasLocations.scannerDownArrowBtn
+      delete this.btnCanvasLocations.scannerLockBtn
     }
     this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
     col1YOffset += (yGap + sizing.yLen)
 
-    // Weapons Menu
+    // Electromagnetic Energy Beam Menu
     x1 = cornerOffset
     x2 = x1 + sizing.xLenMenu
     y2 = canvasHeight - cornerOffset - col1YOffset
@@ -995,21 +1154,185 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.strokeStyle = btnColorWhite
     this.ctx.lineWidth = 2
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
-    if(this.activeBtnGroup === ButtonGroup.WEAPONS) {
+    if(this.activeBtnGroup === ButtonGroup.EMEBEAM) {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
       this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorBlack
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText("WEAPONS", x1 + textLeftBuffer, y2)
+      this.ctx.fillText("EME-BEAM", x1 + textLeftBuffer, y2)
+      // EME Beam Column 2 buttons
+      // FIRE
+      let disabled = !ship.ebeam_can_fire
+      let active = ship.ebeam_firing
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEMEBeamMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.EMEBeamFireBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // CHARGE
+      active = ship.ebeam_charging
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEMEBeamMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.EMEBeamChargeBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("CHARGE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // PAUSE
+      disabled = !ship.ebeam_charging
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenEMEBeamMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.EMEBeamPauseBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = (disabled? btnColorGray: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = (disabled? btnColorGray: btnColorWhite)
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("PAUSE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText("WEAPONS", x1 + textLeftBuffer, y2)
+      this.ctx.fillText("EME-BEAM", x1 + textLeftBuffer, y2)
+      delete this.btnCanvasLocations.EMEBeamChargeBtn
+      delete this.btnCanvasLocations.EMEBeamPauseBtn
+      delete this.btnCanvasLocations.EMEBeamFireBtn
     }
-    this.btnCanvasLocations.weaponsMenuBtn = {x1, x2, y1, y2}
+    this.btnCanvasLocations.EMEBeamMenuBtn = {x1, x2, y1, y2}
+    col1YOffset += (yGap + sizing.yLen)
+
+    // Torpedo Menu
+    x1 = cornerOffset
+    x2 = x1 + sizing.xLenMenu
+    y2 = canvasHeight - cornerOffset - col1YOffset
+    y1 = y2 - sizing.yLen
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.lineWidth = 2
+    this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
+    if(this.activeBtnGroup === ButtonGroup.TORPEDO) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorBlack
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("TORPEDOS", x1 + textLeftBuffer, y2)
+      // TORPEDO Column 2 buttons
+      // EMP Selector
+      let active = this.selectedPneumaticWeapon == EMP_SLUG
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenTorpedoC1Menu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.torpedoMenuSelEMPBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle =active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC1Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("  EMP", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // EMP Selector
+      active = this.selectedPneumaticWeapon == MAGNET_MINE_SLUG
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenTorpedoC1Menu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle =active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC1Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("MAG-MINE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+
+      // Torpedo Column 3 buttons
+      // FIRE
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + xGap + xGap
+      x2 = x1 + sizing.xLenTorpedoC2Menu
+      y2 = canvasHeight - cornerOffset - col3YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.torpedoFireBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
+      col3YOffset += (yGap + sizing.yLen)
+      // Down Arrow
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + xGap + xGap
+      x2 = x1 + sizing.xLenTorpedoC2Menu
+      y2 = canvasHeight - cornerOffset - col3YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.torpedoDownArrowBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText(" 🡇", x1 + textLeftBuffer, y2)
+      col3YOffset += (yGap + sizing.yLen)
+      // Up Arrow
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + xGap + xGap
+      x2 = x1 + sizing.xLenTorpedoC2Menu
+      y2 = canvasHeight - cornerOffset - col3YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.torpedoUpArrowBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorWhite
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
+      col3YOffset += (yGap + sizing.yLen)
+    } else {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("TORPEDOS", x1 + textLeftBuffer, y2)
+      delete this.btnCanvasLocations.torpedoFireBtn
+      delete this.btnCanvasLocations.torpedoDownArrowBtn
+      delete this.btnCanvasLocations.torpedoUpArrowBtn
+      delete this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn
+      delete this.btnCanvasLocations.torpedoMenuSelEMPBtn
+    }
+    this.btnCanvasLocations.torpedoMenuBtn = {x1, x2, y1, y2}
     col1YOffset += (yGap + sizing.yLen)
 
     // Utilities Menu
@@ -1029,11 +1352,66 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = btnColorBlack
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("UTILITIES", x1 + textLeftBuffer, y2)
+      // UTILITIES Column 2 buttons
+      // Gravity Brake
+      let active = ship.gravity_brake_deployed
+      let disabled =  ship.gravity_brake_retracting || ship.gravity_brake_extending
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenUtilitiesMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.gravityBrakeBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("GRAV BRAKE", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // ORE DRILL
+      active = ship.mining_ore
+      disabled =  !(ship.cargo_ore_mass_kg < ship.cargo_ore_mass_capacity_kg)
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenUtilitiesMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.oreMineBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("ORE DRILL", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
+      // Auxilary Power
+      active = ship.apu_online
+      disabled =  ship.apu_starting
+      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x2 = x1 + sizing.xLenUtilitiesMenu
+      y2 = canvasHeight - cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.gravityBrakeBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
+      this.ctx.lineWidth = 2
+      this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("AUX POWER", x1 + textLeftBuffer, y2)
+      col2YOffset += (yGap + sizing.yLen)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("UTILITIES", x1 + textLeftBuffer, y2)
+      delete this.btnCanvasLocations.gravityBrakeBtn
+      delete this.btnCanvasLocations.oreMineBtn
+      delete this.btnCanvasLocations.auxiliaryPowerBtn
     }
     this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
     col1YOffset += (yGap + sizing.yLen)
