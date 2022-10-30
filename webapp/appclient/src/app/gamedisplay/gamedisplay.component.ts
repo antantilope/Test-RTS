@@ -59,6 +59,8 @@ class ButtonSizing {
   xLenTorpedoC2Menu: number
   xLenUtilitiesMenu: number
   yLen: number
+  xGap: number
+  yGap: number
 }
 
 function getRandomFloat(min: number, max: number): number {
@@ -720,6 +722,8 @@ export class GamedisplayComponent implements OnInit {
       xLenTorpedoC2Menu: 68,
       xLenUtilitiesMenu: 150,
       yLen: 29,
+      xGap: 12,
+      yGap: 8,
     }
   }
 
@@ -737,8 +741,6 @@ export class GamedisplayComponent implements OnInit {
     const canvasHeight = this._camera.gameDisplayCamera.canvasHeight
     const cornerOffset = 15
     let col1YOffset = 0, col2YOffset = 0, col3YOffset = 0
-    const yGap = 8
-    const xGap = 12
     const textLeftBuffer = 5
     let x1: number, x2: number, y1: number, y2: number
     const alpha = getRandomFloat(0.40, 0.55)
@@ -772,7 +774,7 @@ export class GamedisplayComponent implements OnInit {
       // Engine Column 2 buttons
       // BOOST
       let enabled = ship.engine_lit
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -785,10 +787,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
       this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("BOOST", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // IGNITE
       enabled = !ship.engine_lit && ship.engine_online
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -801,10 +803,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
       this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("IGNITE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // IDLE
       enabled = ship.engine_lit
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -817,10 +819,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
       this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("IDLE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // SHUTDOWN
       enabled = ship.engine_online
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -833,10 +835,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
       this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("SHUTDOWN", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // STARTUP
       enabled = !ship.engine_online && !ship.engine_starting
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -849,7 +851,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
       this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("STARTUP", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
 
     } else {
       this.ctx.beginPath()
@@ -862,7 +864,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.engineIgnite
       delete this.btnCanvasLocations.engineBoost
     }
-    col1YOffset += (yGap + sizing.yLen)
+    col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Autopilot Menu
     x1 = cornerOffset
@@ -884,7 +886,7 @@ export class GamedisplayComponent implements OnInit {
       // Autopilot Column 2 buttons
       // Lock Retrograde
       let active = ship.autopilot_program == "lock_retrograde" || ship.autopilot_program == "position_hold"
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -897,10 +899,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("RETROGRADE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // Lock Prograde
       active = ship.autopilot_program == "lock_prograde"
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -913,10 +915,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("PROGRADE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // Lock Waypoint
       active = ship.autopilot_program == "lock_waypoint"
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -929,10 +931,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("WAYPOINT", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // Lock Target
       active = ship.autopilot_program == "lock_target"
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -945,10 +947,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("TARGET", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // HALT
       active = ship.autopilot_program == "position_hold"
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -961,10 +963,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("HALT", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // DISABLE
       let enabled = ship.autopilot_program !== null
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -977,7 +979,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("DISABLE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
 
     } else {
       this.ctx.beginPath()
@@ -992,7 +994,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.autoPilotDisabled
     }
     this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
-    col1YOffset += (yGap + sizing.yLen)
+    col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Scanner Menu
     x1 = cornerOffset
@@ -1015,7 +1017,7 @@ export class GamedisplayComponent implements OnInit {
       // IR
       let disabled = !ship.scanner_online
       let active = ship.scanner_online && ship.scanner_mode === "ir"
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1028,11 +1030,11 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("THERMAL", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // RADAR
       disabled = !ship.scanner_online
       active = ship.scanner_online && ship.scanner_mode === "radar"
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1045,10 +1047,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("RADAR", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // Stop
       disabled = !ship.scanner_online
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1061,11 +1063,11 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray :btnColorWhite
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("DISABLE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // Start
       disabled = ship.scanner_starting
       active = ship.scanner_online
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1078,12 +1080,12 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("START", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // Scanner Column 3 buttons
       // Lock
       disabled = !ship.scanner_online || !this._scanner.scannerTargetIDCursor
       active = ship.scanner_locked || ship.scanner_locking
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + xGap + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
@@ -1096,10 +1098,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("LOCK", x1 + textLeftBuffer, y2)
-      col3YOffset += (yGap + sizing.yLen)
+      col3YOffset += (sizing.yGap + sizing.yLen)
       // Down Arrow
       disabled = !ship.scanner_online
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + xGap + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
@@ -1112,10 +1114,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText(" 🡇", x1 + textLeftBuffer, y2)
-      col3YOffset += (yGap + sizing.yLen)
+      col3YOffset += (sizing.yGap + sizing.yLen)
       // UP Arrow
       disabled = !ship.scanner_online
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + xGap + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
@@ -1128,7 +1130,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
-      col3YOffset += (yGap + sizing.yLen)
+      col3YOffset += (sizing.yGap + sizing.yLen)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1143,7 +1145,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.scannerLockBtn
     }
     this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
-    col1YOffset += (yGap + sizing.yLen)
+    col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Electromagnetic Energy Beam Menu
     x1 = cornerOffset
@@ -1166,7 +1168,7 @@ export class GamedisplayComponent implements OnInit {
       // FIRE
       let disabled = !ship.ebeam_can_fire
       let active = ship.ebeam_firing
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1179,10 +1181,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // CHARGE
       active = ship.ebeam_charging
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1195,10 +1197,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("CHARGE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // PAUSE
       disabled = !ship.ebeam_charging
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1211,7 +1213,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = (disabled? btnColorGray: btnColorWhite)
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("PAUSE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1222,7 +1224,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.EMEBeamFireBtn
     }
     this.btnCanvasLocations.EMEBeamMenuBtn = {x1, x2, y1, y2}
-    col1YOffset += (yGap + sizing.yLen)
+    col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Torpedo Menu
     x1 = cornerOffset
@@ -1244,7 +1246,7 @@ export class GamedisplayComponent implements OnInit {
       // TORPEDO Column 2 buttons
       // EMP Selector
       let active = this.selectedPneumaticWeapon == EMP_SLUG
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC1Menu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1257,10 +1259,10 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("  EMP", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // EMP Selector
       active = this.selectedPneumaticWeapon == MAGNET_MINE_SLUG
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC1Menu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1273,11 +1275,11 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("MAG-MINE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
 
       // Torpedo Column 3 buttons
       // FIRE
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + xGap + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
@@ -1290,9 +1292,9 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
-      col3YOffset += (yGap + sizing.yLen)
+      col3YOffset += (sizing.yGap + sizing.yLen)
       // Down Arrow
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + xGap + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
@@ -1305,9 +1307,9 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText(" 🡇", x1 + textLeftBuffer, y2)
-      col3YOffset += (yGap + sizing.yLen)
+      col3YOffset += (sizing.yGap + sizing.yLen)
       // Up Arrow
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + xGap + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
@@ -1320,7 +1322,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
-      col3YOffset += (yGap + sizing.yLen)
+      col3YOffset += (sizing.yGap + sizing.yLen)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1333,7 +1335,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.torpedoMenuSelEMPBtn
     }
     this.btnCanvasLocations.torpedoMenuBtn = {x1, x2, y1, y2}
-    col1YOffset += (yGap + sizing.yLen)
+    col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Utilities Menu
     x1 = cornerOffset
@@ -1356,7 +1358,7 @@ export class GamedisplayComponent implements OnInit {
       // Gravity Brake
       let active = ship.gravity_brake_deployed
       let disabled =  ship.gravity_brake_retracting || ship.gravity_brake_extending
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenUtilitiesMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1369,11 +1371,11 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("GRAV BRAKE", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // ORE DRILL
       active = ship.mining_ore
       disabled =  !(ship.cargo_ore_mass_kg < ship.cargo_ore_mass_capacity_kg)
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenUtilitiesMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1386,11 +1388,11 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("ORE DRILL", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // Auxilary Power
       active = ship.apu_online
       disabled =  ship.apu_starting
-      x1 = cornerOffset + sizing.xLenMenu + xGap
+      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenUtilitiesMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
@@ -1403,7 +1405,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("AUX POWER", x1 + textLeftBuffer, y2)
-      col2YOffset += (yGap + sizing.yLen)
+      col2YOffset += (sizing.yGap + sizing.yLen)
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1414,7 +1416,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.auxiliaryPowerBtn
     }
     this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
-    col1YOffset += (yGap + sizing.yLen)
+    col1YOffset += (sizing.yGap + sizing.yLen)
   }
 
   private paintDebugData(): void {
