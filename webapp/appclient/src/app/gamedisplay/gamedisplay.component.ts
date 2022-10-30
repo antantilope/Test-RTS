@@ -74,7 +74,7 @@ function getRandomFloat(min: number, max: number): number {
 export class GamedisplayComponent implements OnInit {
 
 
-  private activeBtnGroup = ButtonGroup.UTILITIES
+  private activeBtnGroup = ButtonGroup.AUTOPILOT
   private btnCanvasLocations: {
     engineMenu?: BoxCoords,
     engineStartup?: BoxCoords,
@@ -853,6 +853,34 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("STARTUP", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
 
+      // Aestetic Outline
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorGreen
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(
+        this.btnCanvasLocations.engineMenu.x2,
+        this.btnCanvasLocations.engineMenu.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.engineMenu.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.engineMenu.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.engineMenu.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.engineStartup.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.engineStartup.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.engineStartup.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.engineStartup.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.engineBoost.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.engineStartup.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.engineBoost.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.engineMenu.x2,
+        this.btnCanvasLocations.engineMenu.y2)
+      this.ctx.stroke()
+
+
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -871,6 +899,7 @@ export class GamedisplayComponent implements OnInit {
     x2 = x1 + sizing.xLenMenu
     y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
+    this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = btnColorWhite
     this.ctx.lineWidth = 2
@@ -980,6 +1009,36 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("DISABLE", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
+
+      // Aestetic Outline
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorGreen
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(
+        this.btnCanvasLocations.autoPilotMenu.x2,
+        this.btnCanvasLocations.autoPilotMenu.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.autoPilotMenu.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.autoPilotMenu.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.autoPilotDisabled.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.autoPilotDisabled.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.autoPilotDisabled.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.autoPilotDisabled.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.autoPilotDisabled.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.autoPilotRetrograde.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.autoPilotDisabled.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.autoPilotRetrograde.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.autoPilotMenu.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.autoPilotMenu.y2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.autoPilotMenu.x2,
+        this.btnCanvasLocations.autoPilotMenu.y2)
+      this.ctx.stroke()
 
     } else {
       this.ctx.beginPath()
