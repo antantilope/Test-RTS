@@ -121,7 +121,10 @@ export class GamedisplayComponent implements OnInit {
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
 
-  public lauchVelocity: number = 65;
+  private lauchVelocity: number = 60;
+  private minLaunchVelocity = 10
+  private maxLaunchVelocity = 120
+  private launchVelocityInterval = 10
 
   private ctx: CanvasRenderingContext2D | null = null
 
@@ -159,10 +162,6 @@ export class GamedisplayComponent implements OnInit {
   public wayPointUUID: string | null = null
 
   public selectedPneumaticWeapon = MAGNET_MINE_SLUG
-  private allPneumaticWeapons = [
-    MAGNET_MINE_SLUG,
-    EMP_SLUG,
-  ]
 
   constructor(
     public _api: ApiService,
@@ -1762,9 +1761,9 @@ export class GamedisplayComponent implements OnInit {
     }else if(btnName == "torpedoMenuSelMagnetMineBtn") {
       this.selectedPneumaticWeapon = MAGNET_MINE_SLUG
     }else if(btnName == "torpedoUpArrowBtn") {
-
+      this.btnClickIncreasePneumaticPressure()
     }else if(btnName == "torpedoDownArrowBtn") {
-
+      this.btnClickDecreasePneumaticPressure()
     }else if(btnName == "torpedoFireBtn") {
       this.btnClickFirePneumaticTube()
     }// Utilities //
@@ -1778,8 +1777,6 @@ export class GamedisplayComponent implements OnInit {
     else {
       console.warn("unknown btn " + btnName)
     }
-
-
   }
 
   private async btnActivateEngine() {
@@ -2084,6 +2081,21 @@ export class GamedisplayComponent implements OnInit {
     } else {
       console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)
     }
+  }
+
+  private btnClickIncreasePneumaticPressure() {
+    this.lauchVelocity = Math.min(
+      this.maxLaunchVelocity,
+      this.lauchVelocity + this.launchVelocityInterval
+    )
+    console.log(this.lauchVelocity)
+  }
+  private btnClickDecreasePneumaticPressure() {
+    this.lauchVelocity = Math.max(
+      this.minLaunchVelocity,
+      this.lauchVelocity - this.launchVelocityInterval
+    )
+    console.log(this.lauchVelocity)
   }
 
   private async btnClickToggleGravBrake() {
