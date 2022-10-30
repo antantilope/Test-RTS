@@ -410,7 +410,22 @@ export class GamedisplayComponent implements OnInit {
       && this.drawableObjects.ships[0].isSelf
     ) {
       const cameraMode = this.getCameraMode()
-      if(!this._api.frameData.ship.autopilot_program && cameraMode !== CAMERA_MODE_MAP) {
+      let canvasBtnClicked = false
+      if(cameraMode !== CAMERA_MODE_MAP) {
+        const canvasBtnsToCheck = Object.keys(this.btnCanvasLocations)
+        for(let i in canvasBtnsToCheck) {
+          let bc:BoxCoords = this.btnCanvasLocations[canvasBtnsToCheck[i]]
+          if(this._camera.boxesOverlap(
+            bc,
+            {x1:mouseCanvasX, x2:mouseCanvasX, y1:mouseCanvasY, y2:mouseCanvasY})
+          ) {
+            this.handleBtnClick(canvasBtnsToCheck[i])
+            canvasBtnClicked = true
+            break
+          }
+        }
+      }
+      if(cameraMode !== CAMERA_MODE_MAP && !canvasBtnClicked && !this._api.frameData.ship.autopilot_program) {
         this.clickAnimationFrame = 1
         this.clickAnimationCanvasX = mouseCanvasX
         this.clickAnimationCanvasY = mouseCanvasY
@@ -1680,7 +1695,94 @@ export class GamedisplayComponent implements OnInit {
     yOffset += yInterval
   }
 
-  async btnActivateEngine() {
+  private handleBtnClick(btnName: string) {
+    console.log({btnName})
+    // Menu //
+    if(btnName == "engineMenu") {
+      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.ENGINE? ButtonGroup.ENGINE: ButtonGroup.NONE
+    }else if(btnName == "autoPilotMenu") {
+      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.AUTOPILOT? ButtonGroup.AUTOPILOT: ButtonGroup.NONE
+    }else if(btnName == "scannerMenuBtn") {
+      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.SCANNER? ButtonGroup.SCANNER: ButtonGroup.NONE
+    }else if(btnName == "EMEBeamMenuBtn") {
+      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.EMEBEAM? ButtonGroup.EMEBEAM: ButtonGroup.NONE
+    }else if(btnName == "torpedoMenuBtn") {
+      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.TORPEDO? ButtonGroup.TORPEDO: ButtonGroup.NONE
+    }else if(btnName == "utilitiesMenuBtn") {
+      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.UTILITIES? ButtonGroup.UTILITIES: ButtonGroup.NONE
+    }// Engine //
+    else if(btnName == "engineStartup") {
+      this.btnActivateEngine()
+    }else if(btnName == "engineShutdown") {
+      this.btnDeactivateEngine()
+    }else if(btnName == "engineIdle") {
+      this.btnUnlightEngine()
+    }else if(btnName == "engineIgnite") {
+      this.btnLightEngine()
+    }else if(btnName == "engineBoost") {
+      this.btnBoostEngine()
+    }// Autopilot //
+    else if(btnName == "autoPilotRetrograde") {
+      this.btnAutoPilotHeadingLockRetrograde()
+    }else if(btnName == "autoPilotPrograde") {
+      this.btnAutoPilotHeadingLockPrograde()
+    }else if(btnName == "autoPilotWaypoint") {
+      this.btnAutoPilotHeadingLockWaypoint()
+    }else if(btnName == "autoPilotTarget") {
+      this.btnAutoPilotHeadingLockTarget()
+    }else if(btnName == "autoPilotHalt") {
+      this.btnAutoPilotHaltPosition()
+    }else if(btnName == "autoPilotDisabled") {
+      this.btnDisableAutoPilot()
+    }// Scanner //
+    else if(btnName == "scannerStartBtn") {
+      this.btnActivateScanner()
+    }else if(btnName == "scannerStopBtn") {
+      this.btnDeactivateScanner()
+    }else if(btnName == "scannerRadarBtn") {
+      this.btnSetScannerModeRadar()
+    }else if(btnName == "scannerIRBtn") {
+      this.btnSetScannerModeIR()
+    }else if(btnName == "scannerUpArrowBtn") {
+      this.btnClickScannerCursorUp()
+    }else if(btnName == "scannerDownArrowBtn") {
+      this.btnClickScannerCursorDown()
+    }else if(btnName == "scannerLockBtn") {
+      this.btnClickScannerCursorLock()
+    }// EME BEAM //
+    else if(btnName == "EMEBeamChargeBtn") {
+      this.btnClickChargeEBeam()
+    }else if(btnName == "EMEBeamPauseBtn") {
+      this.btnClickPauseChargeEBeam()
+    }else if(btnName == "EMEBeamFireBtn") {
+      this.btnClickFireEBeam()
+    }// Torpedos //
+    else if(btnName == "torpedoMenuSelEMPBtn") {
+      this.selectedPneumaticWeapon = EMP_SLUG
+    }else if(btnName == "torpedoMenuSelMagnetMineBtn") {
+      this.selectedPneumaticWeapon = MAGNET_MINE_SLUG
+    }else if(btnName == "torpedoUpArrowBtn") {
+
+    }else if(btnName == "torpedoDownArrowBtn") {
+
+    }else if(btnName == "torpedoFireBtn") {
+      this.btnClickFirePneumaticTube()
+    }// Utilities //
+    else if(btnName == "auxiliaryPowerBtn") {
+      this.btnToggleAPU()
+    }else if(btnName == "oreMineBtn") {
+      this.btnToggleMineOre()
+    }else if(btnName == "gravityBrakeBtn") {
+      this.btnClickToggleGravBrake()
+    }
+    else {
+      console.warn("unknown btn " + btnName)
+    }
+
+
+  }
+
+  private async btnActivateEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_engine'},
@@ -1688,7 +1790,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnDeactivateEngine() {
+  private async btnDeactivateEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_engine'},
@@ -1696,7 +1798,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnLightEngine() {
+  private async btnLightEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'light_engine'},
@@ -1704,7 +1806,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnBoostEngine() {
+  private async btnBoostEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'boost_engine'},
@@ -1712,7 +1814,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnUnlightEngine() {
+  private async btnUnlightEngine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'unlight_engine'},
@@ -1720,14 +1822,14 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnToggleAPU() {
+  private async btnToggleAPU() {
     if(this._api.frameData.ship.apu_online) {
       this.btnDeactivateAPU()
     } else {
       this.btnActivateAPU()
     }
   }
-  async btnActivateAPU() {
+  private async btnActivateAPU() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_apu'},
@@ -1735,7 +1837,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playUtilityButtonClickSound()
   }
 
-  async btnDeactivateAPU() {
+  private async btnDeactivateAPU() {
     await this._api.post(
       "/api/rooms/command",
       {command:'deactivate_apu'},
@@ -1743,7 +1845,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playUtilityButtonClickSound()
   }
 
-  async btnSetScannerModeRadar() {
+  private async btnSetScannerModeRadar() {
     await this._api.post(
       "/api/rooms/command",
       {command:'set_scanner_mode_radar'},
@@ -1751,7 +1853,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnSetScannerModeIR() {
+  private async btnSetScannerModeIR() {
     await this._api.post(
       "/api/rooms/command",
       {command:'set_scanner_mode_ir'},
@@ -1759,7 +1861,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnActivateScanner() {
+  private async btnActivateScanner() {
     await this._api.post(
       "/api/rooms/command",
       {command:'activate_scanner'},
@@ -1770,7 +1872,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnDeactivateScanner() {
+  private async btnDeactivateScanner() {
     this._scanner.scannerTargetIDCursor = null
     await this._api.post(
       "/api/rooms/command",
@@ -1780,40 +1882,40 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  btnToggleScannerDataWindow() {
+  private btnToggleScannerDataWindow() {
     this._pane.scannerPaneVisible = !this._pane.scannerPaneVisible
   }
 
   // Autopilot button handlers.
-  async btnDisableAutoPilot() {
+  private async btnDisableAutoPilot() {
     await this._api.post(
       "/api/rooms/command",
       {command:'disable_autopilot'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  async btnAutoPilotHaltPosition() {
+  private async btnAutoPilotHaltPosition() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'position_hold'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  async btnAutoPilotHeadingLockTarget() {
+  private async btnAutoPilotHeadingLockTarget() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_target'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  async btnAutoPilotHeadingLockPrograde() {
+  private async btnAutoPilotHeadingLockPrograde() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_prograde'},
     )
     this._sound.playPrimaryButtonClickSound()
   }
-  async btnAutoPilotHeadingLockRetrograde() {
+  private async btnAutoPilotHeadingLockRetrograde() {
     await this._api.post(
       "/api/rooms/command",
       {command:'run_autopilot', autopilot_program:'lock_retrograde'},
@@ -1836,7 +1938,7 @@ export class GamedisplayComponent implements OnInit {
     console.warn("could not calculate waypoint type")
     return null
   }
-  async btnAutoPilotHeadingLockWaypoint() {
+  private async btnAutoPilotHeadingLockWaypoint() {
     const wpType = this.getWaypointType(this.wayPointUUID)
     if(!wpType){
       return
@@ -1852,7 +1954,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  btnClickScannerCursorUp() {
+  private btnClickScannerCursorUp() {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
       this._scanner.scannerTargetIDCursor = null
       return
@@ -1883,7 +1985,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  btnClickScannerCursorDown() {
+  private btnClickScannerCursorDown() {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
       this._scanner.scannerTargetIDCursor = null
       return
@@ -1912,7 +2014,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnClickScannerCursorLock () {
+  private async btnClickScannerCursorLock () {
     if(!this._api.frameData.ship || !this._api.frameData.ship.scanner_online) {
       this._scanner.scannerTargetIDCursor = null
       return
@@ -1938,7 +2040,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnClickChargeEBeam() {
+  private async btnClickChargeEBeam() {
     if(!this._api.frameData.ship.ebeam_charging && !this._api.frameData.ship.ebeam_firing) {
       await this._api.post(
         "/api/rooms/command",
@@ -1948,7 +2050,7 @@ export class GamedisplayComponent implements OnInit {
     this._sound.playPrimaryButtonClickSound()
   }
 
-  async btnClickPauseChargeEBeam() {
+  private async btnClickPauseChargeEBeam() {
     if(this._api.frameData.ship.ebeam_charging) {
       await this._api.post(
         "/api/rooms/command",
@@ -1958,7 +2060,7 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  async btnClickFireEBeam() {
+  private async btnClickFireEBeam() {
     if(this._api.frameData.ship.ebeam_can_fire) {
       await this._api.post(
         "/api/rooms/command",
@@ -1968,18 +2070,7 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  btnClickCyclePneumaticTube() {
-    const totalCount = this.allPneumaticWeapons.length
-    const currentIndex = this.allPneumaticWeapons.indexOf(this.selectedPneumaticWeapon)
-    if(currentIndex == (totalCount - 1)) {
-      this.selectedPneumaticWeapon = this.allPneumaticWeapons[0]
-    } else {
-      this.selectedPneumaticWeapon = this.allPneumaticWeapons[currentIndex + 1]
-    }
-    console.log("selected " + this.selectedPneumaticWeapon)
-  }
-
-  btnClickFirePneumaticTube() {
+  private btnClickFirePneumaticTube() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
       this._api.post(
         "/api/rooms/command",
@@ -1995,7 +2086,7 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  async btnClickToggleGravBrake() {
+  private async btnClickToggleGravBrake() {
     console.log("btnClickToggleGravBrake()")
     if (this._api.frameData.ship.gravity_brake_deployed) {
       this._api.post(
@@ -2017,7 +2108,7 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  async btnToggleMineOre() {
+  private async btnToggleMineOre() {
     if(!this._api.frameData.ship.parked_at_ore_mine === null) {
       console.warn("btn disabled")
       return
@@ -2039,15 +2130,15 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-  async btnToggleAllChatPane(){
+  private async btnToggleAllChatPane(){
     this._pane.toggleAllChatPane()
   }
 
-  btnToggleMainMenuPane() {
+  private btnToggleMainMenuPane() {
     this._pane.toggleMainMenuPane()
   }
 
-  async btnToggleShipPane(){
+  private async btnToggleShipPane(){
     this._pane.toggleShipPane()
   }
 
