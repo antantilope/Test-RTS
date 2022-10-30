@@ -140,9 +140,14 @@ export class GamedisplayComponent implements OnInit {
   private mouseMovedWhileDown = false
 
   /* Props to track click to change heading feedback */
-  private clickAnimationFrame: number | null = null
-  private clickAnimationCanvasX: number | null = null
-  private clickAnimationCanvasY: number | null = null
+  private clickHeadingAdjAnimationFrame: number | null = null
+  private clickHeadingAdjAnimationCanvasX: number | null = null
+  private clickHeadingAdjAnimationCanvasY: number | null = null
+
+  /* Props to track button click feedback */
+  private clickBtnClickAnimationFrame: number | null = null
+  private clickBtnClickAnimationCanvasX: number | null = null
+  private clickBtnClickAnimationCanvasY: number | null = null
 
   /* Props used to hold debug data */
   private isDebug: boolean = false
@@ -418,6 +423,9 @@ export class GamedisplayComponent implements OnInit {
             bc,
             {x1:mouseCanvasX, x2:mouseCanvasX, y1:mouseCanvasY, y2:mouseCanvasY})
           ) {
+            this.clickBtnClickAnimationFrame = 1
+            this.clickBtnClickAnimationCanvasX = mouseCanvasX
+            this.clickBtnClickAnimationCanvasY = mouseCanvasY
             this.handleBtnClick(canvasBtnsToCheck[i])
             canvasBtnClicked = true
             break
@@ -425,9 +433,9 @@ export class GamedisplayComponent implements OnInit {
         }
       }
       if(cameraMode !== CAMERA_MODE_MAP && !canvasBtnClicked && !this._api.frameData.ship.autopilot_program) {
-        this.clickAnimationFrame = 1
-        this.clickAnimationCanvasX = mouseCanvasX
-        this.clickAnimationCanvasY = mouseCanvasY
+        this.clickHeadingAdjAnimationFrame = 1
+        this.clickHeadingAdjAnimationCanvasX = mouseCanvasX
+        this.clickHeadingAdjAnimationCanvasY = mouseCanvasY
         this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
       }
       else if (cameraMode == CAMERA_MODE_MAP) {
@@ -691,21 +699,38 @@ export class GamedisplayComponent implements OnInit {
     this._draw.drawFrontAndCenterAlerts(this.ctx, this._camera.gameDisplayCamera)
 
     // Click feedback
-    if(this.clickAnimationFrame) {
+    if(this.clickHeadingAdjAnimationFrame) {
       this.ctx.beginPath()
-      this.ctx.strokeStyle = "#00ff00"
+      this.ctx.strokeStyle = "#7d00a3"
       this.ctx.lineWidth = 3
       this.ctx.arc(
-        this.clickAnimationCanvasX,
-        this.clickAnimationCanvasY,
-        this.clickAnimationFrame * 2.5,
+        this.clickHeadingAdjAnimationCanvasX,
+        this.clickHeadingAdjAnimationCanvasY,
+        this.clickHeadingAdjAnimationFrame * 2.5,
         0,
         TWO_PI,
       )
       this.ctx.stroke()
-      this.clickAnimationFrame++
-      if (this.clickAnimationFrame > 10) {
-        this.clickAnimationFrame = null
+      this.clickHeadingAdjAnimationFrame++
+      if (this.clickHeadingAdjAnimationFrame > 10) {
+        this.clickHeadingAdjAnimationFrame = null
+      }
+    }
+    if(this.clickBtnClickAnimationFrame) {
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = "#00ff00"
+      this.ctx.lineWidth = 3
+      this.ctx.arc(
+        this.clickBtnClickAnimationCanvasX,
+        this.clickBtnClickAnimationCanvasY,
+        this.clickBtnClickAnimationFrame * 2.5,
+        0,
+        TWO_PI,
+      )
+      this.ctx.stroke()
+      this.clickBtnClickAnimationFrame++
+      if (this.clickBtnClickAnimationFrame > 10) {
+        this.clickBtnClickAnimationFrame = null
       }
     }
 
