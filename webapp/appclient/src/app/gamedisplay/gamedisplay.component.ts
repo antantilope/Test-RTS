@@ -74,7 +74,7 @@ function getRandomFloat(min: number, max: number): number {
 export class GamedisplayComponent implements OnInit {
 
 
-  private activeBtnGroup = ButtonGroup.AUTOPILOT
+  private activeBtnGroup = ButtonGroup.UTILITIES
   private btnCanvasLocations: {
     engineMenu?: BoxCoords,
     engineStartup?: BoxCoords,
@@ -722,8 +722,8 @@ export class GamedisplayComponent implements OnInit {
       xLenTorpedoC2Menu: 68,
       xLenUtilitiesMenu: 150,
       yLen: 29,
-      xGap: 12,
-      yGap: 8,
+      xGap: 10,
+      yGap: 10,
     }
   }
 
@@ -759,7 +759,7 @@ export class GamedisplayComponent implements OnInit {
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.engineMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
-    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.ENGINE? btnColorGreen: btnColorWhite
     this.ctx.lineWidth = 2
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.ENGINE) {
@@ -901,7 +901,7 @@ export class GamedisplayComponent implements OnInit {
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
-    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.AUTOPILOT? btnColorGreen: btnColorWhite
     this.ctx.lineWidth = 2
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.AUTOPILOT) {
@@ -1052,7 +1052,6 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.autoPilotHalt
       delete this.btnCanvasLocations.autoPilotDisabled
     }
-    this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Scanner Menu
@@ -1060,8 +1059,9 @@ export class GamedisplayComponent implements OnInit {
     x2 = x1 + sizing.xLenMenu
     y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
+    this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
-    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.SCANNER? btnColorGreen: btnColorWhite
     this.ctx.lineWidth = 2
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.SCANNER) {
@@ -1190,6 +1190,43 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
+
+      // Aestetic Outline
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorGreen
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(
+        this.btnCanvasLocations.scannerMenuBtn.x2,
+        this.btnCanvasLocations.scannerMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerMenuBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.scannerMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerStartBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.scannerStartBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerStartBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.scannerStartBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerStartBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.scannerStartBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerUpArrowBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.scannerUpArrowBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerUpArrowBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.scannerLockBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerStartBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.scannerLockBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerMenuBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.scannerMenuBtn.y2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.scannerMenuBtn.x2,
+        this.btnCanvasLocations.scannerMenuBtn.y2)
+      this.ctx.stroke()
+
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1203,7 +1240,6 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.scannerDownArrowBtn
       delete this.btnCanvasLocations.scannerLockBtn
     }
-    this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Electromagnetic Energy Beam Menu
@@ -1211,8 +1247,9 @@ export class GamedisplayComponent implements OnInit {
     x2 = x1 + sizing.xLenMenu
     y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
+    this.btnCanvasLocations.EMEBeamMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
-    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.EMEBEAM? btnColorGreen: btnColorWhite
     this.ctx.lineWidth = 2
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.EMEBEAM) {
@@ -1273,6 +1310,37 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("PAUSE", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
+
+      // Aestetic Outline
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorGreen
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(
+        this.btnCanvasLocations.EMEBeamMenuBtn.x2,
+        this.btnCanvasLocations.EMEBeamMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.EMEBeamMenuBtn.x2 + sizing.xGap,
+        this.btnCanvasLocations.EMEBeamMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.EMEBeamPauseBtn.x1,
+      this.btnCanvasLocations.EMEBeamPauseBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.EMEBeamPauseBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.EMEBeamPauseBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.EMEBeamPauseBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.EMEBeamFireBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.EMEBeamPauseBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.EMEBeamFireBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.EMEBeamPauseBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.EMEBeamMenuBtn.y2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.EMEBeamMenuBtn.x2,
+        this.btnCanvasLocations.EMEBeamMenuBtn.y2)
+      this.ctx.stroke()
+
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1282,7 +1350,6 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.EMEBeamPauseBtn
       delete this.btnCanvasLocations.EMEBeamFireBtn
     }
-    this.btnCanvasLocations.EMEBeamMenuBtn = {x1, x2, y1, y2}
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Torpedo Menu
@@ -1290,8 +1357,9 @@ export class GamedisplayComponent implements OnInit {
     x2 = x1 + sizing.xLenMenu
     y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
+    this.btnCanvasLocations.torpedoMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
-    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.TORPEDO? btnColorGreen: btnColorWhite
     this.ctx.lineWidth = 2
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.TORPEDO) {
@@ -1382,6 +1450,43 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
+
+      // Aestetic Outline
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorGreen
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(
+        this.btnCanvasLocations.torpedoMenuBtn.x2,
+        this.btnCanvasLocations.torpedoMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoMenuBtn.x2 + sizing.xGap,
+        this.btnCanvasLocations.torpedoMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.x1,
+        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoUpArrowBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoUpArrowBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoUpArrowBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoUpArrowBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoUpArrowBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoFireBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoMenuSelEMPBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoMenuSelEMPBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoMenuBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoMenuBtn.y2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.torpedoMenuBtn.x2,
+        this.btnCanvasLocations.torpedoMenuBtn.y2)
+      this.ctx.stroke()
+
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1393,7 +1498,6 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn
       delete this.btnCanvasLocations.torpedoMenuSelEMPBtn
     }
-    this.btnCanvasLocations.torpedoMenuBtn = {x1, x2, y1, y2}
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Utilities Menu
@@ -1401,8 +1505,9 @@ export class GamedisplayComponent implements OnInit {
     x2 = x1 + sizing.xLenMenu
     y2 = canvasHeight - cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
+    this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
-    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.UTILITIES? btnColorGreen: btnColorWhite
     this.ctx.lineWidth = 2
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.UTILITIES) {
@@ -1455,7 +1560,7 @@ export class GamedisplayComponent implements OnInit {
       x2 = x1 + sizing.xLenUtilitiesMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
-      this.btnCanvasLocations.gravityBrakeBtn = {x1, x2, y1, y2}
+      this.btnCanvasLocations.auxiliaryPowerBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
       this.ctx.lineWidth = 2
@@ -1465,6 +1570,37 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("AUX POWER", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
+
+      // Aestetic Outline
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = btnColorGreen
+      this.ctx.lineWidth = 2
+      this.ctx.moveTo(
+        this.btnCanvasLocations.utilitiesMenuBtn.x2,
+        this.btnCanvasLocations.utilitiesMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.utilitiesMenuBtn.x2 + sizing.xGap,
+        this.btnCanvasLocations.utilitiesMenuBtn.y1)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.auxiliaryPowerBtn.x1,
+        this.btnCanvasLocations.auxiliaryPowerBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.auxiliaryPowerBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.auxiliaryPowerBtn.y1 - sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.gravityBrakeBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.gravityBrakeBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.gravityBrakeBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.gravityBrakeBtn.y2 + sizing.yGap / 2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.utilitiesMenuBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.utilitiesMenuBtn.y2)
+      this.ctx.lineTo(
+        this.btnCanvasLocations.utilitiesMenuBtn.x2,
+        this.btnCanvasLocations.utilitiesMenuBtn.y2)
+      this.ctx.stroke()
+
     } else {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1474,7 +1610,6 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.oreMineBtn
       delete this.btnCanvasLocations.auxiliaryPowerBtn
     }
-    this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
     col1YOffset += (sizing.yGap + sizing.yLen)
   }
 
