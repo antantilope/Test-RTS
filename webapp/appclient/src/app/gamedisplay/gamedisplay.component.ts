@@ -802,6 +802,7 @@ export class GamedisplayComponent implements OnInit {
     const btnColorWhite = `rgb(255, 255, 255, ${alpha})`
     const btnColorGray = `rgb(180, 180, 180, ${alpha})`
     const btnColorGreen = `rgb(0, 255, 17, ${alpha})`
+    const btnColorRed = `rgb(255, 140, 140, ${alpha})`
     const btnColorBlack = "#000000"
 
     this.ctx.textAlign = "left";
@@ -814,10 +815,12 @@ export class GamedisplayComponent implements OnInit {
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.engineMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
-    this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.ENGINE? btnColorGreen: btnColorWhite
+    const engineMenuSelected = this.activeBtnGroup === ButtonGroup.ENGINE
+    const engineOnline = ship.engine_online || ship.engine_starting
+    this.ctx.strokeStyle = engineMenuSelected? btnColorGreen: btnColorWhite
     this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineMenu")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
-    if(this.activeBtnGroup === ButtonGroup.ENGINE) {
+    if(engineMenuSelected) {
       // Engine Menu selected
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -943,7 +946,7 @@ export class GamedisplayComponent implements OnInit {
 
     } else {
       this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillStyle = engineOnline? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("ENGINE", x1 + textLeftBuffer, y2)
       delete this.btnCanvasLocations.engineStartup
@@ -1102,7 +1105,7 @@ export class GamedisplayComponent implements OnInit {
 
     } else {
       this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillStyle = ship.autopilot_program !== null? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("AUTOPILOT", x1 + textLeftBuffer, y2)
       delete this.btnCanvasLocations.autoPilotRetrograde
@@ -1202,7 +1205,7 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // Scanner Column 3 buttons
       // Lock
-      disabled = !ship.scanner_online || !this._scanner.scannerTargetIDCursor
+      disabled = !ship.scanner_online || !ship.scanner_ship_data.length
       active = ship.scanner_locked || ship.scanner_locking
       x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
@@ -1210,45 +1213,45 @@ export class GamedisplayComponent implements OnInit {
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerLockBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorRed: btnColorWhite)
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerLockBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
       this.ctx.beginPath()
-      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorRed: btnColorWhite)
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("LOCK", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
       // Down Arrow
-      disabled = !ship.scanner_online
+      disabled = !ship.scanner_online || !ship.scanner_ship_data.length
       x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerDownArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
+      this.ctx.strokeStyle = disabled ? btnColorGray : btnColorGreen
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerDownArrowBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText(" 🡇", x1 + textLeftBuffer, y2)
+      this.ctx.fillText("PREV", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
       // UP Arrow
-      disabled = !ship.scanner_online
+      disabled = !ship.scanner_online || !ship.scanner_ship_data.length
       x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerUpArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
+      this.ctx.strokeStyle = disabled ? btnColorGray : btnColorGreen
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerUpArrowBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
-      this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
+      this.ctx.font = `${disabled? "italic ": ""} bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("NEXT", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
 
       // Aestetic Outline
@@ -1289,7 +1292,7 @@ export class GamedisplayComponent implements OnInit {
 
     } else {
       this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillStyle = ship.scanner_online || ship.scanner_starting? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("SCANNER", x1 + textLeftBuffer, y2)
       delete this.btnCanvasLocations.scannerStartBtn
@@ -1323,18 +1326,18 @@ export class GamedisplayComponent implements OnInit {
       // EME Beam Column 2 buttons
       // FIRE
       let disabled = !ship.ebeam_can_fire
-      let active = ship.ebeam_firing
+      let active: boolean
       x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.EMEBeamFireBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.strokeStyle = disabled ? btnColorGray: btnColorRed
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamFireBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
       this.ctx.beginPath()
-      this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
+      this.ctx.fillStyle = disabled ? btnColorGray: btnColorRed
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
@@ -1403,7 +1406,7 @@ export class GamedisplayComponent implements OnInit {
 
     } else {
       this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillStyle = ship.ebeam_can_fire || ship.ebeam_charging? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("EME-BEAM", x1 + textLeftBuffer, y2)
       delete this.btnCanvasLocations.EMEBeamChargeBtn
@@ -1472,11 +1475,11 @@ export class GamedisplayComponent implements OnInit {
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoFireBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = btnColorWhite
+      this.ctx.strokeStyle = btnColorRed
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoFireBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
       this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillStyle = btnColorRed
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
@@ -1493,7 +1496,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText(" 🡇", x1 + textLeftBuffer, y2)
+      this.ctx.fillText("DECR", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
       // Up Arrow
       x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
@@ -1508,7 +1511,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText(" 🡅", x1 + textLeftBuffer, y2)
+      this.ctx.fillText("INCR", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
 
       // Aestetic Outline
