@@ -754,6 +754,7 @@ export class GamedisplayComponent implements OnInit {
       this._camera.gameDisplayCamera.canvasWidth,
     )
     if(this._camera.gameDisplayCamera.canvasWidth >= 650 && this._camera.gameDisplayCamera.canvasHeight >= 450) {
+      // "Larger" screen configuration
       return {
         cornerOffset: 15,
         fontSize: 23,
@@ -771,6 +772,7 @@ export class GamedisplayComponent implements OnInit {
         yGap: 10,
       }
     } else {
+      // "Smaller" screen configuration
       return {
         cornerOffset: 5,
         fontSize: 16,
