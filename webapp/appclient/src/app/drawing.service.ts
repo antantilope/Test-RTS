@@ -691,42 +691,59 @@ export class DrawingService {
     cameraMode: string,
     camera: Camera,
   ) {
+    if(!this._api.frameData || !this._api.frameData.ship.alive) {
+      return
+    }
     const sizing = this.getTopLeftOverlaySizing(
       camera.canvasWidth,
       camera.canvasHeight,
     )
     let tlcYOffset = sizing.yCornerOffset
     const tlcXOffset = sizing.xCornerOffset
-    if(this._api.frameData.ship.alive){
-      // Fuel amount
-      ctx.beginPath()
-      ctx.font = `${sizing.fontSize}px Courier New`
-      ctx.fillStyle = '#fcb8b8'
-      ctx.textAlign = 'left'
-      ctx.textBaseline = 'middle'
-      ctx.fillText("⛽" + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
-      tlcYOffset += sizing.yInterval
+    // Fuel amount
+    ctx.beginPath()
+    ctx.font = `${sizing.fontSize}px Courier New`
+    ctx.fillStyle = '#fcb8b8'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+    ctx.fillText("⛽" + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
 
-      // Battery amount
-      ctx.beginPath()
-      ctx.fillStyle = '#fcf9b8'
-      ctx.fillText("🔋" + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
-      tlcYOffset += sizing.yInterval
+    // Battery amount
+    ctx.beginPath()
+    ctx.fillStyle = '#fcf9b8'
+    ctx.fillText("🔋" + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
 
-      // Ore amount
-      const realOreKg = this._formatting.formatNumber(this._api.frameData.ship.cargo_ore_mass_kg)
-      const virtualOreKg = this._formatting.formatNumber(this._api.frameData.ship.virtual_ore_kg)
-      ctx.beginPath()
-      ctx.fillStyle = '#fce8b8'
-      ctx.fillText(`💎${realOreKg} 🪙${virtualOreKg}`, tlcXOffset, tlcYOffset)
-      tlcYOffset += sizing.yInterval
+    // Ore amount
+    const realOreKg = this._formatting.formatNumber(this._api.frameData.ship.cargo_ore_mass_kg)
+    const virtualOreKg = this._formatting.formatNumber(this._api.frameData.ship.virtual_ore_kg)
+    ctx.beginPath()
+    ctx.fillStyle = '#fce8b8'
+    ctx.fillText(`💎${realOreKg} 🪙${virtualOreKg}`, tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
 
-      // Camera mode
-      ctx.beginPath()
-      ctx.fillStyle = '#ffffff'
-      ctx.fillText("🎥" + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
-      tlcYOffset += sizing.yInterval
-    }
+    // Speed
+    const velocityMS = Math.sqrt(
+      Math.pow(this._api.frameData.ship.velocity_x_meters_per_second, 2)
+      + Math.pow(this._api.frameData.ship.velocity_y_meters_per_second, 2)
+    ).toFixed(0)
+    ctx.beginPath()
+    ctx.fillStyle = '#ffffff'
+    ctx.fillText(`💨 ${velocityMS} M/S`, tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
+
+    // Thermal signature
+    ctx.beginPath()
+    ctx.fillStyle = '#ffffff'
+    ctx.fillText(`🌡️ ${this._api.frameData.ship.scanner_thermal_signature}`, tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
+
+    // Camera mode
+    ctx.beginPath()
+    ctx.fillStyle = '#ffffff'
+    ctx.fillText("🎥 " + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
   }
 
   public drawBottomLeftOverlay(
