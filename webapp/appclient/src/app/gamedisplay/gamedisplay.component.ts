@@ -756,7 +756,7 @@ export class GamedisplayComponent implements OnInit {
     if(this._camera.gameDisplayCamera.canvasWidth >= 650 && this._camera.gameDisplayCamera.canvasHeight >= 450) {
       // "Larger" screen configuration
       return {
-        cornerOffset: 15,
+        cornerOffset: 10,
         fontSize: 23,
         xLenMenu: 135,
         xLenEngineMenu: 125,
@@ -768,8 +768,8 @@ export class GamedisplayComponent implements OnInit {
         xLenTorpedoC2Menu: 68,
         xLenUtilitiesMenu: 150,
         yLen: 29,
-        xGap: 10,
-        yGap: 10,
+        xGap: 7,
+        yGap: 7,
       }
     } else {
       // "Smaller" screen configuration
@@ -786,8 +786,8 @@ export class GamedisplayComponent implements OnInit {
         xLenTorpedoC2Menu: 49,
         xLenUtilitiesMenu: 107,
         yLen: 20,
-        xGap: 6,
-        yGap: 5,
+        xGap: 5,
+        yGap: 4,
       }
     }
   }
