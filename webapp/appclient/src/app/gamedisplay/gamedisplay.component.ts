@@ -148,6 +148,9 @@ export class GamedisplayComponent implements OnInit {
   private clickBtnClickAnimationFrame: number | null = null
   private clickBtnClickAnimationCanvasX: number | null = null
   private clickBtnClickAnimationCanvasY: number | null = null
+  private clickBtnBoarderAnimationButtonName: string | null = null
+  private clickBtnBoarderAnimationFrame: number | null = null
+
 
   /* Props used to hold debug data */
   private isDebug: boolean = false
@@ -775,6 +778,19 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
+  private getAndUpdateBtnBoarderWidth(btnName: string): number {
+    if(this.clickBtnBoarderAnimationFrame && btnName == this.clickBtnBoarderAnimationButtonName){
+      const border = 2 + this.clickBtnBoarderAnimationFrame * 0.65
+      if(this.clickBtnBoarderAnimationFrame++ > 15) {
+        this.clickBtnBoarderAnimationFrame = null
+        this.clickBtnBoarderAnimationButtonName = null
+      }
+      console.log({border})
+      return border
+    }
+    return 2// Default
+  }
+
   private paintLeftCornerButtons(sizing: ButtonSizing) {
     const ship = this._api.frameData.ship
     const canvasHeight = this._camera.gameDisplayCamera.canvasHeight
@@ -799,7 +815,7 @@ export class GamedisplayComponent implements OnInit {
     this.btnCanvasLocations.engineMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.ENGINE? btnColorGreen: btnColorWhite
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineMenu")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.ENGINE) {
       // Engine Menu selected
@@ -820,7 +836,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.engineBoost = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineBoost")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
@@ -836,7 +852,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.engineIgnite = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineIgnite")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
@@ -852,7 +868,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.engineIdle = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineIdle")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
@@ -868,7 +884,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.engineShutdown = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineShutdown")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
@@ -884,7 +900,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.engineStartup = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineStartup")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
@@ -895,7 +911,7 @@ export class GamedisplayComponent implements OnInit {
       // Aestetic Outline
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorGreen
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineMenu")
       this.ctx.moveTo(
         this.btnCanvasLocations.engineMenu.x2,
         this.btnCanvasLocations.engineMenu.y1)
@@ -941,7 +957,7 @@ export class GamedisplayComponent implements OnInit {
     this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.AUTOPILOT? btnColorGreen: btnColorWhite
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotMenu")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.AUTOPILOT) {
       this.ctx.beginPath()
@@ -961,7 +977,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.autoPilotRetrograde = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotRetrograde")
       this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
@@ -977,7 +993,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.autoPilotPrograde = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotPrograde")
       this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
@@ -993,7 +1009,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.autoPilotWaypoint = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotWaypoint")
       this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
@@ -1009,7 +1025,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.autoPilotTarget = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotTarget")
       this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
@@ -1025,7 +1041,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.autoPilotHalt = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotHalt")
       this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
@@ -1041,7 +1057,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.autoPilotDisabled = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotDisabled")
       this.ctx.strokeRect(x1, y1, sizing.xLenAutopilotMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
@@ -1052,7 +1068,7 @@ export class GamedisplayComponent implements OnInit {
       // Aestetic Outline
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorGreen
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("autoPilotMenu")
       this.ctx.moveTo(
         this.btnCanvasLocations.autoPilotMenu.x2,
         this.btnCanvasLocations.autoPilotMenu.y1)
@@ -1101,7 +1117,7 @@ export class GamedisplayComponent implements OnInit {
     this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.SCANNER? btnColorGreen: btnColorWhite
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerMenuBtn")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.SCANNER) {
       this.ctx.beginPath()
@@ -1122,7 +1138,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.scannerIRBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerIRBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
@@ -1139,7 +1155,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.scannerRadarBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerRadarBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
@@ -1155,7 +1171,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.scannerStopBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerStopBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray :btnColorWhite
@@ -1172,7 +1188,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.scannerStartBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerStartBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC1Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
@@ -1190,7 +1206,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.scannerLockBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerLockBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
@@ -1206,7 +1222,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.scannerDownArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerDownArrowBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
@@ -1222,7 +1238,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.scannerUpArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerUpArrowBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenScannerC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : btnColorGreen
@@ -1233,7 +1249,7 @@ export class GamedisplayComponent implements OnInit {
       // Aestetic Outline
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorGreen
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("scannerMenuBtn")
       this.ctx.moveTo(
         this.btnCanvasLocations.scannerMenuBtn.x2,
         this.btnCanvasLocations.scannerMenuBtn.y1)
@@ -1289,7 +1305,7 @@ export class GamedisplayComponent implements OnInit {
     this.btnCanvasLocations.EMEBeamMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.EMEBEAM? btnColorGreen: btnColorWhite
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamMenuBtn")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.EMEBEAM) {
       this.ctx.beginPath()
@@ -1310,7 +1326,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.EMEBeamFireBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamFireBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray : (active? btnColorGreen: btnColorWhite)
@@ -1326,7 +1342,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.EMEBeamChargeBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamChargeBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = (active? btnColorGreen: btnColorWhite)
@@ -1342,7 +1358,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.EMEBeamPauseBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = (disabled? btnColorGray: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamPauseBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = (disabled? btnColorGray: btnColorWhite)
@@ -1353,7 +1369,7 @@ export class GamedisplayComponent implements OnInit {
       // Aestetic Outline
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorGreen
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamMenuBtn")
       this.ctx.moveTo(
         this.btnCanvasLocations.EMEBeamMenuBtn.x2,
         this.btnCanvasLocations.EMEBeamMenuBtn.y1)
@@ -1399,7 +1415,7 @@ export class GamedisplayComponent implements OnInit {
     this.btnCanvasLocations.torpedoMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.TORPEDO? btnColorGreen: btnColorWhite
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoMenuBtn")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.TORPEDO) {
       this.ctx.beginPath()
@@ -1418,8 +1434,8 @@ export class GamedisplayComponent implements OnInit {
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoMenuSelEMPBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle =active? btnColorGreen: btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoMenuSelEMPBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC1Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
@@ -1434,8 +1450,8 @@ export class GamedisplayComponent implements OnInit {
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle =active? btnColorGreen: btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoMenuSelMagnetMineBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC1Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
@@ -1452,7 +1468,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.torpedoFireBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoFireBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1467,7 +1483,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.torpedoDownArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoDownArrowBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1482,7 +1498,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.torpedoUpArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorWhite
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoUpArrowBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
@@ -1493,7 +1509,7 @@ export class GamedisplayComponent implements OnInit {
       // Aestetic Outline
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorGreen
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoMenuBtn")
       this.ctx.moveTo(
         this.btnCanvasLocations.torpedoMenuBtn.x2,
         this.btnCanvasLocations.torpedoMenuBtn.y1)
@@ -1547,7 +1563,7 @@ export class GamedisplayComponent implements OnInit {
     this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
     this.ctx.strokeStyle = this.activeBtnGroup === ButtonGroup.UTILITIES? btnColorGreen: btnColorWhite
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("utilitiesMenuBtn")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.UTILITIES) {
       this.ctx.beginPath()
@@ -1568,7 +1584,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.gravityBrakeBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("gravityBrakeBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
@@ -1585,7 +1601,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.oreMineBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("oreMineBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
@@ -1602,7 +1618,7 @@ export class GamedisplayComponent implements OnInit {
       this.btnCanvasLocations.auxiliaryPowerBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
       this.ctx.strokeStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("auxiliaryPowerBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
@@ -1613,7 +1629,7 @@ export class GamedisplayComponent implements OnInit {
       // Aestetic Outline
       this.ctx.beginPath()
       this.ctx.strokeStyle = btnColorGreen
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("utilitiesMenuBtn")
       this.ctx.moveTo(
         this.btnCanvasLocations.utilitiesMenuBtn.x2,
         this.btnCanvasLocations.utilitiesMenuBtn.y1)
@@ -1721,19 +1737,20 @@ export class GamedisplayComponent implements OnInit {
 
   private handleBtnClick(btnName: string) {
     console.log({btnName})
+    let found = true
     // Menu //
     if(btnName == "engineMenu") {
-      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.ENGINE? ButtonGroup.ENGINE: ButtonGroup.NONE
+      this.btnMenuEngineMenu()
     }else if(btnName == "autoPilotMenu") {
-      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.AUTOPILOT? ButtonGroup.AUTOPILOT: ButtonGroup.NONE
+      this.btnMenuAutopilotMenu()
     }else if(btnName == "scannerMenuBtn") {
-      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.SCANNER? ButtonGroup.SCANNER: ButtonGroup.NONE
+      this.btnMenuScannerMenu()
     }else if(btnName == "EMEBeamMenuBtn") {
-      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.EMEBEAM? ButtonGroup.EMEBEAM: ButtonGroup.NONE
+      this.btnMenuEMEBeamMenu()
     }else if(btnName == "torpedoMenuBtn") {
-      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.TORPEDO? ButtonGroup.TORPEDO: ButtonGroup.NONE
+      this.btnMenuTorpedoMenu()
     }else if(btnName == "utilitiesMenuBtn") {
-      this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.UTILITIES? ButtonGroup.UTILITIES: ButtonGroup.NONE
+      this.btnMenuUtilitiesMenu()
     }// Engine //
     else if(btnName == "engineStartup") {
       this.btnActivateEngine()
@@ -1801,7 +1818,36 @@ export class GamedisplayComponent implements OnInit {
     }
     else {
       console.warn("unknown btn " + btnName)
+      found = false
     }
+    if(found) {
+      this.clickBtnBoarderAnimationFrame = 1
+      this.clickBtnBoarderAnimationButtonName = btnName
+    }
+  }
+
+  private btnMenuEngineMenu() {
+    this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.ENGINE? ButtonGroup.ENGINE: ButtonGroup.NONE
+  }
+
+  private btnMenuAutopilotMenu() {
+    this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.AUTOPILOT? ButtonGroup.AUTOPILOT: ButtonGroup.NONE
+  }
+
+  private btnMenuScannerMenu() {
+    this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.SCANNER? ButtonGroup.SCANNER: ButtonGroup.NONE
+  }
+
+  private btnMenuEMEBeamMenu() {
+    this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.EMEBEAM? ButtonGroup.EMEBEAM: ButtonGroup.NONE
+  }
+
+  private btnMenuTorpedoMenu() {
+    this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.TORPEDO? ButtonGroup.TORPEDO: ButtonGroup.NONE
+  }
+
+  private btnMenuUtilitiesMenu() {
+    this.activeBtnGroup = this.activeBtnGroup != ButtonGroup.UTILITIES? ButtonGroup.UTILITIES: ButtonGroup.NONE
   }
 
   private async btnActivateEngine() {
