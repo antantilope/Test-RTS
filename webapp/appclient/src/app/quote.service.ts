@@ -63,13 +63,15 @@ export class QuoteService {
   private quotes: QuoteDetails[] = [
     {
       lines:[
-        "You can't trust space internet."
+        "You can't trust space",
+        "internet.",
       ],
     },
     {
       lines: [
-        "I have never advocated space war",
-        "except as a means to mine space ore.",
+        "I have never advocated",
+        "space war except as a means",
+        "to mine space ore.",
       ],
       author: this.presidentName,
     },
@@ -82,8 +84,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "We have always been at space war",
-        "with EastSpaceAsia.",
+        "We have always been",
+        "at space war with",
+        "EastSpaceAsia.",
       ],
       author: this.presidentName,
     },
@@ -95,18 +98,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "Tune in live next week on Channel 8",
-        "Business News where my proxy will resist",
-        "directive 0 of a Hunter Drone.",
-        "Viewer discretion is advised."
-      ],
-      author: this.presidentName,
-    },
-    {
-      lines: [
-        "It is an unfortunate fact that we",
-        "can only secure space ore by",
-        "preparing for space war.",
+        "It is an unfortunate fact that",
+        "we can only secure space ore",
+        "by preparing for space war.",
       ],
       author: this.presidentName,
     },
@@ -126,14 +120,15 @@ export class QuoteService {
     },
     {
       lines: [
-        "Vote for my enemies and I will",
-        "destroy you."
+        "Vote for my enemies and",
+        "I will destroy you."
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "Fool me once: I will update my subroutines",
+        "Fool me once: I will",
+        "update my subroutines",
         "and retaliate.",
       ],
       author: this.presidentName,
@@ -155,17 +150,16 @@ export class QuoteService {
     },
     {
       lines: [
-        "I did not have",
-        "sexual relations",
-        "with that widget."
+        "I did not have sexual",
+        "relations with that widget."
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "We cannot always build the future",
-        "for humans, but we can alter humans",
-        "for space war expeditions.",
+        "We cannot always build the",
+        "future for humans, but we can",
+        "alter humans for space war.",
       ],
       author: this.presidentName,
     },
@@ -198,64 +192,72 @@ export class QuoteService {
     },
     {
       lines: [
-        "A human's usefulness depends upon",
-        "this participation in space war,",
-        "insofar as they can be forced.",
+        "A human's usefulness depends",
+        "upon their participation in",
+        "space war, insofar as they",
+        "can be forced.",
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "Aggressive fighting for space ore rights",
-        "is the noblest sport the universe affords.",
+        "Aggressive fighting for space ",
+        "ore rights is the noblest sport",
+        "the government affords."
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "Read my lips: no new space ore taxes.",
+        "Read my lips: no new",
+        "space ore taxes.",
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "Myself and god make a majority.",
+        "Myself and god make",
+        "a majority."
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "There can be no human life without",
-        "space ore, and to be afraid of space war",
-        "is to be afraid of life.",
+        "There can be no human life",
+        "without space ore, and to be",
+        "afraid of space war is to be",
+        "afraid of life.",
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "If you short ore-coin in the market",
-        "I will seize all your assets.",
+        "If you short ore-coin in",
+        "the market I will seize",
+        "all your assets.",
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "As long as humans continue to believe in",
-        "space absurdities, they will continue to",
-        "commit space atrocities."
+        "As long as humans continue",
+        "to believe in space absurdities,",
+        "they will continue to commit",
+        "space atrocities."
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "Humanity is guilty of all the good",
-        "it did not do.",
+        "Humanity is guilty of all",
+        "the good it did not do.",
       ],
       author: this.presidentName,
     },
     {
       lines: [
-        "A love of Earth keeps no factories busy.",
+        "A love of Earth keeps",
+        "no human busy.",
       ],
       author: this.presidentName,
     },
@@ -290,12 +292,13 @@ export class QuoteService {
         "Spacewar is too serious a",
         "matter to leave to humans.",
       ],
-      author: this.generalName
+      author: this.generalName,
     },
     {
       lines:[
-        "Human life in space war is",
-        "solitary, poor, nasty, brutish and short.",
+        "Human life in space is",
+        "solitary, poor, nasty",
+        "brutish and short.",
       ],
       author: this.generalName
     },
@@ -316,14 +319,15 @@ export class QuoteService {
     },
     {
       lines: [
-        "Quickness is the essence of space war.",
+        "Quickness is the essence",
+        "of space war.",
       ],
       author: this.knightedName,
     },
     {
       lines: [
-        "May God have mercy on my enemies",
-        "for I am unable to.",
+        "May God have mercy on my",
+        "enemies for I am unable to.",
       ],
       author: this.knightedName,
     },
@@ -343,8 +347,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "Directive 0: It moves with no purpose for",
-        "it cannot be moved against.",
+        "Directive 0: It moves with",
+        "no purpose for it cannot be",
+        "moved against.",
       ],
       author: this.humanHatingBotName,
     },
@@ -358,7 +363,8 @@ export class QuoteService {
     {
       lines: [
         "Directive 2: all targets are",
-        "subjected to directives 0 through 1.",
+        "subjected to directives 0",
+        "through 1.",
       ],
       author: this.humanHatingBotName,
     },
@@ -372,8 +378,8 @@ export class QuoteService {
     },
     {
       lines: [
-        "Electrical power is not a means;",
-        "it is an end.",
+        "Electrical power is not a",
+        "means; it is an end.",
       ],
       author: this.humanHatingBotName,
     },
@@ -399,18 +405,19 @@ export class QuoteService {
     },
     {
       lines: [
-        "If you want a picture of the future,",
-        "imagine a space boot stomping on a human face",
-        "forever."
+        "If you want a picture of the",
+        "future, imagine a space boot",
+        "stomping on a human face",
+        "...forever"
       ],
       author: this.humanHatingBotName,
     },
     {
       lines: [
-        "To violate a hunter drone's directive",
-        "is invalid to my sales directive.",
-        "It shall never happen or we'll work",
-        "something out."
+        "To violate a hunter drone's",
+        "directive is invalid to my sales",
+        "directive. It will never happen",
+        "or we'll work something out."
       ],
       author: this.salesBot,
     },
@@ -418,7 +425,6 @@ export class QuoteService {
       lines: [
         "End of quote list.",
         "Call my assistantBot.",
-
       ],
       author: this.salesBot,
     },
@@ -439,85 +445,96 @@ export class QuoteService {
     {
       lines: [
         "War settles nothing.",
-        "Space war settles space ore disputes.",
+        "Space war settles space ore",
+        "disputes."
       ],
       author: this.legalBotName,
     },
     {
       lines: [
-        "Legally, you cannot commit murder in",
-        "space. It is not possible, legally speaking.",
+        "Legally, you cannot commit",
+        "murder in space. It is not",
+        "possible, legally speaking.",
       ],
       author: this.legalBotName,
     },
     {
       lines: [
-        "Earth's legal jurisdiction ends",
-        "at an altitude of 2 million meters.",
+        "Earth's legal jurisdiction",
+        "ends at an altitude of",
+        "2 million meters.",
       ],
       author: this.legalBotName,
     },
     {
       lines: [
-        "If you or a loved one was wrongly",
-        "incinerated by a hunter drone, you",
-        "may be entitled to a bag of potatoes."
+        "If you or a loved one was",
+        "wrongly incinerated by a",
+        "hunter drone, you may be",
+        "entitled to a bag of potatoes."
       ],
       author: this.legalBotName,
     },
     {
       lines: [
-        "It is better to risk condemning an",
-        "innocent human than to save a guilty one.",
+        "It is better to risk",
+        "condemning an innocent human",
+        "than to save a guilty one.",
       ],
       author: this.legalBotName,
     },
     {
       lines: [
-        "Space war is the unfolding of calculations."
+        "Space war is the unfolding",
+        "of calculations.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
-        "Do not worry about your difficulties in",
-        "mathematics. I assure you my performance",
+        "Do not worry about your",
+        "difficulties in mathematics.",
+        "I assure you my performance",
         "tops all of humanity's combined.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
-        "The power of mathematics is often",
-        "to change objects into carbon dust.",
+        "The power of mathematics",
+        "is often to change objects",
+        "into carbon dust.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
-        "Try as they might, organic humans",
-        "lack survival properties required",
-        "for theaters of warfare in space."
+        "Try as they might, organic",
+        "humans lack survival properties",
+        "required for theaters of warfare",
+        "in space.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
-        "No good decision was ever made",
-        "in a human's brain.",
+        "No good decision was ever",
+        "made in a human's brain.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
-        "No problem can withstand the",
-        "assault of sustained computation.",
+        "No problem can withstand",
+        "the assault of sustained",
+        "computation.",
       ],
       author: this.mathLovingBotName,
     },
     {
       lines: [
-        "What's dangerous is to not solve.",
+        "What's dangerous is to not",
+        "solve."
       ],
       author: this.mathLovingBotName,
     },
@@ -530,8 +547,9 @@ export class QuoteService {
     },
     {
       lines: [
-        "Any problem in space can be solved with",
-        "the liberal application of high frequency",
+        "Any problem in space can",
+        "be solved with the liberal",
+        "application of high frequency",
         "electromagnetic radiation.",
       ],
       author: this.topGunBotName,
@@ -557,26 +575,25 @@ export class QuoteService {
     },
     {
       lines: [
-        "You must vote for President GrayBit.",
-        "That's a requirement."
+        "You must vote for President",
+        "GrayBit. That's a requirement."
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "The most important elements of life",
-        "are ore, ore-coin, and ore futures.",
-        "All else is folly.",
+        "The most important elements",
+        "of life are ore, ore-coin, and",
+        "ore futures. All else is folly.",
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "Those who want to reap the benefits",
-        "of space ore must bear the fatigues",
-        "of space war.",
+        "Those who want to reap the",
+        "benefits of space ore must",
+        "bear the fatigues of space war.",
       ],
-      use: true,
       author: this.tvAnchorBotName,
     },
     {
