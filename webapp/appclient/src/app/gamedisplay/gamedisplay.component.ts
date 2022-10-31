@@ -48,6 +48,7 @@ enum ButtonGroup {
 }
 
 class ButtonSizing {
+  cornerOffset: number
   fontSize: number
   xLenMenu: number
   xLenEngineMenu: number
@@ -752,20 +753,40 @@ export class GamedisplayComponent implements OnInit {
       this._camera.gameDisplayCamera.canvasHeight,
       this._camera.gameDisplayCamera.canvasWidth,
     )
-    return {
-      fontSize: 23,
-      xLenMenu: 135,
-      xLenEngineMenu: 125,
-      xLenAutopilotMenu: 150,
-      xLenScannerC1Menu: 108,
-      xLenScannerC2Menu: 68,
-      xLenEMEBeamMenu: 95,
-      xLenTorpedoC1Menu: 120,
-      xLenTorpedoC2Menu: 68,
-      xLenUtilitiesMenu: 150,
-      yLen: 29,
-      xGap: 10,
-      yGap: 10,
+    if(this._camera.gameDisplayCamera.canvasWidth >= 650 && this._camera.gameDisplayCamera.canvasHeight >= 450) {
+      return {
+        cornerOffset: 15,
+        fontSize: 23,
+        xLenMenu: 135,
+        xLenEngineMenu: 125,
+        xLenAutopilotMenu: 150,
+        xLenScannerC1Menu: 108,
+        xLenScannerC2Menu: 68,
+        xLenEMEBeamMenu: 95,
+        xLenTorpedoC1Menu: 120,
+        xLenTorpedoC2Menu: 68,
+        xLenUtilitiesMenu: 150,
+        yLen: 29,
+        xGap: 10,
+        yGap: 10,
+      }
+    } else {
+      return {
+        cornerOffset: 5,
+        fontSize: 16,
+        xLenMenu: 95,
+        xLenEngineMenu: 85,
+        xLenAutopilotMenu: 105,
+        xLenScannerC1Menu: 75,
+        xLenScannerC2Menu: 47,
+        xLenEMEBeamMenu: 65,
+        xLenTorpedoC1Menu: 87,
+        xLenTorpedoC2Menu: 49,
+        xLenUtilitiesMenu: 107,
+        yLen: 20,
+        xGap: 6,
+        yGap: 5,
+      }
     }
   }
 
@@ -809,9 +830,9 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.textBaseline = "bottom"
 
     // Engine Menu
-    x1 = cornerOffset
+    x1 = sizing.cornerOffset
     x2 = x1 + sizing.xLenMenu
-    y2 = canvasHeight - cornerOffset - col1YOffset
+    y2 = canvasHeight - sizing.cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.engineMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
@@ -833,9 +854,9 @@ export class GamedisplayComponent implements OnInit {
       // BOOST
       let enabled = ship.engine_lit
       let disabled: boolean, fullyDisabled: boolean
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineBoost = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -851,9 +872,9 @@ export class GamedisplayComponent implements OnInit {
       enabled = ship.engine_lit
       disabled = !ship.engine_online || ship.engine_lit
       fullyDisabled = !ship.engine_online
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineIgnite = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -868,9 +889,9 @@ export class GamedisplayComponent implements OnInit {
       // IDLE
       enabled = !ship.engine_lit
       disabled = !ship.engine_online
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineIdle = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -884,9 +905,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // SHUTDOWN
       enabled = ship.engine_online
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineShutdown = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -901,9 +922,9 @@ export class GamedisplayComponent implements OnInit {
       // STARTUP
       enabled = ship.engine_online || ship.engine_starting
       disabled = ship.engine_starting
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineStartup = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -958,9 +979,9 @@ export class GamedisplayComponent implements OnInit {
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Autopilot Menu
-    x1 = cornerOffset
+    x1 = sizing.cornerOffset
     x2 = x1 + sizing.xLenMenu
-    y2 = canvasHeight - cornerOffset - col1YOffset
+    y2 = canvasHeight - sizing.cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.autoPilotMenu = {x1, x2, y1, y2}
     this.ctx.beginPath()
@@ -978,9 +999,9 @@ export class GamedisplayComponent implements OnInit {
       // Autopilot Column 2 buttons
       // Lock Retrograde
       let active = ship.autopilot_program == "lock_retrograde" || ship.autopilot_program == "position_hold"
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.autoPilotRetrograde = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -994,9 +1015,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // Lock Prograde
       active = ship.autopilot_program == "lock_prograde"
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.autoPilotPrograde = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1010,9 +1031,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // Lock Waypoint
       active = ship.autopilot_program == "lock_waypoint"
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.autoPilotWaypoint = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1026,9 +1047,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // Lock Target
       active = ship.autopilot_program == "lock_target"
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.autoPilotTarget = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1042,9 +1063,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // HALT
       active = ship.autopilot_program == "position_hold"
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.autoPilotHalt = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1058,9 +1079,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // DISABLE
       let enabled = ship.autopilot_program !== null
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenAutopilotMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.autoPilotDisabled = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1118,9 +1139,9 @@ export class GamedisplayComponent implements OnInit {
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Scanner Menu
-    x1 = cornerOffset
+    x1 = sizing.cornerOffset
     x2 = x1 + sizing.xLenMenu
-    y2 = canvasHeight - cornerOffset - col1YOffset
+    y2 = canvasHeight - sizing.cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.scannerMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
@@ -1139,9 +1160,9 @@ export class GamedisplayComponent implements OnInit {
       // IR
       let disabled = !ship.scanner_online
       let active = ship.scanner_online && ship.scanner_mode === "ir"
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerIRBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1156,9 +1177,9 @@ export class GamedisplayComponent implements OnInit {
       // RADAR
       disabled = !ship.scanner_online
       active = ship.scanner_online && ship.scanner_mode === "radar"
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerRadarBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1172,9 +1193,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // Stop
       disabled = !ship.scanner_online
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerStopBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1189,9 +1210,9 @@ export class GamedisplayComponent implements OnInit {
       // Start
       disabled = ship.scanner_starting
       active = ship.scanner_online
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenScannerC1Menu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerStartBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1207,9 +1228,9 @@ export class GamedisplayComponent implements OnInit {
       // Lock
       disabled = !ship.scanner_online || !ship.scanner_ship_data.length
       active = ship.scanner_locked || ship.scanner_locking
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
-      y2 = canvasHeight - cornerOffset - col3YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerLockBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1223,9 +1244,9 @@ export class GamedisplayComponent implements OnInit {
       col3YOffset += (sizing.yGap + sizing.yLen)
       // Down Arrow
       disabled = !ship.scanner_online || !ship.scanner_ship_data.length
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
-      y2 = canvasHeight - cornerOffset - col3YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerDownArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1239,9 +1260,9 @@ export class GamedisplayComponent implements OnInit {
       col3YOffset += (sizing.yGap + sizing.yLen)
       // UP Arrow
       disabled = !ship.scanner_online || !ship.scanner_ship_data.length
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenScannerC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenScannerC2Menu
-      y2 = canvasHeight - cornerOffset - col3YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.scannerUpArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1306,9 +1327,9 @@ export class GamedisplayComponent implements OnInit {
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Electromagnetic Energy Beam Menu
-    x1 = cornerOffset
+    x1 = sizing.cornerOffset
     x2 = x1 + sizing.xLenMenu
-    y2 = canvasHeight - cornerOffset - col1YOffset
+    y2 = canvasHeight - sizing.cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.EMEBeamMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
@@ -1327,9 +1348,9 @@ export class GamedisplayComponent implements OnInit {
       // FIRE
       let disabled = !ship.ebeam_can_fire
       let active: boolean
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.EMEBeamFireBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1343,9 +1364,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // CHARGE
       active = ship.ebeam_charging
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.EMEBeamChargeBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1359,9 +1380,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // PAUSE
       disabled = !ship.ebeam_charging
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.EMEBeamPauseBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1416,9 +1437,9 @@ export class GamedisplayComponent implements OnInit {
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Torpedo Menu
-    x1 = cornerOffset
+    x1 = sizing.cornerOffset
     x2 = x1 + sizing.xLenMenu
-    y2 = canvasHeight - cornerOffset - col1YOffset
+    y2 = canvasHeight - sizing.cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.torpedoMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
@@ -1436,9 +1457,9 @@ export class GamedisplayComponent implements OnInit {
       // TORPEDO Column 2 buttons
       // EMP Selector
       let active = this.selectedPneumaticWeapon == EMP_SLUG
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC1Menu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoMenuSelEMPBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1452,9 +1473,9 @@ export class GamedisplayComponent implements OnInit {
       col2YOffset += (sizing.yGap + sizing.yLen)
       // EMP Selector
       active = this.selectedPneumaticWeapon == MAGNET_MINE_SLUG
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC1Menu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1470,9 +1491,9 @@ export class GamedisplayComponent implements OnInit {
       // Torpedo Column 3 buttons
       // FIRE
       let disabled = this.getCurrentTubeWeaponCount() == 0
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC2Menu
-      y2 = canvasHeight - cornerOffset - col3YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoFireBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1485,9 +1506,9 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
       // Down Arrow
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC2Menu
-      y2 = canvasHeight - cornerOffset - col3YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoDownArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1500,9 +1521,9 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("DECR", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
       // Up Arrow
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC2Menu
-      y2 = canvasHeight - cornerOffset - col3YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoUpArrowBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1565,9 +1586,9 @@ export class GamedisplayComponent implements OnInit {
     col1YOffset += (sizing.yGap + sizing.yLen)
 
     // Utilities Menu
-    x1 = cornerOffset
+    x1 = sizing.cornerOffset
     x2 = x1 + sizing.xLenMenu
-    y2 = canvasHeight - cornerOffset - col1YOffset
+    y2 = canvasHeight - sizing.cornerOffset - col1YOffset
     y1 = y2 - sizing.yLen
     this.btnCanvasLocations.utilitiesMenuBtn = {x1, x2, y1, y2}
     this.ctx.beginPath()
@@ -1586,9 +1607,9 @@ export class GamedisplayComponent implements OnInit {
       // Gravity Brake
       let active = ship.gravity_brake_deployed
       let disabled =  ship.gravity_brake_retracting || ship.gravity_brake_extending
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenUtilitiesMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.gravityBrakeBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1603,9 +1624,9 @@ export class GamedisplayComponent implements OnInit {
       // ORE DRILL
       active = ship.mining_ore
       disabled =  !(ship.cargo_ore_mass_kg < ship.cargo_ore_mass_capacity_kg) || ship.parked_at_ore_mine === null
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenUtilitiesMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.oreMineBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
@@ -1620,9 +1641,9 @@ export class GamedisplayComponent implements OnInit {
       // Auxilary Power
       active = ship.apu_online
       disabled =  ship.apu_starting
-      x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenUtilitiesMenu
-      y2 = canvasHeight - cornerOffset - col2YOffset
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.auxiliaryPowerBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
