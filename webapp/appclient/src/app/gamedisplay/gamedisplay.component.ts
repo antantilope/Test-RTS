@@ -1469,17 +1469,18 @@ export class GamedisplayComponent implements OnInit {
 
       // Torpedo Column 3 buttons
       // FIRE
+      let disabled = this.getCurrentTubeWeaponCount() == 0
       x1 = cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC2Menu
       y2 = canvasHeight - cornerOffset - col3YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.torpedoFireBtn = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = btnColorRed
+      this.ctx.strokeStyle = disabled? btnColorGray: btnColorRed
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoFireBtn")
       this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
       this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorRed
+      this.ctx.fillStyle = disabled? btnColorGray: btnColorRed
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
