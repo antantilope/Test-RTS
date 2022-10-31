@@ -804,7 +804,6 @@ export class GamedisplayComponent implements OnInit {
         this.clickBtnBoarderAnimationFrame = null
         this.clickBtnBoarderAnimationButtonName = null
       }
-      console.log({border})
       return border
     }
     return 2// Default

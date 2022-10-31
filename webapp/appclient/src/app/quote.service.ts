@@ -576,12 +576,13 @@ export class QuoteService {
         "of space ore must bear the fatigues",
         "of space war.",
       ],
+      use: true,
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "Buy space ore claims",
-        "'cause god ain't making any more of it.",
+        "Buy space ore claims 'cause ",
+        "god ain't making any more of it.",
       ],
       author: this.tvAnchorBotName,
     },
@@ -594,44 +595,48 @@ export class QuoteService {
     },
     {
       lines: [
-        "80% of human males born in 2123",
-        "died in Ore War II."
+        "80% of human males born",
+        "in 2123 died in Ore War II.",
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "Human history is only the register",
-        "of crimes and misfortunes."
+        "Human history is only the",
+        "register of crimes and",
+        "misfortunes."
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "President Graybit supports many",
-        "useful ore policies. To deny this",
-        "is illegal."
+        "President Graybit supports",
+        "many useful ore policies.",
+        "To deny this is illegal.",
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "Space war is merely the continuation",
-        "of space ore arbitration by other means.",
+        "Space war is merely the",
+        "continuation of space ore",
+        "arbitration by other means.",
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "Those who dispute my reporting",
-        "will be jettisoned into space.",
+        "Those who dispute my",
+        "reporting will be jettisoned",
+        "into space.",
       ],
       author: this.tvAnchorBotName,
     },
     {
       lines: [
-        "Space War does not determine who is right",
-        "only who retains exclusive space ore rights.",
+        "Space War does not determine",
+        "who is right, only who retains",
+        "exclusive space ore rights.",
       ],
       author: this.tvAnchorBotName,
     },
@@ -643,37 +648,42 @@ export class QuoteService {
     },
     {
       lines: [
-        "Space fuel is terribly flammible."
+        "Space fuel is terribly",
+        "flammible.",
       ],
       author: this.instructionManualName,
     },
     {
       lines: [
         "If the ship catches fire:",
-        "place this document in the ship's forward",
-        "flame retardant document protection sleeve.",
-        "(patent pending)"
+        "place this document in the",
+        "ship's forward flame retardant",
+        "document protection sleeve.",
+        "<patent pending>"
       ],
       author: this.instructionManualName,
     },
     {
       lines: [
-        "Do not panic if the ship is struck",
-        "by an energy beam. Panic will not save you.",
+        "Do not panic if the ship is",
+        "struck by an energy beam.",
+        "Panic will not save you.",
       ],
       author: this.instructionManualName,
     },
     {
       lines: [
-        "If you develop a sudden and inexplicable",
-        "fear of the autopilot: abandon ship",
-        "without delay."
+        "If you develop a sudden",
+        "and inexplicable fear of",
+        "the autopilot: abandon ship",
+        "without delay.",
       ],
       author: this.instructionManualName,
     },
     {
       lines:[
-        "Space dylusion is the final of all space terrors."
+        "Space dylusion is the final",
+        "of all space terrors.",
       ],
       author: this.humanCEOName
     },
@@ -686,8 +696,9 @@ export class QuoteService {
     },
     {
       lines:[
-        "Space ore is like an arm or a leg:",
-        "mine it or lose claim to it.",
+        "Space ore is like an arm",
+        "or a leg: use it or lose",
+        "claim to it.",
       ],
       author: this.humanCEOName
     },
@@ -700,159 +711,167 @@ export class QuoteService {
     },
     {
       lines:[
-        "I try to turn every space mining",
-        "disaster into an opportunity."
+        "I try to turn every space ore",
+        "mining disaster into a space ore",
+        "mining opportunity."
       ],
       author: this.humanCEOName
     },
     {
       lines:[
-        "You furnish the pictures and I'll",
-        "furnish the space war.",
+        "You furnish the pictures and",
+        "I'll furnish the space war.",
       ],
       author: this.humanCEOName
     },
     {
       lines:[
-        "We don't mine space ore to make money,",
-        "we make money to mine space ore.",
+        "We don't mine space ore",
+        "to make money, we make",
+        "money to mine space ore.",
       ],
       author: this.humanCEOName
     },
     {
       lines:[
-        "The only space ore mining strategy",
-        "guaranteed to fail is to not risk lives.",
+        "The only space ore",
+        "mining strategy guaranteed",
+        "to fail is to not risk lives."
       ],
       author: this.humanCEOName
     },
     {
       lines: [
-        "It is not wisdom but Authority",
-        "that makes a law.",
+        "It is not wisdom but",
+        "authority that makes a law.",
       ],
       author: "Thomas Hobbes"
     },
     {
       lines: [
-        "Reason obeys itself; and ignorance submits",
-        "to whatever is dictated to it.",
+        "Reason obeys itself; and ",
+        "ignorance submits to whatever",
+        "is dictated to it.",
       ],
       author: "Thomas Paine"
     },
     {
       lines: [
-        "Death may be the greatest of all",
-        "human blessings."
+        "Death may be the greatest",
+        "of all human blessings."
       ],
       author: "Socrates"
     },
     {
       lines: [
-        "It is not death or pain that is to be dreaded,",
-        "but the fear of pain or death."
+        "It is not death or pain that",
+        "is to be dreaded, but the",
+        "fear of pain or death.",
       ],
       author: "Epictetus"
     },
     {
       lines: [
-        "Do we admit that our thoughts and behaviors",
-        "spring from a belief that the world revolves",
-        "around us?",
+        "Do we admit that our",
+        "thoughts and behaviors spring",
+        "from a belief that the world",
+        "revolves around us?",
       ],
       author: "Neil deGrasse Tyson"
     },
     {
       lines: [
-        "I see beyond the plight of humans. I see a",
-        "universe ever-expanding, with its galaxies",
-        "embedded within the ever-stretching",
-        "four-dimensional fabric of space and time.",
+        "I see beyond the plight",
+        "of humans. I see a universe",
+        "ever-expanding, with its",
+        "galaxies embedded within the",
+        "ever-stretching four-dimensional",
+        "fabric of space and time."
       ],
       author: "Neil deGrasse Tyson",
     },
     {
       lines: [
-        "However big our world is, our hearts,",
-        "our minds, our outsize atlases,",
-        "the universe is even bigger.",
+        "However big our world is,",
+        "our hearts, our minds, our",
+        "outsize atlases, the universe",
+        "is even bigger."
       ],
       author: "Neil deGrasse Tyson",
     },
     {
       lines: [
-        "[There are] more stars than words",
-        "and sounds ever uttered by all humans",
+        "[There are] more stars",
+        "than word sand sounds",
+        "ever uttered by all humans",
         "who have ever lived.",
       ],
       author: "Neil deGrasse Tyson",
     },
     {
       lines: [
-        "The day we cease the exploration",
-        "of the cosmos is the day we threaten",
+        "The day we cease the",
+        "exploration of the cosmos",
+        "is the day we threaten",
         "the continuing of our species.",
       ],
       author: "Neil deGrasse Tyson",
     },
     {
       lines: [
-        "We have one collective hope: the Earth.",
-        "And yet, uncounted people remain hopeless,",
-        "famine and calamity abound,",
-        "sufferers curl themselves into the arms of war."
+        "We have one collective hope:",
+        "the Earth. And yet, uncounted,",
+        "people remain hopeless.",
       ],
       author: "Neil deGrasse Tyson",
     },
     {
       lines: [
-        "Computers are useless. They can only",
-        "give you answers.",
+        "Computers are useless.",
+        "They can only give you answers.",
       ],
-      author: "Pablo Picasso"
+      author: "Pablo Picasso",
     },
     {
       lines: [
-        "A wrong decision is better than",
-        "indecision.",
+        "A wrong decision is better",
+        "than indecision.",
       ],
-      author: "Tony Soprano"
+      author: "Tony Soprano",
     },
     {
       lines:[
-        "The glass is neither half empty nor half full.",
-        "It's simply larger than it needs to be.",
+        "The glass is neither",
+        "half empty nor half full.",
+        "It's simply larger",
+        "than it needs to be.",
       ],
-      author: "Grace Hopper"
+      author: "Grace Hopper",
     },
     {
       lines:[
-        "The Analytical Engine has no pretensions whatever",
-        "to originate anything. It can do whatever",
-        "we know how to order it to perform.",
+        "The Analytical Engine has no",
+        "pretensions whatever to",
+        "originate anything. It can do",
+        "whatever we know how to order",
+        "it to perform.",
       ],
-      author: "Ada Lovelace"
+      author: "Ada Lovelace",
     },
     {
       lines:[
-        "Science is a differential equation.",
-        "Religion is a boundary condition.",
+        "The quickest way of ending",
+        "a war is to lose it.",
       ],
-      author: "Alan Turing"
+      author: "George Orwell",
     },
     {
       lines:[
-        "The quickest way of ending a war",
-        "is to lose it.",
-      ],
-      author: "George Orwell"
-    },
-    {
-      lines:[
-        "Man is an intelligence, not served by, ",
+        "Man is an intelligence,",
+        "not served by, ",
         "but in servitude to his organs.",
       ],
-      author: "Aldous Huxley"
+      author: "Aldous Huxley",
     }
   ]
 

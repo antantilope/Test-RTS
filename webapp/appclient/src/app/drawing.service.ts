@@ -75,6 +75,17 @@ class TopLeftOverlaySizing {
   yInterval: number
 }
 
+class FrontAndCenterAlertSizing {
+  victoryTextFontSize: number
+  victoryTextYTopOffset: number
+  gameOverFontSize: number
+  gameOverYTopOffset: number
+  deathQuoteFontSize: number
+  deathQuoteYTopOffset: number
+  deathQuoteYInterval: number
+  deathQuoteXOffset: number
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -824,17 +835,44 @@ export class DrawingService {
     }
   }
 
+  private getFrontAndCenterAlertsSizing(canvasW: number, canvasH: number): FrontAndCenterAlertSizing {
+    if(canvasW > 650 && canvasH >= 450) {
+      return {
+        victoryTextFontSize: 65,
+        victoryTextYTopOffset: Math.floor(canvasH / 4),
+        gameOverFontSize: 56,
+        gameOverYTopOffset: Math.floor(canvasH / 6),
+        deathQuoteFontSize: 35,
+        deathQuoteYTopOffset: 50,
+        deathQuoteYInterval: 50,
+        deathQuoteXOffset: 50,
+      }
+    } else {
+      return {
+        victoryTextFontSize: 65,
+        victoryTextYTopOffset: Math.floor(canvasH / 4),
+        gameOverFontSize: 40,
+        gameOverYTopOffset: Math.floor(canvasH / 6),
+        deathQuoteFontSize: 25,
+        deathQuoteYTopOffset: 50,
+        deathQuoteYInterval: 28,
+        deathQuoteXOffset: 10,
+      }
+    }
+  }
+
   public drawFrontAndCenterAlerts(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
   ) {
     // This function executes 1 if block and NOTHING MORE. (some have return statements.)
+    const sizing = this.getFrontAndCenterAlertsSizing(camera.canvasWidth, camera.canvasHeight)
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       ctx.beginPath()
-      ctx.font = 'bold 65px courier new'
+      ctx.font = `bold ${sizing.victoryTextFontSize}px courier new`
       ctx.fillStyle = '#ffffff'
       ctx.textAlign = 'center'
-      ctx.fillText("🏆VICTORY", camera.canvasHalfWidth, camera.canvasHalfHeight / 2)
+      ctx.fillText("🏆VICTORY", camera.canvasHalfWidth, sizing.victoryTextYTopOffset)
     }
     else if(!this._api.frameData.ship.alive) {
       if((this._api.frameData.ship.died_on_frame + 100) > this._api.frameData.game_frame) {
@@ -842,28 +880,30 @@ export class DrawingService {
         return;
       }
       ctx.beginPath()
-      ctx.font = 'bold 56px courier new'
+      ctx.font = `bold ${sizing.gameOverFontSize}px courier new`
       ctx.fillStyle = '#ff0000'
       ctx.textAlign = 'center'
-      let deathTextYOffset = camera.canvasHalfHeight / 3
-      const deathQuoteOffset = 50
+      let deathTextYOffset = sizing.gameOverYTopOffset
+      const deathQuoteInterval = sizing.deathQuoteYInterval
       if(this._api.frameData.game_frame % 50 > 25) {
         ctx.fillText("GAME OVER", camera.canvasHalfWidth, deathTextYOffset)
       }
-      deathTextYOffset += (deathQuoteOffset * 2)
+      deathTextYOffset += (deathQuoteInterval * 2)
       ctx.beginPath()
       ctx.fillStyle = '#b8b8b8' // medium light gray
       ctx.textAlign = 'left'
-      ctx.font = `bold 40px Verdana`
+      ctx.font = `bold ${sizing.deathQuoteFontSize}px Verdana`
       for(let i in this.deathQuote.lines) {
         const prefix = parseInt(i) === 0 ? '"' : ""
-        ctx.fillText(prefix + this.deathQuote.lines[i], 100, deathTextYOffset)
-        deathTextYOffset += deathQuoteOffset
+        ctx.fillText(prefix + this.deathQuote.lines[i], sizing.deathQuoteXOffset, deathTextYOffset)
+        deathTextYOffset += deathQuoteInterval
       }
-      ctx.font = 'bold 32px Verdana'
-      deathTextYOffset += deathQuoteOffset * 0.5
+      deathTextYOffset += deathQuoteInterval * 0.5
       ctx.beginPath()
-      ctx.fillText("- " + (this.deathQuote.author || "Unknown"), 100, deathTextYOffset)
+      ctx.font = `italic ${Math.floor(0.95*sizing.deathQuoteFontSize)}px Verdana`
+      ctx.fillText((this.deathQuote.author || "Unknown"),
+        sizing.deathQuoteXOffset,
+        deathTextYOffset)
     }
     else if(this._api.frameData.ship.docked_at_station) {
       const station = this._api.frameData.space_stations.find(
