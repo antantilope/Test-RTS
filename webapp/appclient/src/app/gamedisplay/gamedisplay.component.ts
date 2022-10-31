@@ -693,7 +693,7 @@ export class GamedisplayComponent implements OnInit {
 
     // Corner overlays
     if(cameraMode !== CAMERA_MODE_MAP) {
-      this._draw.drawTopLeftOverlay(this.ctx, cameraMode);
+      this._draw.drawTopLeftOverlay(this.ctx, cameraMode, this._camera.gameDisplayCamera);
       this._draw.drawBottomRightOverlay(this.ctx, this._camera.gameDisplayCamera)
       if(!this.isDebug && this._api.frameData.ship.alive) {
         this._draw.drawTopRightOverlay(this.ctx, this._camera.gameDisplayCamera, this.wayPoint)

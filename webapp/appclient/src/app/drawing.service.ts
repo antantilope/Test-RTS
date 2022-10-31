@@ -68,6 +68,13 @@ class BottomRightOverlaySizing {
   clockTimerGap: number
 }
 
+class TopLeftOverlaySizing {
+  xCornerOffset: number
+  yCornerOffset: number
+  fontSize: number
+  yInterval: number
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -650,53 +657,64 @@ export class DrawingService {
     }
   }
 
+  private getTopLeftOverlaySizing(canvasW: number, canvasH: number): TopLeftOverlaySizing {
+    if(canvasW >= 650 && canvasH >= 450) {
+      return {
+        xCornerOffset: 15,
+        yCornerOffset: 25,
+        fontSize: 24,
+        yInterval: 34,
+      }
+    } else {
+      return {
+        xCornerOffset: 9,
+        yCornerOffset: 15,
+        fontSize: 18,
+        yInterval: 24,
+      }
+    }
+  }
+
   public drawTopLeftOverlay(
     ctx: CanvasRenderingContext2D,
     cameraMode: string,
+    camera: Camera,
   ) {
-    const tlcYInterval = 34
-    const tlcKFYInterval = 28
-    let tlcYOffset = 25
-    const tlcXOffset = 15
+    const sizing = this.getTopLeftOverlaySizing(
+      camera.canvasWidth,
+      camera.canvasHeight,
+    )
+    let tlcYOffset = sizing.yCornerOffset
+    const tlcXOffset = sizing.xCornerOffset
     if(this._api.frameData.ship.alive){
       // Fuel amount
       ctx.beginPath()
-      ctx.font = '24px Courier New'
+      ctx.font = `${sizing.fontSize}px Courier New`
       ctx.fillStyle = '#fcb8b8'
       ctx.textAlign = 'left'
-      ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
+      ctx.textBaseline = 'middle'
+      ctx.fillText("⛽" + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
+      tlcYOffset += sizing.yInterval
 
       // Battery amount
       ctx.beginPath()
       ctx.fillStyle = '#fcf9b8'
-      ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
+      ctx.fillText("🔋" + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+      tlcYOffset += sizing.yInterval
 
       // Ore amount
       const realOreKg = this._formatting.formatNumber(this._api.frameData.ship.cargo_ore_mass_kg)
       const virtualOreKg = this._formatting.formatNumber(this._api.frameData.ship.virtual_ore_kg)
       ctx.beginPath()
       ctx.fillStyle = '#fce8b8'
-      ctx.fillText(`💎 ${realOreKg} / 🪙 ${virtualOreKg}`, tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
+      ctx.fillText(`💎${realOreKg} 🪙${virtualOreKg}`, tlcXOffset, tlcYOffset)
+      tlcYOffset += sizing.yInterval
 
       // Camera mode
       ctx.beginPath()
       ctx.fillStyle = '#ffffff'
-      ctx.fillText("🎥 " + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
-    }
-    // Killfeed (TOP LEFT)
-    tlcYOffset += tlcYInterval
-    ctx.font = '20px Courier New'
-    ctx.fillStyle = '#ffffff'
-    ctx.textAlign = 'left'
-    for(let i in this._api.frameData.killfeed) {
-      const kfe = this._api.frameData.killfeed[i]
-      ctx.beginPath()
-      ctx.fillText("💀 " + kfe.victim_name, tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcKFYInterval
+      ctx.fillText("🎥" + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
+      tlcYOffset += sizing.yInterval
     }
   }
 
