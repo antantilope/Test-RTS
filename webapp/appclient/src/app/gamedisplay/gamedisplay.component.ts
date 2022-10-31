@@ -1597,12 +1597,12 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
-      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("GRAV BRAKE", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
       // ORE DRILL
       active = ship.mining_ore
-      disabled =  !(ship.cargo_ore_mass_kg < ship.cargo_ore_mass_capacity_kg)
+      disabled =  !(ship.cargo_ore_mass_kg < ship.cargo_ore_mass_capacity_kg) || ship.parked_at_ore_mine === null
       x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenUtilitiesMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
@@ -1631,7 +1631,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.strokeRect(x1, y1, sizing.xLenUtilitiesMenu, sizing.yLen)
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray: (active? btnColorGreen: btnColorWhite)
-      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("AUX POWER", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
 
@@ -1667,7 +1667,7 @@ export class GamedisplayComponent implements OnInit {
 
     } else {
       this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
+      this.ctx.fillStyle = ship.mining_ore || ship.gravity_brake_position != 0 || ship.apu_online || ship.apu_starting? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("UTILITIES", x1 + textLeftBuffer, y2)
       delete this.btnCanvasLocations.gravityBrakeBtn
