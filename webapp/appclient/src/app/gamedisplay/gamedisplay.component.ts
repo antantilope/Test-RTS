@@ -829,6 +829,7 @@ export class GamedisplayComponent implements OnInit {
       // Engine Column 2 buttons
       // BOOST
       let enabled = ship.engine_lit
+      let disabled: boolean, fullyDisabled: boolean
       x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
@@ -844,35 +845,38 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("BOOST", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
       // IGNITE
-      enabled = !ship.engine_lit && ship.engine_online
+      enabled = ship.engine_lit
+      disabled = !ship.engine_online || ship.engine_lit
+      fullyDisabled = !ship.engine_online
       x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineIgnite = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.strokeStyle = fullyDisabled? btnColorGray: (enabled? btnColorGreen: btnColorWhite)
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineIgnite")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
-      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillStyle = fullyDisabled? btnColorGray: (enabled? btnColorGreen: btnColorWhite)
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("IGNITE", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
       // IDLE
-      enabled = ship.engine_lit
+      enabled = !ship.engine_lit
+      disabled = !ship.engine_online
       x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineIdle = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.strokeStyle = disabled? btnColorGray: enabled?btnColorGreen: btnColorWhite
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineIdle")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
-      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillStyle = disabled? btnColorGray: enabled?btnColorGreen: btnColorWhite
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("IDLE", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
       // SHUTDOWN
@@ -892,19 +896,20 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillText("SHUTDOWN", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
       // STARTUP
-      enabled = !ship.engine_online && !ship.engine_starting
+      enabled = ship.engine_online || ship.engine_starting
+      disabled = ship.engine_starting
       x1 = cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEngineMenu
       y2 = canvasHeight - cornerOffset - col2YOffset
       y1 = y2 - sizing.yLen
       this.btnCanvasLocations.engineStartup = {x1, x2, y1, y2}
       this.ctx.beginPath()
-      this.ctx.strokeStyle = enabled? btnColorWhite: btnColorGray
+      this.ctx.strokeStyle = enabled? btnColorGreen: btnColorWhite
       this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("engineStartup")
       this.ctx.strokeRect(x1, y1, sizing.xLenEngineMenu, sizing.yLen)
       this.ctx.beginPath()
-      this.ctx.fillStyle = enabled? btnColorWhite: btnColorGray
-      this.ctx.font = `${enabled?"":"italic "}bold ${sizing.fontSize}px courier new`
+      this.ctx.fillStyle = enabled? btnColorGreen: btnColorWhite
+      this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("STARTUP", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
 
