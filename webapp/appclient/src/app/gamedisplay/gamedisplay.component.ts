@@ -75,7 +75,7 @@ function getRandomFloat(min: number, max: number): number {
 export class GamedisplayComponent implements OnInit {
 
 
-  private activeBtnGroup = ButtonGroup.UTILITIES
+  private activeBtnGroup = ButtonGroup.NONE
   private btnCanvasLocations: {
     engineMenu?: BoxCoords,
     engineStartup?: BoxCoords,
