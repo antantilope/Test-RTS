@@ -757,7 +757,7 @@ export class GamedisplayComponent implements OnInit {
         xLenMenu: 135,
         xLenEngineMenu: 125,
         xLenAutopilotMenu: 150,
-        xLenScannerC1Menu: 108,
+        xLenScannerC1Menu: 104,
         xLenScannerC2Menu: 68,
         xLenEMEBeamMenu: 95,
         xLenTorpedoC1Menu: 120,
@@ -775,7 +775,7 @@ export class GamedisplayComponent implements OnInit {
         xLenMenu: 95,
         xLenEngineMenu: 85,
         xLenAutopilotMenu: 105,
-        xLenScannerC1Menu: 75,
+        xLenScannerC1Menu: 74,
         xLenScannerC2Menu: 47,
         xLenEMEBeamMenu: 65,
         xLenTorpedoC1Menu: 87,
@@ -1203,7 +1203,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.beginPath()
       this.ctx.fillStyle = disabled ? btnColorGray :btnColorWhite
       this.ctx.font = `${disabled?"italic ":""}bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText("DISABLE", x1 + textLeftBuffer, y2)
+      this.ctx.fillText("STOP", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
       // Start
       disabled = ship.scanner_starting

@@ -512,7 +512,7 @@ export class DrawingService {
         ctx.rect(
           camera.canvasWidth - barRAlignXOffset, // top left x
           camera.canvasHeight - (brcYOffset + sizing.timerBarHeight / 2), // top left y
-          timerBarLength,       // width
+          timerBarLength,       // widthc
           sizing.timerBarHeight,// height
         )
         ctx.stroke()
