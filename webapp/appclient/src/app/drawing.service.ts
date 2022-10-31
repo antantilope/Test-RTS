@@ -849,7 +849,7 @@ export class DrawingService {
       }
     } else {
       return {
-        victoryTextFontSize: 65,
+        victoryTextFontSize: 45,
         victoryTextYTopOffset: Math.floor(canvasH / 4),
         gameOverFontSize: 40,
         gameOverYTopOffset: Math.floor(canvasH / 6),
