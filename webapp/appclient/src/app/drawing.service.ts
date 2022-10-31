@@ -56,6 +56,18 @@ function nthRoot(x, root) {
   return Math.pow(x, 1 / root)
 }
 
+class BottomRightOverlaySizing {
+  yInterval: number
+  timerRightXOffset: number
+  timerLabelFontSize: number
+  timerBarHeight: number
+  timerBarLen: number
+  gameClockFontSize: number
+  XCornerOffset: number
+  YCornerOffset: number
+  clockTimerGap: number
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -429,62 +441,97 @@ export class DrawingService {
     }
   }
 
+  private getBottomRightOverlay(canvasW: number, canvasH: number): BottomRightOverlaySizing{
+    if(canvasW >= 650 && canvasH >= 450) {
+      // "larger" screen sizing
+      return {
+        yInterval: 45,
+        clockTimerGap: 55,
+        gameClockFontSize: 28,
+        XCornerOffset: 15,
+        YCornerOffset: 15,
+
+        timerBarLen: 200,
+        timerRightXOffset: 15,
+        timerLabelFontSize: 28,
+        timerBarHeight: 30,
+      }
+    } else {
+      // "smaller" screen sizing
+      return {
+        yInterval: 25,
+        clockTimerGap: 35,
+        gameClockFontSize: 19,
+        XCornerOffset: 5,
+        YCornerOffset: 5,
+        timerBarLen: 105,
+        timerRightXOffset: 5,
+        timerLabelFontSize: 18,
+        timerBarHeight: 20,
+      }
+    }
+  }
+
   public drawBottomRightOverlay(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
   ) {
-    const brcYInterval = 45
-    let brcYOffset = 30
-    const brcXOffset = 15
-    const timerBarLength = Math.round(camera.canvasWidth / 8)
-    const textRAlignXOffset = brcXOffset + timerBarLength + 10
-    const barRAlignXOffset = brcXOffset + timerBarLength
-
+    // This method is a bit of a mess
+    const sizing = this.getBottomRightOverlay(camera.canvasWidth, camera.canvasHeight)
+    let brcYOffset = sizing.YCornerOffset
     // Game Time
     ctx.strokeStyle = '#ffffff'
     ctx.fillStyle = '#ffffff'
     ctx.lineWidth = 1
     ctx.textAlign = 'right'
-    ctx.font = 'bold 24px Courier New'
+    ctx.textBaseline = "bottom"
+    ctx.font = `bold ${sizing.gameClockFontSize}px Courier New`
     ctx.beginPath()
     ctx.fillText(
       this._api.frameData.elapsed_time,
-      camera.canvasWidth - 15,
+      camera.canvasWidth - sizing.XCornerOffset,
       camera.canvasHeight - brcYOffset,
     )
 
     // Timers
+    const timerBarLength = sizing.timerBarLen //Math.min(200, Math.round(camera.canvasWidth / 6.5))
+    const brcXOffset = sizing.timerRightXOffset
+    const textRAlignXOffset = brcXOffset + timerBarLength + 10
+    const barRAlignXOffset = brcXOffset + timerBarLength
     if(this._api.frameData.ship.alive){
-      ctx.font = '20px Courier New'
+      ctx.font = `${sizing.timerLabelFontSize}px Courier New`
       ctx.strokeStyle = '#00ff00'
-      ctx.fillStyle = '#00ff00'
-      brcYOffset += brcYInterval
+      brcYOffset += sizing.clockTimerGap
+      ctx.textBaseline = "middle"
+      ctx.textAlign = "right"
       for(let i in this._api.frameData.ship.timers) {
         const timer: TimerItem = this._api.frameData.ship.timers[i]
         const fillLength = Math.round((timer.percent / 100) * timerBarLength)
         ctx.beginPath()
-        ctx.fillText(
-          timer.name,
-          camera.canvasWidth - textRAlignXOffset,
-          camera.canvasHeight - brcYOffset,
-        )
-        ctx.beginPath()
+        ctx.fillStyle = '#006600'
         ctx.rect(
-          camera.canvasWidth - barRAlignXOffset, //    top left x
-          camera.canvasHeight - (brcYOffset + 20),  // top left y
-          timerBarLength, // width
-          30,             // height
+          camera.canvasWidth - barRAlignXOffset, // top left x
+          camera.canvasHeight - (brcYOffset + sizing.timerBarHeight / 2), // top left y
+          timerBarLength,       // width
+          sizing.timerBarHeight,// height
         )
         ctx.stroke()
         ctx.beginPath()
         ctx.rect(
-          camera.canvasWidth - barRAlignXOffset, //    top left x
-          camera.canvasHeight - (brcYOffset + 20),  // top left y
-          fillLength, // width
-          30,         // height
+          camera.canvasWidth - barRAlignXOffset, // top left x
+          camera.canvasHeight - (brcYOffset + sizing.timerBarHeight / 2),  // top left y
+          fillLength,            // width
+          sizing.timerBarHeight, // height
         )
         ctx.fill()
-        brcYOffset += brcYInterval
+        ctx.beginPath()
+        ctx.fillStyle = '#ffffff'
+        ctx.fillText(
+          timer.name.toLocaleLowerCase(),
+          camera.canvasWidth - (sizing.timerRightXOffset + 2),
+          camera.canvasHeight - (brcYOffset),
+        )
+        brcYOffset += sizing.yInterval
       }
     }
   }

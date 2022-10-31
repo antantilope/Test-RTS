@@ -720,14 +720,14 @@ class Ship(BaseModel):
     def get_timer_items(self) -> Generator[TimerItem, None, None]:
         if self.engine_starting:
             yield {
-                'name': 'Engine Startup',
+                'name': 'Engine',
                 'percent': round(
                     self.engine_startup_power_used / self.engine_activation_power_required_total * 100
                 ),
             }
         if self.scanner_starting:
             yield {
-                'name': 'Scanner Startup',
+                'name': 'Scanner',
                 'slug': 'scanner_startup',
                 'percent': round(
                     self.scanner_startup_power_used / self.scanner_activation_power_required_total * 100
@@ -735,7 +735,7 @@ class Ship(BaseModel):
             }
         if self.scanner_locking:
             yield {
-                'name': 'Scanner Locking',
+                'name': 'Locking',
                 'slug': 'scanner_locking',
                 'percent': round(
                     self.scanner_locking_power_used / self.scanner_get_lock_power_requirement_total * 100
@@ -743,14 +743,14 @@ class Ship(BaseModel):
             }
         if self.ebeam_charge > 0:
             yield {
-                'name': 'E-Beam Charge',
+                'name': 'EME-Beam',
                 'percent': round(
                     self.ebeam_charge / self.ebeam_charge_capacity * 100
                 ),
             }
         if self.apu_starting:
             yield {
-                'name': 'APU Startup',
+                'name': 'aux power',
                 'percent': round(
                     self.apu_startup_power_used / self.apu_activation_power_required_total * 100
                 ),
@@ -758,16 +758,16 @@ class Ship(BaseModel):
 
         if self.gravity_brake_extending:
             yield {
-                'name': 'Brake Deploy',
+                'name': 'Brake',
                 'percent': round(
                     self.gravity_brake_position / self.gravity_brake_deployed_position * 100
                 ),
             }
         elif self.gravity_brake_retracting:
             yield {
-                'name': 'Brake Retract',
-                'percent': round(
-                    (self.gravity_brake_deployed_position - self.gravity_brake_position) / self.gravity_brake_deployed_position * 100
+                'name': 'Brake',
+                'percent': round( # count down timer (starts filled, and empties)
+                    self.gravity_brake_position / self.gravity_brake_deployed_position * 100
                 ),
             }
 

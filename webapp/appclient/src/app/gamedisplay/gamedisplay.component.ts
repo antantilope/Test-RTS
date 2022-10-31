@@ -749,10 +749,6 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private getButtonSizingData(): ButtonSizing {
-    const canvasDim = Math.min(
-      this._camera.gameDisplayCamera.canvasHeight,
-      this._camera.gameDisplayCamera.canvasWidth,
-    )
     if(this._camera.gameDisplayCamera.canvasWidth >= 650 && this._camera.gameDisplayCamera.canvasHeight >= 450) {
       // "Larger" screen configuration
       return {
