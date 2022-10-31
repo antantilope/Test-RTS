@@ -155,6 +155,7 @@ export class SoundService {
     // Setup music engine
     const deathMusicFile = this.deathMusicChoices[randomInt(0, this.deathMusicChoices.length)]
     this.deathMusicSound = new Audio("/static/sound/" + deathMusicFile)
+
     setTimeout(this.runMusicEngine.bind(this), this.musicEngineInterval)
 
     // Setup sound effects engine
@@ -466,6 +467,10 @@ export class SoundService {
   }
 
   private runMusicEngine() {
+    if(!this._api.frameData) {
+      console.warn("musicEngine - no frame data, will try rerunning")
+      setTimeout(this.runMusicEngine.bind(this), this.musicEngineInterval)
+    }
 
     // Pause ambient music and play death music.
     if(!this.deathMusicPlaying && !this._api.frameData.ship.alive) {

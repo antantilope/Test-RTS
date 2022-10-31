@@ -26,6 +26,3 @@ export const SHIP_MIN_BOUNDING_BOX_LENGTH_METERS = Math.max(
     SHIP_LENGTH_METERS_X,
     SHIP_LENGTH_METERS_Y,
 )
-
-export const TWO_SEVENTHS = 2 / 7
-export const FIVE_SEVENTHS = 5 / 7
