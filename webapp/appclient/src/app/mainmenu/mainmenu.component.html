@@ -3,12 +3,10 @@
     id="draggable-container"
     (mousedown)="select();"
     #paneElement
-    ngDraggable
-    ngResizable
 >
     <div id="title-bar">
         <strong>Main Menu</strong>
-        <button id="close-btn" (click)="_pane.toggleMainMenuPane()">
+        <button id="close-btn" (click)="_pane.closeMainMenuPane()">
             x
         </button>
     </div>

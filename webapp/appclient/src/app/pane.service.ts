@@ -44,37 +44,54 @@ export class PaneService {
     return this.inputIsFocused
   }
 
-  toggleAllChatPane() {
-    const remove = this.allChatPaneVisible
-    this.allChatPaneVisible = !this.allChatPaneVisible
-    if(remove) {
-      this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_ALL_CHAT)
-    }
+  openAllchatPane() {
+    this.allChatPaneVisible = true
+    this.shipPaneVisible = false
+    this.scannerPaneVisible = false
+    this.mainMenuPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn == this.PANE_ALL_CHAT)
+  }
+  closeAllchatPane() {
+    this.allChatPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_ALL_CHAT)
   }
 
-  toggleMainMenuPane() {
-    const remove = this.mainMenuPaneVisible
-    this.mainMenuPaneVisible = !this.mainMenuPaneVisible
-    if(remove) {
-      this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_MAIN_MENU)
-    }
+  openMainMenuPane() {
+    this.mainMenuPaneVisible = true
+    this.allChatPaneVisible = false
+    this.shipPaneVisible = false
+    this.scannerPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn == this.PANE_MAIN_MENU)
+  }
+  closeMainMenuPane() {
+    this.mainMenuPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_MAIN_MENU)
   }
 
-  toggleShipPane() {
-    const remove = this.shipPaneVisible
-    this.shipPaneVisible = !this.shipPaneVisible
-    if(remove) {
-      this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_SHIP)
-    }
+  openShipMenuPane() {
+    this.shipPaneVisible = true
+    this.mainMenuPaneVisible = false
+    this.allChatPaneVisible = false
+    this.scannerPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn == this.PANE_SHIP)
+  }
+  closeShipMenuPane() {
+    this.shipPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_SHIP)
   }
 
-  toggleScannerPane() {
-    const remove = this.scannerPaneVisible
-    this.scannerPaneVisible = !this.scannerPaneVisible
-    if(remove) {
-      this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_SCANNER)
-    }
+  openScannerPane() {
+    this.scannerPaneVisible = true
+    this.shipPaneVisible = false
+    this.mainMenuPaneVisible = false
+    this.allChatPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn == this.PANE_SCANNER)
   }
+  closeScannerPane() {
+    this.scannerPaneVisible = false
+    this._mouseInPane = this._mouseInPane.filter(pn => pn != this.PANE_SCANNER)
+  }
+
 
   mouseInPane(): boolean {
     return this._mouseInPane.length > 0

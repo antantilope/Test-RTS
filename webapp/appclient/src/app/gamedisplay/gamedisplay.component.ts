@@ -1984,13 +1984,13 @@ export class GamedisplayComponent implements OnInit {
       this.toggleMap()
     }
     else if(btnName == "shipMenu") {
-      this.btnToggleShipPane()
+      this._pane.openShipMenuPane()
     }
     else if(btnName == "gameMainMenu") {
-      this.btnToggleMainMenuPane()
+      this._pane.openMainMenuPane()
     }
     else if(btnName == "gameChatMenu") {
-      this.btnToggleAllChatPane()
+      this._pane.openAllchatPane()
     }
     else if(btnName == "toggleCamera") {
       this.cycleCameraMode()
@@ -2114,7 +2114,7 @@ export class GamedisplayComponent implements OnInit {
       {command:'activate_scanner'},
     )
     setTimeout(()=>{
-      this._pane.scannerPaneVisible = true
+      this._pane.openScannerPane()
     }, 100)
     this._sound.playPrimaryButtonClickSound()
   }
@@ -2125,12 +2125,8 @@ export class GamedisplayComponent implements OnInit {
       "/api/rooms/command",
       {command:'deactivate_scanner'},
     )
-    this._pane.scannerPaneVisible = false
+    this._pane.closeScannerPane()
     this._sound.playPrimaryButtonClickSound()
-  }
-
-  private btnToggleScannerDataWindow() {
-    this._pane.scannerPaneVisible = !this._pane.scannerPaneVisible
   }
 
   // Autopilot button handlers.
@@ -2390,18 +2386,6 @@ export class GamedisplayComponent implements OnInit {
       this._sound.playUtilityButtonClickSound()
       return
     }
-  }
-
-  private async btnToggleAllChatPane(){
-    this._pane.toggleAllChatPane()
-  }
-
-  private btnToggleMainMenuPane() {
-    this._pane.toggleMainMenuPane()
-  }
-
-  private async btnToggleShipPane(){
-    this._pane.toggleShipPane()
   }
 
 }
