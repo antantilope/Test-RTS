@@ -64,6 +64,15 @@ class ButtonSizing {
   yGap: number
 }
 
+class TopRightButtonSizing {
+  cornerOffset: number
+  fontSize: number
+  xLenMenu: number
+  yLen: number
+  yGap: number
+}
+
+
 function getRandomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
@@ -77,6 +86,13 @@ export class GamedisplayComponent implements OnInit {
 
   private activeBtnGroup = ButtonGroup.NONE
   private btnCanvasLocations: {
+
+    gameMainMenu?: BoxCoords,
+    gameChatMenu?: BoxCoords,
+    shipMenu?: BoxCoords,
+    toggleMap?: BoxCoords,
+    toggleCamera?: BoxCoords,
+
     engineMenu?: BoxCoords,
     engineStartup?: BoxCoords,
     engineShutdown?: BoxCoords,
@@ -261,7 +277,7 @@ export class GamedisplayComponent implements OnInit {
   cycleCameraMode() {
     const mode = this.getCameraMode()
     if(mode === CAMERA_MODE_MAP) {
-      return
+      this.toggleMap()
     }
     if (mode === CAMERA_MODE_SHIP) {
       this.setCameraModeScanner()
@@ -419,21 +435,19 @@ export class GamedisplayComponent implements OnInit {
     ) {
       const cameraMode = this.getCameraMode()
       let canvasBtnClicked = false
-      if(cameraMode !== CAMERA_MODE_MAP) {
-        const canvasBtnsToCheck = Object.keys(this.btnCanvasLocations)
-        for(let i in canvasBtnsToCheck) {
-          let bc:BoxCoords = this.btnCanvasLocations[canvasBtnsToCheck[i]]
-          if(this._camera.boxesOverlap(
-            bc,
-            {x1:mouseCanvasX, x2:mouseCanvasX, y1:mouseCanvasY, y2:mouseCanvasY})
-          ) {
-            this.clickBtnClickAnimationFrame = 1
-            this.clickBtnClickAnimationCanvasX = mouseCanvasX
-            this.clickBtnClickAnimationCanvasY = mouseCanvasY
-            this.handleBtnClick(canvasBtnsToCheck[i])
-            canvasBtnClicked = true
-            break
-          }
+      const canvasBtnsToCheck = Object.keys(this.btnCanvasLocations)
+      for(let i in canvasBtnsToCheck) {
+        let bc:BoxCoords = this.btnCanvasLocations[canvasBtnsToCheck[i]]
+        if(this._camera.boxesOverlap(
+          bc,
+          {x1:mouseCanvasX, x2:mouseCanvasX, y1:mouseCanvasY, y2:mouseCanvasY})
+        ) {
+          this.clickBtnClickAnimationFrame = 1
+          this.clickBtnClickAnimationCanvasX = mouseCanvasX
+          this.clickBtnClickAnimationCanvasY = mouseCanvasY
+          this.handleBtnClick(canvasBtnsToCheck[i])
+          canvasBtnClicked = true
+          break
         }
       }
       if(cameraMode !== CAMERA_MODE_MAP && !canvasBtnClicked && !this._api.frameData.ship.autopilot_program) {
@@ -442,7 +456,7 @@ export class GamedisplayComponent implements OnInit {
         this.clickHeadingAdjAnimationCanvasY = mouseCanvasY
         this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
       }
-      else if (cameraMode == CAMERA_MODE_MAP) {
+      else if (cameraMode == CAMERA_MODE_MAP && !canvasBtnClicked) {
         this.handleMouseClickInCanvasDropWaypoint(cameraMode, mouseCanvasX, mouseCanvasY)
         if(this._api.frameData.ship.autopilot_program == 'lock_waypoint') {
           console.log("reclicking to lock heading to waypoint")
@@ -695,9 +709,9 @@ export class GamedisplayComponent implements OnInit {
     if(cameraMode !== CAMERA_MODE_MAP) {
       this._draw.drawTopLeftOverlay(this.ctx, cameraMode, this._camera.gameDisplayCamera);
       this._draw.drawBottomRightOverlay(this.ctx, this._camera.gameDisplayCamera)
-      if(!this.isDebug && this._api.frameData.ship.alive) {
-        this._draw.drawTopRightOverlay(this.ctx, this._camera.gameDisplayCamera, this.wayPoint)
-      }
+      // if(!this.isDebug && this._api.frameData.ship.alive) {
+      //   this._draw.drawTopRightOverlay(this.ctx, this._camera.gameDisplayCamera)
+      // }
     }
     // Front center and alerts
     this._draw.drawFrontAndCenterAlerts(this.ctx, this._camera.gameDisplayCamera)
@@ -744,6 +758,8 @@ export class GamedisplayComponent implements OnInit {
     if(this.cameraMode !== CAMERA_MODE_MAP) {
       this.paintButtons()
     }
+    const trcSizing = this.getTopRightButtonSizing()
+    this.paintTopRightButtons(trcSizing)
     this._sound.runSoundFXEngine();
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
@@ -806,8 +822,129 @@ export class GamedisplayComponent implements OnInit {
       }
       return border
     }
-    return 2// Default
+    return 2 //Default
   }
+
+  private getAllchatUnreadCtText(): string {
+    if(this._allchat.unreadCount && !this._pane.allChatPaneVisible) {
+      return `${Math.min(9, this._allchat.unreadCount)}-`
+    }
+    return ""
+  }
+
+  private getTopRightButtonSizing(): TopRightButtonSizing {
+    const canvasW = this._camera.gameDisplayCamera.canvasWidth
+    const canvasH = this._camera.gameDisplayCamera.canvasHeight
+    if(canvasW >= 650 && canvasH >= 450) {
+      // "Larger" screen configuration
+      return {
+        cornerOffset: 9,
+        fontSize: 23,
+        xLenMenu: 90,
+        yLen: 29,
+        yGap: 7,
+      }
+    } else {
+      // "Smaller" screen configuration
+      return {
+        cornerOffset: 9,
+        fontSize: 16,
+        xLenMenu: 63,
+        yLen: 20,
+        yGap: 4,
+      }
+    }
+  }
+
+  public paintTopRightButtons(sizing: TopRightButtonSizing) {
+    let btnTopYOffset = sizing.cornerOffset
+    const btnRightXOffset = sizing.cornerOffset
+    let x1: number, x2: number, y1: number, y2: number
+    const alpha = getRandomFloat(0.40, 0.55)
+    const btnColorWhite = `rgb(255, 255, 255, ${alpha})`
+    const btnColorGray = `rgb(180, 180, 180, ${alpha})`
+    this.ctx.textAlign = "right";
+    this.ctx.textBaseline = "bottom"
+    this.ctx.lineWidth = 2
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.fillStyle = btnColorWhite
+    this.ctx.font = `bold ${sizing.fontSize}px Courier New`
+    const canvasW = this._camera.gameDisplayCamera.canvasWidth
+    // Main Menu
+    x1 = canvasW - (btnRightXOffset + sizing.xLenMenu)
+    x2 = canvasW - btnRightXOffset
+    y1 = btnTopYOffset
+    y2 = y1 + sizing.yLen
+    this.btnCanvasLocations.gameMainMenu = {x1, x2, y1, y2}
+    this.ctx.beginPath()
+    this.ctx.strokeRect(
+      x1, y1, sizing.xLenMenu, sizing.yLen
+    )
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      "MENU", x2 - 2, y2
+    )
+    btnTopYOffset += sizing.yLen + sizing.yGap
+
+    // Chat Menu
+    x1 = canvasW - (btnRightXOffset + sizing.xLenMenu)
+    x2 = canvasW - btnRightXOffset
+    y1 = btnTopYOffset
+    y2 = y1 + sizing.yLen
+    this.btnCanvasLocations.gameChatMenu = {x1, x2, y1, y2}
+    this.ctx.beginPath()
+    this.ctx.strokeRect(
+      x1, y1, sizing.xLenMenu, sizing.yLen
+    )
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      `${this.getAllchatUnreadCtText()}CHAT`, x2 - 2, y2
+    )
+    btnTopYOffset += sizing.yLen + sizing.yGap
+
+    // Ship Menu
+    y1 = btnTopYOffset
+    y2 = y1 + sizing.yLen
+    this.btnCanvasLocations.shipMenu = {x1, x2, y1, y2}
+    this.ctx.beginPath()
+    this.ctx.strokeRect(
+      x1, y1, sizing.xLenMenu, sizing.yLen
+    )
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      "SHIP", x2 - 2, y2
+    )
+    btnTopYOffset += sizing.yLen + sizing.yGap
+
+    // Map Camera
+    y1 = btnTopYOffset
+    y2 = y1 + sizing.yLen
+    this.btnCanvasLocations.toggleMap = {x1, x2, y1, y2}
+    this.ctx.beginPath()
+    this.ctx.strokeRect(
+      x1, y1, sizing.xLenMenu, sizing.yLen
+    )
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      "MAP", x2 - 2, y2
+    )
+    btnTopYOffset += sizing.yLen + sizing.yGap
+
+    // Toggle Camera
+    y1 = btnTopYOffset
+    y2 = y1 + sizing.yLen
+    this.btnCanvasLocations.toggleCamera = {x1, x2, y1, y2}
+    this.ctx.beginPath()
+    this.ctx.strokeRect(
+      x1, y1, sizing.xLenMenu, sizing.yLen
+    )
+    this.ctx.beginPath()
+    this.ctx.fillText(
+      "CAMERA", x2 - 2, y2
+    )
+    btnTopYOffset += sizing.yLen + sizing.yGap
+  }
+
 
   private paintLeftCornerButtons(sizing: ButtonSizing) {
     const ship = this._api.frameData.ship
@@ -1842,6 +1979,21 @@ export class GamedisplayComponent implements OnInit {
       this.btnToggleMineOre()
     }else if(btnName == "gravityBrakeBtn") {
       this.btnClickToggleGravBrake()
+    }
+    else if(btnName == "toggleMap") {
+      this.toggleMap()
+    }
+    else if(btnName == "shipMenu") {
+      this.btnToggleShipPane()
+    }
+    else if(btnName == "gameMainMenu") {
+      this.btnToggleMainMenuPane()
+    }
+    else if(btnName == "gameChatMenu") {
+      this.btnToggleAllChatPane()
+    }
+    else if(btnName == "toggleCamera") {
+      this.cycleCameraMode()
     }
     else {
       console.warn("unknown btn " + btnName)
