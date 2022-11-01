@@ -1,40 +1,17 @@
 
-#draggable-container {
-    position: absolute;
-    top: 1px;
-    left: 1px;
-    display: flex;
-    flex-direction: column;
-    width: 99vw;
-    height: 99vh;
+#ship-pane-takeover {
     background-color: #a6ffc1;
-    overflow-y: clip;
-    overflow-x: clip;
-    border-radius: 8px;
 }
 
 #title-bar {
-    display: flex;
-    justify-content: space-between;
     background-color: #006917;
     color: #ffffff;
-    padding:3px;
 }
 
 #close-btn {
     color: #ffffff;
     background-color: #00410e;
-    font-weight: bold;
-    border-radius:50%;
-    cursor: pointer;
 }
-
-#card-body {
-    overflow-y:scroll;
-    width:auto;
-    height:auto;
-}
-
 
 #subpane-selector {
     margin:5px;
@@ -52,7 +29,4 @@
     padding: 4px;
     font-size: 1.5rem;
     cursor: pointer;
-}
-
-.temp-subpane-selector-btn {
 }
