@@ -84,6 +84,10 @@ class FrontAndCenterAlertSizing {
   deathQuoteYTopOffset: number
   deathQuoteYInterval: number
   deathQuoteXOffset: number
+  abbreviateDockedAt: boolean
+  dockedAtFontSize: number
+  docketAtYTopOffset: number
+  dockedAtYInterval?: number
 }
 
 @Injectable({
@@ -749,6 +753,10 @@ export class DrawingService {
         deathQuoteYTopOffset: 50,
         deathQuoteYInterval: 50,
         deathQuoteXOffset: 50,
+        abbreviateDockedAt: false,
+        dockedAtFontSize: 32,
+        dockedAtYInterval: 45,
+        docketAtYTopOffset: 50,
       }
     } else {
       return {
@@ -760,6 +768,9 @@ export class DrawingService {
         deathQuoteYTopOffset: 50,
         deathQuoteYInterval: 28,
         deathQuoteXOffset: 10,
+        abbreviateDockedAt: true,
+        docketAtYTopOffset: 20,
+        dockedAtFontSize: 25,
       }
     }
   }
@@ -809,44 +820,68 @@ export class DrawingService {
         deathTextYOffset)
     }
     else if(this._api.frameData.ship.docked_at_station) {
-      const station = this._api.frameData.space_stations.find(
-        s => s.uuid == this._api.frameData.ship.docked_at_station
-      )
-      ctx.beginPath()
-      ctx.font = 'bold 32px courier new'
-      ctx.fillStyle = '#00ff00'
-      ctx.textAlign = 'left'
-      ctx.fillText(
-        "Docked at",
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2
-      )
-      ctx.font = 'bold 38px courier new'
-      ctx.fillText(
-        station.name,
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2 + 45
-      )
+      if(sizing.abbreviateDockedAt) {
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Docked🛰️",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+      }else {
+        const station = this._api.frameData.space_stations.find(
+          s => s.uuid == this._api.frameData.ship.docked_at_station
+        )
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize * 0.8}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Docked at",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillText(
+          station.name,
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset + sizing.dockedAtYInterval
+        )
+      }
     }
     else if (this._api.frameData.ship.parked_at_ore_mine) {
       const oreMine = this._api.frameData.ore_mines.find(
         om => om.uuid == this._api.frameData.ship.parked_at_ore_mine
       )
-      ctx.beginPath()
-      ctx.font = 'bold 32px courier new'
-      ctx.fillStyle = '#00ff00'
-      ctx.textAlign = 'left'
-      ctx.fillText(
-        "Parked at",
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2
-      )
-      ctx.font = 'bold 38px courier new'
-      ctx.fillText(
-        oreMine.name,
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2 + 45
-      )
+      if(sizing.abbreviateDockedAt) {
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Parked🪨",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+      }else {
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize * 0.8}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Parked at",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillText(
+          oreMine.name,
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset + sizing.dockedAtYInterval
+        )
+      }
     }
   }
 
