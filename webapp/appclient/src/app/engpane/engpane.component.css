@@ -4,7 +4,8 @@ div {
 }
 .section-heading {
     margin: 6px;
-    font-size: 115%;
+    font-size: 125%;
+    color: #2eb55c;
     text-decoration: underline;
 }
 

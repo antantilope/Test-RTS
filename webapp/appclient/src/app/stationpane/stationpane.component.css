@@ -11,8 +11,19 @@ h2 {
 }
 #welcome-to-label {
     font-style: italic;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     margin-bottom: 0.4rem;
+}
+
+@media only screen and (min-width: 650px) {
+    #station-pain-container {
+        font-size: 1.4rem;
+    }
+}
+@media only screen and (max-width: 649px) {
+    #station-pain-container {
+        font-size: 1.2rem;
+    }
 }
 
 .section-heading {
@@ -33,13 +44,13 @@ h2 {
 
 #no-ore-notice {
     font-style: italic;
-    color: #3d2d2d;
+    color: #ff3838;
 }
 
 .section {
-    margin-bottom:8px;
+    margin-bottom:12px;
     padding: 4px;
-    border: 1px solid #8b8b8b;
+    border: 1px solid #2a2a2a;;
     border-radius: 5px;
 }
 
@@ -49,20 +60,21 @@ h2 {
 #begin-feuling-btn{
     margin-top: 4px;
     font-size: 1.25rem;
-    background-color: #003b07;
-    color: #ffffff;
+    background-color: #3ae374;;
+    color: #000000;
     cursor: pointer;
 }
 #stop-feuling-btn{
     margin-top: 4px;
     font-size: 1.25rem;
-    background-color: #3b0000;
+    background-color: #ff4d4d;;
     color: #ffffff;
+    font-weight: bold;
     cursor: pointer;
 }
 .buy-weapon-btn{
     font-size: 1.25rem;
-    background-color: #5d3a00;
+    background-color: #7158e2;
     color: #ffffff;
     cursor: pointer;
     margin-left:10px;
@@ -72,9 +84,9 @@ h2 {
     font-size:1.10rem;
 }
 
-#ore-price-label {
+/* #ore-price-label {
     font-size:1.10rem;
-}
+} */
 
 .td-row-label {
     text-align: left;

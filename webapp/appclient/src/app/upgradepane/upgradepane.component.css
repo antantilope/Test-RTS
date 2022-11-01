@@ -21,12 +21,12 @@ div, h2 {
     border-radius: 5px;
 }
 .section-heading {
-    font-size: 125%;
+    font-size: 145%;
     font-weight: bold;
     margin-left:5px;
     margin-bottom: 10px;
     text-decoration: underline;
-    color: #ebebeb;
+    color: #2eb55c;
 }
 #not-docked-at-station-alert {
     font-style: bold;
@@ -59,8 +59,8 @@ div, h2 {
 .start-research-btn {
     font-size: 110%;
     cursor: pointer;
-    color: #ffffff;
-    background-color: #00410e;
+    color: #000000;
+    background-color: #3ae374;
     border-radius: 5px;
 }
 
@@ -75,7 +75,8 @@ div, h2 {
     font-size: 110%;
     cursor: pointer;
     color: #ffffff;
-    background-color: #410000;
+    background-color: #ff4d4d;
+    font-weight: bold;
     border-radius: 5px;
 }
 
@@ -83,5 +84,5 @@ div, h2 {
     margin-bottom: 5px;
 }
 .missing-core-upgrade-label {
-    color: #ff3838;
+    color: #ff2222;
 }
