@@ -8,12 +8,12 @@
     <div
         id="title-bar"
         class="takeover-pane-title-bar"
+        (click)="_pane.closeShipMenuPane()"
     >
         <strong>Ship Menu</strong>
         <button
             id="close-btn"
             class="close-takeover-pane-btn"
-            (click)="_pane.closeShipMenuPane()"
         >
             x
         </button>

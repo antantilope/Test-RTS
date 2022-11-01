@@ -36,6 +36,7 @@ html, body {
     justify-content: space-between;
     padding:5px;
     font-size: 1.4rem;
+    cursor: pointer;
 }
 
 .close-takeover-pane-btn {
