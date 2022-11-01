@@ -1,20 +1,16 @@
 
 #draggable-container {
     position: absolute;
-    top: 50px; left: 150px;
+    top: 1px;
+    left:1px;
     display: flex;
     flex-direction: column;
-    width: 300px;
-    height: 250px;
+    width: 99vw;
+    height: 99vh;
     background-color: #b5ccff;
-    cursor: grab;
     overflow-y: clip;
     overflow-x: clip;
     border-radius: 8px;
-    max-width:500px;
-    min-width: 100px;
-    max-height: 500px;
-    min-height:100px;
 }
 
 #title-bar {
