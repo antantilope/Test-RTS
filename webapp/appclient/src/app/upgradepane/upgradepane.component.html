@@ -13,7 +13,6 @@
             <!-- Advanced Electionics -->
             <div class="core-upgrade-container">
                 <div
-                    [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_level == 1) ? '#00410e' : '#000000'}"
                     class="upgrade-header"
                 >
                     <strong>
@@ -32,12 +31,12 @@
                         *ngIf="_api.frameData.ship.upgrade_summary.core.advanced_electronics.seconds_researched === null"
                     >
                         <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                         >
                             🪙{{ _api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.ore }}
                         </span>
                         <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                         >
                             🔋{{ _api.frameData.ship.upgrade_summary.core.advanced_electronics.current_cost.electricity|number:"1.0-0" }}
                         </span>
@@ -77,7 +76,6 @@
             <!-- Titanium Allow Hull -->
             <div class="core-upgrade-container">
                 <div
-                    [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_level == 1) ? '#00410e' : '#000000'}"
                     class="upgrade-header"
                 >
                     <strong>
@@ -96,12 +94,12 @@
                         *ngIf="_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.seconds_researched === null"
                     >
                         <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                         >
                             🪙{{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.ore }}
                         </span>
                         <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                         >
                             🔋{{ _api.frameData.ship.upgrade_summary.core.titanium_alloy_hull.current_cost.electricity|number:"1.0-0" }}
                         </span>
@@ -141,7 +139,6 @@
             <!-- Liquid Nitrogen Cooling -->
             <div class="core-upgrade-container">
                 <div
-                    [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_level == 1) ? '#00410e' : '#000000'}"
                     class="upgrade-header"
                 >
                     <strong>
@@ -160,12 +157,12 @@
                         *ngIf="_api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.seconds_researched === null"
                     >
                         <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                         >
                             🪙{{ _api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_cost.ore }}
                         </span>
                         <span
-                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                            [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                         >
                             🔋{{ _api.frameData.ship.upgrade_summary.core.liquid_nitrogen_cooling.current_cost.electricity|number:"1.0-0" }}
                         </span>
@@ -225,12 +222,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.engine_newtons.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.engine_newtons.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -287,12 +284,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.ore_capacity.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.ore_capacity.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -350,12 +347,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.battery_capacity.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.battery_capacity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.battery_capacity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.battery_capacity.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.battery_capacity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.battery_capacity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.battery_capacity.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -412,12 +409,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.fuel_capacity.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.fuel_capacity.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -474,12 +471,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_range.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.scanner_range.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -536,12 +533,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.radar_sensitivity.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.radar_sensitivity.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -598,12 +595,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.anti_radar_coating.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.anti_radar_coating.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.anti_radar_coating.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.anti_radar_coating.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.anti_radar_coating.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.anti_radar_coating.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.anti_radar_coating.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -660,12 +657,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.scanner_lock_traversal.current_cost.electricity|number:"1.0-0" }}
                     </span>
@@ -722,12 +719,12 @@
             <div *ngIf="_api.frameData.ship.upgrade_summary.ship.apu_efficiency.seconds_researched === null">
                 <div class="upgrade-cost-label">
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.ore <= (_api.frameData.ship.cargo_ore_mass_kg + _api.frameData.ship.virtual_ore_kg)) ? '#ebebeb' : '#ff3838'}"
                     >
                         🪙{{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.ore }}
                     </span>
                     <span
-                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#000000' : '#ff0000'}"
+                        [ngStyle]="{'color': (_api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.electricity <= _api.frameData.ship.battery_power) ? '#ebebeb' : '#ff3838'}"
                     >
                         🔋{{ _api.frameData.ship.upgrade_summary.ship.apu_efficiency.current_cost.electricity|number:"1.0-0" }}
                     </span>

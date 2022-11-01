@@ -3,12 +3,22 @@ div, h2 {
     font-family: 'Courier New', Courier, monospace;
 }
 
+@media only screen and (min-width: 650px) {
+    .upgrade-type-section {
+        font-size: 1.4rem;
+    }
+}
+@media only screen and (max-width: 649px) {
+    .upgrade-type-section {
+        font-size: 1.2rem;
+    }
+}
+
 .upgrade-type-section {
-    margin-bottom:8px;
+    margin-bottom: 8px;
     padding: 4px;
     border: 1px solid #8b8b8b;
     border-radius: 5px;
-    font-size: 1.2rem;
 }
 .section-heading {
     font-size: 125%;
@@ -16,30 +26,34 @@ div, h2 {
     margin-left:5px;
     margin-bottom: 10px;
     text-decoration: underline;
+    color: #ebebeb;
 }
 #not-docked-at-station-alert {
     font-style: bold;
-    color: #ff0000;
-    font-size: 110%;
+    color: #ff3838;
+    font-size: 120%;
 }
 
 .core-upgrade-container {
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     padding: 6px;
-    background-color: #fbeeff; /* constrasted against #a6ffc1*/
+    background-color: #303030;
+    color: #ebebeb;
     border-radius: 5px;
 }
 
 .ship-upgrade-container {
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     padding: 6px;
-    background-color: #f9ffe8; /* constrasted against #a6ffc1*/
+    background-color: #303030;
+    color: #ebebeb;
     border-radius: 5px;
 }
 
 .upgrade-header{
     font-size: 115%;
     margin-bottom: 5px;
+    color: #ebebeb;
 }
 
 .start-research-btn {
@@ -69,5 +83,5 @@ div, h2 {
     margin-bottom: 5px;
 }
 .missing-core-upgrade-label {
-    color: #ff0000;
+    color: #ff3838;
 }

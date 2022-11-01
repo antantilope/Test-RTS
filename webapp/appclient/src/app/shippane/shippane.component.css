@@ -1,22 +1,26 @@
 
 #ship-pane-takeover {
-    background-color: #a6ffc1;
+    background-color: #3d3d3d;
 }
 
 #title-bar {
-    background-color: #006917;
-    color: #ffffff;
+    background-color: #2a2a2a;
+    color: #c4c4c4;
 }
 
 #close-btn {
     color: #ffffff;
-    background-color: #00410e;
+    background-color: #3d3d3d;
+}
+
+#pane-body{
+    color: #d8d8d8;
 }
 
 #subpane-selector {
     margin:5px;
     padding-bottom: 3px;
-    border-bottom: 1px solid #808080;
+    border-bottom: 1px solid #2a2a2a;
 }
 
 #sub-pane-container {
