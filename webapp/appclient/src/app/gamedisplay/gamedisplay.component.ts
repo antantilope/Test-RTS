@@ -457,12 +457,20 @@ export class GamedisplayComponent implements OnInit {
         this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
       }
       else if (cameraMode == CAMERA_MODE_MAP && !canvasBtnClicked) {
-        this.handleMouseClickInCanvasDropWaypoint(cameraMode, mouseCanvasX, mouseCanvasY)
-        if(this._api.frameData.ship.autopilot_program == 'lock_waypoint') {
+        const waypointUpdated = this.handleMouseClickInCanvasDropWaypoint(
+          cameraMode, mouseCanvasX, mouseCanvasY)
+        if(waypointUpdated && this._api.frameData.ship.autopilot_program == 'lock_waypoint') {
           console.log("reclicking to lock heading to waypoint")
           setTimeout(() => {
             this.btnAutoPilotHeadingLockWaypoint()
           }, 15)
+        }
+        if(!waypointUpdated) {
+          // Handle heading adjust from map view (no waypoint updated)
+          this.clickHeadingAdjAnimationFrame = 1
+          this.clickHeadingAdjAnimationCanvasX = mouseCanvasX
+          this.clickHeadingAdjAnimationCanvasY = mouseCanvasY
+          this.handleMouseClickInCanvasHeadingAdjust(mouseCanvasX, mouseCanvasY)
         }
       }
 
@@ -482,13 +490,15 @@ export class GamedisplayComponent implements OnInit {
     )
   }
 
-  private async handleMouseClickInCanvasDropWaypoint(
+  private handleMouseClickInCanvasDropWaypoint(
     mode: string,
     canvasClickX: number,
     canvasClickY: number,
-  ) {
+  ): boolean {
+    // returns true if a waypoint was updated, false if no action taken.
     if (mode !== CAMERA_MODE_MAP) {
-      return console.warn("handleMouseClickInCanvasDropWaypoint only runs in map mode")
+      console.warn("handleMouseClickInCanvasDropWaypoint only runs in map mode")
+      return false
     }
     const getCanvasDistanceBetweenCanvasCoords = (
       p1: PointCoord,
@@ -535,7 +545,6 @@ export class GamedisplayComponent implements OnInit {
         console.log("clearing waypoint")
         this.wayPointUUID = null
         this.wayPoint = null
-        return
       } else {
         console.log("setting new waypoint")
         this.wayPointUUID = minDistData.uuid
@@ -544,7 +553,9 @@ export class GamedisplayComponent implements OnInit {
           y: minDistData.position_map_units_y,
         }
       }
+      return true
     }
+    return false
   }
 
   private getCurrentTubeWeaponCount() {
