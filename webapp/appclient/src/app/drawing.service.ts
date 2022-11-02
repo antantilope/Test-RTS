@@ -593,7 +593,7 @@ export class DrawingService {
     // Fuel amount
     ctx.beginPath()
     ctx.font = `${sizing.fontSize}px Courier New`
-    ctx.fillStyle = '#fcb8b8'
+    ctx.fillStyle = '#ff9494'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
     ctx.fillText("⛽" + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
@@ -601,7 +601,7 @@ export class DrawingService {
 
     // Battery amount
     ctx.beginPath()
-    ctx.fillStyle = '#fcf9b8'
+    ctx.fillStyle = '#98ffbe'
     ctx.fillText("🔋" + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
     tlcYOffset += sizing.yInterval
 
@@ -609,7 +609,7 @@ export class DrawingService {
     const realOreKg = this._formatting.formatNumber(this._api.frameData.ship.cargo_ore_mass_kg)
     const virtualOreKg = this._formatting.formatNumber(this._api.frameData.ship.virtual_ore_kg)
     ctx.beginPath()
-    ctx.fillStyle = '#fce8b8'
+    ctx.fillStyle = '#fffa65'
     ctx.fillText(`💎${realOreKg} 🪙${virtualOreKg}`, tlcXOffset, tlcYOffset)
     tlcYOffset += sizing.yInterval
 
@@ -619,19 +619,19 @@ export class DrawingService {
       + Math.pow(this._api.frameData.ship.velocity_y_meters_per_second, 2)
     ).toFixed(0)
     ctx.beginPath()
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = '#ffcccc'
     ctx.fillText(`💨 ${velocityMS} M/S`, tlcXOffset, tlcYOffset)
     tlcYOffset += sizing.yInterval
 
     // Thermal signature
     ctx.beginPath()
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = '#ffcccc'
     ctx.fillText(`🌡️ ${this._api.frameData.ship.scanner_thermal_signature}`, tlcXOffset, tlcYOffset)
     tlcYOffset += sizing.yInterval
 
     // Camera mode
     ctx.beginPath()
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = '#ffcccc'
     ctx.fillText("🎥 " + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
     tlcYOffset += sizing.yInterval
   }

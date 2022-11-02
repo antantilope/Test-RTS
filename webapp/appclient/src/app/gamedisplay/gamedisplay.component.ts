@@ -873,6 +873,7 @@ export class GamedisplayComponent implements OnInit {
     let x1: number, x2: number, y1: number, y2: number
     const alpha = getRandomFloat(0.40, 0.55)
     const btnColorWhite = `rgb(255, 255, 255, ${alpha})`
+    const btnColorGreen = `rgb(50, 255,	126, ${alpha})`
     const btnColorGray = `rgb(180, 180, 180, ${alpha})`
     this.ctx.textAlign = "right";
     this.ctx.textBaseline = "bottom"
@@ -932,6 +933,8 @@ export class GamedisplayComponent implements OnInit {
     y2 = y1 + sizing.yLen
     this.btnCanvasLocations.toggleMap = {x1, x2, y1, y2}
     this.ctx.beginPath()
+    this.ctx.strokeStyle = this.cameraMode == CAMERA_MODE_MAP? btnColorGreen:  btnColorWhite
+    this.ctx.fillStyle = this.cameraMode == CAMERA_MODE_MAP? btnColorGreen:  btnColorWhite
     this.ctx.strokeRect(
       x1, y1, sizing.xLenMenu, sizing.yLen
     )
@@ -946,6 +949,8 @@ export class GamedisplayComponent implements OnInit {
     y2 = y1 + sizing.yLen
     this.btnCanvasLocations.toggleCamera = {x1, x2, y1, y2}
     this.ctx.beginPath()
+    this.ctx.strokeStyle = btnColorWhite
+    this.ctx.fillStyle = btnColorWhite
     this.ctx.strokeRect(
       x1, y1, sizing.xLenMenu, sizing.yLen
     )
@@ -967,8 +972,8 @@ export class GamedisplayComponent implements OnInit {
     const alpha = getRandomFloat(0.40, 0.55)
     const btnColorWhite = `rgb(255, 255, 255, ${alpha})`
     const btnColorGray = `rgb(180, 180, 180, ${alpha})`
-    const btnColorGreen = `rgb(0, 255, 17, ${alpha})`
-    const btnColorRed = `rgb(255, 140, 140, ${alpha})`
+    const btnColorGreen = `rgb(50, 255,	126, ${alpha})`
+    const btnColorRed = `rgb(255, 135, 135, ${alpha})`
     const btnColorBlack = "#000000"
 
     this.ctx.textAlign = "left";

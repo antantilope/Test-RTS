@@ -1,28 +1,44 @@
 
-div, h2 {
+div {
     font-family: 'Courier New', Courier, monospace;
-}
-h2 {
-    margin:0;
-}
-#pane-title-container {
-    margin-top: 0.6rem;
-    margin-bottom: 0.8rem;
-}
-#welcome-to-label {
-    font-style: italic;
-    font-size: 1.3rem;
-    margin-bottom: 0.4rem;
 }
 
 @media only screen and (min-width: 650px) {
     #station-pain-container {
         font-size: 1.4rem;
     }
+    #pane-title-container {
+        margin-top: 0.6rem;
+        margin-bottom: 0.8rem;
+    }
+    #welcome-to-label {
+        font-style: italic;
+        font-weight: bold;
+        font-size: 1.5rem;
+        margin-bottom: 0.4rem;
+    }
+    #station-name-label {
+        font-size: 2rem;
+        margin-bottom: 0.4rem;
+    }
 }
 @media only screen and (max-width: 649px) {
     #station-pain-container {
         font-size: 1.2rem;
+    }
+    #pane-title-container {
+        margin-top: 0.6rem;
+        margin-bottom: 0.8rem;
+    }
+    #welcome-to-label {
+        font-style: italic;
+        font-weight: bold;
+        font-size: 1.3rem;
+        margin-bottom: 0.4rem;
+    }
+    #station-name-label {
+        font-size: 1.5rem;
+        margin-bottom: 0.4rem;
     }
 }
 
@@ -31,6 +47,7 @@ h2 {
     font-weight: bold;
     margin-left:5px;
     margin-bottom: 10px;
+    color: #2eb55c;
 }
 
 #trade-ore-btn {
@@ -50,7 +67,8 @@ h2 {
 .section {
     margin-bottom:12px;
     padding: 4px;
-    border: 1px solid #2a2a2a;;
+    border: 1px solid #2a2a2a;
+    background-color: #303030;
     border-radius: 5px;
 }
 
@@ -63,6 +81,7 @@ h2 {
     background-color: #3ae374;;
     color: #000000;
     cursor: pointer;
+    border-radius: 5px;
 }
 #stop-feuling-btn{
     margin-top: 4px;
@@ -71,6 +90,7 @@ h2 {
     color: #ffffff;
     font-weight: bold;
     cursor: pointer;
+    border-radius: 5px;
 }
 .buy-weapon-btn{
     font-size: 1.25rem;
@@ -78,6 +98,7 @@ h2 {
     color: #ffffff;
     cursor: pointer;
     margin-left:10px;
+    border-radius: 5px;
 }
 #ore-price {
     font-weight: bold;
