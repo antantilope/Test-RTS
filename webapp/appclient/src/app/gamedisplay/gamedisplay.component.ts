@@ -235,9 +235,14 @@ export class GamedisplayComponent implements OnInit {
   private resizeCanvas() {
     setTimeout(() => {
       console.log("GameDisplayComponent::resizeCanvas()")
-      this.canvas.nativeElement.width = document.body.clientWidth;
-      this.canvas.nativeElement.height = document.body.clientHeight;
-      console.log({w: this.canvas.nativeElement.width, h: this.canvas.nativeElement.height})
+      this.canvas.nativeElement.width = document.body.clientWidth
+      // Using window.innerHeight to try to fix address bar covering content
+      // on mobile. Seems to work somewhat on iOS safari, but not perfect...
+      this.canvas.nativeElement.height = window.innerHeight
+      console.log({
+        w: this.canvas.nativeElement.width,
+        h: this.canvas.nativeElement.height
+      })
       this._camera.gameDisplayCamera.registerCanvasWidthHeight(
         this.canvas.nativeElement.offsetWidth,
         this.canvas.nativeElement.offsetHeight,
