@@ -763,10 +763,10 @@ export class DrawingService {
         victoryTextFontSize: 45,
         victoryTextYTopOffset: Math.floor(canvasH / 4),
         gameOverFontSize: 40,
-        gameOverYTopOffset: Math.floor(canvasH / 6),
-        deathQuoteFontSize: 25,
+        gameOverYTopOffset: Math.floor(canvasH / 5),
+        deathQuoteFontSize: 18,
         deathQuoteYTopOffset: 50,
-        deathQuoteYInterval: 28,
+        deathQuoteYInterval: 23,
         deathQuoteXOffset: 10,
         abbreviateDockedAt: true,
         docketAtYTopOffset: 20,
@@ -796,13 +796,13 @@ export class DrawingService {
       ctx.beginPath()
       ctx.font = `bold ${sizing.gameOverFontSize}px courier new`
       ctx.fillStyle = '#ff0000'
-      ctx.textAlign = 'center'
+      ctx.textAlign = 'left'
       let deathTextYOffset = sizing.gameOverYTopOffset
       const deathQuoteInterval = sizing.deathQuoteYInterval
       if(this._api.frameData.game_frame % 50 > 25) {
-        ctx.fillText("GAME OVER", camera.canvasHalfWidth, deathTextYOffset)
+        ctx.fillText("GAME OVER", sizing.deathQuoteXOffset, deathTextYOffset)
       }
-      deathTextYOffset += (deathQuoteInterval * 2)
+      deathTextYOffset += (deathQuoteInterval * 3)
       ctx.beginPath()
       ctx.fillStyle = '#b8b8b8' // medium light gray
       ctx.textAlign = 'left'
