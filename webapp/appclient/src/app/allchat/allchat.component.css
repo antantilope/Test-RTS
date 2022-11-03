@@ -1,43 +1,18 @@
 
-#draggable-container {
-    position: absolute;
-    top: 50px; left: 150px;
-    display: flex;
-    flex-direction: column;
-    width: 300px;
-    height: 250px;
+#allchat-pane-takeover {
     background-color: #b5ccff;
-    cursor: grab;
-    overflow-y: clip;
-    overflow-x: clip;
-    border-radius: 8px;
-    max-width:500px;
-    min-width: 100px;
-    max-height: 500px;
-    min-height:100px;
 }
 
 #title-bar {
-    display: flex;
-    justify-content: space-between;
     background-color: #0000ff;
     color: #ffffff;
-    padding:3px;
 }
 
 #close-btn {
     color: #ffffff;
     background-color: rgb(8, 0, 117);
-    font-weight: bold;
-    border-radius:50%;
-    cursor: pointer;
 }
 
-#card-body {
-    overflow-y:scroll;
-    width:auto;
-    height:auto;
-}
 
 .pubmsg-line {
     word-wrap: break-word;

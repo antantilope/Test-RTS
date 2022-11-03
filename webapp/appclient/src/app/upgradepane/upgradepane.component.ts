@@ -27,7 +27,7 @@ export class UpgradepaneComponent implements OnInit {
   ngOnInit(): void {
     setTimeout(()=>{
       this.refreshMissingCoreUpgrades()
-    }, this.refreshMissingCoreUpgradesInterval)
+    })
   }
 
   private refreshMissingCoreUpgrades() {

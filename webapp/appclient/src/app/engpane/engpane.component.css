@@ -4,12 +4,22 @@ div {
 }
 .section-heading {
     margin: 6px;
-    font-size: 115%;
+    font-size: 125%;
+    color: #2eb55c;
     text-decoration: underline;
 }
-.section {
-    margin: 6px;
-    font-size:1.2rem;
+
+@media only screen and (min-width: 650px) {
+    .section {
+        margin: 6px;
+        font-size: 1.4rem;
+    }
+}
+@media only screen and (max-width: 649px) {
+    .section {
+        margin: 6px;
+        font-size: 1.2rem;
+    }
 }
 
 #progress-container {
@@ -27,10 +37,14 @@ div {
 }
 
 .content-td {
-    padding-left: 6px;
+    padding-left: 12px;
     text-align: right;
 }
 
 .title-indent-td {
     padding-left: 15px;
+}
+
+hr {
+    border: 1px solid #2a2a2a;
 }

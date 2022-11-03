@@ -56,6 +56,40 @@ function nthRoot(x, root) {
   return Math.pow(x, 1 / root)
 }
 
+class BottomRightOverlaySizing {
+  yInterval: number
+  timerRightXOffset: number
+  timerLabelFontSize: number
+  timerBarHeight: number
+  timerBarLen: number
+  gameClockFontSize: number
+  XCornerOffset: number
+  YCornerOffset: number
+  clockTimerGap: number
+}
+
+class TopLeftOverlaySizing {
+  xCornerOffset: number
+  yCornerOffset: number
+  fontSize: number
+  yInterval: number
+}
+
+class FrontAndCenterAlertSizing {
+  victoryTextFontSize: number
+  victoryTextYTopOffset: number
+  gameOverFontSize: number
+  gameOverYTopOffset: number
+  deathQuoteFontSize: number
+  deathQuoteYTopOffset: number
+  deathQuoteYInterval: number
+  deathQuoteXOffset: number
+  abbreviateDockedAt: boolean
+  dockedAtFontSize: number
+  docketAtYTopOffset: number
+  dockedAtYInterval?: number
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -429,228 +463,177 @@ export class DrawingService {
     }
   }
 
+  private getBottomRightOverlay(canvasW: number, canvasH: number): BottomRightOverlaySizing{
+    if(canvasW >= 650 && canvasH >= 450) {
+      // "larger" screen sizing
+      return {
+        yInterval: 45,
+        clockTimerGap: 55,
+        gameClockFontSize: 28,
+        XCornerOffset: 15,
+        YCornerOffset: 15,
+
+        timerBarLen: 200,
+        timerRightXOffset: 15,
+        timerLabelFontSize: 28,
+        timerBarHeight: 30,
+      }
+    } else {
+      // "smaller" screen sizing
+      return {
+        yInterval: 25,
+        clockTimerGap: 35,
+        gameClockFontSize: 19,
+        XCornerOffset: 5,
+        YCornerOffset: 5,
+        timerBarLen: 105,
+        timerRightXOffset: 5,
+        timerLabelFontSize: 18,
+        timerBarHeight: 20,
+      }
+    }
+  }
+
   public drawBottomRightOverlay(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
   ) {
-    const brcYInterval = 45
-    let brcYOffset = 30
-    const brcXOffset = 15
-    const timerBarLength = Math.round(camera.canvasWidth / 8)
-    const textRAlignXOffset = brcXOffset + timerBarLength + 10
-    const barRAlignXOffset = brcXOffset + timerBarLength
-
+    // This method is a bit of a mess
+    const sizing = this.getBottomRightOverlay(camera.canvasWidth, camera.canvasHeight)
+    let brcYOffset = sizing.YCornerOffset
     // Game Time
     ctx.strokeStyle = '#ffffff'
     ctx.fillStyle = '#ffffff'
     ctx.lineWidth = 1
     ctx.textAlign = 'right'
-    ctx.font = 'bold 24px Courier New'
+    ctx.textBaseline = "bottom"
+    ctx.font = `bold ${sizing.gameClockFontSize}px Courier New`
     ctx.beginPath()
     ctx.fillText(
       this._api.frameData.elapsed_time,
-      camera.canvasWidth - 15,
+      camera.canvasWidth - sizing.XCornerOffset,
       camera.canvasHeight - brcYOffset,
     )
 
     // Timers
+    const timerBarLength = sizing.timerBarLen //Math.min(200, Math.round(camera.canvasWidth / 6.5))
+    const brcXOffset = sizing.timerRightXOffset
+    const textRAlignXOffset = brcXOffset + timerBarLength + 10
+    const barRAlignXOffset = brcXOffset + timerBarLength
     if(this._api.frameData.ship.alive){
-      ctx.font = '20px Courier New'
+      ctx.font = `${sizing.timerLabelFontSize}px Courier New`
       ctx.strokeStyle = '#00ff00'
-      ctx.fillStyle = '#00ff00'
-      brcYOffset += brcYInterval
+      brcYOffset += sizing.clockTimerGap
+      ctx.textBaseline = "middle"
+      ctx.textAlign = "right"
       for(let i in this._api.frameData.ship.timers) {
         const timer: TimerItem = this._api.frameData.ship.timers[i]
         const fillLength = Math.round((timer.percent / 100) * timerBarLength)
         ctx.beginPath()
-        ctx.fillText(
-          timer.name,
-          camera.canvasWidth - textRAlignXOffset,
-          camera.canvasHeight - brcYOffset,
-        )
-        ctx.beginPath()
+        ctx.fillStyle = '#006600'
         ctx.rect(
-          camera.canvasWidth - barRAlignXOffset, //    top left x
-          camera.canvasHeight - (brcYOffset + 20),  // top left y
-          timerBarLength, // width
-          30,             // height
+          camera.canvasWidth - barRAlignXOffset, // top left x
+          camera.canvasHeight - (brcYOffset + sizing.timerBarHeight / 2), // top left y
+          timerBarLength,       // widthc
+          sizing.timerBarHeight,// height
         )
         ctx.stroke()
         ctx.beginPath()
         ctx.rect(
-          camera.canvasWidth - barRAlignXOffset, //    top left x
-          camera.canvasHeight - (brcYOffset + 20),  // top left y
-          fillLength, // width
-          30,         // height
+          camera.canvasWidth - barRAlignXOffset, // top left x
+          camera.canvasHeight - (brcYOffset + sizing.timerBarHeight / 2),  // top left y
+          fillLength,            // width
+          sizing.timerBarHeight, // height
         )
         ctx.fill()
-        brcYOffset += brcYInterval
+        ctx.beginPath()
+        ctx.fillStyle = '#ffffff'
+        ctx.fillText(
+          timer.name.toLocaleLowerCase(),
+          camera.canvasWidth - (sizing.timerRightXOffset + 2),
+          camera.canvasHeight - (brcYOffset),
+        )
+        brcYOffset += sizing.yInterval
       }
     }
   }
 
-  public drawTopRightOverlay(
-    ctx: CanvasRenderingContext2D,
-    camera: Camera,
-    waypointMapCoord: PointCoord | null,
-  ) {
-    // Gyroscope circle
-    const buffer = 3;
-    const gryroscopeRadius = Math.floor(camera.canvasHalfHeight / 8)
-    const gryroscopeX = camera.canvasWidth - (gryroscopeRadius + buffer)
-    const gryroscopeY = gryroscopeRadius + buffer
-    ctx.beginPath()
-    ctx.fillStyle = "rgb(255, 255, 255, 0.65)"
-    ctx.arc(
-      gryroscopeX,
-      gryroscopeY,
-      gryroscopeRadius,
-      0,
-      TWO_PI,
-    )
-    ctx.fill()
-
-    // Gyroscope relative velocity indicator line
-    if(
-      this._api.frameData.ship.velocity_x_meters_per_second
-      || this._api.frameData.ship.velocity_y_meters_per_second
-    ) {
-      const angleRads = camera.getCanvasAngleBetween(
-        {x:0, y:0},
-        {
-          x: gryroscopeX + this._api.frameData.ship.velocity_x_meters_per_second * 1000,
-          y: gryroscopeY + this._api.frameData.ship.velocity_y_meters_per_second * 1000,
-        }
-      ) * (Math.PI / 180)
-      const gyroLinePointB = {
-        x: gryroscopeX + Math.round(gryroscopeRadius * Math.sin(angleRads)),
-        y: gryroscopeY + Math.round(gryroscopeRadius * Math.cos(angleRads)),
+  private getTopLeftOverlaySizing(canvasW: number, canvasH: number): TopLeftOverlaySizing {
+    if(canvasW >= 650 && canvasH >= 450) {
+      return {
+        xCornerOffset: 15,
+        yCornerOffset: 25,
+        fontSize: 24,
+        yInterval: 34,
       }
-      ctx.beginPath()
-      ctx.strokeStyle = '#000000'
-      ctx.lineWidth = 4
-      ctx.moveTo(gryroscopeX, gryroscopeY)
-      ctx.lineTo(gyroLinePointB.x, gyroLinePointB.y)
-      ctx.stroke()
-    }
-
-    // Scanner Traversal Crosshairs
-    if(this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
-      const crossOffset = gryroscopeRadius * this._api.frameData.ship.scanner_lock_traversal_slack
-      ctx.beginPath()
-      ctx.strokeStyle = 'rgb(255, 0, 0, 0.75)'
-      ctx.lineWidth = 4
-      // Verticle hairs
-      ctx.moveTo(gryroscopeX - crossOffset, gryroscopeY - gryroscopeRadius)
-      ctx.lineTo(gryroscopeX - crossOffset, gryroscopeY + gryroscopeRadius)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(gryroscopeX + crossOffset, gryroscopeY - gryroscopeRadius)
-      ctx.lineTo(gryroscopeX + crossOffset, gryroscopeY + gryroscopeRadius)
-      ctx.stroke()
-
-      // Horizontal hairs
-      ctx.beginPath()
-      ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY - crossOffset)
-      ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY - crossOffset)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(gryroscopeX - gryroscopeRadius, gryroscopeY + crossOffset)
-      ctx.lineTo(gryroscopeX + gryroscopeRadius, gryroscopeY + crossOffset)
-      ctx.stroke()
-    }
-
-    // Velocity Text
-    const velocity = Math.sqrt(
-      Math.pow(this._api.frameData.ship.velocity_x_meters_per_second, 2)
-      + Math.pow(this._api.frameData.ship.velocity_y_meters_per_second, 2)
-    ).toFixed(1)
-    ctx.beginPath()
-    ctx.font = 'bold 22px Courier New'
-    ctx.fillStyle = 'rgb(255, 181, 43,  0.95)'
-    ctx.textAlign = 'right'
-    ctx.fillText(
-      velocity + " M/S",
-      camera.canvasWidth - 3,
-      gryroscopeY + gryroscopeRadius + 18,
-    )
-    // Thermal Signature Text
-    ctx.beginPath()
-    ctx.fillText(
-      this._api.frameData.ship.scanner_thermal_signature + " IR ",
-      camera.canvasWidth - 3,
-      gryroscopeY + gryroscopeRadius + 40,
-    )
-
-    // Waypoint distance test
-    if (waypointMapCoord !== null) {
-      const ship = this._api.frameData.ship
-      const shipMapCoord = {x:ship.coord_x, y: ship.coord_y}
-      const metersDist = Math.floor(
-        Math.sqrt(
-          Math.pow(shipMapCoord.x - waypointMapCoord.x, 2)
-          + Math.pow(shipMapCoord.y - waypointMapCoord.y, 2)
-        )
-        / this._api.frameData.map_config.units_per_meter
-      )
-      ctx.beginPath()
-      ctx.fillStyle = "rgb(193, 113, 209, 0.95)"
-      ctx.fillText(
-        `WP ${metersDist} M`,
-        camera.canvasWidth - 3,
-        gryroscopeY + gryroscopeRadius + 65,
-      )
+    } else {
+      return {
+        xCornerOffset: 9,
+        yCornerOffset: 15,
+        fontSize: 18,
+        yInterval: 24,
+      }
     }
   }
 
   public drawTopLeftOverlay(
     ctx: CanvasRenderingContext2D,
     cameraMode: string,
+    camera: Camera,
   ) {
-    const tlcYInterval = 34
-    const tlcKFYInterval = 28
-    let tlcYOffset = 25
-    const tlcXOffset = 15
-    if(this._api.frameData.ship.alive){
-      // Fuel amount
-      ctx.beginPath()
-      ctx.font = '24px Courier New'
-      ctx.fillStyle = '#fcb8b8'
-      ctx.textAlign = 'left'
-      ctx.fillText("⛽ " + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
-
-      // Battery amount
-      ctx.beginPath()
-      ctx.fillStyle = '#fcf9b8'
-      ctx.fillText("🔋 " + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
-
-      // Ore amount
-      const realOreKg = this._formatting.formatNumber(this._api.frameData.ship.cargo_ore_mass_kg)
-      const virtualOreKg = this._formatting.formatNumber(this._api.frameData.ship.virtual_ore_kg)
-      ctx.beginPath()
-      ctx.fillStyle = '#fce8b8'
-      ctx.fillText(`💎 ${realOreKg} / 🪙 ${virtualOreKg}`, tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
-
-      // Camera mode
-      ctx.beginPath()
-      ctx.fillStyle = '#ffffff'
-      ctx.fillText("🎥 " + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcYInterval
+    if(!this._api.frameData || !this._api.frameData.ship.alive) {
+      return
     }
-    // Killfeed (TOP LEFT)
-    tlcYOffset += tlcYInterval
-    ctx.font = '20px Courier New'
-    ctx.fillStyle = '#ffffff'
+    const sizing = this.getTopLeftOverlaySizing(
+      camera.canvasWidth,
+      camera.canvasHeight,
+    )
+    let tlcYOffset = sizing.yCornerOffset
+    const tlcXOffset = sizing.xCornerOffset
+    // Fuel amount
+    ctx.beginPath()
+    ctx.font = `${sizing.fontSize}px Courier New`
+    ctx.fillStyle = '#ff9494'
     ctx.textAlign = 'left'
-    for(let i in this._api.frameData.killfeed) {
-      const kfe = this._api.frameData.killfeed[i]
-      ctx.beginPath()
-      ctx.fillText("💀 " + kfe.victim_name, tlcXOffset, tlcYOffset)
-      tlcYOffset += tlcKFYInterval
-    }
+    ctx.textBaseline = 'middle'
+    ctx.fillText("⛽" + this._formatting.formatNumber(this._api.frameData.ship.fuel_level), tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
+
+    // Battery amount
+    ctx.beginPath()
+    ctx.fillStyle = '#98ffbe'
+    ctx.fillText("🔋" + this._formatting.formatNumber(this._api.frameData.ship.battery_power), tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
+
+    // Ore amount
+    const realOreKg = this._formatting.formatNumber(this._api.frameData.ship.cargo_ore_mass_kg)
+    const virtualOreKg = this._formatting.formatNumber(this._api.frameData.ship.virtual_ore_kg)
+    ctx.beginPath()
+    ctx.fillStyle = '#fffa65'
+    ctx.fillText(`💎${realOreKg} 🪙${virtualOreKg}`, tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
+
+    // Speed
+    const velocityMS = Math.sqrt(
+      Math.pow(this._api.frameData.ship.velocity_x_meters_per_second, 2)
+      + Math.pow(this._api.frameData.ship.velocity_y_meters_per_second, 2)
+    ).toFixed(0)
+    ctx.beginPath()
+    ctx.fillStyle = '#ffcccc'
+    ctx.fillText(`💨 ${velocityMS} M/S`, tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
+
+    // Thermal signature
+    ctx.beginPath()
+    ctx.fillStyle = '#ffcccc'
+    ctx.fillText(`🌡️ ${this._api.frameData.ship.scanner_thermal_signature}`, tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
+
+    // Camera mode
+    ctx.beginPath()
+    ctx.fillStyle = '#ffcccc'
+    ctx.fillText("🎥 " + cameraMode.toUpperCase(), tlcXOffset, tlcYOffset)
+    tlcYOffset += sizing.yInterval
   }
 
   public drawBottomLeftOverlay(
@@ -759,17 +742,51 @@ export class DrawingService {
     }
   }
 
+  private getFrontAndCenterAlertsSizing(canvasW: number, canvasH: number): FrontAndCenterAlertSizing {
+    if(canvasW > 650 && canvasH >= 450) {
+      return {
+        victoryTextFontSize: 65,
+        victoryTextYTopOffset: Math.floor(canvasH / 4),
+        gameOverFontSize: 56,
+        gameOverYTopOffset: Math.floor(canvasH / 6),
+        deathQuoteFontSize: 35,
+        deathQuoteYTopOffset: 50,
+        deathQuoteYInterval: 50,
+        deathQuoteXOffset: 50,
+        abbreviateDockedAt: false,
+        dockedAtFontSize: 32,
+        dockedAtYInterval: 45,
+        docketAtYTopOffset: 50,
+      }
+    } else {
+      return {
+        victoryTextFontSize: 45,
+        victoryTextYTopOffset: Math.floor(canvasH / 4),
+        gameOverFontSize: 40,
+        gameOverYTopOffset: Math.floor(canvasH / 5),
+        deathQuoteFontSize: 18,
+        deathQuoteYTopOffset: 50,
+        deathQuoteYInterval: 23,
+        deathQuoteXOffset: 10,
+        abbreviateDockedAt: true,
+        docketAtYTopOffset: 20,
+        dockedAtFontSize: 25,
+      }
+    }
+  }
+
   public drawFrontAndCenterAlerts(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
   ) {
     // This function executes 1 if block and NOTHING MORE. (some have return statements.)
+    const sizing = this.getFrontAndCenterAlertsSizing(camera.canvasWidth, camera.canvasHeight)
     if (this._api.frameData.winning_team == this._api.frameData.ship.team_id) {
       ctx.beginPath()
-      ctx.font = 'bold 65px courier new'
+      ctx.font = `bold ${sizing.victoryTextFontSize}px courier new`
       ctx.fillStyle = '#ffffff'
       ctx.textAlign = 'center'
-      ctx.fillText("🏆VICTORY", camera.canvasHalfWidth, camera.canvasHalfHeight / 2)
+      ctx.fillText("🏆VICTORY", camera.canvasHalfWidth, sizing.victoryTextYTopOffset)
     }
     else if(!this._api.frameData.ship.alive) {
       if((this._api.frameData.ship.died_on_frame + 100) > this._api.frameData.game_frame) {
@@ -777,68 +794,94 @@ export class DrawingService {
         return;
       }
       ctx.beginPath()
-      ctx.font = 'bold 56px courier new'
+      ctx.font = `bold ${sizing.gameOverFontSize}px courier new`
       ctx.fillStyle = '#ff0000'
-      ctx.textAlign = 'center'
-      let deathTextYOffset = camera.canvasHalfHeight / 3
-      const deathQuoteOffset = 50
+      ctx.textAlign = 'left'
+      let deathTextYOffset = sizing.gameOverYTopOffset
+      const deathQuoteInterval = sizing.deathQuoteYInterval
       if(this._api.frameData.game_frame % 50 > 25) {
-        ctx.fillText("GAME OVER", camera.canvasHalfWidth, deathTextYOffset)
+        ctx.fillText("GAME OVER", sizing.deathQuoteXOffset, deathTextYOffset)
       }
-      deathTextYOffset += (deathQuoteOffset * 2)
+      deathTextYOffset += (deathQuoteInterval * 3)
       ctx.beginPath()
       ctx.fillStyle = '#b8b8b8' // medium light gray
       ctx.textAlign = 'left'
-      ctx.font = `bold 40px Verdana`
+      ctx.font = `bold ${sizing.deathQuoteFontSize}px Verdana`
       for(let i in this.deathQuote.lines) {
         const prefix = parseInt(i) === 0 ? '"' : ""
-        ctx.fillText(prefix + this.deathQuote.lines[i], 100, deathTextYOffset)
-        deathTextYOffset += deathQuoteOffset
+        ctx.fillText(prefix + this.deathQuote.lines[i], sizing.deathQuoteXOffset, deathTextYOffset)
+        deathTextYOffset += deathQuoteInterval
       }
-      ctx.font = 'bold 32px Verdana'
-      deathTextYOffset += deathQuoteOffset * 0.5
+      deathTextYOffset += deathQuoteInterval * 0.5
       ctx.beginPath()
-      ctx.fillText("- " + (this.deathQuote.author || "Unknown"), 100, deathTextYOffset)
+      ctx.font = `italic ${Math.floor(0.95*sizing.deathQuoteFontSize)}px Verdana`
+      ctx.fillText((this.deathQuote.author || "Unknown"),
+        sizing.deathQuoteXOffset,
+        deathTextYOffset)
     }
     else if(this._api.frameData.ship.docked_at_station) {
-      const station = this._api.frameData.space_stations.find(
-        s => s.uuid == this._api.frameData.ship.docked_at_station
-      )
-      ctx.beginPath()
-      ctx.font = 'bold 32px courier new'
-      ctx.fillStyle = '#00ff00'
-      ctx.textAlign = 'left'
-      ctx.fillText(
-        "Docked at",
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2
-      )
-      ctx.font = 'bold 38px courier new'
-      ctx.fillText(
-        station.name,
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2 + 45
-      )
+      if(sizing.abbreviateDockedAt) {
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Docked🛰️",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+      }else {
+        const station = this._api.frameData.space_stations.find(
+          s => s.uuid == this._api.frameData.ship.docked_at_station
+        )
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize * 0.8}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Docked at",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillText(
+          station.name,
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset + sizing.dockedAtYInterval
+        )
+      }
     }
     else if (this._api.frameData.ship.parked_at_ore_mine) {
       const oreMine = this._api.frameData.ore_mines.find(
         om => om.uuid == this._api.frameData.ship.parked_at_ore_mine
       )
-      ctx.beginPath()
-      ctx.font = 'bold 32px courier new'
-      ctx.fillStyle = '#00ff00'
-      ctx.textAlign = 'left'
-      ctx.fillText(
-        "Parked at",
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2
-      )
-      ctx.font = 'bold 38px courier new'
-      ctx.fillText(
-        oreMine.name,
-        camera.canvasHalfWidth / 3,
-        camera.canvasHalfHeight / 2 + 45
-      )
+      if(sizing.abbreviateDockedAt) {
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Parked🪨",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+      }else {
+        ctx.beginPath()
+        ctx.font = `bold ${sizing.dockedAtFontSize * 0.8}px courier new`
+        ctx.fillStyle = '#00ff00'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          "Parked at",
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset
+        )
+        ctx.font = `bold ${sizing.dockedAtFontSize}px courier new`
+        ctx.fillText(
+          oreMine.name,
+          camera.canvasHalfWidth,
+          sizing.docketAtYTopOffset + sizing.dockedAtYInterval
+        )
+      }
     }
   }
 
@@ -2086,8 +2129,6 @@ export class DrawingService {
       )
       ctx.fill()
     }
-
-
   }
 
 }

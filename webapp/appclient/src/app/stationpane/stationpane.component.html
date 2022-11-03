@@ -3,7 +3,7 @@
         <div id="welcome-to-label">
             Welcome to
         </div>
-        <h2>{{ stationName }}</h2>
+        <div id="station-name-label">{{ stationName }}</div>
     </div>
     <div
         id="trade-ore-for-coin-container"
@@ -53,7 +53,7 @@
                         </td>
                         <td>
                             <button class="buy-weapon-btn" (click)="btnClickBuyMagnetMine()">
-                                Buy @ {{ _api.frameData.special_weapon_costs.magnet_mine }}🪙
+                                Buy {{ _api.frameData.special_weapon_costs.magnet_mine }}🪙
                             </button>
                         </td>
                     </tr>
@@ -66,7 +66,7 @@
                         </td>
                         <td>
                             <button class="buy-weapon-btn" (click)="btnClickBuyEMP()">
-                                Buy @ {{ _api.frameData.special_weapon_costs.emp }}🪙
+                                Buy {{ _api.frameData.special_weapon_costs.emp }}🪙
                             </button>
                         </td>
                     </tr>

@@ -5,9 +5,50 @@ body {
     margin: 0;
     height: 100vh;
     width: 100vw;
+    background-color: #000000;
+}
+
+html, body {
+    overflow: hidden;
 }
 
 .fake-link {
     cursor: pointer;
     text-decoration: underline;
+}
+
+
+.takeover-pane {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    display: flex;
+    flex-direction: column;
+    width: 99vw;
+    height: 99vh;
+    overflow-y: clip;
+    overflow-x: clip;
+    border-radius: 8px;
+}
+
+.takeover-pane-title-bar {
+    display: flex;
+    justify-content: space-between;
+    padding:5px;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.close-takeover-pane-btn {
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 50px;
+    height: 100%;
+}
+
+.takeover-pane-scrolling-body {
+    overflow-y: scroll;
+    width: auto;
+    height: auto;
 }

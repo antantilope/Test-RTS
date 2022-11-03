@@ -1,18 +1,28 @@
 
 <div
-    id="draggable-container"
+    id="allchat-pane-takeover"
+    class="takeover-pane"
     (mousedown)="select();"
     #paneElement
-    ngDraggable
-    ngResizable
 >
-    <div id="title-bar">
+    <div
+        id="title-bar"
+        class="takeover-pane-title-bar"
+        (click)="_pane.closeAllchatPane()"
+    >
         <strong>All Chat</strong>
-        <button id="close-btn" (click)="_pane.toggleAllChatPane()">
+        <button
+            id="close-btn"
+            class="close-takeover-pane-btn"
+        >
             x
         </button>
     </div>
-    <div #paneBodyElement id="card-body">
+    <div
+        #paneBodyElement
+        id="card-body"
+        class="takeover-pane-scrolling-body"
+    >
         <div
             *ngFor="let m of _allchat.messages"
             class="pubmsg-line"

@@ -1,18 +1,28 @@
 
 <div
-    id="draggable-container"
+    id="mainmenu-takeover-pane"
+    class="takeover-pane"
     (mousedown)="select();"
     #paneElement
-    ngDraggable
-    ngResizable
 >
-    <div id="title-bar">
+    <div
+        id="title-bar"
+        class="takeover-pane-title-bar"
+        (click)="_pane.closeMainMenuPane()"
+    >
         <strong>Main Menu</strong>
-        <button id="close-btn" (click)="_pane.toggleMainMenuPane()">
+        <button
+            id="close-btn"
+            class="close-takeover-pane-btn"
+        >
             x
         </button>
     </div>
-    <div #paneBodyElement id="pane-body">
+    <div
+        #paneBodyElement
+        id="pane-body"
+        class="takeover-pane-scrolling-body"
+    >
         <div>
             <button id="exit-btn" [disabled]="waitingToExit" (click)="btnClickLeaveMatch()">
                 {{ exitBtnText }}

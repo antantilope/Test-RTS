@@ -1,30 +1,40 @@
 
 <div
-    id="draggable-container"
+    id="ship-pane-takeover"
+    class="takeover-pane"
     (mousedown)="select();"
     #paneElement
-    ngDraggable
-    ngResizable
 >
-    <div id="title-bar">
+    <div
+        id="title-bar"
+        class="takeover-pane-title-bar"
+        (click)="_pane.closeShipMenuPane()"
+    >
         <strong>Ship Menu</strong>
-        <button id="close-btn" (click)="_pane.toggleShipPane()">
+        <button
+            id="close-btn"
+            class="close-takeover-pane-btn"
+        >
             x
         </button>
     </div>
-    <div #paneBodyElement id="card-body">
+    <div
+        #paneBodyElement
+        id="pane-body"
+        class="takeover-pane-scrolling-body"
+    >
         <div id="subpane-selector">
             <button
                 (click)="selectEngineeringSubPane()"
                 class="subpane-selector-btn"
-                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameEngineering) ? '#fff784' : '#ebebeb'}"
+                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameEngineering) ? '#fffa65' : '#ebebeb'}"
             >
                 🔧
             </button>
             <button
                 (click)="selectUpgradesSubPane()"
                 class="subpane-selector-btn"
-                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameUpgrades) ? '#fff784' : '#ebebeb'}"
+                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameUpgrades) ? '#fffa65' : '#ebebeb'}"
             >
                 🔬
             </button>
@@ -32,7 +42,7 @@
                 *ngIf="_api.frameData.ship.docked_at_station !== null"
                 class="subpane-selector-btn temp-subpane-selector-btn"
                 (click)="selectStationSubPane()"
-                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameStation) ? '#fff784' : '#ebebeb'}"
+                [ngStyle]="{'background-color': (selectedSubPane == subPaneNameStation) ? '#fffa65' : '#ebebeb'}"
             >
                 🛰️
             </button>
