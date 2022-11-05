@@ -10,7 +10,14 @@ from api.constants import HUNTER_DRONE_SLUG
 
 class TestHunterDrone(TestCase):
 
+    def pprint(self, *a):
+        if self.show_debug:
+            print(*a)
+
     def setUp(self):
+
+        self.show_debug = False
+
         # MAP UNITS PER METER
         self.upm = 10
 
