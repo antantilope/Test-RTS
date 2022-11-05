@@ -160,6 +160,17 @@ export class ScannerDataMagnetMineElement {
     exploded: boolean
     percent_armed: number
 }
+export class ScannerDataHunterDroneElement {
+    id: string
+    team_id: string
+    coord_x: number
+    coord_y: number
+    relative_heading: number
+    distance: number
+    exploded: boolean
+    percent_armed: number
+    visual_heading: number
+}
 
 export class ScannerDataEMPElement {
     id: string
@@ -236,6 +247,7 @@ export class Ship {
     scanner_ship_data: ScannerDataShipElement[]
     scanner_magnet_mine_data: ScannerDataMagnetMineElement[]
     scanner_emp_data: ScannerDataEMPElement[]
+    scanner_hunter_drone_data: ScannerDataHunterDroneElement[]
 
     anti_radar_coating_level: number
 
