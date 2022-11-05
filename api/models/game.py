@@ -18,7 +18,6 @@ from .ship import (
     ShipDeathType,
     ShipScannerMode,
     ScannedShipElement,
-    ScannedMagnetMineElement,
     MapMiningLocationDetails,
     MapSpaceStation,
     AutopilotError,
@@ -698,6 +697,7 @@ class Game(BaseModel):
         self._ships[ship_id].scanner_ship_data.clear()
         self._ships[ship_id].scanner_magnet_mine_data.clear()
         self._ships[ship_id].scanner_emp_data.clear()
+        self._ships[ship_id].scanner_hunter_drone_data.clear()
 
         ship_coords = self._ships[ship_id].coords
         scan_range = self._ships[ship_id].scanner_range if self._ships[ship_id].scanner_online else None
@@ -832,6 +832,30 @@ class Game(BaseModel):
                     'exploded': self._emps[emp_id].exploded,
                     'relative_heading': round(exact_heading),
                     'percent_armed': self._emps[emp_id].percent_armed,
+                }
+
+        # Add Hunter Drones to scanner data
+        for hd_id in self._hunter_drones:
+            drone_coords = self._hunter_drones[hd_id].coords
+            distance = utils2d.calculate_point_distance(ship_coords, drone_coords)
+            distance_meters = round(distance / self._map_units_per_meter)
+            is_visual = visual_range >= distance_meters
+            is_scannable = (
+                scan_range is not None
+                and scan_range >= distance_meters
+            )
+            if is_visual or is_scannable:
+                exact_heading = utils2d.calculate_heading_to_point(ship_coords, drone_coords)
+                self._ships[ship_id].scanner_hunter_drone_data[hd_id] = {
+                    'id': hd_id,
+                    'coord_x': drone_coords[0],
+                    'coord_y': drone_coords[1],
+                    'distance': distance_meters,
+                    'exploded': self._hunter_drones[hd_id].exploded,
+                    'visual_heading': self._hunter_drones[hd_id].heading,
+                    'relative_heading': round(exact_heading),
+                    'percent_armed': self._hunter_drones[hd_id].percent_armed,
+                    'team_id': self._ship_id_to_team_id_map[self._hunter_drones[hd_id].ship_id],
                 }
 
         # Check if scanner target has gone out of range

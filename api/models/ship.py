@@ -180,6 +180,17 @@ class ScannedEMPElement(TypedDict):
     relative_heading: int
     percent_armed: float
 
+class ScannedHunterDroneElement(TypedDict):
+    id: str
+    coord_x: int
+    coord_y: int
+    distance: int
+    exploded: bool
+    visual_heading: int
+    relative_heading: int
+    percent_armed: float
+    team_id: str
+
 class TimerItem(TypedDict):
     name: str
     percent: int
@@ -309,6 +320,7 @@ class Ship(BaseModel):
         self.scanner_ship_data: Dict[str, ScannedShipElement] = OrderedDict()
         self.scanner_magnet_mine_data: Dict[str, ScannedMagnetMineElement] = OrderedDict()
         self.scanner_emp_data: Dict[str, ScannedEMPElement] = OrderedDict()
+        self.scanner_hunter_drone_data: Dict[str, ScannedHunterDroneElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
