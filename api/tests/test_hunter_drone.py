@@ -209,3 +209,41 @@ class TestHunterDrone(TestCase):
         assert not self.game._hunter_drones[hd_id].armed
         assert self.game._hunter_drones[hd_id].coords[0] == self.game._ships[self.player_1_ship_id].map_nose_coord[0] + 20 * self.upm
         assert self.game._hunter_drones[hd_id].coords[1] == self.game._ships[self.player_1_ship_id].map_nose_coord[1]
+
+    def test_a_launched_hunter_drone_arms(self):
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id]._set_heading(90)
+        self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
+        self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
+        # Fire drone
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._hunter_drones) == 1
+        hd_id = next(iter(self.game._hunter_drones.keys()))
+
+        # drone sitting on ships nose
+        assert self.game._hunter_drones[hd_id].coords == self.game._ships[self.player_1_ship_id].map_nose_coord
+        # drone has ship velocity (0) + tube launch velocity
+        assert self.game._hunter_drones[hd_id].velocity_x_meters_per_second == 10
+        assert round(self.game._hunter_drones[hd_id].velocity_y_meters_per_second) == 0
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 0
+        assert not self.game._hunter_drones[hd_id].armed
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 1000
+        assert not self.game._hunter_drones[hd_id].armed
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 2000
+        assert not self.game._hunter_drones[hd_id].armed
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 3000
+        assert not self.game._hunter_drones[hd_id].armed
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 4000
+        assert not self.game._hunter_drones[hd_id].armed
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 5000
+        assert self.game._hunter_drones[hd_id].armed # Drone armed
+
