@@ -77,6 +77,8 @@ class TestEMP(TestCase):
         self.game._ships[self.player_2_ship_id].emps_loaded = 0
         self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 0
         self.game._ships[self.player_2_ship_id].magnet_mines_loaded = 0
+        self.game._ships[self.player_1_ship_id].hunter_drones_loaded = 0
+        self.game._ships[self.player_2_ship_id].hunter_drones_loaded = 0
 
     def test_ship_can_buy_emp_if_tube_available(self):
         assert self.game._ships[self.player_1_ship_id]
@@ -94,7 +96,7 @@ class TestEMP(TestCase):
         self.game._ships[self.player_1_ship_id].cmd_buy_emp()
         assert self.game._ships[self.player_1_ship_id].emps_loaded == 0
 
-    def test_ship_cannot_buy_magnet_mine_if_not_enough_tubes(self):
+    def test_ship_cannot_buy_EMP_if_not_enough_tubes(self):
         self.game._ships[self.player_1_ship_id].special_weapons_tubes_count = 1
         self.game._ships[self.player_1_ship_id].virtual_ore_kg = 1000
         self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 1
@@ -106,7 +108,7 @@ class TestEMP(TestCase):
         self.game._ships[self.player_1_ship_id].cmd_buy_emp()
         assert self.game._ships[self.player_1_ship_id].emps_loaded == 1
 
-    def test_ship_cannot_buy_magnet_mine_if_not_docked_at_station(self):
+    def test_ship_cannot_buy_EMP_if_not_docked_at_station(self):
         assert self.game._ships[self.player_1_ship_id].emps_loaded == 0
         self.game._ships[self.player_1_ship_id].cmd_buy_emp()
         assert self.game._ships[self.player_1_ship_id].emps_loaded == 0
