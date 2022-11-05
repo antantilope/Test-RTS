@@ -282,6 +282,7 @@ export class Camera {
       magnetMines: [],
       magnetMineTargetingLines: [],
       emps: [],
+      hunterDrones: [],
       ebeamRays: [],
       visionCircles:[],
     }
