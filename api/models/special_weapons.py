@@ -87,6 +87,7 @@ class HunterDrone(BaseModel):
         map_units_per_meter: int,
         game_frame: int,
         ship_id: str,
+        team_id: str,
         initial_heading: int,
         initial_velocity_x_meters_per_second: float,
         initial_velocity_y_meters_per_second: float,
@@ -99,6 +100,7 @@ class HunterDrone(BaseModel):
         self.elapsed_milliseconds = 0
         self.created_frame = game_frame
         self.ship_id = ship_id      # ship the drone was spawned from
+        self.team_id = team_id      # team the drone was spawned from
         self.target_ship_id = None  # ship the drone has targeted
         self.max_acquisition_meters = max_acquisition_meters
         self.tracking_acceleration_ms = tracking_acceleration_ms

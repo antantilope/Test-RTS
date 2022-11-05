@@ -545,6 +545,7 @@ class Ship(BaseModel):
             'scanner_ship_data': list(self.scanner_ship_data.values()),
             'scanner_magnet_mine_data': list(self.scanner_magnet_mine_data.values()),
             'scanner_emp_data': list(self.scanner_emp_data.values()),
+            'scanner_hunter_drone_data': list(self.scanner_hunter_drone_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
             'scanner_locking_max_traversal_degrees': self.scanner_locking_max_traversal_degrees,

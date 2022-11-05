@@ -855,7 +855,7 @@ class Game(BaseModel):
                     'visual_heading': self._hunter_drones[hd_id].heading,
                     'relative_heading': round(exact_heading),
                     'percent_armed': self._hunter_drones[hd_id].percent_armed,
-                    'team_id': self._ship_id_to_team_id_map[self._hunter_drones[hd_id].ship_id],
+                    'team_id': self._hunter_drones[hd_id].team_id,
                 }
 
         # Check if scanner target has gone out of range
@@ -1017,6 +1017,7 @@ class Game(BaseModel):
                 self._map_units_per_meter,
                 self._game_frame,
                 ship_id,
+                self._ships[ship_id].team_id,
                 self._ships[ship_id].heading,
                 self._ships[ship_id].velocity_x_meters_per_second + extra_x,
                 self._ships[ship_id].velocity_y_meters_per_second + extra_y,
@@ -1252,8 +1253,8 @@ class Game(BaseModel):
                 min_distance_ship_id = None
                 min_distance_map_units = None
                 for ship_id in self._ships:
-                    if self._hunter_drones[hd_id].ship_id == ship_id:
-                        continue # ignore ship that launched drone.
+                    if self._hunter_drones[hd_id].team_id == self._ships[ship_id].team_id:
+                        continue # ignore ship/team that launched drone.
                     distance = utils2d.calculate_point_distance(
                         self._ships[ship_id].coords,
                         self._hunter_drones[hd_id].coords,
