@@ -99,6 +99,7 @@ class HunterDrone(BaseModel):
         self.ship_id = ship_id
 
         self.exploded = False
+        self.arming_time = constants.HUNTER_DRONE_ARMING_TIME_SECONDS
 
         # Position
         self.coord_x = coord_x

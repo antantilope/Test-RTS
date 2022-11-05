@@ -469,8 +469,13 @@ class Ship(BaseModel):
         return self.gravity_brake_position == self.gravity_brake_deployed_position
 
     @property
-    def special_weapons_loaded(self):
-        return self.magnet_mines_loaded + self.emps_loaded
+    def special_weapons_loaded(self) -> int:
+        # Total tube weapons aboard.
+        return (
+            self.magnet_mines_loaded
+            + self.emps_loaded
+            + self.hunter_drones_loaded
+        )
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
@@ -550,6 +555,7 @@ class Ship(BaseModel):
             'special_weapons_loaded': self.special_weapons_loaded,
             'magnet_mines_loaded': self.magnet_mines_loaded,
             'emps_loaded': self.emps_loaded,
+            'hunter_drones_loaded': self.hunter_drones_loaded,
 
             'docked_at_station': self.docked_at_station,
             'scouted_station_gravity_brake_catches_last_frame': self.scouted_station_gravity_brake_catches_last_frame,

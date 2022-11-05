@@ -957,6 +957,7 @@ class Game(BaseModel):
             self._magnet_mines[mine.id] = mine
 
         elif self._ships[ship_id].emp_firing:
+            # Spawn a new EMP
             self._ships[ship_id].emp_firing = False
             self._ships[ship_id].last_tube_fire_frame = self._game_frame
             emp = EMP(self._game_frame, ship_id)
@@ -968,6 +969,11 @@ class Game(BaseModel):
             emp.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
             emp.coord_x, emp.coord_y =  self._ships[ship_id].map_nose_coord
             self._emps[emp.id] = emp
+
+        elif self._ships[ship_id].hunter_drone_firing:
+            # Spawn a new Hunter Drone
+            self._ships[ship_id].hunter_drone_firing = False
+            self._ships[ship_id].last_tube_fire_frame = self._game_frame
 
     def advance_magnet_mines(self, fps: int):
         keys_to_drop = []
