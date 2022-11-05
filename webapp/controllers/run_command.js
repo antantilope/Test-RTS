@@ -266,6 +266,20 @@ const commandHandlers = {
             args: [velocity],
         });
     },
+    buy_hunter_drone: (req, queueName) => {
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'buy_hunter_drone',
+        });
+    },
+    launch_hunter_drone: (req, queueName) => {
+        const velocity = validateLaunchTubeWeapon(req.body)
+        req.app.get(queueName).push({
+            player_id: req.session.player_id,
+            ship_command: 'launch_hunter_drone',
+            args: [velocity],
+        });
+    },
 };
 
 exports.RunCommandController = async (req, res) => {

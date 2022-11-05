@@ -109,6 +109,8 @@ class ShipCommands:
     LAUNCH_MAGNET_MINE = "launch_magnet_mine"
     BUY_EMP = "buy_emp"
     LAUNCH_EMP = "launch_emp"
+    BUY_HUNTER_DRONE = "buy_hunter_drone"
+    LAUNCH_HUNTER_DRONE = "launch_hunter_drone"
 
 class ShipStateKey:
     MASS = 'mass'
@@ -340,8 +342,10 @@ class Ship(BaseModel):
         self._special_weapons_launch_velocity = None
         self.magnet_mines_loaded = 5
         self.emps_loaded = 5
+        self.hunter_drones_loaded = 5
         self.magnet_mine_firing = False
         self.emp_firing = False
+        self.hunter_drone_firing = False
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -1473,6 +1477,10 @@ class Ship(BaseModel):
             self.cmd_buy_emp()
         elif command == ShipCommands.LAUNCH_EMP:
             self.cmd_launch_emp(args[0])
+        elif command == ShipCommands.BUY_HUNTER_DRONE:
+            self.cmd_buy_hunter_drone()
+        elif command == ShipCommands.LAUNCH_HUNTER_DRONE:
+            self.cmd_launch_hunter_drone(args[0])
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1855,4 +1863,30 @@ class Ship(BaseModel):
         if self.emps_loaded > 0 and not self.emp_firing:
             self.emps_loaded -= 1
             self.emp_firing = True
+            self._special_weapons_launch_velocity = _velocity
+
+    def cmd_buy_hunter_drone(self):
+        if self.special_weapons_loaded >= self.special_weapons_tubes_count:
+            return
+        if not self.docked_at_station:
+            return
+        ore_cost = self._special_weapon_costs[constants.HUNTER_DRONE_SLUG]
+        try:
+            self.withdraw_ore(ore_cost)
+        except InsufficientOreError:
+            return
+        self.hunter_drones_loaded += 1
+
+    def cmd_launch_hunter_drone(self, launch_velocity: int):
+        _velocity = max(
+            launch_velocity,
+            self._special_weapons_min_launch_velocity,
+        )
+        _velocity = min(
+            _velocity,
+            self._special_weapons_max_launch_velocity,
+        )
+        if self.hunter_drones_loaded > 0 and not self.hunter_drone_firing:
+            self.hunter_drones_loaded -= 1
+            self.hunter_drone_firing = True
             self._special_weapons_launch_velocity = _velocity

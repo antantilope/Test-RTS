@@ -7,6 +7,12 @@ from api import utils2d
 
 
 class MagnetMine(BaseModel):
+    """ Guided explosive munition (dumb acceleration model)
+        that tracks any closest ship (including the shooter).
+        Arms after a short period.
+        explodes within proximity killing all ships
+        within a large AOE.
+    """
 
     def __init__(self, game_frame: int, ship_id: str):
         super().__init__()
@@ -35,6 +41,10 @@ class MagnetMine(BaseModel):
 
 
 class EMP(BaseModel):
+    """ Unguided munition. Arms after a number of seconds.
+        Explodes within proximity of any ship.
+        AOE effect that deactivates all systems and drains power.
+    """
 
     def __init__(self, game_frame: int, ship_id: str):
         super().__init__()
@@ -60,6 +70,17 @@ class EMP(BaseModel):
 
 
 class HunterDrone(BaseModel):
+    """ guided munition that patroles
+        and tracks (smart acceleration model)
+        first enemy ship encountered.
+        explodes within proximity killing all ships
+        within a small AOE.
+    """
+
+    AUTOPILOT_MODE_PATROL = "patrol"
+    AUTOPILOT_PATROL_PATERN_CLOCKWISE = "cw"
+    AUTOPILOT_PATROL_PATERN_COUNTERCLOCKWISE = "ccw"
+    AUTOPILOT_MODE_CHASE = "chase"
 
     def __init__(
         self,
@@ -77,7 +98,6 @@ class HunterDrone(BaseModel):
         self.created_frame = game_frame
         self.ship_id = ship_id
 
-        self.percent_armed = 0
         self.exploded = False
 
         # Position
@@ -87,6 +107,8 @@ class HunterDrone(BaseModel):
         # Velocity
         self.velocity_x_meters_per_second = float(initial_velocity_x_meters_per_second)
         self.velocity_y_meters_per_second = float(initial_velocity_y_meters_per_second)
+        # Acceleration
+        self._tracking_acceleration = constants.HUNTER_DRONE_TRACKING_ACCELERATION_MS
 
         # Heading of drone in degrees (between 0 and 359)
         self.heading = None
@@ -122,6 +144,13 @@ class HunterDrone(BaseModel):
         )
 
         self.set_heading(initial_heading)
+
+        # autopilot
+        self.autopilot_mode = self.AUTOPILOT_MODE_PATROL
+        if initial_heading < 180:
+            self.autopilot_patrol_pattern = self.AUTOPILOT_PATROL_PATERN_CLOCKWISE
+        else:
+            self.autopilot_patrol_pattern = self.AUTOPILOT_PATROL_PATERN_COUNTERCLOCKWISE
 
     @property
     def coords(self) -> Tuple[int]:

@@ -24,7 +24,11 @@ from .ship import (
     AutopilotError,
 )
 from .ship_designator import get_designations
-from .special_weapons import MagnetMine, EMP
+from .special_weapons import (
+    MagnetMine,
+    EMP,
+    HunterDrone,
+)
 from api import utils2d
 from api.constants import (
     MAX_SERVER_FPS,
@@ -223,6 +227,7 @@ class Game(BaseModel):
         self._special_weapon_costs = {
             constants.MAGNET_MINE_SLUG: constants.MAGNET_MINE_ORE_COST,
             constants.EMP_SLUG: constants.EMP_ORE_COST,
+            constants.HUNTER_DRONE_SLUG: constants.HUNTER_DRONE_COST,
         }
         self._magnet_mine_tracking_acceleration_ms = constants.MAGNET_MINE_TRACKING_ACCELERATION_MS
         self._magnet_mine_arming_time_seconds = constants.MAGNET_MINE_ARMING_TIME_SECONDS
