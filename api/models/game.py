@@ -190,6 +190,8 @@ class Game(BaseModel):
 
         self._magnet_mines: Dict[str, MagnetMine] = OrderedDict()
         self._emps: Dict[str, EMP] = OrderedDict()
+        self._hunter_drones: Dict[str, HunterDrone] = OrderedDict()
+
         self._magnet_mine_targeting_lines: List[EBeamTargetingLine] = []
 
         self._player_id_to_ship_id_map: Dict[str, str] = {}
@@ -240,6 +242,11 @@ class Game(BaseModel):
         self._emp_max_proximity_to_explode_meters = constants.EMP_MAX_PROXIMITY_TO_EXPLODE_METERS
         self._emp_explode_damage_radius_meters = constants.EMP_EXPLODE_DAMAGE_RADIUS_METERS
         self._emp_electricity_drain = constants.EMP_ELECTRICITY_DRAIN
+
+        self._hunter_drone_arming_time_seconds = constants.HUNTER_DRONE_ARMING_TIME_SECONDS
+        self._hunter_drone_max_proximity_to_explode_meters = constants.HUNTER_DRONE_MAX_PROXIMITY_TO_EXPLODE_METERS
+        self._hunter_drone_explode_damage_radius_meters = constants.HUNTER_DRONE_EXPLODE_DAMAGE_RADIUS_METERS
+
 
     def get_state(self) -> GameState:
         base_state = {
@@ -538,6 +545,7 @@ class Game(BaseModel):
 
         self.advance_magnet_mines(self._fps)
         self.advance_emps(self._fps)
+        self.advance_hunter_drones(self._fps)
 
         if any(self._explosions):
             self.advance_explosions()
@@ -920,6 +928,7 @@ class Game(BaseModel):
                 return
 
 
+        # ELECTRO MAGNETIC ENERGY BEAM WEAPON
         if self._ships[ship_id].ebeam_firing:
             ebeam_fired = self._ships[ship_id].use_ebeam_charge(self._fps)
             if ebeam_fired:
@@ -940,6 +949,7 @@ class Game(BaseModel):
                         "victim_name": self._ships[hit_ship_id].scanner_designator,
                     })
 
+        # SPECIAL WEAPONS (TUBE/TORPEDO WEAPONS)
         # ship._special_weapons_launch_velocity is set when processing
         # ship commands in run_frame()
         if self._ships[ship_id].magnet_mine_firing:
@@ -974,6 +984,24 @@ class Game(BaseModel):
             # Spawn a new Hunter Drone
             self._ships[ship_id].hunter_drone_firing = False
             self._ships[ship_id].last_tube_fire_frame = self._game_frame
+            start_x, start_y = self._ships[ship_id].map_nose_coord
+            extra_x, extra_y = utils2d.calculate_x_y_components(
+                self._ships[ship_id]._special_weapons_launch_velocity,
+                self._ships[ship_id].heading,
+            )
+            hunter_drone = HunterDrone(
+                self._map_units_per_meter,
+                self._game_frame,
+                ship_id,
+                self._ships[ship_id].heading,
+                self._ships[ship_id].velocity_x_meters_per_second + extra_x,
+                self._ships[ship_id].velocity_y_meters_per_second + extra_y,
+                start_x,
+                start_y,
+                self._ships[ship_id]._hunter_drone_max_target_acquisition_distance_meters,
+                self._ships[ship_id]._hunter_drone_tracking_acceleration_ms,
+            )
+            self._hunter_drones[hunter_drone.id] = hunter_drone
 
     def advance_magnet_mines(self, fps: int):
         keys_to_drop = []
@@ -1166,6 +1194,110 @@ class Game(BaseModel):
         if any(keys_to_drop):
             for k in keys_to_drop:
                 del self._emps[k]
+
+
+    def advance_hunter_drones(self, fps: int):
+        keys_to_drop = []
+        arm_time_ms = self._hunter_drone_arming_time_seconds * 1000
+
+        # For a performance boost, only check proximity every 2nd frame
+        check_proximity = self._is_testing or self._game_frame % 2 == 0
+
+        for hd_id in self._hunter_drones:
+            if self._hunter_drones[hd_id].exploded:
+                keys_to_drop.append(hd_id)
+                continue
+
+            # Arm drone, or advance "percent armed" property
+            # and position (no acceleration)
+            if not self._hunter_drones[hd_id].armed:
+                self._hunter_drones[hd_id].elapsed_milliseconds += (1000 / fps)
+                if self._hunter_drones[hd_id].elapsed_milliseconds > arm_time_ms:
+                    self._hunter_drones[hd_id].armed = True
+                    self._hunter_drones[hd_id].percent_armed = 1
+                else:
+                    self._hunter_drones[hd_id].percent_armed = self._hunter_drones[hd_id].elapsed_milliseconds / arm_time_ms
+                    self._hunter_drones[hd_id].coord_x += (
+                        self._hunter_drones[hd_id].velocity_x_meters_per_second * self._map_units_per_meter / fps)
+                    self._hunter_drones[hd_id].coord_y += (
+                        self._hunter_drones[hd_id].velocity_y_meters_per_second * self._map_units_per_meter / fps)
+                    continue
+
+            # Drone armed, search for target
+            if self._hunter_drones[hd_id].target_ship_id is None and check_proximity:
+                min_distance_ship_id = None
+                min_distance_map_units = None
+                for ship_id in self._ships:
+                    if self._hunter_drones[hd_id].ship_id == ship_id:
+                        continue # ignore ship that launched drone.
+                    distance = utils2d.calculate_point_distance(
+                        self._ships[ship_id].coords,
+                        self._hunter_drones[hd_id].coords,
+                    )
+                    if min_distance_ship_id is None or distance < min_distance_map_units:
+                        min_distance_ship_id = ship_id
+                        min_distance_map_units = distance
+                if (
+                    min_distance_map_units is not None
+                    and (min_distance_map_units/self._map_units_per_meter) < self._hunter_drones[hd_id].max_acquisition_meters
+                ):
+                    # Target aquired
+                    self._hunter_drones[hd_id].target_ship_id = min_distance_ship_id
+
+            # Adjust heading
+            target_ship_id = self._hunter_drones[hd_id].target_ship_id
+            if target_ship_id is None:
+                # No target: fly patrol.
+                _, current_velocity_heading = utils2d.calculate_resultant_vector(
+                    self._hunter_drones[hd_id].velocity_x_meters_per_second,
+                    self._hunter_drones[hd_id].velocity_y_meters_per_second,
+                )
+                delta_degrees = (
+                    90
+                    if self._hunter_drones[hd_id].autopilot_patrol_pattern == HunterDrone.AUTOPILOT_PATROL_PATERN_CLOCKWISE else
+                    -90
+                )
+                new_heading = utils2d.signed_angle_to_unsigned_angle(
+                    current_velocity_heading
+                    + delta_degrees
+                )
+                self._hunter_drones[hd_id].set_heading(new_heading)
+
+            elif (
+                target_ship_id is not None
+                and self._ships[target_ship_id].exploded
+            ):
+                # original target exploded, clear targeting.
+                # start flying patrol on next frame.
+                self._hunter_drones[hd_id].target_ship_id = None
+
+            elif (
+                target_ship_id is not None
+                and not self._ships[target_ship_id].exploded
+            ):
+                # Set intercept heading.
+                intercept_angle = utils2d.calculate_heading_to_point(
+                    self._hunter_drones[hd_id].coords,
+                    self._ships[target_ship_id].coords,
+                )
+                _, velocity_angle = utils2d.calculate_resultant_vector(
+                    self._hunter_drones[hd_id].velocity_x_meters_per_second,
+                    self._hunter_drones[hd_id].velocity_y_meters_per_second,
+                )
+                intercept_angle_delta = abs(intercept_angle - velocity_angle)
+
+            # Apply acceleration and update position.
+            acc_x, acc_y = utils2d.calculate_x_y_components(
+                self._hunter_drones[hd_id].tracking_acceleration_ms/fps,
+                self._hunter_drones[hd_id].heading,
+            )
+            self._hunter_drones[hd_id].velocity_x_meters_per_second += acc_x
+            self._hunter_drones[hd_id].velocity_y_meters_per_second += acc_y
+            self._hunter_drones[hd_id].coord_x += (
+                self._hunter_drones[hd_id].velocity_x_meters_per_second*self._map_units_per_meter/fps)
+            self._hunter_drones[hd_id].coord_y += (
+                self._hunter_drones[hd_id].velocity_y_meters_per_second*self._map_units_per_meter/fps)
+
 
 
     def _advance_collisions(self, ship_id: str, collision_type: str):

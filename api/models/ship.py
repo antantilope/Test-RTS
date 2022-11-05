@@ -346,6 +346,8 @@ class Ship(BaseModel):
         self.magnet_mine_firing = False
         self.emp_firing = False
         self.hunter_drone_firing = False
+        self._hunter_drone_max_target_acquisition_distance_meters = None
+        self._hunter_drone_tracking_acceleration_ms = None
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -717,6 +719,10 @@ class Ship(BaseModel):
                 + instance._special_weapons_max_launch_velocity
             ) / 2
         )
+        instance._hunter_drone_max_target_acquisition_distance_meters = (
+            constants.HUNTER_DRONE_MAX_TARGET_ACQUISITION_DISTANCE_METERS)
+        instance._hunter_drone_tracking_acceleration_ms = (
+            constants.HUNTER_DRONE_TRACKING_ACCELERATION_MS)
 
         instance.cargo_ore_mass_capacity_kg = constants.ORE_CAPACITY_KG
         instance.mining_ore_power_usage_per_second = constants.MINING_ORE_POWER_USAGE_PER_SECOND

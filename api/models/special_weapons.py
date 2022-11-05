@@ -92,14 +92,20 @@ class HunterDrone(BaseModel):
         initial_velocity_y_meters_per_second: float,
         coord_x: int,
         coord_y: int,
+        max_acquisition_meters: int,
+        tracking_acceleration_ms: int,
     ):
         super().__init__()
         self.elapsed_milliseconds = 0
         self.created_frame = game_frame
-        self.ship_id = ship_id
+        self.ship_id = ship_id      # ship the drone was spawned from
+        self.target_ship_id = None  # ship the drone has targeted
+        self.max_acquisition_meters = max_acquisition_meters
+        self.tracking_acceleration_ms = tracking_acceleration_ms
 
+        self.armed = False
+        self.percent_armed = 0
         self.exploded = False
-        self.arming_time = constants.HUNTER_DRONE_ARMING_TIME_SECONDS
 
         # Position
         self.coord_x = coord_x
@@ -108,8 +114,6 @@ class HunterDrone(BaseModel):
         # Velocity
         self.velocity_x_meters_per_second = float(initial_velocity_x_meters_per_second)
         self.velocity_y_meters_per_second = float(initial_velocity_y_meters_per_second)
-        # Acceleration
-        self._tracking_acceleration = constants.HUNTER_DRONE_TRACKING_ACCELERATION_MS
 
         # Heading of drone in degrees (between 0 and 359)
         self.heading = None
