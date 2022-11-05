@@ -41,8 +41,8 @@ class TestHunterDrone(TestCase):
 
         self.game.set_map({
             'mapData':{
-                "meters_x": 3 * 1000, # 3KM
-                "meters_y": 3 * 1000, # 3KM
+                "meters_x": 10 * 1000, # 10KM
+                "meters_y": 10 * 1000, # 10KM
                 "name": "TestMap",
             },
             'spawnPoints': [{
@@ -247,3 +247,17 @@ class TestHunterDrone(TestCase):
         assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 5000
         assert self.game._hunter_drones[hd_id].armed # Drone armed
 
+    def test_a_hunter_drone_flies_clockwise_patrol_if_no_targets_in_range(self):
+        pass
+
+    def test_a_hunter_drone_flies_counter_clockwise_patrol_if_no_targets_in_range(self):
+        pass
+
+    def test_a_hunter_drone_acquires_target_if_one_is_in_range(self):
+        pass
+
+    def test_a_hunter_drone_flies_straight_trajectory_towards_a_target_and_kills_it(self):
+        pass
+
+    def test_a_hunter_drone_flies_curved_trajectory_towards_a_target_and_kills_it(self):
+        pass
