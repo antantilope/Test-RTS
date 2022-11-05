@@ -1270,6 +1270,7 @@ class Game(BaseModel):
                 # original target exploded, clear targeting.
                 # start flying patrol on next frame.
                 self._hunter_drones[hd_id].target_ship_id = None
+                target_ship_id = None
 
             elif (
                 target_ship_id is not None
@@ -1284,7 +1285,19 @@ class Game(BaseModel):
                     self._hunter_drones[hd_id].velocity_x_meters_per_second,
                     self._hunter_drones[hd_id].velocity_y_meters_per_second,
                 )
-                intercept_angle_delta = abs(intercept_angle - velocity_angle)
+                intercept_angle_delta = velocity_angle - intercept_angle
+                if abs(intercept_angle_delta) < 5:
+                    # Zero or tiny course correction. Accelerate on
+                    # intercept angle.
+                    self._hunter_drones[hd_id].set_heading(intercept_angle)
+                else:
+                    # Fly perpendicular to drones velocity line to
+                    # in order to swing velocity line towards intercept line.
+                    new_heading = utils2d.signed_angle_to_unsigned_angle(
+                        velocity_angle
+                        + (90 if intercept_angle_delta > 0 else -90)
+                    )
+                    self._hunter_drones[hd_id].set_heading(new_heading)
 
             # Apply acceleration and update position.
             acc_x, acc_y = utils2d.calculate_x_y_components(
@@ -1298,6 +1311,37 @@ class Game(BaseModel):
             self._hunter_drones[hd_id].coord_y += (
                 self._hunter_drones[hd_id].velocity_y_meters_per_second*self._map_units_per_meter/fps)
 
+            # Check for proximity detonations and ship damamge.
+            if check_proximity and target_ship_id is not None:
+                distance_to_target = utils2d.calculate_point_distance(
+                    self._hunter_drones[hd_id].coords,
+                    self._ships[target_ship_id].coords,
+                ) / self._map_units_per_meter
+                if distance_to_target <= self._hunter_drone_max_proximity_to_explode_meters:
+                    # Explode drone, kill target ship.
+                    self._hunter_drones[hd_id].exploded = True
+                    self.register_explosion_on_map(
+                        self._hunter_drones[hd_id].coords,
+                        self._hunter_drone_explode_damage_radius_meters * 1.1,
+                        800,
+                        1400,
+                    )
+                    self._ships[target_ship_id].die(self._game_frame)
+                    # Kill any other ships within damage AOE.
+                    for ship_id in self._ships:
+                        if target_ship_id == ship_id:
+                            continue # Already dead.
+                        distance_to_ship = utils2d.calculate_point_distance(
+                            self._hunter_drones[hd_id].coords,
+                            self._ships[ship_id].coords,
+                        ) / self._map_units_per_meter
+                        if distance_to_ship <= self._hunter_drone_explode_damage_radius_meters:
+                            self._ships[ship_id].die(self._game_frame)
+
+        # Hunter Drone keys get deleted from dict on the frame after they explode.
+        if any(keys_to_drop):
+            for k in keys_to_drop:
+                del self._hunter_drones[k]
 
 
     def _advance_collisions(self, ship_id: str, collision_type: str):
