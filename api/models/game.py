@@ -1310,7 +1310,10 @@ class Game(BaseModel):
                     self._hunter_drones[hd_id].velocity_x_meters_per_second,
                     self._hunter_drones[hd_id].velocity_y_meters_per_second,
                 )
-                intercept_angle_delta = velocity_angle - intercept_angle
+                intercept_angle_delta = utils2d.calculate_delta_degrees(
+                    velocity_angle,
+                    intercept_angle,
+                )
                 delta_magnitude = abs(intercept_angle_delta)
                 if delta_magnitude < 5:
                     # Zero or tiny course correction. Accelerate on

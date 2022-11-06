@@ -255,16 +255,198 @@ class TestHunterDrone(TestCase):
         assert self.game._hunter_drones[hd_id].armed # Drone armed
 
     def test_a_hunter_drone_flies_clockwise_patrol_if_no_targets_in_range(self):
-        pass
+        self.game._ships[self.player_1_ship_id].coord_x = 1000 * 10 # ship1 at 1000M, 10M
+        self.game._ships[self.player_1_ship_id].coord_y = 10 * 10
+        self.game._ships[self.player_1_ship_id]._hunter_drone_max_target_acquisition_distance_meters = 1000
+        self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
+        self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * 10 # ship2 at 1000M, 6000M (out of range)
+        self.game._ships[self.player_2_ship_id].coord_y = 6000 * 10
+
+        # heading at 45 degrees, drone will fly clockwise patrol
+        self.game._ships[self.player_1_ship_id]._set_heading(45)
+        # Fire drone, heading locked at 45 until drone arms
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._hunter_drones) == 1
+        hd_id = next(iter(self.game._hunter_drones.keys()))
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 1000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 45
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 2000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 45
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 3000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 45
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 4000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 45
+        self.game.advance_hunter_drones(5)
+        assert self.game._hunter_drones[hd_id].armed # Drone armed
+        # heading increases as drone flies clockwise
+        new_heading_1 = self.game._hunter_drones[hd_id].heading
+        assert new_heading_1 > 45
+        self.game.advance_hunter_drones(1)
+        new_heading_2 = self.game._hunter_drones[hd_id].heading
+        assert new_heading_2 > new_heading_1
+        self.game.advance_hunter_drones(1)
+        new_heading_3 = self.game._hunter_drones[hd_id].heading
+        assert new_heading_3 > new_heading_2
 
     def test_a_hunter_drone_flies_counter_clockwise_patrol_if_no_targets_in_range(self):
-        pass
+        self.game._ships[self.player_1_ship_id].coord_x = 1000 * 10 # ship1 at 1000M, 10M
+        self.game._ships[self.player_1_ship_id].coord_y = 10 * 10
+        self.game._ships[self.player_1_ship_id]._hunter_drone_max_target_acquisition_distance_meters = 1000
+        self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
+        self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * 10 # ship2 at 1000M, 6000M (out of range)
+        self.game._ships[self.player_2_ship_id].coord_y = 6000 * 10
+
+        # heading at 345 degrees, drone will fly counter clockwise patrol
+        self.game._ships[self.player_1_ship_id]._set_heading(345)
+        # Fire drone, heading locked at 45 until drone arms
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._hunter_drones) == 1
+        hd_id = next(iter(self.game._hunter_drones.keys()))
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 1000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 345
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 2000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 345
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 3000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 345
+        self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].elapsed_milliseconds == 4000
+        assert not self.game._hunter_drones[hd_id].armed
+        assert self.game._hunter_drones[hd_id].heading == 345
+        self.game.advance_hunter_drones(5)
+        assert self.game._hunter_drones[hd_id].armed # Drone armed
+        # heading decreases as drone flies counter clockwise
+        new_heading_1 = self.game._hunter_drones[hd_id].heading
+        assert new_heading_1 < 345
+        self.game.advance_hunter_drones(1)
+        new_heading_2 = self.game._hunter_drones[hd_id].heading
+        assert new_heading_2 < new_heading_1
+        self.game.advance_hunter_drones(1)
+        new_heading_3 = self.game._hunter_drones[hd_id].heading
+        assert new_heading_3 < new_heading_2
 
     def test_a_hunter_drone_acquires_target_if_one_is_in_range(self):
-        pass
+        self.game._ships[self.player_1_ship_id].coord_x = 1000 * 10 # ship1 at 1000M, 10M
+        self.game._ships[self.player_1_ship_id].coord_y = 10 * 10
+        self.game._ships[self.player_1_ship_id]._hunter_drone_max_target_acquisition_distance_meters = 2000
+        self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
+        self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * 10 # ship2 at 1000M, 1200M (in range)
+        self.game._ships[self.player_2_ship_id].coord_y = 1200 * 10
+
+        self.game._ships[self.player_1_ship_id]._set_heading(0)
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._hunter_drones) == 1
+        hd_id = next(iter(self.game._hunter_drones.keys()))
+        while not self.game._hunter_drones[hd_id].armed:
+            self.game.advance_hunter_drones(1)
+        assert self.game._hunter_drones[hd_id].target_ship_id == self.player_2_ship_id
 
     def test_a_hunter_drone_flies_straight_trajectory_towards_a_target_and_kills_it(self):
-        pass
+        self.game._ships[self.player_1_ship_id].coord_x = 1000 * 10 # ship1 at 1000M, 10M
+        self.game._ships[self.player_1_ship_id].coord_y = 10 * 10
+        self.game._ships[self.player_1_ship_id]._hunter_drone_max_target_acquisition_distance_meters = 2000
+        self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
+        self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * 10 # ship2 at 1000M, 1200M (in range)
+        self.game._ships[self.player_2_ship_id].coord_y = 1200 * 10
+
+        self.game._ships[self.player_1_ship_id]._set_heading(0)
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._hunter_drones) == 1
+        hd_id = next(iter(self.game._hunter_drones.keys()))
+        iterations = 0
+        while not self.game._hunter_drones[hd_id].exploded:
+            iterations += 1
+            if iterations > 200:
+                raise AssertionError("too many iterations")
+            self.game.advance_hunter_drones(1)
+        assert self.game._ships[self.player_2_ship_id].died_on_frame is not None
 
     def test_a_hunter_drone_flies_curved_trajectory_towards_a_target_and_kills_it(self):
-        pass
+        self.game._ships[self.player_1_ship_id].coord_x = 1000 * 10 # ship1 at 1000M, 10M
+        self.game._ships[self.player_1_ship_id].coord_y = 10 * 10
+        self.game._ships[self.player_1_ship_id]._hunter_drone_max_target_acquisition_distance_meters = 2000
+        self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
+        self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * 10 # ship2 at 1000M, 1200M (in range)
+        self.game._ships[self.player_2_ship_id].coord_y = 1200 * 10
+
+        self.game._ships[self.player_1_ship_id]._set_heading(60)
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._hunter_drones) == 1
+        hd_id = next(iter(self.game._hunter_drones.keys()))
+        iterations = 0
+        while not self.game._hunter_drones[hd_id].exploded:
+            iterations += 1
+            if iterations > 1000:
+                raise AssertionError("too many iterations")
+            self.game.advance_hunter_drones(15)
+        assert self.game._ships[self.player_2_ship_id].died_on_frame is not None
+
+    def test_a_hunter_drone_flies_retrograde_trajectory_towards_a_target_and_kills_it(self):
+        self.game._ships[self.player_1_ship_id].coord_x = 1000 * 10 # ship1 at 1000M, 10M
+        self.game._ships[self.player_1_ship_id].coord_y = 10 * 10
+        self.game._ships[self.player_1_ship_id]._hunter_drone_max_target_acquisition_distance_meters = 2000
+        self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
+        self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
+        self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
+        self.game._ships[self.player_2_ship_id].coord_x = 1000 * 10 # ship2 at 1000M, 1200M (in range)
+        self.game._ships[self.player_2_ship_id].coord_y = 1200 * 10
+
+        # drone initially flying in opposite direction towards target.
+        self.game._ships[self.player_1_ship_id]._set_heading(180)
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
+            launch_velocity=10
+        )
+        self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+        assert len(self.game._hunter_drones) == 1
+        hd_id = next(iter(self.game._hunter_drones.keys()))
+        iterations = 0
+        while not self.game._hunter_drones[hd_id].exploded:
+            iterations += 1
+            if iterations > 1000:
+                raise AssertionError("too many iterations")
+            self.game.advance_hunter_drones(15)
+        assert self.game._ships[self.player_2_ship_id].died_on_frame is not None
