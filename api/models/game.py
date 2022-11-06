@@ -1311,10 +1311,16 @@ class Game(BaseModel):
                     self._hunter_drones[hd_id].velocity_y_meters_per_second,
                 )
                 intercept_angle_delta = velocity_angle - intercept_angle
-                if abs(intercept_angle_delta) < 5:
+                delta_magnitude = abs(intercept_angle_delta)
+                if delta_magnitude < 5:
                     # Zero or tiny course correction. Accelerate on
                     # intercept angle.
                     self._hunter_drones[hd_id].set_heading(intercept_angle)
+                elif delta_magnitude > 90:
+                    # Fly retrograde heading to make large course correction.
+                    self._hunter_drones[hd_id].set_heading(
+                        utils2d.invert_heading(velocity_angle)
+                    )
                 else:
                     # Fly perpendicular to drones velocity line to
                     # in order to swing velocity line towards intercept line.
