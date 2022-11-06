@@ -20,38 +20,45 @@ export class StationpaneComponent implements OnInit {
     ).name
   }
 
-  public async btnClickTradeOreForOreCoin() {
+  async btnClickTradeOreForOreCoin() {
     await this._api.post(
       "/api/rooms/command",
       {command:'trade_ore_for_ore_coin'},
     )
   }
 
-  public async btnClickStartFueling() {
+  async btnClickStartFueling() {
     await this._api.post(
       "/api/rooms/command",
       {command:'start_fueling'},
     )
   }
 
-  public async btnClickHaltFueling() {
+  async btnClickHaltFueling() {
     await this._api.post(
       "/api/rooms/command",
       {command:'stop_fueling'},
     )
   }
 
-  public async btnClickBuyMagnetMine() {
+  async btnClickBuyMagnetMine() {
     await this._api.post(
       "/api/rooms/command",
       {command:'buy_magnet_mine'},
     )
   }
 
-  public async btnClickBuyEMP() {
+  async btnClickBuyEMP() {
     await this._api.post(
       "/api/rooms/command",
       {command:'buy_emp'},
+    )
+  }
+
+  async btnClickBuyHunterDrone() {
+    await this._api.post(
+      "/api/rooms/command",
+      {command:'buy_hunter_drone'},
     )
   }
 

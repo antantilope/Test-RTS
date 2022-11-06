@@ -268,6 +268,7 @@ export class Ship {
     last_tube_fire_frame: number
     magnet_mines_loaded: number
     emps_loaded: number
+    hunter_drones_loaded: number
 
     docked_at_station: string
     gravity_brake_position: number
@@ -301,6 +302,7 @@ export class Ship {
 export class SpecialWeaponsCost {
     emp: number
     magnet_mine: number
+    hunter_drone: number
 }
 
 

@@ -352,9 +352,9 @@ class Ship(BaseModel):
         self._special_weapons_min_launch_velocity = None
         self._special_weapons_max_launch_velocity = None
         self._special_weapons_launch_velocity = None
-        self.magnet_mines_loaded = 5
-        self.emps_loaded = 5
-        self.hunter_drones_loaded = 5
+        self.magnet_mines_loaded = 4
+        self.emps_loaded = 3
+        self.hunter_drones_loaded = 2
         self.magnet_mine_firing = False
         self.emp_firing = False
         self.hunter_drone_firing = False
