@@ -1618,6 +1618,79 @@ export class DrawingService {
       droneLenXPX,
       droneLenYPX,
     )
+    ctx.strokeStyle = drone.isFriendly? "rgb(200, 200, 200, 0.85)": "rgb(255, 0, 0, 0.85)"
+    ctx.lineWidth = 1.75 + (1.5 * drone.percentArmed)
+    if(drone.percentArmed > 0.97) {
+      ctx.beginPath()
+      ctx.rect(
+        drone.canvasBoundingBox.x1,
+        drone.canvasBoundingBox.y1,
+        drone.canvasBoundingBox.x2 - drone.canvasBoundingBox.x1,
+        drone.canvasBoundingBox.y2 - drone.canvasBoundingBox.y1,
+      )
+      ctx.stroke()
+    } else {
+      // Draw arming animation with bounding box.
+      const topLen = drone.canvasBoundingBox.x2 - drone.canvasBoundingBox.x1
+      const sideLen = drone.canvasBoundingBox.y2 - drone.canvasBoundingBox.y1
+      // Top Line (left to right)
+      if(drone.percentArmed >= 0.25) {
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1)
+        ctx.stroke()
+      } else {
+        let percSide = drone.percentArmed / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x1 + (topLen * percSide), drone.canvasBoundingBox.y1)
+        ctx.stroke()
+      }
+      // right side line (top to bottom)
+      if(drone.percentArmed >= 0.50) {
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (drone.percentArmed >= 0.25 && drone.percentArmed < 0.5) {
+        let percSide = (drone.percentArmed - 0.25) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1 + (sideLen * percSide))
+        ctx.stroke()
+      }
+      // bottom line (right to left)
+      if(drone.percentArmed >= 0.75) {
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y2)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (drone.percentArmed >= 0.50 && drone.percentArmed < 0.75) {
+        let percSide = (drone.percentArmed - 0.5) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y2)
+        ctx.lineTo(drone.canvasBoundingBox.x2 - (topLen * percSide), drone.canvasBoundingBox.y2)
+        ctx.stroke()
+      }
+      // left side (bottom to top)
+      if(drone.percentArmed > 0.75 && drone.percentArmed <= 0.97) {
+        let percSide = (drone.percentArmed - 0.75) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y2)
+        ctx.lineTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y2 - (sideLen * percSide))
+        ctx.stroke()
+      }
+    }
+    const bbXOffset = drone.canvasBoundingBox.x1
+    const bbYOffsetInterval = 20
+    let bbYOffset = drone.canvasBoundingBox.y2 + bbYOffsetInterval
+    ctx.beginPath()
+    ctx.font = 'bold 18px Courier New'
+    ctx.fillStyle = drone.isFriendly? "rgb(200, 200, 200, 0.85)": "rgb(255, 0, 0, 0.85)"
+    ctx.textAlign = 'left'
+    ctx.fillText("🤖 Drone", bbXOffset, bbYOffset)
+    bbYOffset += bbYOffsetInterval
+    ctx.fillText(`${drone.distance} M`, bbXOffset, bbYOffset)
   }
 
   public drawMagnetMine(
