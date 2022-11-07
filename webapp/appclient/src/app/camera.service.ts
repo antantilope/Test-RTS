@@ -13,6 +13,9 @@ import {
   MAGNET_MINE_SIDE_LENGTH_METERS,
   EMP_RADIUS_METERS,
   SHIP_MIN_BOUNDING_BOX_LENGTH_METERS,
+  HUNTER_DRONE_LENGTH_METERS_X,
+  HUNTER_DRONE_LENGTH_METERS_Y,
+  HUNTER_DRONE_MIN_BOUNDING_BOX_LENGTH_METERS,
 } from "./constants"
 
 function getRandomFloat(min: number, max: number): number {
@@ -506,8 +509,8 @@ export class Camera {
       )
       let pointB = this.mapCoordToCanvasCoord(
         {
-          x:tl.target_coord[0] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / this.getZoom()),
-          y:tl.target_coord[1] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / this.getZoom()),
+          x:tl.target_coord[0] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / currentZoom),
+          y:tl.target_coord[1] + (getRandomFloat(-30, 30) * this._api.frameData.map_config.units_per_meter / currentZoom),
         },
         cameraPosition,
       )
@@ -516,7 +519,31 @@ export class Camera {
         targetCanvasCoord: pointB,
       })
     }
-
+    // Hunter Drones
+    for(let i in this._api.frameData.ship.scanner_hunter_drone_data) {
+      let sde = this._api.frameData.ship.scanner_hunter_drone_data[i]
+      if(sde.exploded) {
+        continue
+      }
+      const canvasCoordCenter = this.mapCoordToCanvasCoord(
+        {x: sde.coord_x, y:sde.coord_y},
+        cameraPosition,
+      )
+      drawableItems.hunterDrones.push({
+        hunterDroneId: sde.id,
+        isDot: true,
+        canvasCoordCenter,
+        visualHeading: sde.visual_heading,
+        percentArmed: sde.percent_armed,
+        distance: sde.distance,
+        isFriendly: sde.team_id == this._api.frameData.ship.team_id,
+        canvasBoundingBox: this.pointCoordToBoxCoord(
+          canvasCoordCenter,
+          HUNTER_DRONE_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
+        ),
+      })
+    }
+    // EMPs
     for(let i in this._api.frameData.ship.scanner_emp_data) {
       let sde = this._api.frameData.ship.scanner_emp_data[i]
       if(sde.exploded) {
@@ -526,7 +553,7 @@ export class Camera {
         {x: sde.coord_x, y: sde.coord_y},
         cameraPosition,
       )
-      let empRadiusPx = EMP_RADIUS_METERS * this._api.frameData.map_config.units_per_meter / this.getZoom()
+      let empRadiusPx = EMP_RADIUS_METERS * this._api.frameData.map_config.units_per_meter / currentZoom
       drawableItems.emps.push({
         EMPId: sde.id,
         canvasCoordCenter,

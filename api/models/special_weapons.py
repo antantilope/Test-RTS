@@ -121,8 +121,8 @@ class HunterDrone(BaseModel):
         self.heading = None
 
         # Orient hit boxes
-        x_len = constants.HUNTER_DRONE_X_LEN * map_units_per_meter
-        y_len = constants.HUNTER_DRONE_Y_LEN * map_units_per_meter
+        x_len = constants.HUNTER_DRONE_LENGTH_METERS_X * map_units_per_meter
+        y_len = constants.HUNTER_DRONE_LENGTH_METERS_Y * map_units_per_meter
         # relative hitbox coordinates
         # of the drone with heading fixed to zero.
         # These coords will NOT change

@@ -258,6 +258,14 @@ export class ScannerpaneComponent implements OnInit {
       this.ctx,
       drawableObjects.magnetMineTargetingLines
     )
+    // Hunter Drones
+    for(let i in drawableObjects.hunterDrones) {
+      this._draw.drawHunterDrone(
+        this.ctx,
+        this._camera.scannerPaneCamera,
+        drawableObjects.hunterDrones[i],
+      )
+    }
     // EMPs
     for(let i in drawableObjects.emps) {
       this._draw.drawEMP(this.ctx, drawableObjects.emps[i])

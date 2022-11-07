@@ -66,10 +66,6 @@ export class DrawableHunterDrone {
     hunterDroneId: string
     isDot: boolean
     canvasCoordCenter: PointCoord
-    canvasX1: number
-    canvasY1: number
-    canvasW: number
-    canvasH: number
     canvasBoundingBox: BoxCoords
     percentArmed: number
     distance: number

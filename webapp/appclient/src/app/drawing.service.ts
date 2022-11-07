@@ -26,6 +26,7 @@ import {
   DrawableMagnetMine,
   DrawableMagnetMineTargetingLine,
   DrawableEMP,
+  DrawableHunterDrone,
   VisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
@@ -38,6 +39,8 @@ import {
   LOW_POWER_THRESHOLD,
   SHIP_LENGTH_METERS_X,
   SHIP_LENGTH_METERS_Y,
+  HUNTER_DRONE_LENGTH_METERS_X,
+  HUNTER_DRONE_LENGTH_METERS_Y
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
@@ -1582,6 +1585,39 @@ export class DrawingService {
       )
       ctx.fill()
     }
+  }
+
+  public drawHunterDrone(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    drone: DrawableHunterDrone,
+  ){
+    const currentZoom = camera.getZoom()
+    if (drone.isDot) {
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(0, 255, 0, 0.9)"
+      ctx.arc(
+        drone.canvasCoordCenter.x,
+        drone.canvasCoordCenter.y,
+        camera.minSizeForDotPx - 1,
+        0,
+        TWO_PI,
+      )
+      ctx.fill()
+    }
+    const droneLenXPX = HUNTER_DRONE_LENGTH_METERS_X * this._api.frameData.map_config.units_per_meter / currentZoom
+    const droneLenYPX = HUNTER_DRONE_LENGTH_METERS_Y * this._api.frameData.map_config.units_per_meter / currentZoom
+    const droneX1 = (drone.canvasCoordCenter.x) - (droneLenXPX / 2)
+    const droneY1 = (drone.canvasCoordCenter.y) - (droneLenYPX / 2)
+    this.drawRotatedImg(
+      ctx,
+      this._asset.hunterDroneAsset,
+      drone.visualHeading,
+      droneX1,
+      droneY1,
+      droneLenXPX,
+      droneLenYPX,
+    )
   }
 
   public drawMagnetMine(

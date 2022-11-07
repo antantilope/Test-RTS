@@ -16,8 +16,12 @@ export const EMP_SLUG = "emp"
 export const EMP_RADIUS_METERS = 1
 
 export const HUNTER_DRONE_SLUG = "hunter_drone"
-export const HUNTER_DRONE_X_LEN = 4
-export const HUNTER_DRONE_Y_LEN = 2.95
+export const HUNTER_DRONE_LENGTH_METERS_X = 4
+export const HUNTER_DRONE_LENGTH_METERS_Y = 2.95
+export const HUNTER_DRONE_MIN_BOUNDING_BOX_LENGTH_METERS = Math.max(
+    HUNTER_DRONE_LENGTH_METERS_X,
+    HUNTER_DRONE_LENGTH_METERS_Y,
+)
 
 // Timer Slugs
 export const TIMER_SLUG_SCANNER_STARTUP = "scanner_startup"
