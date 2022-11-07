@@ -788,7 +788,9 @@ export class GamedisplayComponent implements OnInit {
       this.paintButtons()
     }
     const trcSizing = this.getTopRightButtonSizing()
-    this.paintTopRightButtons(trcSizing)
+    if(!this.isDebug) {
+      this.paintTopRightButtons(trcSizing)
+    }
     this._sound.runSoundFXEngine();
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
