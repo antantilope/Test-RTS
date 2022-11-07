@@ -1688,7 +1688,7 @@ export class DrawingService {
     ctx.font = 'bold 18px Courier New'
     ctx.fillStyle = drone.isFriendly? "rgb(200, 200, 200, 0.85)": "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
-    ctx.fillText("🤖 Drone", bbXOffset, bbYOffset)
+    ctx.fillText("HTR.Drone", bbXOffset, bbYOffset)
     bbYOffset += bbYOffsetInterval
     ctx.fillText(`${drone.distance} M`, bbXOffset, bbYOffset)
   }
@@ -1772,7 +1772,7 @@ export class DrawingService {
     ctx.font = 'bold 18px Courier New'
     ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
-    ctx.fillText("🤖 Mine", bbXOffset, bbYOffset)
+    ctx.fillText("MAG.Mine", bbXOffset, bbYOffset)
     bbYOffset += bbYOffsetInterval
     ctx.fillText(`${mine.distance} M`, bbXOffset, bbYOffset)
 
