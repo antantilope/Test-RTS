@@ -491,10 +491,7 @@ export class GamedisplayComponent implements OnInit {
     }
     const canvasShipPoint: PointCoord = this.drawableObjects.ships[0].canvasCoordCenter
     const heading = this._camera.gameDisplayCamera.getCanvasAngleBetween(canvasShipPoint, canvasClickPoint)
-    await this._api.post(
-      "/api/rooms/command",
-      {command: "set_heading", heading},
-    )
+    this._api.emitGameCommand("set_heading", { heading })
   }
 
   private handleMouseClickInCanvasDropWaypoint(
@@ -2098,42 +2095,27 @@ export class GamedisplayComponent implements OnInit {
   }
 
   private async btnActivateEngine() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'activate_engine'},
-    )
+    this._api.emitGameCommand('activate_engine', {})
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnDeactivateEngine() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'deactivate_engine'},
-    )
+    this._api.emitGameCommand('deactivate_engine', {})
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnLightEngine() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'light_engine'},
-    )
+    this._api.emitGameCommand('light_engine', {})
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnBoostEngine() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'boost_engine'},
-    )
+    this._api.emitGameCommand('boost_engine', {})
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnUnlightEngine() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'unlight_engine'},
-    )
+    this._api.emitGameCommand('unlight_engine', {})
     this._sound.playPrimaryButtonClickSound()
   }
 
@@ -2145,42 +2127,27 @@ export class GamedisplayComponent implements OnInit {
     }
   }
   private async btnActivateAPU() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'activate_apu'},
-    )
+    this._api.emitGameCommand('activate_apu', {})
     this._sound.playUtilityButtonClickSound()
   }
 
   private async btnDeactivateAPU() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'deactivate_apu'},
-    )
+    this._api.emitGameCommand('deactivate_apu', {})
     this._sound.playUtilityButtonClickSound()
   }
 
   private async btnSetScannerModeRadar() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'set_scanner_mode_radar'},
-    )
+    this._api.emitGameCommand('set_scanner_mode_radar', {})
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnSetScannerModeIR() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'set_scanner_mode_ir'},
-    )
+    this._api.emitGameCommand('set_scanner_mode_ir', {})
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnActivateScanner() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'activate_scanner'},
-    )
+    this._api.emitGameCommand('activate_scanner', {})
     setTimeout(()=>{
       this._pane.openScannerPane()
     }, 100)
@@ -2189,48 +2156,30 @@ export class GamedisplayComponent implements OnInit {
 
   private async btnDeactivateScanner() {
     this._scanner.scannerTargetIDCursor = null
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'deactivate_scanner'},
-    )
+    this._api.emitGameCommand('deactivate_scanner', {})
     this._pane.closeScannerPane()
     this._sound.playPrimaryButtonClickSound()
   }
 
   // Autopilot button handlers.
   private async btnDisableAutoPilot() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'disable_autopilot'},
-    )
+    this._api.emitGameCommand('disable_autopilot', {})
     this._sound.playPrimaryButtonClickSound()
   }
   private async btnAutoPilotHaltPosition() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'run_autopilot', autopilot_program:'position_hold'},
-    )
+    this._api.emitGameCommand('run_autopilot', {autopilot_program:'position_hold'})
     this._sound.playPrimaryButtonClickSound()
   }
   private async btnAutoPilotHeadingLockTarget() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'run_autopilot', autopilot_program:'lock_target'},
-    )
+    this._api.emitGameCommand('run_autopilot', {autopilot_program:'lock_target'})
     this._sound.playPrimaryButtonClickSound()
   }
   private async btnAutoPilotHeadingLockPrograde() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'run_autopilot', autopilot_program:'lock_prograde'},
-    )
+    this._api.emitGameCommand('run_autopilot', {autopilot_program:'lock_prograde'})
     this._sound.playPrimaryButtonClickSound()
   }
   private async btnAutoPilotHeadingLockRetrograde() {
-    await this._api.post(
-      "/api/rooms/command",
-      {command:'run_autopilot', autopilot_program:'lock_retrograde'},
-    )
+    this._api.emitGameCommand('run_autopilot', {autopilot_program:'lock_retrograde'})
     this._sound.playPrimaryButtonClickSound()
   }
   private getWaypointType(uuid: string): string | null {
@@ -2252,12 +2201,11 @@ export class GamedisplayComponent implements OnInit {
   private async btnAutoPilotHeadingLockWaypoint() {
     const wpType = this.getWaypointType(this.wayPointUUID)
     if(!wpType){
-      return
+      return console.warn("unknown waypoint type " + wpType)
     }
-    await this._api.post(
-      "/api/rooms/command",
+    this._api.emitGameCommand(
+      'run_autopilot_heading_to_waypoint',
       {
-        command:'run_autopilot_heading_to_waypoint',
         waypoint_uuid: this.wayPointUUID,
         waypoint_type: wpType,
       },
@@ -2344,59 +2292,43 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData.ship.scanner_locked && this._scanner.scannerTargetIDCursor === this._api.frameData.ship.scanner_lock_target) {
       return
     }
-    await this._api.post(
-      "/api/rooms/command",
-      {command: 'set_scanner_lock_target', target: this._scanner.scannerTargetIDCursor},
+    this._api.emitGameCommand(
+      'set_scanner_lock_target',
+      {
+        target: this._scanner.scannerTargetIDCursor,
+      },
     )
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnClickChargeEBeam() {
     if(!this._api.frameData.ship.ebeam_charging && !this._api.frameData.ship.ebeam_firing) {
-      await this._api.post(
-        "/api/rooms/command",
-        {command:'charge_ebeam'},
-      )
+      this._api.emitGameCommand('charge_ebeam', {})
     }
     this._sound.playPrimaryButtonClickSound()
   }
 
   private async btnClickPauseChargeEBeam() {
     if(this._api.frameData.ship.ebeam_charging) {
-      await this._api.post(
-        "/api/rooms/command",
-        {command:'pause_charge_ebeam'},
-      )
+      this._api.emitGameCommand('pause_charge_ebeam', {})
       this._sound.playPrimaryButtonClickSound()
     }
   }
 
   private async btnClickFireEBeam() {
     if(this._api.frameData.ship.ebeam_can_fire) {
-      await this._api.post(
-        "/api/rooms/command",
-        {command:'fire_ebeam'},
-      )
+      this._api.emitGameCommand('fire_ebeam', {})
       this._sound.playPrimaryButtonClickSound()
     }
   }
 
   private btnClickFirePneumaticTube() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
-      this._api.post(
-        "/api/rooms/command",
-        {command:'launch_magnet_mine', launch_velocity: this.lauchVelocity},
-      )
+      this._api.emitGameCommand('launch_magnet_mine', {launch_velocity: this.lauchVelocity})
     } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
-      this._api.post(
-        "/api/rooms/command",
-        {command:'launch_emp', launch_velocity: this.lauchVelocity},
-      )
+      this._api.emitGameCommand('launch_emp', {launch_velocity: this.lauchVelocity})
     } else if (this.selectedPneumaticWeapon == HUNTER_DRONE_SLUG) {
-      this._api.post(
-        "/api/rooms/command",
-        {command:'launch_hunter_drone', launch_velocity: this.lauchVelocity},
-      )
+      this._api.emitGameCommand('launch_hunter_drone', {launch_velocity: this.lauchVelocity})
     } else {
       console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)
     }
@@ -2420,21 +2352,15 @@ export class GamedisplayComponent implements OnInit {
   private async btnClickToggleGravBrake() {
     console.log("btnClickToggleGravBrake()")
     if (this._api.frameData.ship.gravity_brake_deployed) {
-      this._api.post(
-        "/api/rooms/command",
-        {command:'retract_gravity_brake'},
-      )
+      this._api.emitGameCommand('retract_gravity_brake', {})
       this._sound.playUtilityButtonClickSound()
       return
     }
     else if (
       this._api.frameData.ship.gravity_brake_position == 0
     ) {
-      this._api.post(
-        "/api/rooms/command",
-        {command:'extend_gravity_brake'},
-      )
       this._sound.playUtilityButtonClickSound()
+      this._api.emitGameCommand('extend_gravity_brake', {})
       return
     }
   }
@@ -2445,17 +2371,11 @@ export class GamedisplayComponent implements OnInit {
       return
     }
     if(!this._api.frameData.ship.mining_ore) {
-      this._api.post(
-        "/api/rooms/command",
-        {command:'start_ore_mining'},
-      )
+      this._api.emitGameCommand('start_ore_mining', {})
       this._sound.playUtilityButtonClickSound()
       return
     } else {
-      this._api.post(
-        "/api/rooms/command",
-        {command:'stop_ore_mining'},
-      )
+      this._api.emitGameCommand('stop_ore_mining', {})
       this._sound.playUtilityButtonClickSound()
       return
     }

@@ -92,7 +92,7 @@ export class ApiService {
       (this.frameData && this.frameData.ship.alive)
       || this.allowedDeadCommands.indexOf(command) != -1
     ) {
-      this.socket.emit(this.EVENT_GAME_COMMAND, data)
+      this.socket.emit(this.EVENT_GAME_COMMAND, command, data)
     } else {
       console.warn("not emitting game command, no frame data or ship is dead.")
     }
