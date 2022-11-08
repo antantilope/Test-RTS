@@ -819,7 +819,7 @@ export class QuoteService {
     {
       lines: [
         "[There are] more stars",
-        "than word sand sounds",
+        "than words and sounds",
         "ever uttered by all humans",
         "who have ever lived.",
       ],
