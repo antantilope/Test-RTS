@@ -1145,7 +1145,7 @@ export class DrawingService {
         ctx.stroke()
       }
       // White flash
-      const whiteFlashTTLMS = ex.flame_ms / 2
+      const whiteFlashTTLMS = Math.min(500, ex.flame_ms / 2)
       if(ex.elapsed_ms < whiteFlashTTLMS) {
         const whiteFlashRadiusPx = ex.max_radius_meters * 45 * ppm / zoom
         const whiteFlashPercentComplete = ex.elapsed_ms / whiteFlashTTLMS
