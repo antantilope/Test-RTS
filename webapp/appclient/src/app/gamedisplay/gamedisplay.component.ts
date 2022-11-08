@@ -26,6 +26,7 @@ import {
   FEATURE_STATION,
   MAGNET_MINE_SLUG,
   EMP_SLUG,
+  HUNTER_DRONE_SLUG,
 } from '../constants'
 
 const randomInt = function (min: number, max: number): number  {
@@ -125,6 +126,7 @@ export class GamedisplayComponent implements OnInit {
     torpedoMenuBtn?: BoxCoords,
     torpedoMenuSelEMPBtn?: BoxCoords,
     torpedoMenuSelMagnetMineBtn?: BoxCoords,
+    torpedoMenuSelHunterDroneBtn?: BoxCoords,
     torpedoUpArrowBtn?: BoxCoords,
     torpedoDownArrowBtn?: BoxCoords,
     torpedoFireBtn?: BoxCoords,
@@ -568,6 +570,8 @@ export class GamedisplayComponent implements OnInit {
       return this._api.frameData.ship.magnet_mines_loaded
     } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
       return this._api.frameData.ship.emps_loaded
+    } else if (this.selectedPneumaticWeapon == HUNTER_DRONE_SLUG) {
+      return this._api.frameData.ship.hunter_drones_loaded
     }
     return 0
   }
@@ -684,7 +688,10 @@ export class GamedisplayComponent implements OnInit {
       }
       if(drawableObjects.ships[i].engineLit && Math.random() < 0.33) {
         this._camera.addFlameSmokeElement(
-          drawableObjects.ships[i].HBBottomCenterMapCoord,
+          this._camera.applyRandomOffset(
+            drawableObjects.ships[i].HBBottomCenterMapCoord,
+            1.5
+          ),
           randomInt(3, 5)
         )
       }
@@ -697,6 +704,24 @@ export class GamedisplayComponent implements OnInit {
       this.ctx,
       drawableObjects.magnetMineTargetingLines
     )
+    // Hunter Drones
+    for(let i in drawableObjects.hunterDrones) {
+      this._draw.drawHunterDrone(
+        this.ctx,
+        this._camera.gameDisplayCamera,
+        drawableObjects.hunterDrones[i],
+      )
+      if(drawableObjects.hunterDrones[i].percentArmed > 0.99) {
+        this._camera.addFlameSmokeElement(
+          this._camera.applyRandomOffset(
+            drawableObjects.hunterDrones[i].HBBottomCenterMapCoord,
+            1,
+          ),
+          randomInt(1, 3)
+        )
+      }
+    }
+
     // EMPs
     for(let i in drawableObjects.emps) {
       this._draw.drawEMP(this.ctx, drawableObjects.emps[i])
@@ -775,7 +800,9 @@ export class GamedisplayComponent implements OnInit {
       this.paintButtons()
     }
     const trcSizing = this.getTopRightButtonSizing()
-    this.paintTopRightButtons(trcSizing)
+    if(!this.isDebug) {
+      this.paintTopRightButtons(trcSizing)
+    }
     this._sound.runSoundFXEngine();
     window.requestAnimationFrame(this.paintDisplay.bind(this))
   }
@@ -1626,7 +1653,7 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("  EMP", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
-      // EMP Selector
+      // Magnet Mine Selector
       active = this.selectedPneumaticWeapon == MAGNET_MINE_SLUG
       x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenTorpedoC1Menu
@@ -1641,6 +1668,22 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("MAG-MINE", x1 + textLeftBuffer, y2)
+      col2YOffset += (sizing.yGap + sizing.yLen)
+      // Hunter Drone Selector
+      active = this.selectedPneumaticWeapon == HUNTER_DRONE_SLUG
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
+      x2 = x1 + sizing.xLenTorpedoC1Menu
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoMenuSelHunterDroneBtn")
+      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC1Menu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("H-DRONE", x1 + textLeftBuffer, y2)
       col2YOffset += (sizing.yGap + sizing.yLen)
 
       // Torpedo Column 3 buttons
@@ -1702,11 +1745,11 @@ export class GamedisplayComponent implements OnInit {
         this.btnCanvasLocations.torpedoMenuBtn.x2 + sizing.xGap,
         this.btnCanvasLocations.torpedoMenuBtn.y1)
       this.ctx.lineTo(
-        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.x1,
-        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.y1 - sizing.yGap / 2)
+        this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn.x1,
+        this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn.y1 - sizing.yGap / 2)
       this.ctx.lineTo(
-        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.x2 + sizing.xGap / 2,
-        this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn.y1 - sizing.yGap / 2)
+        this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn.y1 - sizing.yGap / 2)
       this.ctx.lineTo(
         this.btnCanvasLocations.torpedoUpArrowBtn.x1 - sizing.xGap / 2,
         this.btnCanvasLocations.torpedoUpArrowBtn.y1 - sizing.yGap / 2)
@@ -1737,6 +1780,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.torpedoUpArrowBtn
       delete this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn
       delete this.btnCanvasLocations.torpedoMenuSelEMPBtn
+      delete this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn
     }
     col1YOffset += (sizing.yGap + sizing.yLen)
 
@@ -1987,7 +2031,10 @@ export class GamedisplayComponent implements OnInit {
       this.selectedPneumaticWeapon = EMP_SLUG
     }else if(btnName == "torpedoMenuSelMagnetMineBtn") {
       this.selectedPneumaticWeapon = MAGNET_MINE_SLUG
-    }else if(btnName == "torpedoUpArrowBtn") {
+    } else if (btnName == "torpedoMenuSelHunterDroneBtn") {
+      this.selectedPneumaticWeapon = HUNTER_DRONE_SLUG
+    }
+    else if(btnName == "torpedoUpArrowBtn") {
       this.btnClickIncreasePneumaticPressure()
     }else if(btnName == "torpedoDownArrowBtn") {
       this.btnClickDecreasePneumaticPressure()
@@ -2344,6 +2391,11 @@ export class GamedisplayComponent implements OnInit {
       this._api.post(
         "/api/rooms/command",
         {command:'launch_emp', launch_velocity: this.lauchVelocity},
+      )
+    } else if (this.selectedPneumaticWeapon == HUNTER_DRONE_SLUG) {
+      this._api.post(
+        "/api/rooms/command",
+        {command:'launch_hunter_drone', launch_velocity: this.lauchVelocity},
       )
     } else {
       console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)

@@ -12,9 +12,16 @@ export const LOW_POWER_THRESHOLD = 45000
 export const MAGNET_MINE_SLUG = "magnet_mine"
 export const MAGNET_MINE_SIDE_LENGTH_METERS = 3.5
 
+export const EMP_SLUG = "emp"
 export const EMP_RADIUS_METERS = 1
 
-export const EMP_SLUG = "emp"
+export const HUNTER_DRONE_SLUG = "hunter_drone"
+export const HUNTER_DRONE_LENGTH_METERS_X = 4
+export const HUNTER_DRONE_LENGTH_METERS_Y = 2.95
+export const HUNTER_DRONE_MIN_BOUNDING_BOX_LENGTH_METERS = Math.max(
+    HUNTER_DRONE_LENGTH_METERS_X,
+    HUNTER_DRONE_LENGTH_METERS_Y,
+)
 
 // Timer Slugs
 export const TIMER_SLUG_SCANNER_STARTUP = "scanner_startup"

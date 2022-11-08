@@ -328,6 +328,38 @@ class TestUtils(TestCase):
         ))) == 0
 
 
+    def test_calculate_delta_degrees(self):
+        # from zero, to a larger angle
+        assert utils2d.calculate_delta_degrees(0, 1) == 1
+        assert utils2d.calculate_delta_degrees(0, 20) == 20
+        assert utils2d.calculate_delta_degrees(0, 60) == 60
+        assert utils2d.calculate_delta_degrees(0, 120) == 120
+        assert utils2d.calculate_delta_degrees(0, 170) == 170
+        assert abs(utils2d.calculate_delta_degrees(0, 180)) == 180
+        assert utils2d.calculate_delta_degrees(0, 190) == -170
+        assert utils2d.calculate_delta_degrees(0, 225) == -135
+        assert utils2d.calculate_delta_degrees(0, 270) == -90
+        assert utils2d.calculate_delta_degrees(0, 315) == -45
+        assert utils2d.calculate_delta_degrees(0, 345) == -15
+        assert utils2d.calculate_delta_degrees(0, 359) == -1
+        # from non-zero to a larger number
+        assert utils2d.calculate_delta_degrees(45, 50) == 5
+        assert utils2d.calculate_delta_degrees(45, 90) == 45
+        assert utils2d.calculate_delta_degrees(45, 180) == 135
+        assert abs(utils2d.calculate_delta_degrees(45, 225)) == 180
+        assert utils2d.calculate_delta_degrees(45, 270) == -135
+        assert utils2d.calculate_delta_degrees(45, 315) == -90
+        assert utils2d.calculate_delta_degrees(45, 359) == -46
+        # from non-zero number to a smaller number
+        assert utils2d.calculate_delta_degrees(45, 40) == -5
+        assert utils2d.calculate_delta_degrees(45, 0) == -45
+        assert utils2d.calculate_delta_degrees(270, 180) == -90
+        assert utils2d.calculate_delta_degrees(270, 135) == -135
+        assert abs(utils2d.calculate_delta_degrees(270, 90)) == 180
+        assert utils2d.calculate_delta_degrees(270, 45) == 135
+        assert utils2d.calculate_delta_degrees(270, 0) == 90
+
+
     # RESULTANT FORCE # # #
     def test_calc_resultant_force_due_north(self):
         meters, angle = utils2d.calculate_resultant_vector(0, 12)

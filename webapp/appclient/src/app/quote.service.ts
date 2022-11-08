@@ -837,7 +837,7 @@ export class QuoteService {
     {
       lines: [
         "We have one collective hope:",
-        "the Earth. And yet, uncounted,",
+        "the Earth. And yet, uncounted",
         "people remain hopeless.",
       ],
       author: "Neil deGrasse Tyson",

@@ -36,6 +36,12 @@ def degrees_to_radians(degrees: int) -> float:
 def heading_to_delta_heading_from_zero(heading: int) -> int:
     return heading if heading <= 180 else (heading - 360)
 
+def calculate_delta_degrees(start_angle: int, end_angle: int) -> int:
+    delta = end_angle - start_angle
+    if delta > 0:
+        return delta if delta < 180 else delta - 360
+    else:
+        return delta if delta > -180 else 360 - abs(delta)
 
 def invert_heading(heading: int):
     if not (0 <= heading <= 360):
@@ -46,7 +52,6 @@ def invert_heading(heading: int):
 def signed_angle_to_unsigned_angle(degrees: int) -> int:
     if degrees >= 0:
         return degrees % 360
-
     pos_angle = abs(degrees)
     if pos_angle <= 360:
         return 360 - pos_angle

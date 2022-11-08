@@ -26,6 +26,7 @@ import {
   DrawableMagnetMine,
   DrawableMagnetMineTargetingLine,
   DrawableEMP,
+  DrawableHunterDrone,
   VisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
@@ -38,6 +39,8 @@ import {
   LOW_POWER_THRESHOLD,
   SHIP_LENGTH_METERS_X,
   SHIP_LENGTH_METERS_Y,
+  HUNTER_DRONE_LENGTH_METERS_X,
+  HUNTER_DRONE_LENGTH_METERS_Y
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
@@ -748,10 +751,10 @@ export class DrawingService {
         victoryTextFontSize: 65,
         victoryTextYTopOffset: Math.floor(canvasH / 4),
         gameOverFontSize: 56,
-        gameOverYTopOffset: Math.floor(canvasH / 6),
+        gameOverYTopOffset: Math.floor(canvasH / 8),
         deathQuoteFontSize: 35,
         deathQuoteYTopOffset: 50,
-        deathQuoteYInterval: 50,
+        deathQuoteYInterval: 40,
         deathQuoteXOffset: 50,
         abbreviateDockedAt: false,
         dockedAtFontSize: 32,
@@ -763,10 +766,10 @@ export class DrawingService {
         victoryTextFontSize: 45,
         victoryTextYTopOffset: Math.floor(canvasH / 4),
         gameOverFontSize: 40,
-        gameOverYTopOffset: Math.floor(canvasH / 5),
+        gameOverYTopOffset: Math.floor(canvasH / 7),
         deathQuoteFontSize: 18,
         deathQuoteYTopOffset: 50,
-        deathQuoteYInterval: 23,
+        deathQuoteYInterval: 20,
         deathQuoteXOffset: 10,
         abbreviateDockedAt: true,
         docketAtYTopOffset: 20,
@@ -802,7 +805,7 @@ export class DrawingService {
       if(this._api.frameData.game_frame % 50 > 25) {
         ctx.fillText("GAME OVER", sizing.deathQuoteXOffset, deathTextYOffset)
       }
-      deathTextYOffset += (deathQuoteInterval * 3)
+      deathTextYOffset += (deathQuoteInterval * 2)
       ctx.beginPath()
       ctx.fillStyle = '#b8b8b8' // medium light gray
       ctx.textAlign = 'left'
@@ -1140,6 +1143,21 @@ export class DrawingService {
         ctx.moveTo(linep1.x, linep1.y)
         ctx.lineTo(linep2.x, linep2.y)
         ctx.stroke()
+      }
+      // White flash
+      const whiteFlashTTLMS = ex.flame_ms / 2
+      if(ex.elapsed_ms < whiteFlashTTLMS) {
+        const whiteFlashRadiusPx = ex.max_radius_meters * 45 * ppm / zoom
+        const whiteFlashPercentComplete = ex.elapsed_ms / whiteFlashTTLMS
+        const gradient = ctx.createRadialGradient(
+          canvasCoord.x, canvasCoord.y, 0,
+          canvasCoord.x, canvasCoord.y, whiteFlashRadiusPx,
+        )
+        gradient.addColorStop(0, `rgb(255, 255, 255, ${1 - whiteFlashPercentComplete})`)
+        gradient.addColorStop(1, "rgb(255, 255, 255, 0)");
+        ctx.fillStyle = gradient
+        ctx.arc(canvasCoord.x, canvasCoord.y, whiteFlashRadiusPx, 0,  TWO_PI)
+        ctx.fill()
       }
     }
     else if(ex.elapsed_ms < (ex.flame_ms + ex.fade_ms)) {
@@ -1584,6 +1602,138 @@ export class DrawingService {
     }
   }
 
+  public drawHunterDrone(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    drone: DrawableHunterDrone,
+  ){
+    const currentZoom = camera.getZoom()
+    if (drone.isDot) {
+      ctx.beginPath()
+      ctx.fillStyle = "rgb(0, 255, 0, 0.9)"
+      ctx.arc(
+        drone.canvasCoordCenter.x,
+        drone.canvasCoordCenter.y,
+        camera.minSizeForDotPx - 1,
+        0,
+        TWO_PI,
+      )
+      ctx.fill()
+    }
+    const droneLenXPX = HUNTER_DRONE_LENGTH_METERS_X * this._api.frameData.map_config.units_per_meter / currentZoom
+    const droneLenYPX = HUNTER_DRONE_LENGTH_METERS_Y * this._api.frameData.map_config.units_per_meter / currentZoom
+    const droneX1 = (drone.canvasCoordCenter.x) - (droneLenXPX / 2)
+    const droneY1 = (drone.canvasCoordCenter.y) - (droneLenYPX / 2)
+    this.drawRotatedImg(
+      ctx,
+      this._asset.hunterDroneAsset,
+      drone.visualHeading,
+      droneX1,
+      droneY1,
+      droneLenXPX,
+      droneLenYPX,
+    )
+    // Engine flame
+    if(drone.percentArmed > 0.9) {
+      let radiusPx = 1.25 * this._api.frameData.map_config.units_per_meter / currentZoom
+      ctx.beginPath()
+      ctx.fillStyle = "#ff0000"
+      ctx.arc(
+        drone.HBBottomCenterCanvasCoord.x,
+        drone.HBBottomCenterCanvasCoord.y,
+        radiusPx * getRandomFloat(0.9, 1.1),
+        0, TWO_PI,
+      )
+      ctx.fill()
+      // inner engine Flame
+      radiusPx = 0.5 * this._api.frameData.map_config.units_per_meter / currentZoom
+      let maxInnerShake = radiusPx * 0.35
+      ctx.beginPath()
+      ctx.fillStyle = `rgb(255, 160, 0, ${getRandomFloat(0.2, 0.5)})`
+      ctx.arc(
+        drone.HBBottomCenterCanvasCoord.x + getRandomFloat(-maxInnerShake, maxInnerShake),
+        drone.HBBottomCenterCanvasCoord.y + getRandomFloat(-maxInnerShake, maxInnerShake),
+        radiusPx * getRandomFloat(0.5, 1.25),
+        0, TWO_PI,
+      )
+      ctx.fill()
+    }
+
+    ctx.strokeStyle = drone.isFriendly? "rgb(200, 200, 200, 0.85)": "rgb(255, 0, 0, 0.85)"
+    ctx.lineWidth = 1.75 + (1.5 * drone.percentArmed)
+    if(drone.percentArmed > 0.97) {
+      ctx.beginPath()
+      ctx.rect(
+        drone.canvasBoundingBox.x1,
+        drone.canvasBoundingBox.y1,
+        drone.canvasBoundingBox.x2 - drone.canvasBoundingBox.x1,
+        drone.canvasBoundingBox.y2 - drone.canvasBoundingBox.y1,
+      )
+      ctx.stroke()
+    } else {
+      // Draw arming animation with bounding box.
+      const topLen = drone.canvasBoundingBox.x2 - drone.canvasBoundingBox.x1
+      const sideLen = drone.canvasBoundingBox.y2 - drone.canvasBoundingBox.y1
+      // Top Line (left to right)
+      if(drone.percentArmed >= 0.25) {
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1)
+        ctx.stroke()
+      } else {
+        let percSide = drone.percentArmed / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x1 + (topLen * percSide), drone.canvasBoundingBox.y1)
+        ctx.stroke()
+      }
+      // right side line (top to bottom)
+      if(drone.percentArmed >= 0.50) {
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (drone.percentArmed >= 0.25 && drone.percentArmed < 0.5) {
+        let percSide = (drone.percentArmed - 0.25) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y1 + (sideLen * percSide))
+        ctx.stroke()
+      }
+      // bottom line (right to left)
+      if(drone.percentArmed >= 0.75) {
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y2)
+        ctx.lineTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y2)
+        ctx.stroke()
+      } else if (drone.percentArmed >= 0.50 && drone.percentArmed < 0.75) {
+        let percSide = (drone.percentArmed - 0.5) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x2, drone.canvasBoundingBox.y2)
+        ctx.lineTo(drone.canvasBoundingBox.x2 - (topLen * percSide), drone.canvasBoundingBox.y2)
+        ctx.stroke()
+      }
+      // left side (bottom to top)
+      if(drone.percentArmed > 0.75 && drone.percentArmed <= 0.97) {
+        let percSide = (drone.percentArmed - 0.75) / 0.25
+        ctx.beginPath()
+        ctx.moveTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y2)
+        ctx.lineTo(drone.canvasBoundingBox.x1, drone.canvasBoundingBox.y2 - (sideLen * percSide))
+        ctx.stroke()
+      }
+    }
+    const bbXOffset = drone.canvasBoundingBox.x1
+    const bbYOffsetInterval = 20
+    let bbYOffset = drone.canvasBoundingBox.y2 + bbYOffsetInterval
+    ctx.beginPath()
+    ctx.font = 'bold 18px Courier New'
+    ctx.fillStyle = drone.isFriendly? "rgb(200, 200, 200, 0.85)": "rgb(255, 0, 0, 0.85)"
+    ctx.textAlign = 'left'
+    ctx.fillText("HTR.Drone", bbXOffset, bbYOffset)
+    bbYOffset += bbYOffsetInterval
+    ctx.fillText(`${drone.distance} M`, bbXOffset, bbYOffset)
+  }
+
   public drawMagnetMine(
     ctx: CanvasRenderingContext2D,
     mine: DrawableMagnetMine,
@@ -1663,7 +1813,7 @@ export class DrawingService {
     ctx.font = 'bold 18px Courier New'
     ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
     ctx.textAlign = 'left'
-    ctx.fillText("🤖 Mine", bbXOffset, bbYOffset)
+    ctx.fillText("MAG.Mine", bbXOffset, bbYOffset)
     bbYOffset += bbYOffsetInterval
     ctx.fillText(`${mine.distance} M`, bbXOffset, bbYOffset)
 

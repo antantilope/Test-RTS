@@ -46,7 +46,7 @@
                     </tr>
                     <tr>
                         <td>
-                            Magnet Mines
+                            Magnet Mine
                         </td>
                         <td class="td-armory-table-value">
                             {{ _api.frameData.ship.magnet_mines_loaded }}
@@ -59,7 +59,20 @@
                     </tr>
                     <tr>
                         <td>
-                            EMPs
+                            Hunter Drone
+                        </td>
+                        <td class="td-armory-table-value">
+                            {{ _api.frameData.ship.hunter_drones_loaded }}
+                        </td>
+                        <td>
+                            <button class="buy-weapon-btn" (click)="btnClickBuyHunterDrone()">
+                                Buy {{ _api.frameData.special_weapon_costs.hunter_drone }}🪙
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            EMP
                         </td>
                         <td class="td-armory-table-value">
                             {{ _api.frameData.ship.emps_loaded }}

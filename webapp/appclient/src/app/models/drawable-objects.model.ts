@@ -62,6 +62,19 @@ export class DrawableEMP {
     distance: number
 }
 
+export class DrawableHunterDrone {
+    hunterDroneId: string
+    isDot: boolean
+    canvasCoordCenter: PointCoord
+    canvasBoundingBox: BoxCoords
+    percentArmed: number
+    distance: number
+    visualHeading: number
+    isFriendly: boolean
+    HBBottomCenterCanvasCoord: PointCoord
+    HBBottomCenterMapCoord: PointCoord
+}
+
 export class DrawableMagnetMineTargetingLine {
     mineCanvasCoord: PointCoord
     targetCanvasCoord: PointCoord
@@ -87,6 +100,7 @@ export class DrawableCanvasItems {
     magnetMines: DrawableMagnetMine[]
     magnetMineTargetingLines: DrawableMagnetMineTargetingLine[]
     emps: DrawableEMP[]
+    hunterDrones: DrawableHunterDrone[]
     ebeamRays: EBeamRayDetails[]
     mapWall?: BoxCoords
     visionCircles: VisionCircle[]

@@ -160,6 +160,18 @@ export class ScannerDataMagnetMineElement {
     exploded: boolean
     percent_armed: number
 }
+export class ScannerDataHunterDroneElement {
+    id: string
+    team_id: string
+    coord_x: number
+    coord_y: number
+    relative_heading: number
+    distance: number
+    exploded: boolean
+    percent_armed: number
+    visual_heading: number
+    visual_map_bottom_center_coord: number[]
+}
 
 export class ScannerDataEMPElement {
     id: string
@@ -236,6 +248,7 @@ export class Ship {
     scanner_ship_data: ScannerDataShipElement[]
     scanner_magnet_mine_data: ScannerDataMagnetMineElement[]
     scanner_emp_data: ScannerDataEMPElement[]
+    scanner_hunter_drone_data: ScannerDataHunterDroneElement[]
 
     anti_radar_coating_level: number
 
@@ -256,6 +269,7 @@ export class Ship {
     last_tube_fire_frame: number
     magnet_mines_loaded: number
     emps_loaded: number
+    hunter_drones_loaded: number
 
     docked_at_station: string
     gravity_brake_position: number
@@ -289,6 +303,7 @@ export class Ship {
 export class SpecialWeaponsCost {
     emp: number
     magnet_mine: number
+    hunter_drone: number
 }
 
 

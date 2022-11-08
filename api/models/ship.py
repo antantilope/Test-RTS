@@ -109,6 +109,8 @@ class ShipCommands:
     LAUNCH_MAGNET_MINE = "launch_magnet_mine"
     BUY_EMP = "buy_emp"
     LAUNCH_EMP = "launch_emp"
+    BUY_HUNTER_DRONE = "buy_hunter_drone"
+    LAUNCH_HUNTER_DRONE = "launch_hunter_drone"
 
 class ShipStateKey:
     MASS = 'mass'
@@ -168,6 +170,7 @@ class ScannedMagnetMineElement(TypedDict):
     exploded: bool
     relative_heading: int
     percent_armed: float
+    visual_map_bottom_center_coord: Tuple[int]
 
 class ScannedEMPElement(TypedDict):
     id: str
@@ -177,6 +180,17 @@ class ScannedEMPElement(TypedDict):
     exploded: bool
     relative_heading: int
     percent_armed: float
+
+class ScannedHunterDroneElement(TypedDict):
+    id: str
+    coord_x: int
+    coord_y: int
+    distance: int
+    exploded: bool
+    visual_heading: int
+    relative_heading: int
+    percent_armed: float
+    team_id: str
 
 class TimerItem(TypedDict):
     name: str
@@ -307,6 +321,7 @@ class Ship(BaseModel):
         self.scanner_ship_data: Dict[str, ScannedShipElement] = OrderedDict()
         self.scanner_magnet_mine_data: Dict[str, ScannedMagnetMineElement] = OrderedDict()
         self.scanner_emp_data: Dict[str, ScannedEMPElement] = OrderedDict()
+        self.scanner_hunter_drone_data: Dict[str, ScannedHunterDroneElement] = OrderedDict()
         # Temperature of the ship as it appears on an other ships' IR mode scanner
         self.scanner_thermal_signature = None
         self.anti_radar_coating_level = None
@@ -338,10 +353,14 @@ class Ship(BaseModel):
         self._special_weapons_min_launch_velocity = None
         self._special_weapons_max_launch_velocity = None
         self._special_weapons_launch_velocity = None
-        self.magnet_mines_loaded = 5
-        self.emps_loaded = 5
+        self.magnet_mines_loaded = 4
+        self.emps_loaded = 3
+        self.hunter_drones_loaded = 2
         self.magnet_mine_firing = False
         self.emp_firing = False
+        self.hunter_drone_firing = False
+        self._hunter_drone_max_target_acquisition_distance_meters = None
+        self._hunter_drone_tracking_acceleration_ms = None
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -465,8 +484,13 @@ class Ship(BaseModel):
         return self.gravity_brake_position == self.gravity_brake_deployed_position
 
     @property
-    def special_weapons_loaded(self):
-        return self.magnet_mines_loaded + self.emps_loaded
+    def special_weapons_loaded(self) -> int:
+        # Total tube weapons aboard.
+        return (
+            self.magnet_mines_loaded
+            + self.emps_loaded
+            + self.hunter_drones_loaded
+        )
 
     def to_dict(self) -> Dict:
         """ Get JSON serializable representation of the ship.
@@ -522,6 +546,7 @@ class Ship(BaseModel):
             'scanner_ship_data': list(self.scanner_ship_data.values()),
             'scanner_magnet_mine_data': list(self.scanner_magnet_mine_data.values()),
             'scanner_emp_data': list(self.scanner_emp_data.values()),
+            'scanner_hunter_drone_data': list(self.scanner_hunter_drone_data.values()),
             'scanner_thermal_signature': self.scanner_thermal_signature,
             'scanner_lock_traversal_slack': self.scanner_lock_traversal_slack,
             'scanner_locking_max_traversal_degrees': self.scanner_locking_max_traversal_degrees,
@@ -546,6 +571,7 @@ class Ship(BaseModel):
             'special_weapons_loaded': self.special_weapons_loaded,
             'magnet_mines_loaded': self.magnet_mines_loaded,
             'emps_loaded': self.emps_loaded,
+            'hunter_drones_loaded': self.hunter_drones_loaded,
 
             'docked_at_station': self.docked_at_station,
             'scouted_station_gravity_brake_catches_last_frame': self.scouted_station_gravity_brake_catches_last_frame,
@@ -707,6 +733,10 @@ class Ship(BaseModel):
                 + instance._special_weapons_max_launch_velocity
             ) / 2
         )
+        instance._hunter_drone_max_target_acquisition_distance_meters = (
+            constants.HUNTER_DRONE_MAX_TARGET_ACQUISITION_DISTANCE_METERS)
+        instance._hunter_drone_tracking_acceleration_ms = (
+            constants.HUNTER_DRONE_TRACKING_ACCELERATION_MS)
 
         instance.cargo_ore_mass_capacity_kg = constants.ORE_CAPACITY_KG
         instance.mining_ore_power_usage_per_second = constants.MINING_ORE_POWER_USAGE_PER_SECOND
@@ -1473,6 +1503,10 @@ class Ship(BaseModel):
             self.cmd_buy_emp()
         elif command == ShipCommands.LAUNCH_EMP:
             self.cmd_launch_emp(args[0])
+        elif command == ShipCommands.BUY_HUNTER_DRONE:
+            self.cmd_buy_hunter_drone()
+        elif command == ShipCommands.LAUNCH_HUNTER_DRONE:
+            self.cmd_launch_hunter_drone(args[0])
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1855,4 +1889,30 @@ class Ship(BaseModel):
         if self.emps_loaded > 0 and not self.emp_firing:
             self.emps_loaded -= 1
             self.emp_firing = True
+            self._special_weapons_launch_velocity = _velocity
+
+    def cmd_buy_hunter_drone(self):
+        if self.special_weapons_loaded >= self.special_weapons_tubes_count:
+            return
+        if not self.docked_at_station:
+            return
+        ore_cost = self._special_weapon_costs[constants.HUNTER_DRONE_SLUG]
+        try:
+            self.withdraw_ore(ore_cost)
+        except InsufficientOreError:
+            return
+        self.hunter_drones_loaded += 1
+
+    def cmd_launch_hunter_drone(self, launch_velocity: int):
+        _velocity = max(
+            launch_velocity,
+            self._special_weapons_min_launch_velocity,
+        )
+        _velocity = min(
+            _velocity,
+            self._special_weapons_max_launch_velocity,
+        )
+        if self.hunter_drones_loaded > 0 and not self.hunter_drone_firing:
+            self.hunter_drones_loaded -= 1
+            self.hunter_drone_firing = True
             self._special_weapons_launch_velocity = _velocity

@@ -73,6 +73,8 @@ class TestMagnetMine(TestCase):
         self.game._ships[self.player_2_ship_id].magnet_mines_loaded = 0
         self.game._ships[self.player_1_ship_id].emps_loaded = 0
         self.game._ships[self.player_2_ship_id].emps_loaded = 0
+        self.game._ships[self.player_1_ship_id].hunter_drones_loaded = 0
+        self.game._ships[self.player_2_ship_id].hunter_drones_loaded = 0
 
     def test_ship_can_buy_magnet_mine_if_tube_available(self):
         assert self.game._ships[self.player_1_ship_id].magnet_mines_loaded == 0
