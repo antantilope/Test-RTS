@@ -711,13 +711,15 @@ export class GamedisplayComponent implements OnInit {
         this._camera.gameDisplayCamera,
         drawableObjects.hunterDrones[i],
       )
-      this._camera.addFlameSmokeElement(
-        this._camera.applyRandomOffset(
-          drawableObjects.hunterDrones[i].HBBottomCenterMapCoord,
-          1,
-        ),
-        randomInt(1, 3)
-      )
+      if(drawableObjects.hunterDrones[i].percentArmed > 0.99) {
+        this._camera.addFlameSmokeElement(
+          this._camera.applyRandomOffset(
+            drawableObjects.hunterDrones[i].HBBottomCenterMapCoord,
+            1,
+          ),
+          randomInt(1, 3)
+        )
+      }
     }
 
     // EMPs
