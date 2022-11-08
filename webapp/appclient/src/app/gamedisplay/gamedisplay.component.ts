@@ -688,7 +688,10 @@ export class GamedisplayComponent implements OnInit {
       }
       if(drawableObjects.ships[i].engineLit && Math.random() < 0.33) {
         this._camera.addFlameSmokeElement(
-          drawableObjects.ships[i].HBBottomCenterMapCoord,
+          this._camera.applyRandomOffset(
+            drawableObjects.ships[i].HBBottomCenterMapCoord,
+            1.5
+          ),
           randomInt(3, 5)
         )
       }
@@ -707,6 +710,13 @@ export class GamedisplayComponent implements OnInit {
         this.ctx,
         this._camera.gameDisplayCamera,
         drawableObjects.hunterDrones[i],
+      )
+      this._camera.addFlameSmokeElement(
+        this._camera.applyRandomOffset(
+          drawableObjects.hunterDrones[i].HBBottomCenterMapCoord,
+          1,
+        ),
+        randomInt(1, 3)
       )
     }
 

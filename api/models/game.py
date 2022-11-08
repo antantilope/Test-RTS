@@ -856,6 +856,7 @@ class Game(BaseModel):
                     'relative_heading': round(exact_heading),
                     'percent_armed': self._hunter_drones[hd_id].percent_armed,
                     'team_id': self._hunter_drones[hd_id].team_id,
+                    'visual_map_bottom_center_coord': self._hunter_drones[hd_id].map_bottom_center_coord,
                 }
 
         # Check if scanner target has gone out of range

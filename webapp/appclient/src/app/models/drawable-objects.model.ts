@@ -71,6 +71,8 @@ export class DrawableHunterDrone {
     distance: number
     visualHeading: number
     isFriendly: boolean
+    HBBottomCenterCanvasCoord: PointCoord
+    HBBottomCenterMapCoord: PointCoord
 }
 
 export class DrawableMagnetMineTargetingLine {

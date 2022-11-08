@@ -170,6 +170,7 @@ class ScannedMagnetMineElement(TypedDict):
     exploded: bool
     relative_heading: int
     percent_armed: float
+    visual_map_bottom_center_coord: Tuple[int]
 
 class ScannedEMPElement(TypedDict):
     id: str

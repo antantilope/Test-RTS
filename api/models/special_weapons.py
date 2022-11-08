@@ -138,16 +138,16 @@ class HunterDrone(BaseModel):
         # Relative rotated hitbox coordinates
         # these values are rotated to account for drone heading.
         self.rel_rot_coord_hitbox_nose = (
-            self.rel_fixed_coord_hitbox_nose[0] + self.coord_x,
-            self.rel_fixed_coord_hitbox_nose[1] + self.coord_y,
+            self.rel_fixed_coord_hitbox_nose[0],
+            self.rel_fixed_coord_hitbox_nose[1],
         )
         self.rel_rot_coord_hitbox_bottom_left = (
-            self.rel_fixed_coord_hitbox_bottom_left[0] + self.coord_x,
-            self.rel_fixed_coord_hitbox_bottom_left[1] + self.coord_y,
+            self.rel_fixed_coord_hitbox_bottom_left[0],
+            self.rel_fixed_coord_hitbox_bottom_left[1],
         )
         self.rel_rot_coord_hitbox_bottom_right = (
-            self.rel_fixed_coord_hitbox_bottom_right[0] + self.coord_x,
-            self.rel_fixed_coord_hitbox_bottom_right[1] + self.coord_y,
+            self.rel_fixed_coord_hitbox_bottom_right[0],
+            self.rel_fixed_coord_hitbox_bottom_right[1],
         )
 
         self.set_heading(initial_heading)
@@ -162,6 +162,19 @@ class HunterDrone(BaseModel):
     @property
     def coords(self) -> Tuple[int]:
         return (self.coord_x, self.coord_y,)
+
+    @property
+    def map_bottom_center_coord(self) -> Tuple[int]:
+        return (
+            (
+                self.rel_rot_coord_hitbox_bottom_left[0] + self.coord_x
+                + self.rel_rot_coord_hitbox_bottom_right[0] + self.coord_x
+            ) / 2,
+            (
+                self.rel_rot_coord_hitbox_bottom_left[1] + self.coord_y
+                + self.rel_rot_coord_hitbox_bottom_right[1] + self.coord_y
+            ) / 2,
+        )
 
     def set_heading(self, heading: int):
         self.heading = heading

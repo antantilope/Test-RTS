@@ -1618,6 +1618,30 @@ export class DrawingService {
       droneLenXPX,
       droneLenYPX,
     )
+    // Engine flame
+    let radiusPx = 1.25 * this._api.frameData.map_config.units_per_meter / currentZoom
+    ctx.beginPath()
+    ctx.fillStyle = "#ff0000"
+    ctx.arc(
+      drone.HBBottomCenterCanvasCoord.x,
+      drone.HBBottomCenterCanvasCoord.y,
+      radiusPx * getRandomFloat(0.9, 1.1),
+      0, TWO_PI,
+    )
+    ctx.fill()
+    // inner engine Flame
+    radiusPx = 0.5 * this._api.frameData.map_config.units_per_meter / currentZoom
+    let maxInnerShake = radiusPx * 0.35
+    ctx.beginPath()
+    ctx.fillStyle = `rgb(255, 160, 0, ${getRandomFloat(0.2, 0.5)})`
+    ctx.arc(
+      drone.HBBottomCenterCanvasCoord.x + getRandomFloat(-maxInnerShake, maxInnerShake),
+      drone.HBBottomCenterCanvasCoord.x + getRandomFloat(-maxInnerShake, maxInnerShake),
+      radiusPx * getRandomFloat(0.5, 1.25),
+      0, TWO_PI,
+    )
+    ctx.fill()
+
     ctx.strokeStyle = drone.isFriendly? "rgb(200, 200, 200, 0.85)": "rgb(255, 0, 0, 0.85)"
     ctx.lineWidth = 1.75 + (1.5 * drone.percentArmed)
     if(drone.percentArmed > 0.97) {

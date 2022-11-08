@@ -541,6 +541,13 @@ export class Camera {
           canvasCoordCenter,
           HUNTER_DRONE_MIN_BOUNDING_BOX_LENGTH_METERS / 2 * mapConfig.units_per_meter / currentZoom + boundingBoxBuffer
         ),
+        HBBottomCenterCanvasCoord: this.mapCoordToCanvasCoord(
+          this.arrayToCoords(sde.visual_map_bottom_center_coord),
+          cameraPosition,
+        ),
+        HBBottomCenterMapCoord: this.arrayToCoords(
+          sde.visual_map_bottom_center_coord
+        ),
       })
     }
     // EMPs
@@ -936,7 +943,7 @@ export class CameraService {
       this.velocityTrailElements.push({
         createdAt: now,
         mapCoord: {x: this._api.frameData.ship.coord_x, y:this._api.frameData.ship.coord_y},
-        radiusMeters: this._api.frameData.ship.engine_lit ? 1.5 : 0.4,
+        radiusMeters: this._api.frameData.ship.engine_lit ? 1 : 0.4,
         grow: this._api.frameData.ship.engine_lit,
       })
     }
@@ -974,7 +981,7 @@ export class CameraService {
     )
   }
 
-  public boxesOverlap(box1: BoxCoords, box2: BoxCoords): boolean {
+  boxesOverlap(box1: BoxCoords, box2: BoxCoords): boolean {
     const completeXOverlap = (box1.x1 <= box2.x1) && (box1.x2 >= box2.x2)
     const completeYOverlap = (box1.y1 <= box2.y1) && (box1.y2 >= box2.y2)
     if(completeXOverlap && completeYOverlap) {
@@ -994,6 +1001,14 @@ export class CameraService {
       return true
     }
     return false
+  }
+
+  applyRandomOffset(mapCoord: PointCoord, maxOffsetMeters: number): PointCoord {
+    const mag = maxOffsetMeters * this._api.frameData.map_config.units_per_meter
+    return {
+      x: mapCoord.x + getRandomFloat(-1 * mag, mag),
+      y: mapCoord.y + getRandomFloat(-1 * mag, mag),
+    }
   }
 
 }

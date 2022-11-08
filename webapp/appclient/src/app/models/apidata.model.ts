@@ -170,6 +170,7 @@ export class ScannerDataHunterDroneElement {
     exploded: boolean
     percent_armed: number
     visual_heading: number
+    visual_map_bottom_center_coord: number[]
 }
 
 export class ScannerDataEMPElement {
