@@ -83,9 +83,9 @@ export class ApiService {
     return this._http.get(url).toPromise();
   }
 
-  public async post(url:string, data: any){
-    return this._http.post(url, data).toPromise();
-  }
+  // public async post(url:string, data: any){
+  //   return this._http.post(url, data).toPromise();
+  // }
 
   async emitGameCommand(command: string, data: any) {
     if(
