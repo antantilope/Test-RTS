@@ -751,10 +751,10 @@ export class DrawingService {
         victoryTextFontSize: 65,
         victoryTextYTopOffset: Math.floor(canvasH / 4),
         gameOverFontSize: 56,
-        gameOverYTopOffset: Math.floor(canvasH / 6),
+        gameOverYTopOffset: Math.floor(canvasH / 8),
         deathQuoteFontSize: 35,
         deathQuoteYTopOffset: 50,
-        deathQuoteYInterval: 50,
+        deathQuoteYInterval: 40,
         deathQuoteXOffset: 50,
         abbreviateDockedAt: false,
         dockedAtFontSize: 32,
@@ -766,10 +766,10 @@ export class DrawingService {
         victoryTextFontSize: 45,
         victoryTextYTopOffset: Math.floor(canvasH / 4),
         gameOverFontSize: 40,
-        gameOverYTopOffset: Math.floor(canvasH / 5),
+        gameOverYTopOffset: Math.floor(canvasH / 7),
         deathQuoteFontSize: 18,
         deathQuoteYTopOffset: 50,
-        deathQuoteYInterval: 23,
+        deathQuoteYInterval: 20,
         deathQuoteXOffset: 10,
         abbreviateDockedAt: true,
         docketAtYTopOffset: 20,
@@ -805,7 +805,7 @@ export class DrawingService {
       if(this._api.frameData.game_frame % 50 > 25) {
         ctx.fillText("GAME OVER", sizing.deathQuoteXOffset, deathTextYOffset)
       }
-      deathTextYOffset += (deathQuoteInterval * 3)
+      deathTextYOffset += (deathQuoteInterval * 2)
       ctx.beginPath()
       ctx.fillStyle = '#b8b8b8' // medium light gray
       ctx.textAlign = 'left'
@@ -1143,6 +1143,21 @@ export class DrawingService {
         ctx.moveTo(linep1.x, linep1.y)
         ctx.lineTo(linep2.x, linep2.y)
         ctx.stroke()
+      }
+      // White flash
+      const whiteFlashTTLMS = ex.flame_ms / 2
+      if(ex.elapsed_ms < whiteFlashTTLMS) {
+        const whiteFlashRadiusPx = ex.max_radius_meters * 45 * ppm / zoom
+        const whiteFlashPercentComplete = ex.elapsed_ms / whiteFlashTTLMS
+        const gradient = ctx.createRadialGradient(
+          canvasCoord.x, canvasCoord.y, 0,
+          canvasCoord.x, canvasCoord.y, whiteFlashRadiusPx,
+        )
+        gradient.addColorStop(0, `rgb(255, 255, 255, ${1 - whiteFlashPercentComplete})`)
+        gradient.addColorStop(1, "rgb(255, 255, 255, 0)");
+        ctx.fillStyle = gradient
+        ctx.arc(canvasCoord.x, canvasCoord.y, whiteFlashRadiusPx, 0,  TWO_PI)
+        ctx.fill()
       }
     }
     else if(ex.elapsed_ms < (ex.flame_ms + ex.fade_ms)) {
