@@ -30,9 +30,6 @@ const {
     startGameController,
     relaunchGameLoops,
 } = require("./controllers/start_game");
-const {
-    RunCommandController
-} = require("./controllers/run_command");
 const { liveGameDetailsController } = require("./controllers/live_game_details");
 const { userDetailsController } = require("./controllers/user_details");
 const { pingServerController } = require("./controllers/ping_server");
@@ -108,7 +105,9 @@ expressApp.use(helmet({
 
 /* Socket.IO connection handler.
 */
-io.on('connection', async (socket) => handleSocketConnection(io, socket));
+io.on('connection', async (socket) => {
+    handleSocketConnection(io, socket, expressApp)
+});
 
 
 /*
@@ -233,7 +232,6 @@ expressApp.post('/api/rooms/pick-ship', setJSONContentType, pickShipController);
 expressApp.post('/api/rooms/leave', setJSONContentType, leaveRoomController);
 expressApp.get('/api/rooms/details', setJSONContentType, roomDetailsController);
 expressApp.post('/api/rooms/start', setJSONContentType, startGameController);
-expressApp.post('/api/rooms/command', setJSONContentType, RunCommandController);
 expressApp.get('/api/maps/list', setJSONContentType, getMapsController);
 expressApp.get('/api/game/live-details', setJSONContentType, liveGameDetailsController);
 
