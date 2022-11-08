@@ -109,3 +109,11 @@ event name: "framedata"
 room_{ROOM_UUID}_{TEAM_UUID}
 
 
+event name "gc"
+description: events sent from client to server when user commands
+their ship to do something. Optimizing websocket data to be as small as possible.
+payload: data: {
+    cmd: string,
+    data: any,
+}
+

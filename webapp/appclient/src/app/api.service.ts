@@ -32,6 +32,9 @@ export class ApiService {
   private EVENT_PUBMSG = "pubmsg"
   public pubmsgEvent: Subject<AllChatMessage> = new Subject()
 
+  private EVENT_GAME_COMMAND = "gc"
+  private allowedDeadCommands = ["leave_game"]
+
   constructor(
     private _http: HttpClient,
   ) {
@@ -80,8 +83,19 @@ export class ApiService {
     return this._http.get(url).toPromise();
   }
 
-  public async post(url:string, data: any){
-    return this._http.post(url, data).toPromise();
+  // public async post(url:string, data: any){
+  //   return this._http.post(url, data).toPromise();
+  // }
+
+  async emitGameCommand(command: string, data: any) {
+    if(
+      (this.frameData && this.frameData.ship.alive)
+      || this.allowedDeadCommands.indexOf(command) != -1
+    ) {
+      this.socket.emit(this.EVENT_GAME_COMMAND, command, data)
+    } else {
+      console.warn("not emitting game command, no frame data or ship is dead.")
+    }
   }
 
   private async fetchLiveDetails() {

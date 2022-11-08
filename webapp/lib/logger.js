@@ -27,8 +27,8 @@ const logger = winston.createLogger({
     transports: [
         new winston.transports.File(
             {
-                filename: 'error.log',
-                level: 'error',
+                filename: 'errors_and_warnings.log',
+                level: 'warn',
                 format: fileFormat
             }
         ),

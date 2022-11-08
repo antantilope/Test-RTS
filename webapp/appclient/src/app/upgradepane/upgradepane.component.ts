@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core'
 import { ApiService } from '../api.service';
 
 @Component({
@@ -101,148 +101,148 @@ export class UpgradepaneComponent implements OnInit {
 
   // Core Upgrades
   public async btnStartAdvancedElectronicsUpgrade() {
-    const command = 'start_core_upgrade';
-    const slug = 'advanced_electronics';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_core_upgrade'
+    const slug = 'advanced_electronics'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelAdvancedElectronicsUpgrade() {
-    const command = 'cancel_core_upgrade';
-    const slug = 'advanced_electronics';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_core_upgrade'
+    const slug = 'advanced_electronics'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartTitaniumAllowHullUpgrade() {
-    const command = 'start_core_upgrade';
-    const slug = 'titanium_alloy_hull';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_core_upgrade'
+    const slug = 'titanium_alloy_hull'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelTitaniumAllowHullUpgrade() {
-    const command = 'cancel_core_upgrade';
-    const slug = 'titanium_alloy_hull';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_core_upgrade'
+    const slug = 'titanium_alloy_hull'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartLiquidNitrogenCoolingUpgrade() {
-    const command = 'start_core_upgrade';
-    const slug = 'liquid_nitrogen_cooling';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_core_upgrade'
+    const slug = 'liquid_nitrogen_cooling'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelLiquidNitrogenCoolingUpgrade() {
-    const command = 'cancel_core_upgrade';
-    const slug = 'liquid_nitrogen_cooling';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_core_upgrade'
+    const slug = 'liquid_nitrogen_cooling'
+    this._api.emitGameCommand(command, { slug })
   }
 
   // Ship Upgrades
   public async btnStartEngineNewtonsUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'engine_newtons';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'engine_newtons'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelEngineNewtonsUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'engine_newtons';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'engine_newtons'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartOreCapacityUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'ore_capacity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'ore_capacity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelOreCapacityUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'ore_capacity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'ore_capacity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartScannerRangeUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'scanner_range';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'scanner_range'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelScannerRangeUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'scanner_range';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'scanner_range'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartScannerLockTraversalUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'scanner_lock_traversal';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'scanner_lock_traversal'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelScannerLockTraversalUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'scanner_lock_traversal';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'scanner_lock_traversal'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartScannerRadarSensitivityUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'radar_sensitivity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'radar_sensitivity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelScannerRadarSensitivityUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'radar_sensitivity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'radar_sensitivity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartAntiRadarCoatingUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'anti_radar_coating';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'anti_radar_coating'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelAntiRadarCoatingUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'anti_radar_coating';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'anti_radar_coating'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartBatteryCapacityUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'battery_capacity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'battery_capacity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelBatteryCapacityUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'battery_capacity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'battery_capacity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartFuelCapacityUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'fuel_capacity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'fuel_capacity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelFuelCapacityUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'fuel_capacity';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'fuel_capacity'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnStartAPUEfficiencyUpgrade() {
-    const command = 'start_ship_upgrade';
-    const slug = 'apu_efficiency';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'start_ship_upgrade'
+    const slug = 'apu_efficiency'
+    this._api.emitGameCommand(command, { slug })
   }
 
   public async btnCancelAPUEfficiencyUpgrade() {
-    const command = 'cancel_ship_upgrade';
-    const slug = 'apu_efficiency';
-    await this._api.post("/api/rooms/command", {command, slug});
+    const command = 'cancel_ship_upgrade'
+    const slug = 'apu_efficiency'
+    this._api.emitGameCommand(command, { slug })
   }
 
 }

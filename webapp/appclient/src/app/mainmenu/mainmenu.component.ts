@@ -63,10 +63,7 @@ export class MainmenuComponent implements OnInit {
       return
     }
     this.waitingToExit = true
-    const resp = await this._api.post(
-      "/api/rooms/command",
-      {command:'leave_game'},
-    )
+    this._api.emitGameCommand('leave_game', {})
     setTimeout(()=>{
       location.reload()
     }, 1000)
