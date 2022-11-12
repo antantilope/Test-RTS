@@ -170,6 +170,7 @@ export class GamedisplayComponent implements OnInit {
 
   /* Props used to hold debug data */
   private isDebug: boolean = false
+  private isCinematic: boolean = false
   private lastFrameTime:any = null
   private clientFPS: number = 0
   private clientFrames: number = 0
@@ -216,6 +217,7 @@ export class GamedisplayComponent implements OnInit {
   ngAfterViewInit() {
     console.log("GamedisplayComponent::ngAfterViewInit")
     this.isDebug = window.location.search.indexOf("debug") !== -1
+    this.isCinematic = window.location.search.indexOf("cinematic") !== -1
     this.resizeCanvas()
     this.setupCanvasContext()
     this.setCanvasColor()
@@ -765,15 +767,14 @@ export class GamedisplayComponent implements OnInit {
     )
 
     // Corner overlays
-    if(cameraMode !== CAMERA_MODE_MAP) {
+    if(!this.isCinematic && cameraMode !== CAMERA_MODE_MAP) {
       this._draw.drawTopLeftOverlay(this.ctx, cameraMode, this._camera.gameDisplayCamera);
       this._draw.drawBottomRightOverlay(this.ctx, this._camera.gameDisplayCamera)
-      // if(!this.isDebug && this._api.frameData.ship.alive) {
-      //   this._draw.drawTopRightOverlay(this.ctx, this._camera.gameDisplayCamera)
-      // }
     }
     // Front center and alerts
-    this._draw.drawFrontAndCenterAlerts(this.ctx, this._camera.gameDisplayCamera)
+    if(!this.isCinematic) {
+      this._draw.drawFrontAndCenterAlerts(this.ctx, this._camera.gameDisplayCamera)
+    }
 
     // Click feedback
     if(this.clickHeadingAdjAnimationFrame) {

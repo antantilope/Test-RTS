@@ -13,7 +13,6 @@ import {
 import { TimerItem } from "../models/timer-item.model"
 import { ScannerDataShipElement } from '../models/apidata.model';
 import { DrawableCanvasItems } from '../models/drawable-objects.model'
-import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 const randomInt = function (min: number, max: number): number  {
   return Math.floor(Math.random() * (max - min) + min)

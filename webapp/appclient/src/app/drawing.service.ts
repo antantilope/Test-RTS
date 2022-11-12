@@ -43,6 +43,7 @@ import {
   HUNTER_DRONE_LENGTH_METERS_Y,
   STATION_LENGTH_METERS_X,
   STATION_LENGTH_METERS_Y,
+  TIMER_SLUG_SCANNER_LOCKING,
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
@@ -100,11 +101,15 @@ class FrontAndCenterAlertSizing {
 })
 export class DrawingService {
 
+  private isCinematic = window.location.search.indexOf("cinematic") !== -1
   private isDebug = window.location.search.indexOf("debug") !== -1
 
   private deathQuote: QuoteDetails | null = null;
 
-
+  private maxLockingModLength = 30
+  private lockingCounter = 0
+  private minOnCount = 10
+  private onForCount = 0
 
   constructor(
     // private _camera: CameraService,
@@ -1273,6 +1278,86 @@ export class DrawingService {
     ctx.restore()
   }
 
+
+  private drawLockVisualIndicator(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    target: DrawableShip,
+  ) {
+    let lineWidth = 3
+    const useYellow = this._api.frameData.ship.scanner_mode == "ir"
+    if(this._api.frameData.ship.scanner_locking) {
+      // If locking: blink crosshair, slow at first, faster as lock is obtained
+      const timer = this._api.frameData.ship.timers.find(t => t.slug === TIMER_SLUG_SCANNER_LOCKING)
+      if(!timer) {
+        return console.warn("expected to find timer")
+      }
+      let skipCheck = false
+      if(this.onForCount && this.onForCount < this.minOnCount) {
+        this.onForCount++
+        skipCheck = true
+      } else if(this.onForCount && this.onForCount >= this.minOnCount) {
+        this.onForCount = 0
+        this.lockingCounter = 0
+      }
+      if(!skipCheck) {
+        this.lockingCounter++
+        const percent = timer.percent / 100
+        const modDenominator = Math.max(1, Math.floor(this.maxLockingModLength * (1 - percent)))
+        const mod = this.lockingCounter % modDenominator
+        if (mod){
+          return
+        }
+        this.onForCount = 1
+      }
+    } else {
+      // If locked, no blinking, and
+      lineWidth = 5
+    }
+
+    const midX  = (target.canvasBoundingBox.x2 + target.canvasBoundingBox.x1) / 2
+    const midY  = (target.canvasBoundingBox.y2 + target.canvasBoundingBox.y1) / 2
+    const dx = target.canvasBoundingBox.x2 - target.canvasBoundingBox.x1
+    const dy = target.canvasBoundingBox.y2 - target.canvasBoundingBox.y1
+    const maxRadius = Math.max(dx, dy)
+    const distance = maxRadius * this._api.frameData.ship.scanner_lock_traversal_slack
+    // Vertical CrossHairs
+    ctx.beginPath()
+    ctx.strokeStyle = `rgb(255, ${useYellow?'255':'0'}, 0, ${alpha / 2})`
+    ctx.lineWidth = lineWidth
+    ctx.beginPath()
+    ctx.moveTo(midX + distance, midY + maxRadius)
+    ctx.lineTo(midX + distance, midY - maxRadius)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(midX - distance, midY + maxRadius)
+    ctx.lineTo(midX - distance, midY - maxRadius)
+    ctx.stroke()
+    // Horizontal Crosshairs
+    ctx.beginPath()
+    ctx.moveTo(midX - maxRadius, midY + distance)
+    ctx.lineTo(midX + maxRadius, midY + distance)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(midX - maxRadius, midY - distance)
+    ctx.lineTo(midX + maxRadius, midY - distance)
+    ctx.stroke()
+
+    if(this._api.frameData.ship.scanner_locked && Math.random() < 0.8) {
+      // Diamond Lock
+      const buffer = 0//randomInt(-2, 2)
+      ctx.beginPath()
+      ctx.lineWidth = 2
+      ctx.strokeStyle = `rgb(255, ${useYellow?'255':'0'}, 0, ${alpha})`
+      ctx.moveTo(midX, midY - (maxRadius + buffer)) // top mid
+      ctx.lineTo(midX + maxRadius + buffer, midY) // mid right
+      ctx.lineTo(midX, midY + maxRadius + buffer) // bottom mid
+      ctx.lineTo(midX - (maxRadius + buffer), midY) // mid left
+      ctx.lineTo(midX, midY - (maxRadius + buffer)) // top mid
+      ctx.stroke()
+    }
+  }
+
   public drawShip(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
@@ -1364,16 +1449,19 @@ export class DrawingService {
         this._api.frameData.ship.scanner_locked || this._api.frameData.ship.scanner_locking
       )
       const cursorOnShip = drawableShip.shipId === scannerTargetIDCursor
-      ctx.beginPath()
-      ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.40)" : "rgb(255, 0, 0, 0.85)"
-      ctx.lineWidth = 2.5
-      ctx.rect(
-        drawableShip.canvasBoundingBox.x1,
-        drawableShip.canvasBoundingBox.y1,
-        drawableShip.canvasBoundingBox.x2 - drawableShip.canvasBoundingBox.x1,
-        drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1,
-      )
-      ctx.stroke()
+      // We dont want to draw bounding box if diamond lock box will be drawn
+      if(!shipIsLockedOrLocking || (shipIsLockedOrLocking && !this._api.frameData.ship.scanner_locked)) {
+        ctx.beginPath()
+        ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.40)" : "rgb(255, 0, 0, 0.85)"
+        ctx.lineWidth = 2.5
+        ctx.rect(
+          drawableShip.canvasBoundingBox.x1,
+          drawableShip.canvasBoundingBox.y1,
+          drawableShip.canvasBoundingBox.x2 - drawableShip.canvasBoundingBox.x1,
+          drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1,
+        )
+        ctx.stroke()
+      }
 
       const bbXOffset = drawableShip.canvasBoundingBox.x1
       let bbYOffset = drawableShip.canvasBoundingBox.y2 + 20
@@ -1393,31 +1481,11 @@ export class DrawingService {
         bbYOffset += bbYInterval
       }
       if (shipIsLockedOrLocking && this._api.frameData.ship.scanner_lock_traversal_slack !== null) {
-        const midX  = (drawableShip.canvasBoundingBox.x2 + drawableShip.canvasBoundingBox.x1) / 2
-        const midY  = (drawableShip.canvasBoundingBox.y2 + drawableShip.canvasBoundingBox.y1) / 2
-        const dx = drawableShip.canvasBoundingBox.x2 - drawableShip.canvasBoundingBox.x1
-        const dy = drawableShip.canvasBoundingBox.y2 - drawableShip.canvasBoundingBox.y1
-        const maxRadius = Math.max(dx, dy)
-        const distance = maxRadius * this._api.frameData.ship.scanner_lock_traversal_slack
-        // Vertical CH
-        ctx.beginPath()
-        ctx.strokeStyle = this._api.frameData.ship.scanner_locked ? "rgb(255, 0, 0, 0.85)" : "rgb(255, 0, 0, 0.5)"
-        ctx.moveTo(midX + distance, midY + maxRadius)
-        ctx.lineTo(midX + distance, midY - maxRadius)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(midX - distance, midY + maxRadius)
-        ctx.lineTo(midX - distance, midY - maxRadius)
-        ctx.stroke()
-        // Horizontal CH
-        ctx.beginPath()
-        ctx.moveTo(midX - maxRadius, midY + distance)
-        ctx.lineTo(midX + maxRadius, midY + distance)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(midX - maxRadius, midY - distance)
-        ctx.lineTo(midX + maxRadius, midY - distance)
-        ctx.stroke()
+        this.drawLockVisualIndicator(
+          ctx,
+          getRandomFloat(0.62, 0.95),
+          drawableShip,
+        )
       }
     }
     const tubeFireAnimationFrameCt = 15
