@@ -219,8 +219,8 @@ class Game(BaseModel):
         self._colision_cycle_station = "station"
         self._colision_cycle_wall = "wall"
         self._collision_cycle = cycle((
-            self._colision_cycle_mine,
-            self._colision_cycle_station,
+            # self._colision_cycle_mine,
+            # self._colision_cycle_station,
             self._colision_cycle_wall,
         ))
 

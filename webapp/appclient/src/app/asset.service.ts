@@ -30,6 +30,7 @@ export class AssetService {
 
   public magnetMineAsset: HTMLImageElement = new Image()
   public hunterDroneAsset: HTMLImageElement = new Image()
+  public stationAsset: HTMLImageElement = new Image()
 
   public shipAssetRegister: ShipAssetRegister = {}
   public backupShipAsset: HTMLImageElement = new Image()
@@ -45,6 +46,7 @@ export class AssetService {
 
     this.magnetMineAsset.src = "/static/img/magnet-mine.svg"
     this.hunterDroneAsset.src = "/static/img/Drone.png"
+    this.stationAsset.src = "/static/img/Station.png"
 
     this.backupShipAsset.src = "/static/img/ships/type_1_gray.png"
 

@@ -40,7 +40,7 @@ class Command(BaseCommand):
                 battle_map=bm,
                 position_meters_x=500,
                 position_meters_y=500,
-                service_radius_meters=120,
+                service_radius_meters=95,
                 collision_radius_meters=15,
                 name="Central Gas n' Go",
             )
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                 battle_map=bm,
                 position_meters_x=4500,
                 position_meters_y=4500,
-                service_radius_meters=120,
+                service_radius_meters=95,
                 collision_radius_meters=15,
                 name="Central Gas n' Go",
             )
@@ -79,7 +79,7 @@ class Command(BaseCommand):
                 battle_map=bm,
                 position_meters_x=3800,
                 position_meters_y=8500,
-                service_radius_meters=120,
+                service_radius_meters=95,
                 collision_radius_meters=15,
                 name="Space Depot North",
             )
@@ -87,7 +87,7 @@ class Command(BaseCommand):
                 battle_map=bm,
                 position_meters_x=3800,
                 position_meters_y=500,
-                service_radius_meters=120,
+                service_radius_meters=95,
                 collision_radius_meters=15,
                 name="Space Depot South",
             )
@@ -166,7 +166,7 @@ class Command(BaseCommand):
                 battle_map=bm,
                 position_meters_x=1000,
                 position_meters_y=1000,
-                service_radius_meters=120,
+                service_radius_meters=95,
                 collision_radius_meters=15,
                 name="Outpost 87",
             )
