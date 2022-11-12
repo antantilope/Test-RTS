@@ -180,6 +180,9 @@ export class DrawingService {
     camera: Camera,
     velocityTrailElements: VelocityTrailElement[],
   ) {
+    if(this.isCinematic) {
+      return
+    }
     const cameraPosition = camera.getPosition()
     const now = performance.now()
     for(let i in velocityTrailElements) {
