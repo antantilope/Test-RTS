@@ -347,6 +347,9 @@ export class GamedisplayComponent implements OnInit {
       case key === 'c':
         this.cycleCameraMode()
         break
+      case key === 'f':
+        this.btnClickFirePneumaticTube()
+        break
       case key === ' ':
         this.keyboardShortcutEngineStateUp()
         break
