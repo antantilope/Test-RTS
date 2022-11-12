@@ -276,11 +276,9 @@ const commandHandlers = {
         });
     },
     launch_hunter_drone: (app, queueName, session, requestBody) => {
-        const velocity = validateLaunchTubeWeapon(requestBody)
         app.get(queueName).push({
             player_id: session.player_id,
             ship_command: 'launch_hunter_drone',
-            args: [velocity],
         });
     },
 };

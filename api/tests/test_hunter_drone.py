@@ -135,9 +135,8 @@ class TestHunterDrone(TestCase):
         self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
         assert self.game._ships[self.player_1_ship_id].hunter_drones_loaded == 1
         # Fire drone
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -149,9 +148,8 @@ class TestHunterDrone(TestCase):
         self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
         self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
         # Fire drone
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -186,9 +184,8 @@ class TestHunterDrone(TestCase):
         self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
         self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
         # Fire drone
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -224,9 +221,8 @@ class TestHunterDrone(TestCase):
         self.game._ships[self.player_1_ship_id].docked_at_station = "foobar"
         self.game._ships[self.player_1_ship_id].cmd_buy_hunter_drone()
         # Fire drone
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -268,9 +264,8 @@ class TestHunterDrone(TestCase):
         # heading at 45 degrees, drone will fly clockwise patrol
         self.game._ships[self.player_1_ship_id]._set_heading(45)
         # Fire drone, heading locked at 45 until drone arms
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -316,9 +311,8 @@ class TestHunterDrone(TestCase):
         # heading at 345 degrees, drone will fly counter clockwise patrol
         self.game._ships[self.player_1_ship_id]._set_heading(345)
         # Fire drone, heading locked at 45 until drone arms
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -362,9 +356,8 @@ class TestHunterDrone(TestCase):
         self.game._ships[self.player_2_ship_id].coord_y = 1200 * 10
 
         self.game._ships[self.player_1_ship_id]._set_heading(0)
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -384,9 +377,8 @@ class TestHunterDrone(TestCase):
         self.game._ships[self.player_2_ship_id].coord_y = 1200 * 10
 
         self.game._ships[self.player_1_ship_id]._set_heading(0)
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -410,9 +402,8 @@ class TestHunterDrone(TestCase):
         self.game._ships[self.player_2_ship_id].coord_y = 1200 * 10
 
         self.game._ships[self.player_1_ship_id]._set_heading(60)
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))
@@ -437,9 +428,8 @@ class TestHunterDrone(TestCase):
 
         # drone initially flying in opposite direction towards target.
         self.game._ships[self.player_1_ship_id]._set_heading(180)
-        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].hunter_drone_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_hunter_drone()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._hunter_drones) == 1
         hd_id = next(iter(self.game._hunter_drones.keys()))

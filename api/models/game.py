@@ -1008,7 +1008,7 @@ class Game(BaseModel):
             self._ships[ship_id].last_tube_fire_frame = self._game_frame
             start_x, start_y = self._ships[ship_id].map_nose_coord
             extra_x, extra_y = utils2d.calculate_x_y_components(
-                self._ships[ship_id]._special_weapons_launch_velocity,
+                self._ships[ship_id].hunter_drone_launch_velocity,
                 self._ships[ship_id].heading,
             )
             hunter_drone = HunterDrone(
