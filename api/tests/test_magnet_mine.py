@@ -126,9 +126,8 @@ class TestMagnetMine(TestCase):
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
         # Fire mine
-        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].magnet_mine_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._magnet_mines) == 1
         mine_id = next(iter(self.game._magnet_mines.keys()))
@@ -172,9 +171,8 @@ class TestMagnetMine(TestCase):
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 5
         # Fire mine
-        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].magnet_mine_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
 
         assert len(self.game._magnet_mines) == 1
@@ -221,9 +219,8 @@ class TestMagnetMine(TestCase):
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
         # Fire mine
-        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=100
-        )
+        self.game._ships[self.player_1_ship_id].magnet_mine_launch_velocity = 100
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._magnet_mines) == 1
         mine_id = next(iter(self.game._magnet_mines.keys()))
@@ -273,9 +270,8 @@ class TestMagnetMine(TestCase):
         # mine will be 200 meters from ship 2
         # mine will be 300 meters from ship 1
         # mine should target ship 2
-        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=100
-        )
+        self.game._ships[self.player_1_ship_id].magnet_mine_launch_velocity = 100
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._magnet_mines) == 1
         mine_id = next(iter(self.game._magnet_mines.keys()))
@@ -331,9 +327,8 @@ class TestMagnetMine(TestCase):
         # mine will be 200 meters from ship 2
         # mine will be 300 meters from ship 1
         # mine should target ship 2
-        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=100
-        )
+        self.game._ships[self.player_1_ship_id].magnet_mine_launch_velocity = 100
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._magnet_mines) == 1
         mine_id = next(iter(self.game._magnet_mines.keys()))
@@ -391,10 +386,9 @@ class TestMagnetMine(TestCase):
         # moving at 100M/S, arming after 3 seconds.
         # mine will be 1850 meters from ship 2
         # mine will be 150 meters from ship 1
-        # mine should target ship 2
-        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=50
-        )
+        # mine should target ship
+        self.game._ships[self.player_1_ship_id].magnet_mine_launch_velocity = 50
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._magnet_mines) == 1
         mine_id = next(iter(self.game._magnet_mines.keys()))

@@ -51,9 +51,6 @@ class EMP(BaseModel):
         self.elapsed_milliseconds = 0
         self.created_frame = game_frame
         self.ship_id = ship_id
-
-        self.armed = False
-        self.percent_armed = 0
         self.exploded = False
 
         # Position

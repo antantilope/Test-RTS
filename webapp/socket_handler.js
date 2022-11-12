@@ -252,11 +252,9 @@ const commandHandlers = {
         });
     },
     launch_magnet_mine: (app, queueName, session, requestBody) => {
-        const velocity = validateLaunchTubeWeapon(requestBody)
         app.get(queueName).push({
             player_id: session.player_id,
             ship_command: 'launch_magnet_mine',
-            args: [velocity],
         });
     },
     buy_emp: (app, queueName, session, requestBody) => {
@@ -266,11 +264,9 @@ const commandHandlers = {
         });
     },
     launch_emp: (app, queueName, session, requestBody) => {
-        const velocity = validateLaunchTubeWeapon(requestBody)
         app.get(queueName).push({
             player_id: session.player_id,
             ship_command: 'launch_emp',
-            args: [velocity],
         });
     },
     buy_hunter_drone: (app, queueName, session, requestBody) => {
@@ -280,11 +276,9 @@ const commandHandlers = {
         });
     },
     launch_hunter_drone: (app, queueName, session, requestBody) => {
-        const velocity = validateLaunchTubeWeapon(requestBody)
         app.get(queueName).push({
             player_id: session.player_id,
             ship_command: 'launch_hunter_drone',
-            args: [velocity],
         });
     },
 };

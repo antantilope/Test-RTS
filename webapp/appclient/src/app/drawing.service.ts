@@ -985,9 +985,15 @@ export class DrawingService {
       radiusMeters = Math.max(1, percentCompleteFlareRadius * empBlast.max_radius_meters)
       radiusPx = radiusMeters * ppm / zoom
       const maxRadiusPx = empBlast.max_radius_meters * ppm / zoom
+      const gradient = ctx.createRadialGradient(
+        canvasCoord.x, canvasCoord.y, 0,
+        canvasCoord.x, canvasCoord.y, radiusPx,
+      )
+      gradient.addColorStop(0, `rgb(0, 0, 255, ${getRandomFloat(0.5, 0.8)})`)
+      gradient.addColorStop(1, "rgb(0, 0, 255, 0)");
+      ctx.fillStyle = gradient
       for(let i=0; i<3; i++) {
         ctx.beginPath()
-        ctx.fillStyle = `rgb(0, 0, 255, 0.${randomInt(2, 5)})`
         ctx.arc(
           canvasCoord.x + getRandomFloat(-1.5, 1.5) * ppm / zoom,
           canvasCoord.y + getRandomFloat(-1.5, 1.5) * ppm / zoom,
@@ -1020,9 +1026,15 @@ export class DrawingService {
       const endRadius = empBlast.max_radius_meters * 1.4
       radiusMeters = startRadius + (endRadius - startRadius) * fadePercent
       const fadeRadiusPx = radiusMeters * ppm / zoom
-      const alpha = 0.4 - (0.4 * fadePercent)
+      const alpha = 0.8 - (0.8 * fadePercent)
+      const gradient = ctx.createRadialGradient(
+        canvasCoord.x, canvasCoord.y, 0,
+        canvasCoord.x, canvasCoord.y, fadeRadiusPx,
+      )
+      gradient.addColorStop(0, `rgb(0, 0, 255, ${alpha})`)
+      gradient.addColorStop(1, `rgb(0, 0, 255, 0)`);
       ctx.beginPath()
-      ctx.fillStyle = `rgb(0, 0, 255, ${alpha})`
+      ctx.fillStyle = gradient
       ctx.arc(
         canvasCoord.x,
         canvasCoord.y,
@@ -1032,13 +1044,13 @@ export class DrawingService {
       )
       ctx.fill()
       const dotCt = Math.ceil((1 - fadePercent) * 8)
-      const dotRadiusPx = Math.max(1, 0.7 * ppm / zoom)
+      const dotRadiusPx = Math.max(1, 1 * ppm / zoom)
       for(let i=0; i<dotCt; i++) {
         ctx.beginPath()
         ctx.fillStyle = 'rgb(0, 0, 255, 0.75)'
         ctx.arc(
-          canvasCoord.x + getRandomFloat(-1 * fadeRadiusPx,  fadeRadiusPx),
-          canvasCoord.y + getRandomFloat(-1 * fadeRadiusPx, fadeRadiusPx),
+          canvasCoord.x + getRandomFloat(-2 * fadeRadiusPx,  fadeRadiusPx*2),
+          canvasCoord.y + getRandomFloat(-2 * fadeRadiusPx, fadeRadiusPx*2),
           dotRadiusPx,
           0,
           TWO_PI,
@@ -1846,82 +1858,6 @@ export class DrawingService {
       ctx.strokeStyle = `rgb(60, 60, 255, ${getRandomFloat(0.4, 0.8)})`
       ctx.stroke()
     }
-    ctx.beginPath()
-    ctx.lineWidth = 1.75 + (1.5 * emp.percentArmed)
-    if(emp.percentArmed > 0.97) {
-      ctx.beginPath()
-      ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
-      ctx.rect(
-        emp.canvasBoundingBox.x1,
-        emp.canvasBoundingBox.y1,
-        emp.canvasBoundingBox.x2 - emp.canvasBoundingBox.x1,
-        emp.canvasBoundingBox.y2 - emp.canvasBoundingBox.y1,
-      )
-      ctx.stroke()
-    } else {
-      ctx.beginPath()
-      ctx.strokeStyle = "rgb(255, 0, 0, 0.85)"
-      // Draw arming animation with bounding box.
-      const topLen = emp.canvasBoundingBox.x2 - emp.canvasBoundingBox.x1
-      const sideLen = emp.canvasBoundingBox.y2 - emp.canvasBoundingBox.y1
-      // Top Line (left to right)
-      if(emp.percentArmed >= 0.25) {
-        ctx.beginPath()
-        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y1)
-        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1)
-        ctx.stroke()
-      } else {
-        let percSide = emp.percentArmed / 0.25
-        ctx.beginPath()
-        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y1)
-        ctx.lineTo(emp.canvasBoundingBox.x1 + (topLen * percSide), emp.canvasBoundingBox.y1)
-        ctx.stroke()
-      }
-      // right side line (top to bottom)
-      if(emp.percentArmed >= 0.50) {
-        ctx.beginPath()
-        ctx.moveTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1)
-        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y2)
-        ctx.stroke()
-      } else if (emp.percentArmed >= 0.25 && emp.percentArmed < 0.5) {
-        let percSide = (emp.percentArmed - 0.25) / 0.25
-        ctx.beginPath()
-        ctx.moveTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1)
-        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y1 + (sideLen * percSide))
-        ctx.stroke()
-      }
-      // bottom line (right to left)
-      if(emp.percentArmed >= 0.75) {
-        ctx.beginPath()
-        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y2)
-        ctx.lineTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y2)
-        ctx.stroke()
-      } else if (emp.percentArmed >= 0.50 && emp.percentArmed < 0.75) {
-        let percSide = (emp.percentArmed - 0.5) / 0.25
-        ctx.beginPath()
-        ctx.moveTo(emp.canvasBoundingBox.x2, emp.canvasBoundingBox.y2)
-        ctx.lineTo(emp.canvasBoundingBox.x2 - (topLen * percSide), emp.canvasBoundingBox.y2)
-        ctx.stroke()
-      }
-      // left side (bottom to top)
-      if(emp.percentArmed > 0.75 && emp.percentArmed <= 0.97) {
-        let percSide = (emp.percentArmed - 0.75) / 0.25
-        ctx.beginPath()
-        ctx.moveTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y2)
-        ctx.lineTo(emp.canvasBoundingBox.x1, emp.canvasBoundingBox.y2 - (sideLen * percSide))
-        ctx.stroke()
-      }
-    }
-    const bbYInterval = 20
-    const bbXOffset = emp.canvasBoundingBox.x1
-    let bbYOffset = emp.canvasBoundingBox.y2 + bbYInterval
-    ctx.beginPath()
-    ctx.font = 'bold 18px Courier New'
-    ctx.fillStyle = "rgb(255, 0, 0, 0.85)"
-    ctx.textAlign = 'left'
-    ctx.fillText("EMP", bbXOffset, bbYOffset)
-    bbYOffset += bbYInterval
-    ctx.fillText(`${emp.distance} M`, bbXOffset, bbYOffset)
   }
 
   private getIconFontSize(camera: Camera) {

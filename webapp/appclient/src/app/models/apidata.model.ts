@@ -180,7 +180,6 @@ export class ScannerDataEMPElement {
     relative_heading: number
     distance: number
     exploded: boolean
-    percent_armed: number
 }
 
 type scoutedOre = {

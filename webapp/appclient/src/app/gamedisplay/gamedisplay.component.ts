@@ -127,8 +127,6 @@ export class GamedisplayComponent implements OnInit {
     torpedoMenuSelEMPBtn?: BoxCoords,
     torpedoMenuSelMagnetMineBtn?: BoxCoords,
     torpedoMenuSelHunterDroneBtn?: BoxCoords,
-    torpedoUpArrowBtn?: BoxCoords,
-    torpedoDownArrowBtn?: BoxCoords,
     torpedoFireBtn?: BoxCoords,
 
     utilitiesMenuBtn?: BoxCoords,
@@ -140,7 +138,6 @@ export class GamedisplayComponent implements OnInit {
 
   @ViewChild("graphicsCanvas") canvas: ElementRef
 
-  private lauchVelocity: number = 60;
   private minLaunchVelocity = 10
   private maxLaunchVelocity = 120
   private launchVelocityInterval = 10
@@ -1700,36 +1697,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("FIRE", x1 + textLeftBuffer, y2)
       col3YOffset += (sizing.yGap + sizing.yLen)
-      // Down Arrow
-      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
-      x2 = x1 + sizing.xLenTorpedoC2Menu
-      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
-      y1 = y2 - sizing.yLen
-      this.btnCanvasLocations.torpedoDownArrowBtn = {x1, x2, y1, y2}
-      this.ctx.beginPath()
-      this.ctx.strokeStyle = btnColorWhite
-      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoDownArrowBtn")
-      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
-      this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
-      this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText("DECR", x1 + textLeftBuffer, y2)
-      col3YOffset += (sizing.yGap + sizing.yLen)
-      // Up Arrow
-      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xLenTorpedoC1Menu + sizing.xGap + sizing.xGap
-      x2 = x1 + sizing.xLenTorpedoC2Menu
-      y2 = canvasHeight - sizing.cornerOffset - col3YOffset
-      y1 = y2 - sizing.yLen
-      this.btnCanvasLocations.torpedoUpArrowBtn = {x1, x2, y1, y2}
-      this.ctx.beginPath()
-      this.ctx.strokeStyle = btnColorWhite
-      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("torpedoUpArrowBtn")
-      this.ctx.strokeRect(x1, y1, sizing.xLenTorpedoC2Menu, sizing.yLen)
-      this.ctx.beginPath()
-      this.ctx.fillStyle = btnColorWhite
-      this.ctx.font = `bold ${sizing.fontSize}px courier new`
-      this.ctx.fillText("INCR", x1 + textLeftBuffer, y2)
-      col3YOffset += (sizing.yGap + sizing.yLen)
 
       // Aestetic Outline
       this.ctx.beginPath()
@@ -1748,13 +1715,13 @@ export class GamedisplayComponent implements OnInit {
         this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn.x2 + sizing.xGap / 2,
         this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn.y1 - sizing.yGap / 2)
       this.ctx.lineTo(
-        this.btnCanvasLocations.torpedoUpArrowBtn.x1 - sizing.xGap / 2,
-        this.btnCanvasLocations.torpedoUpArrowBtn.y1 - sizing.yGap / 2)
+        this.btnCanvasLocations.torpedoFireBtn.x1 - sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoFireBtn.y1 - sizing.yGap / 2)
       this.ctx.lineTo(
-        this.btnCanvasLocations.torpedoUpArrowBtn.x2 + sizing.xGap / 2,
-        this.btnCanvasLocations.torpedoUpArrowBtn.y1 - sizing.yGap / 2)
+        this.btnCanvasLocations.torpedoFireBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoFireBtn.y1 - sizing.yGap / 2)
       this.ctx.lineTo(
-        this.btnCanvasLocations.torpedoUpArrowBtn.x2 + sizing.xGap / 2,
+        this.btnCanvasLocations.torpedoFireBtn.x2 + sizing.xGap / 2,
         this.btnCanvasLocations.torpedoFireBtn.y2 + sizing.yGap / 2)
       this.ctx.lineTo(
         this.btnCanvasLocations.torpedoMenuSelEMPBtn.x1 - sizing.xGap / 2,
@@ -1773,8 +1740,6 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("TORPEDOS", x1 + textLeftBuffer, y2)
       delete this.btnCanvasLocations.torpedoFireBtn
-      delete this.btnCanvasLocations.torpedoDownArrowBtn
-      delete this.btnCanvasLocations.torpedoUpArrowBtn
       delete this.btnCanvasLocations.torpedoMenuSelMagnetMineBtn
       delete this.btnCanvasLocations.torpedoMenuSelEMPBtn
       delete this.btnCanvasLocations.torpedoMenuSelHunterDroneBtn
@@ -2031,11 +1996,7 @@ export class GamedisplayComponent implements OnInit {
     } else if (btnName == "torpedoMenuSelHunterDroneBtn") {
       this.selectedPneumaticWeapon = HUNTER_DRONE_SLUG
     }
-    else if(btnName == "torpedoUpArrowBtn") {
-      this.btnClickIncreasePneumaticPressure()
-    }else if(btnName == "torpedoDownArrowBtn") {
-      this.btnClickDecreasePneumaticPressure()
-    }else if(btnName == "torpedoFireBtn") {
+    else if(btnName == "torpedoFireBtn") {
       this.btnClickFirePneumaticTube()
     }// Utilities //
     else if(btnName == "auxiliaryPowerBtn") {
@@ -2324,29 +2285,14 @@ export class GamedisplayComponent implements OnInit {
 
   private btnClickFirePneumaticTube() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
-      this._api.emitGameCommand('launch_magnet_mine', {launch_velocity: this.lauchVelocity})
+      this._api.emitGameCommand('launch_magnet_mine', {})
     } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
-      this._api.emitGameCommand('launch_emp', {launch_velocity: this.lauchVelocity})
+      this._api.emitGameCommand('launch_emp', {})
     } else if (this.selectedPneumaticWeapon == HUNTER_DRONE_SLUG) {
-      this._api.emitGameCommand('launch_hunter_drone', {launch_velocity: this.lauchVelocity})
+      this._api.emitGameCommand('launch_hunter_drone', {})
     } else {
       console.warn("unknown selected pneumatic weapon " + this.selectedPneumaticWeapon)
     }
-  }
-
-  private btnClickIncreasePneumaticPressure() {
-    this.lauchVelocity = Math.min(
-      this.maxLaunchVelocity,
-      this.lauchVelocity + this.launchVelocityInterval
-    )
-    console.log(this.lauchVelocity)
-  }
-  private btnClickDecreasePneumaticPressure() {
-    this.lauchVelocity = Math.max(
-      this.minLaunchVelocity,
-      this.lauchVelocity - this.launchVelocityInterval
-    )
-    console.log(this.lauchVelocity)
   }
 
   private async btnClickToggleGravBrake() {

@@ -180,7 +180,6 @@ class ScannedEMPElement(TypedDict):
     distance: int
     exploded: bool
     relative_heading: int
-    percent_armed: float
 
 class ScannedHunterDroneElement(TypedDict):
     id: str
@@ -353,17 +352,17 @@ class Ship(BaseModel):
         self.special_weapons_tubes_count = None
         self.last_tube_fire_frame = None
         self._special_weapon_costs = None
-        self._special_weapons_min_launch_velocity = None
-        self._special_weapons_max_launch_velocity = None
-        self._special_weapons_launch_velocity = None
         self.magnet_mines_loaded = 4
         self.emps_loaded = 3
+        self.emp_launch_velocity_ms = constants.EMP_LAUNCH_VELOCITY_MS
         self.hunter_drones_loaded = 2
         self.magnet_mine_firing = False
+        self.magnet_mine_launch_velocity = constants.MAGNET_MINE_LAUNCH_VELOCITY_MS
         self.emp_firing = False
         self.hunter_drone_firing = False
         self._hunter_drone_max_target_acquisition_distance_meters = None
         self._hunter_drone_tracking_acceleration_ms = None
+        self.hunter_drone_launch_velocity = constants.HUNTER_DRONE_LAUNCH_VELOCITY_MS
 
         self.autopilot_program = None
         self.autopilot_waypoint_uuid = None
@@ -728,14 +727,6 @@ class Ship(BaseModel):
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
 
         instance.special_weapons_tubes_count = constants.SPECIAL_WEAPONS_TUBES_COUNT
-        instance._special_weapons_min_launch_velocity = constants.SPECIAL_WEAPONS_MIN_LAUNCH_VELOCITY
-        instance._special_weapons_max_launch_velocity = constants.SPECIAL_WEAPONS_MAX_LAUNCH_VELOCITY
-        instance._special_weapons_launch_velocity = round(
-            (
-                instance._special_weapons_min_launch_velocity
-                + instance._special_weapons_max_launch_velocity
-            ) / 2
-        )
         instance._hunter_drone_max_target_acquisition_distance_meters = (
             constants.HUNTER_DRONE_MAX_TARGET_ACQUISITION_DISTANCE_METERS)
         instance._hunter_drone_tracking_acceleration_ms = (
@@ -1530,15 +1521,15 @@ class Ship(BaseModel):
         elif command == ShipCommands.BUY_MAGNET_MINE:
             self.cmd_buy_magnet_mine()
         elif command == ShipCommands.LAUNCH_MAGNET_MINE:
-            self.cmd_launch_magnet_mine(args[0])
+            self.cmd_launch_magnet_mine()
         elif command == ShipCommands.BUY_EMP:
             self.cmd_buy_emp()
         elif command == ShipCommands.LAUNCH_EMP:
-            self.cmd_launch_emp(args[0])
+            self.cmd_launch_emp()
         elif command == ShipCommands.BUY_HUNTER_DRONE:
             self.cmd_buy_hunter_drone()
         elif command == ShipCommands.LAUNCH_HUNTER_DRONE:
-            self.cmd_launch_hunter_drone(args[0])
+            self.cmd_launch_hunter_drone()
 
         else:
             raise ShipCommandError("NotImplementedError")
@@ -1883,19 +1874,10 @@ class Ship(BaseModel):
             return
         self.magnet_mines_loaded += 1
 
-    def cmd_launch_magnet_mine(self, launch_velocity: int):
-        _velocity = max(
-            launch_velocity,
-            self._special_weapons_min_launch_velocity,
-        )
-        _velocity = min(
-            _velocity,
-            self._special_weapons_max_launch_velocity,
-        )
+    def cmd_launch_magnet_mine(self):
         if self.magnet_mines_loaded > 0 and not self.magnet_mine_firing:
             self.magnet_mines_loaded -= 1
             self.magnet_mine_firing = True
-            self._special_weapons_launch_velocity = _velocity
 
     def cmd_buy_emp(self):
         if self.special_weapons_loaded >= self.special_weapons_tubes_count:
@@ -1909,19 +1891,10 @@ class Ship(BaseModel):
             return
         self.emps_loaded += 1
 
-    def cmd_launch_emp(self, launch_velocity: int):
-        _velocity = max(
-            launch_velocity,
-            self._special_weapons_min_launch_velocity,
-        )
-        _velocity = min(
-            _velocity,
-            self._special_weapons_max_launch_velocity,
-        )
+    def cmd_launch_emp(self):
         if self.emps_loaded > 0 and not self.emp_firing:
             self.emps_loaded -= 1
             self.emp_firing = True
-            self._special_weapons_launch_velocity = _velocity
 
     def cmd_buy_hunter_drone(self):
         if self.special_weapons_loaded >= self.special_weapons_tubes_count:
@@ -1935,16 +1908,7 @@ class Ship(BaseModel):
             return
         self.hunter_drones_loaded += 1
 
-    def cmd_launch_hunter_drone(self, launch_velocity: int):
-        _velocity = max(
-            launch_velocity,
-            self._special_weapons_min_launch_velocity,
-        )
-        _velocity = min(
-            _velocity,
-            self._special_weapons_max_launch_velocity,
-        )
+    def cmd_launch_hunter_drone(self):
         if self.hunter_drones_loaded > 0 and not self.hunter_drone_firing:
             self.hunter_drones_loaded -= 1
             self.hunter_drone_firing = True
-            self._special_weapons_launch_velocity = _velocity
