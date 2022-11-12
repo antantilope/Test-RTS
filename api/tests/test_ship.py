@@ -2263,9 +2263,26 @@ class TestShipCMDSetHeading(TestCase):
         self.ship.advance_heading_traversal(30)
         assert self.ship.heading == 24
         self.ship.advance_heading_traversal(30)
-        assert self.ship.heading == 30
+        assert self.ship.heading == 25
         assert self.ship.desired_heading == 25
 
+    def test_gradual_rotation_counter_clockwise(self):
+        self.ship.ship_traversal_degrees_per_second = 180
+        self._assert_ship_heading_0()
+        self.ship.cmd_set_heading(335)
+        assert self.ship.heading == 0
+        assert self.ship.desired_heading == 335
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 354
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 348
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 342
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 336
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 335
+        assert self.ship.desired_heading == 335
 
 '''
 ███████ ███    ██  ██████  ██ ███    ██ ███████

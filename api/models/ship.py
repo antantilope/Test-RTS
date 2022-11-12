@@ -1336,7 +1336,11 @@ class Ship(BaseModel):
         if abs(frame_adj) >= delta_degrees_mag:
             return self._set_heading(self.desired_heading)
 
-        self._set_heading(self.heading + frame_adj)
+        self._set_heading(
+            utils2d.signed_angle_to_unsigned_angle(
+                self.heading + frame_adj
+            )
+        )
 
 
     def advance_gravity_brake_position(self, fps: int) -> None:
