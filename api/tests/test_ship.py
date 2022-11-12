@@ -2247,6 +2247,25 @@ class TestShipCMDSetHeading(TestCase):
         assert self.ship.rel_rot_coord_hitbox_bottom_right == (75, 9)
         self._assert_heading_0_cords_fixed()
 
+    # Test gradual heading adjustment
+    def test_gradual_rotation_clockwise(self):
+        self.ship.ship_traversal_degrees_per_second = 180
+        self._assert_ship_heading_0()
+        self.ship.cmd_set_heading(25)
+        assert self.ship.heading == 0
+        assert self.ship.desired_heading == 25
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 6
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 12
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 18
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 24
+        self.ship.advance_heading_traversal(30)
+        assert self.ship.heading == 30
+        assert self.ship.desired_heading == 25
+
 
 '''
 ███████ ███    ██  ██████  ██ ███    ██ ███████
