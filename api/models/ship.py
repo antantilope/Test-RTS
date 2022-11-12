@@ -1,5 +1,6 @@
 
 from collections import OrderedDict
+import math
 import random
 from typing import Tuple, Dict, TypedDict, Optional, Generator, List, Union
 
@@ -223,6 +224,8 @@ class Ship(BaseModel):
 
         # heading of ship in degrees (between 0 and 359)
         self.heading = 0
+        self.desired_heading = 0
+        self.ship_traversal_degrees_per_second = constants.SHIP_TRAVERSAL_DEGREES_PER_SECOND
 
         # <START OF RELATIVE COORDINATES>
         # These are the coordinates for the ship if the ship's center is at the origin: (coord_x, coord_y) == (0, 0,)
@@ -1311,6 +1314,31 @@ class Ship(BaseModel):
         if not self.engine_lit:
             self.engine_lit = True
 
+    def advance_heading_traversal(self, fps: int) -> None:
+        if self.autopilot_program:
+            self.desired_heading = self.heading
+            return
+        if self.heading == self.desired_heading:
+            return
+
+        delta_degrees = utils2d.calculate_delta_degrees(
+            self.heading,
+            self.desired_heading)
+        delta_degrees_mag = abs(delta_degrees)
+        if delta_degrees_mag < 5:
+            return self._set_heading(self.desired_heading)
+
+        is_negative = delta_degrees < 0
+        frame_adj = (-1 if is_negative else 1) * max(
+            1,
+            math.ceil(self.ship_traversal_degrees_per_second / fps)
+        )
+        if abs(frame_adj) >= delta_degrees_mag:
+            return self._set_heading(self.desired_heading)
+
+        self._set_heading(self.heading + frame_adj)
+
+
     def advance_gravity_brake_position(self, fps: int) -> None:
         if not self.gravity_brake_retracting and not self.gravity_brake_extending:
             return
@@ -1520,7 +1548,7 @@ class Ship(BaseModel):
         if not (359 >= heading >= 0):
             raise ShipCommandError("invalid heading")
 
-        self._set_heading(heading)
+        self.desired_heading = heading
 
     def _set_heading(self, heading: int):
         self.heading = heading
