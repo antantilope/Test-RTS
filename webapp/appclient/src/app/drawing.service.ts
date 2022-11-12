@@ -100,6 +100,7 @@ class FrontAndCenterAlertSizing {
 })
 export class DrawingService {
 
+  private isCinematic = window.location.search.indexOf("cinematic") !== -1
   private isDebug = window.location.search.indexOf("debug") !== -1
 
   private deathQuote: QuoteDetails | null = null;
