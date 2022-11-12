@@ -40,7 +40,9 @@ import {
   SHIP_LENGTH_METERS_X,
   SHIP_LENGTH_METERS_Y,
   HUNTER_DRONE_LENGTH_METERS_X,
-  HUNTER_DRONE_LENGTH_METERS_Y
+  HUNTER_DRONE_LENGTH_METERS_Y,
+  STATION_LENGTH_METERS_X,
+  STATION_LENGTH_METERS_Y,
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
@@ -1875,6 +1877,7 @@ export class DrawingService {
 
   public drawSpaceStations(ctx: CanvasRenderingContext2D, camera: Camera,) {
     const cameraPosition = camera.getPosition()
+    const cameraZoom = camera.getZoom()
     for(let i in this._api.frameData.space_stations) {
       const st = this._api.frameData.space_stations[i]
       const centerCanvasCoord = camera.mapCoordToCanvasCoord(
@@ -1882,15 +1885,12 @@ export class DrawingService {
         cameraPosition,
       )
 
-      const sideLengthCanvasPx = Math.floor(
+      const sideXLengthCanvasPx = Math.floor(
         (
-          st.collision_radius_meters
-          * 2
+          STATION_LENGTH_METERS_X
           * this._api.frameData.map_config.units_per_meter
-        )
-        / camera.getZoom()
-      )
-      if(sideLengthCanvasPx < 10) {
+        )/ cameraZoom)
+      if(sideXLengthCanvasPx < 10) {
         const iconFontSize = this.getIconFontSize(camera)
         ctx.beginPath()
         ctx.font = iconFontSize + "px Courier New";
@@ -1904,65 +1904,36 @@ export class DrawingService {
         );
       }
       else {
-        this.drawSpaceStation(ctx, camera, st, centerCanvasCoord, sideLengthCanvasPx)
-      }
-    }
-  }
-  private drawSpaceStation(
-    ctx: CanvasRenderingContext2D,
-    camera: Camera,
-    st: SpaceStation,
-    centerCanvasCoord: PointCoord,
-    sideLengthCanvasPx: number,
-  ) {
-    // Draw station body
-    const halfLength = Math.floor(sideLengthCanvasPx / 2)
-    const lightRadius = Math.max(1, Math.floor(sideLengthCanvasPx / 14))
-    ctx.beginPath()
-    ctx.fillStyle = "#789096"; // Dark gray blue
-    ctx.rect(
-      centerCanvasCoord.x - halfLength,
-      centerCanvasCoord.y - halfLength,
-      sideLengthCanvasPx, sideLengthCanvasPx,
-    )
-    ctx.fill()
-
-    // Draw service perimeter
-    const servicePerimeterCavasPx = st.service_radius_map_units / camera.getZoom()
-    const perimeterWidth = Math.ceil(4 * this._api.frameData.map_config.units_per_meter / camera.getZoom())
-    if(Math.random() > 0.8) {
-      ctx.beginPath()
-      ctx.strokeStyle = Math.random() > 0.5 ? "rgb(0, 0, 255, 0.3)" : "rgb(0, 0, 255, 0.7)"
-      ctx.lineWidth = perimeterWidth
-      ctx.arc(
-        centerCanvasCoord.x, centerCanvasCoord.y,
-        servicePerimeterCavasPx,
-        0,
-        TWO_PI,
-      )
-      ctx.stroke()
-    }
-    ctx.beginPath()
-    ctx.strokeStyle = "rgb(0, 0, 255, 0.35)"
-    ctx.lineWidth = 1
-    ctx.arc(
-      centerCanvasCoord.x, centerCanvasCoord.y,
-      servicePerimeterCavasPx,
-      0,
-      TWO_PI,
-    )
-    ctx.stroke()
-    const grav_brake_last_caught: number | undefined = this._api.frameData.ship.scouted_station_gravity_brake_catches_last_frame[st.uuid]
-    if(
-      grav_brake_last_caught !== undefined
-      && (grav_brake_last_caught + 18 > this._api.frameData.game_frame)
-    ) {
-      // Draw capture effect
-      const frame = this._api.frameData.game_frame - grav_brake_last_caught + 1
-      if(frame < 12 || Math.random() > 0.8) {
+        const sideYLengthCanvasPx = Math.floor(
+          (
+            STATION_LENGTH_METERS_Y
+            * this._api.frameData.map_config.units_per_meter
+          ) / cameraZoom)
+        const stationImgX1 = centerCanvasCoord.x - (sideXLengthCanvasPx/2)
+        const stationImgY1 = centerCanvasCoord.y - (sideYLengthCanvasPx/2)
+        ctx.drawImage(
+          this._asset.stationAsset,
+          stationImgX1, stationImgY1,
+          sideXLengthCanvasPx, sideYLengthCanvasPx
+        )
+        // Draw service perimeter
+        const servicePerimeterCavasPx = st.service_radius_map_units / cameraZoom
+        const perimeterWidth = Math.ceil(4 * this._api.frameData.map_config.units_per_meter / cameraZoom)
+        if(Math.random() > 0.8) {
+          ctx.beginPath()
+          ctx.strokeStyle = Math.random() > 0.5 ? "rgb(0, 0, 255, 0.3)" : "rgb(0, 0, 255, 0.7)"
+          ctx.lineWidth = perimeterWidth
+          ctx.arc(
+            centerCanvasCoord.x, centerCanvasCoord.y,
+            servicePerimeterCavasPx,
+            0,
+            TWO_PI,
+          )
+          ctx.stroke()
+        }
         ctx.beginPath()
-        ctx.strokeStyle = `rgb(124, 0, 166, 0.${randomInt(20, 80)})`
-        ctx.lineWidth = Math.max(1, Math.ceil(perimeterWidth * frame))
+        ctx.strokeStyle = "rgb(0, 0, 255, 0.35)"
+        ctx.lineWidth = 1
         ctx.arc(
           centerCanvasCoord.x, centerCanvasCoord.y,
           servicePerimeterCavasPx,
@@ -1970,84 +1941,27 @@ export class DrawingService {
           TWO_PI,
         )
         ctx.stroke()
+        const grav_brake_last_caught: number | undefined = this._api.frameData.ship.scouted_station_gravity_brake_catches_last_frame[st.uuid]
+        if(
+          grav_brake_last_caught !== undefined
+          && (grav_brake_last_caught + 18 > this._api.frameData.game_frame)
+        ) {
+          // Draw capture effect
+          const frame = this._api.frameData.game_frame - grav_brake_last_caught + 1
+          if(frame < 12 || Math.random() > 0.8) {
+            ctx.beginPath()
+            ctx.strokeStyle = `rgb(124, 0, 166, 0.${randomInt(20, 80)})`
+            ctx.lineWidth = Math.max(1, Math.ceil(perimeterWidth * frame))
+            ctx.arc(
+              centerCanvasCoord.x, centerCanvasCoord.y,
+              servicePerimeterCavasPx,
+              0,
+              TWO_PI,
+            )
+            ctx.stroke()
+          }
+        }
       }
-    }
-    // Draw lights
-    const lightPushoutMultiple = 3
-    ctx.beginPath()
-    const lightOn = this._api.frameData.game_frame % 125 < 30
-    ctx.fillStyle = lightOn ? "rgb(255, 255, 120, 0.95)" : "#575757"
-    ctx.arc(
-      centerCanvasCoord.x, centerCanvasCoord.y - halfLength * lightPushoutMultiple,
-      lightRadius,
-      0,
-      TWO_PI,
-    )
-    ctx.fill()
-
-    ctx.beginPath()
-    ctx.arc(
-      centerCanvasCoord.x + halfLength * lightPushoutMultiple, centerCanvasCoord.y,
-      lightRadius,
-      0,
-      TWO_PI,
-    )
-    ctx.fill()
-
-    ctx.beginPath()
-    ctx.arc(
-      centerCanvasCoord.x, centerCanvasCoord.y + halfLength * lightPushoutMultiple,
-      lightRadius,
-      0,
-      TWO_PI,
-    )
-    ctx.fill()
-
-    ctx.beginPath()
-    ctx.arc(
-      centerCanvasCoord.x - halfLength * lightPushoutMultiple, centerCanvasCoord.y,
-      lightRadius,
-      0,
-      TWO_PI,
-    )
-    ctx.fill()
-
-    // Draw light on effects
-    if(lightOn) {
-      const effectRadius = lightRadius * 30
-      ctx.beginPath()
-      ctx.fillStyle = "rgb(255, 255, 120, 0.05)"
-      ctx.arc(
-        centerCanvasCoord.x, centerCanvasCoord.y - halfLength * lightPushoutMultiple,
-        effectRadius,
-        0,
-        TWO_PI,
-      )
-      ctx.fill()
-      ctx.beginPath()
-      ctx.arc(
-        centerCanvasCoord.x + halfLength * lightPushoutMultiple, centerCanvasCoord.y,
-        effectRadius,
-        0,
-        TWO_PI,
-      )
-      ctx.fill()
-      ctx.beginPath()
-      ctx.arc(
-        centerCanvasCoord.x, centerCanvasCoord.y + halfLength * lightPushoutMultiple,
-        effectRadius,
-        0,
-        TWO_PI,
-      )
-      ctx.fill()
-      ctx.beginPath()
-      ctx.arc(
-        centerCanvasCoord.x - halfLength * lightPushoutMultiple, centerCanvasCoord.y,
-        effectRadius,
-        0,
-        TWO_PI,
-      )
-      ctx.fill()
     }
   }
 
