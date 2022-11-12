@@ -122,7 +122,7 @@ class TestMagnetMine(TestCase):
 
         self.game._fps = 1
         self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 1
-        self.game._ships[self.player_1_ship_id].cmd_set_heading(90)
+        self.game._ships[self.player_1_ship_id]._set_heading(90)
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 0
         # Fire mine
@@ -167,7 +167,7 @@ class TestMagnetMine(TestCase):
 
         self.game._fps = 1
         self.game._ships[self.player_1_ship_id].magnet_mines_loaded = 1
-        self.game._ships[self.player_1_ship_id].cmd_set_heading(90)
+        self.game._ships[self.player_1_ship_id]._set_heading(90)
         # ship moving north at 5 M/S
         self.game._ships[self.player_1_ship_id].velocity_x_meters_per_second = 0
         self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 5
