@@ -180,7 +180,6 @@ class ScannedEMPElement(TypedDict):
     distance: int
     exploded: bool
     relative_heading: int
-    percent_armed: float
 
 class ScannedHunterDroneElement(TypedDict):
     id: str
@@ -358,6 +357,7 @@ class Ship(BaseModel):
         self._special_weapons_launch_velocity = None
         self.magnet_mines_loaded = 4
         self.emps_loaded = 3
+        self.emp_launch_velocity_ms = constants.EMP_LAUNCH_VELOCITY_MS
         self.hunter_drones_loaded = 2
         self.magnet_mine_firing = False
         self.emp_firing = False
@@ -1534,7 +1534,7 @@ class Ship(BaseModel):
         elif command == ShipCommands.BUY_EMP:
             self.cmd_buy_emp()
         elif command == ShipCommands.LAUNCH_EMP:
-            self.cmd_launch_emp(args[0])
+            self.cmd_launch_emp()
         elif command == ShipCommands.BUY_HUNTER_DRONE:
             self.cmd_buy_hunter_drone()
         elif command == ShipCommands.LAUNCH_HUNTER_DRONE:
@@ -1909,19 +1909,10 @@ class Ship(BaseModel):
             return
         self.emps_loaded += 1
 
-    def cmd_launch_emp(self, launch_velocity: int):
-        _velocity = max(
-            launch_velocity,
-            self._special_weapons_min_launch_velocity,
-        )
-        _velocity = min(
-            _velocity,
-            self._special_weapons_max_launch_velocity,
-        )
+    def cmd_launch_emp(self):
         if self.emps_loaded > 0 and not self.emp_firing:
             self.emps_loaded -= 1
             self.emp_firing = True
-            self._special_weapons_launch_velocity = _velocity
 
     def cmd_buy_hunter_drone(self):
         if self.special_weapons_loaded >= self.special_weapons_tubes_count:

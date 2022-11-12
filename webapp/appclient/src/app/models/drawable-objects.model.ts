@@ -58,7 +58,6 @@ export class DrawableEMP {
     canvasCoordCenter: PointCoord
     canvasBoundingBox: BoxCoords
     radiusCanvasPX: number
-    percentArmed: number
     distance: number
 }
 

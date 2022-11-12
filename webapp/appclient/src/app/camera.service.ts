@@ -565,7 +565,6 @@ export class Camera {
         EMPId: sde.id,
         canvasCoordCenter,
         radiusCanvasPX: empRadiusPx,
-        percentArmed: sde.percent_armed,
         isDot: empRadiusPx < this.minSizeForDotPx,
         distance: sde.distance,
         canvasBoundingBox: this.pointCoordToBoxCoord(
@@ -735,7 +734,7 @@ export class CameraService {
   private updateFlameSmokeElementInterval = 300
   private flameSmokeElements: FlameSmokeElement[] = []
 
-  private updateEMPTrailElementsInterval = 250
+  private updateEMPTrailElementsInterval = 200
   private EMPTrailElements: EMPTrailElement[] = []
 
   private EBeamFiringEffectElements: EBeamFiringEffectElement[] = []
@@ -839,24 +838,24 @@ export class CameraService {
       this.EMPTrailElements.push({
         createdAt: now,
         mapCoord: {
-          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
-          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          x: sed.coord_x + getRandomFloat(-2.5, 2.5) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2.5, 2.5) * this._api.frameData.map_config.units_per_meter,
         },
-        initalRadiusMeters: getRandomFloat(1, 2),
+        initalRadiusMeters: getRandomFloat(1.5, 2.5),
       },{
         createdAt: now,
         mapCoord: {
-          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
-          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          x: sed.coord_x + getRandomFloat(-2.5, 2.5) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2.5, 2.5) * this._api.frameData.map_config.units_per_meter,
         },
-        initalRadiusMeters: getRandomFloat(1, 2),
+        initalRadiusMeters: getRandomFloat(1.5, 2.5),
       },{
         createdAt: now,
         mapCoord: {
-          x: sed.coord_x + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
-          y: sed.coord_y + getRandomFloat(-2, 2) * this._api.frameData.map_config.units_per_meter,
+          x: sed.coord_x + getRandomFloat(-2.5, 2.5) * this._api.frameData.map_config.units_per_meter,
+          y: sed.coord_y + getRandomFloat(-2.5, 2.5) * this._api.frameData.map_config.units_per_meter,
         },
-        initalRadiusMeters: getRandomFloat(1, 2),
+        initalRadiusMeters: getRandomFloat(1.5, 2.5),
       })
     }
     setTimeout(this.updateEMPTrailElements.bind(this), this.updateEMPTrailElementsInterval)

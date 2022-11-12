@@ -236,7 +236,6 @@ class Game(BaseModel):
         self._magnet_mine_max_proximity_to_explode_meters = constants.MAGNET_MINE_MAX_PROXIMITY_TO_EXPLODE_METERS
         self._magnet_mine_explode_damage_radius_meters = constants.MAGNET_MINE_EXPLODE_DAMAGE_RADIUS_METERS
 
-        self._emp_arming_time_seconds = constants.EMP_ARMING_TIME_SECONDS
         self._emp_max_seconds_to_detonate = constants.EMP_MAX_SECONDS_TO_DETONATE
         self._emp_max_proximity_to_explode_meters = constants.EMP_MAX_PROXIMITY_TO_EXPLODE_METERS
         self._emp_explode_damage_radius_meters = constants.EMP_EXPLODE_DAMAGE_RADIUS_METERS
@@ -832,7 +831,6 @@ class Game(BaseModel):
                     'distance': distance_meters,
                     'exploded': self._emps[emp_id].exploded,
                     'relative_heading': round(exact_heading),
-                    'percent_armed': self._emps[emp_id].percent_armed,
                 }
 
         # Add Hunter Drones to scanner data
@@ -998,7 +996,7 @@ class Game(BaseModel):
             self._ships[ship_id].last_tube_fire_frame = self._game_frame
             emp = EMP(self._game_frame, ship_id)
             extra_x, extra_y = utils2d.calculate_x_y_components(
-                self._ships[ship_id]._special_weapons_launch_velocity,
+                self._ships[ship_id].emp_launch_velocity_ms,
                 self._ships[ship_id].heading,
             )
             emp.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second
@@ -1157,7 +1155,6 @@ class Game(BaseModel):
 
     def advance_emps(self, fps: int):
         keys_to_drop = []
-        arm_time_ms = self._emp_arming_time_seconds * 1000
 
         # For a performance boost, only check proximity every 3rd frame
         check_proximity = self._is_testing or self._game_frame % 3 == 0
@@ -1168,33 +1165,24 @@ class Game(BaseModel):
                 continue
 
             self._emps[emp_id].elapsed_milliseconds += (1000 / fps)
-            if (
-                not self._emps[emp_id].armed
-                and self._emps[emp_id].elapsed_milliseconds > arm_time_ms
-            ):
-                # Arm the mine if enough time has passed
-                self._emps[emp_id].armed = True
-                self._emps[emp_id].percent_armed = 1
-
-            elif not self._emps[emp_id].armed:
-                self._emps[emp_id].percent_armed = self._emps[emp_id].elapsed_milliseconds / arm_time_ms
 
             # Blow up EMP if timer has expired
             explode = False
             if self._emps[emp_id].elapsed_milliseconds > (self._emp_max_seconds_to_detonate * 1000):
                 explode = True
 
-            if self._emps[emp_id].armed and (explode or check_proximity):
+            if explode or check_proximity:
                 ship_id_in_kill_range = []
                 for ship_id in self._ships:
+                    is_shooter = ship_id == self._emps[emp_id].ship_id
                     if self._ships[ship_id].exploded:
                         continue
                     distance_meters = utils2d.calculate_point_distance(
                         self._emps[emp_id].coords,
                         self._ships[ship_id].coords,
                     ) / self._map_units_per_meter
-                    if not explode and distance_meters <= self._emp_max_proximity_to_explode_meters:
-                        # Blow up EMP if it's within proximity of a ship
+                    if not is_shooter and not explode and distance_meters <= self._emp_max_proximity_to_explode_meters:
+                        # Blow up EMP if it's within proximity of an enemy ship
                         explode = True
                         ship_id_in_kill_range.append(ship_id)
                     elif distance_meters <= self._emp_explode_damage_radius_meters:
