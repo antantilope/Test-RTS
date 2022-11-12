@@ -985,9 +985,15 @@ export class DrawingService {
       radiusMeters = Math.max(1, percentCompleteFlareRadius * empBlast.max_radius_meters)
       radiusPx = radiusMeters * ppm / zoom
       const maxRadiusPx = empBlast.max_radius_meters * ppm / zoom
+      const gradient = ctx.createRadialGradient(
+        canvasCoord.x, canvasCoord.y, 0,
+        canvasCoord.x, canvasCoord.y, radiusPx,
+      )
+      gradient.addColorStop(0, `rgb(0, 0, 255, ${getRandomFloat(0.5, 0.8)})`)
+      gradient.addColorStop(1, "rgb(0, 0, 255, 0)");
+      ctx.fillStyle = gradient
       for(let i=0; i<3; i++) {
         ctx.beginPath()
-        ctx.fillStyle = `rgb(0, 0, 255, 0.${randomInt(2, 5)})`
         ctx.arc(
           canvasCoord.x + getRandomFloat(-1.5, 1.5) * ppm / zoom,
           canvasCoord.y + getRandomFloat(-1.5, 1.5) * ppm / zoom,
@@ -1020,9 +1026,15 @@ export class DrawingService {
       const endRadius = empBlast.max_radius_meters * 1.4
       radiusMeters = startRadius + (endRadius - startRadius) * fadePercent
       const fadeRadiusPx = radiusMeters * ppm / zoom
-      const alpha = 0.4 - (0.4 * fadePercent)
+      const alpha = 0.8 - (0.8 * fadePercent)
+      const gradient = ctx.createRadialGradient(
+        canvasCoord.x, canvasCoord.y, 0,
+        canvasCoord.x, canvasCoord.y, fadeRadiusPx,
+      )
+      gradient.addColorStop(0, `rgb(0, 0, 255, ${alpha})`)
+      gradient.addColorStop(1, `rgb(0, 0, 255, 0)`);
       ctx.beginPath()
-      ctx.fillStyle = `rgb(0, 0, 255, ${alpha})`
+      ctx.fillStyle = gradient
       ctx.arc(
         canvasCoord.x,
         canvasCoord.y,
@@ -1032,13 +1044,13 @@ export class DrawingService {
       )
       ctx.fill()
       const dotCt = Math.ceil((1 - fadePercent) * 8)
-      const dotRadiusPx = Math.max(1, 0.7 * ppm / zoom)
+      const dotRadiusPx = Math.max(1, 1 * ppm / zoom)
       for(let i=0; i<dotCt; i++) {
         ctx.beginPath()
         ctx.fillStyle = 'rgb(0, 0, 255, 0.75)'
         ctx.arc(
-          canvasCoord.x + getRandomFloat(-1 * fadeRadiusPx,  fadeRadiusPx),
-          canvasCoord.y + getRandomFloat(-1 * fadeRadiusPx, fadeRadiusPx),
+          canvasCoord.x + getRandomFloat(-2 * fadeRadiusPx,  fadeRadiusPx*2),
+          canvasCoord.y + getRandomFloat(-2 * fadeRadiusPx, fadeRadiusPx*2),
           dotRadiusPx,
           0,
           TWO_PI,

@@ -1193,7 +1193,7 @@ class Game(BaseModel):
                         "id": str(uuid4()),
                         "origin_point": self._emps[emp_id].coords,
                         "max_radius_meters":  self._emp_explode_damage_radius_meters,
-                        "flare_ms": 1000,
+                        "flare_ms": 200,
                         "fade_ms": 3000,
                         "elapsed_ms": 10,
                     })
