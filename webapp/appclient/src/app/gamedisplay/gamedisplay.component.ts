@@ -332,20 +332,44 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
-
   @HostListener('document:keypress', ['$event'])
   private handleKeyboardEvent(event: KeyboardEvent) {
+    // Handler for character key presses
     if(this._pane.getInputIsFocused()) {
       return
     }
     const key = event.key.toLocaleLowerCase()
-    console.log({gameKeystroke: key})
+    console.log({gameCharKeystroke: key})
     switch (true) {
       case key === 'm':
         this.toggleMap()
         break
       case key === 'c':
         this.cycleCameraMode()
+        break
+      case key === 'f':
+        this.btnClickFirePneumaticTube()
+        break
+      case key === ' ':
+        this.keyboardShortcutEngineStateUp()
+        break
+    }
+  }
+
+  @HostListener('document:keyup', ['$event'])
+  private handleNonKeypressKeyboardEvent(event: KeyboardEvent) {
+    // Handler for non-character key presses (Alt, Ctrl)
+    if(this._pane.getInputIsFocused()) {
+      return
+    }
+    var key = event.key.toLocaleLowerCase();
+    if(/^(\w|\s)$/.test(key)){
+      return
+    }
+    console.log({gameKeyStroke: key})
+    switch (true) {
+      case key === 'alt' || key === 'control':
+        this.keyboardShortcutEngineStateDown()
         break
     }
   }
@@ -2327,4 +2351,20 @@ export class GamedisplayComponent implements OnInit {
     }
   }
 
+  private keyboardShortcutEngineStateUp() {
+    if(!this._api.frameData.ship.engine_online) {
+      this.btnActivateEngine()
+    } else if (!this._api.frameData.ship.engine_lit){
+      this.btnLightEngine()
+    } else if (this._api.frameData.ship.engine_lit){
+      this.btnBoostEngine()
+    }
+  }
+  private keyboardShortcutEngineStateDown() {
+    if (this._api.frameData.ship.engine_lit){
+      this.btnUnlightEngine()
+    } else if (this._api.frameData.ship.engine_online) {
+      this.btnDeactivateEngine()
+    }
+  }
 }
