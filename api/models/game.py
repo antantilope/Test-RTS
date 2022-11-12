@@ -974,15 +974,13 @@ class Game(BaseModel):
                     })
 
         # SPECIAL WEAPONS (TUBE/TORPEDO WEAPONS)
-        # ship._special_weapons_launch_velocity is set when processing
-        # ship commands in run_frame()
         if self._ships[ship_id].magnet_mine_firing:
             # Spawn a new magnet mine.
             self._ships[ship_id].magnet_mine_firing = False
             self._ships[ship_id].last_tube_fire_frame = self._game_frame
             mine = MagnetMine(self._game_frame, ship_id)
             extra_x, extra_y = utils2d.calculate_x_y_components(
-                self._ships[ship_id]._special_weapons_launch_velocity,
+                self._ships[ship_id].magnet_mine_launch_velocity,
                 self._ships[ship_id].heading,
             )
             mine.velocity_x_meters_per_second = extra_x + self._ships[ship_id].velocity_x_meters_per_second

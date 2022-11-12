@@ -360,6 +360,7 @@ class Ship(BaseModel):
         self.emp_launch_velocity_ms = constants.EMP_LAUNCH_VELOCITY_MS
         self.hunter_drones_loaded = 2
         self.magnet_mine_firing = False
+        self.magnet_mine_launch_velocity = constants.MAGNET_MINE_LAUNCH_VELOCITY_MS
         self.emp_firing = False
         self.hunter_drone_firing = False
         self._hunter_drone_max_target_acquisition_distance_meters = None
@@ -1530,7 +1531,7 @@ class Ship(BaseModel):
         elif command == ShipCommands.BUY_MAGNET_MINE:
             self.cmd_buy_magnet_mine()
         elif command == ShipCommands.LAUNCH_MAGNET_MINE:
-            self.cmd_launch_magnet_mine(args[0])
+            self.cmd_launch_magnet_mine()
         elif command == ShipCommands.BUY_EMP:
             self.cmd_buy_emp()
         elif command == ShipCommands.LAUNCH_EMP:
@@ -1883,19 +1884,10 @@ class Ship(BaseModel):
             return
         self.magnet_mines_loaded += 1
 
-    def cmd_launch_magnet_mine(self, launch_velocity: int):
-        _velocity = max(
-            launch_velocity,
-            self._special_weapons_min_launch_velocity,
-        )
-        _velocity = min(
-            _velocity,
-            self._special_weapons_max_launch_velocity,
-        )
+    def cmd_launch_magnet_mine(self):
         if self.magnet_mines_loaded > 0 and not self.magnet_mine_firing:
             self.magnet_mines_loaded -= 1
             self.magnet_mine_firing = True
-            self._special_weapons_launch_velocity = _velocity
 
     def cmd_buy_emp(self):
         if self.special_weapons_loaded >= self.special_weapons_tubes_count:

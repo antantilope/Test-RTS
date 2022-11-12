@@ -2324,7 +2324,7 @@ export class GamedisplayComponent implements OnInit {
 
   private btnClickFirePneumaticTube() {
     if(this.selectedPneumaticWeapon == MAGNET_MINE_SLUG) {
-      this._api.emitGameCommand('launch_magnet_mine', {launch_velocity: this.lauchVelocity})
+      this._api.emitGameCommand('launch_magnet_mine', {})
     } else if (this.selectedPneumaticWeapon == EMP_SLUG) {
       this._api.emitGameCommand('launch_emp', {})
     } else if (this.selectedPneumaticWeapon == HUNTER_DRONE_SLUG) {

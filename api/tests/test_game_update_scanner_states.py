@@ -902,9 +902,8 @@ class TestGameUpdateScannerStatesForMines(TestCase):
         assert len(self.game._ships[self.player_1_ship_id].scanner_magnet_mine_data) == 0
         assert len(self.game._ships[self.player_2_ship_id].scanner_magnet_mine_data) == 0
 
-        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine(
-            launch_velocity=10
-        )
+        self.game._ships[self.player_1_ship_id].magnet_mine_launch_velocity = 10
+        self.game._ships[self.player_1_ship_id].cmd_launch_magnet_mine()
         self.game.calculate_weapons_and_damage(self.player_1_ship_id)
         assert len(self.game._magnet_mines) == 1
 
