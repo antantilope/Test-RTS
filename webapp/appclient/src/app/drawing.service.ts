@@ -1450,7 +1450,7 @@ export class DrawingService {
       )
       const cursorOnShip = drawableShip.shipId === scannerTargetIDCursor
       // We dont want to draw bounding box if diamond lock box will be drawn
-      if(!shipIsLockedOrLocking || !this._api.frameData.ship.scanner_locked) {
+      if(!shipIsLockedOrLocking || (shipIsLockedOrLocking && !this._api.frameData.ship.scanner_locked)) {
         ctx.beginPath()
         ctx.strokeStyle = drawableShip.isSelf ? "rgb(200, 200, 200, 0.40)" : "rgb(255, 0, 0, 0.85)"
         ctx.lineWidth = 2.5
