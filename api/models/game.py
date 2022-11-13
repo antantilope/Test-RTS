@@ -522,7 +522,7 @@ class Game(BaseModel):
             ship.advance_gravity_brake_position(self._fps)
             ship.adjust_resources(self._fps, self._game_frame)
             ship.advance_heading_traversal(self._fps)
-            ship.calculate_physics(self._fps)
+            ship.calculate_physics(self._fps, self._game_frame)
             ship.advance_thermal_signature(self._fps)
             self.reset_and_update_scanner_states(ship_id)
 

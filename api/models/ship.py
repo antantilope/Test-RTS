@@ -95,7 +95,6 @@ class ShipCommands:
     RETRACT_GRAVITY_BRAKE = "retract_gravity_brake"
     START_ORE_MINING = 'start_ore_mining'
     STOP_ORE_MINING = 'stop_ore_mining'
-    TRADE_ORE_FOR_ORE_COIN = 'trade_ore_for_ore_coin'
 
     START_FUELING = "start_fueling"
     STOP_FUELING = "stop_fueling"
@@ -1056,7 +1055,7 @@ class Ship(BaseModel):
                     )
                 )
 
-    def calculate_physics(self, fps: int) -> None:
+    def calculate_physics(self, fps: int, game_frame=None) -> None:
         ## apply gravity brake
         if self.gravity_brake_active:
             if self.velocity_x_meters_per_second != 0:
@@ -1093,9 +1092,11 @@ class Ship(BaseModel):
                     self.velocity_y_meters_per_second = 0
 
             if self.is_stationary:
+                # Docking complete
                 self.gravity_brake_active = False
                 self.docked_at_station = self.docking_at_station
                 self.docking_at_station = None
+                self._cmd_trade_ore_for_ore_coin(game_frame)
                 return
 
 
@@ -1501,8 +1502,6 @@ class Ship(BaseModel):
             self.cmd_start_ore_mining()
         elif command == ShipCommands.STOP_ORE_MINING:
             self.cmd_stop_ore_mining()
-        elif command == ShipCommands.TRADE_ORE_FOR_ORE_COIN:
-            self.cmd_trade_ore_for_ore_coin(kwargs['game_frame'])
 
         elif command == ShipCommands.START_FUELING:
             self.cmd_start_fueling()
@@ -1717,7 +1716,7 @@ class Ship(BaseModel):
     def cmd_stop_ore_mining(self):
         self.mining_ore = False
 
-    def cmd_trade_ore_for_ore_coin(self, game_frame: int):
+    def _cmd_trade_ore_for_ore_coin(self, game_frame: int):
         if not self.docked_at_station:
             return
         if not self.cargo_ore_mass_kg > 0:

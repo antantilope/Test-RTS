@@ -5,27 +5,6 @@
         </div>
         <div id="station-name-label">{{ stationName }}</div>
     </div>
-    <div
-        id="trade-ore-for-coin-container"
-    >
-        <div class="section">
-            <div class="section-heading">
-                Ore Trade Desk
-            </div>
-            <p><strong>Trade Physical Ore for Virtual Ore Coin</strong></p>
-            <p *ngIf="_api.frameData.ship.cargo_ore_mass_kg == 0" id="no-ore-notice">
-                You have no raw ore to trade.
-            </p>
-            <button
-                id="trade-ore-btn"
-                *ngIf="_api.frameData.ship.cargo_ore_mass_kg > 0"
-                (click)="btnClickTradeOreForOreCoin()"
-                [disabled]="_api.frameData.ship.cargo_ore_mass_kg == 0"
-            >
-                💎🔄🪙
-            </button>
-        </div>
-    </div>
     <div>
         <div class="section">
             <div class="section-heading">

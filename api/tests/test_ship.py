@@ -874,7 +874,7 @@ class TestShipCMDCalculatePhysics(TestCase):
         self.start_y = self.ship.coord_y
 
     def _calculate_physics(self) -> None:
-        self.ship.calculate_physics(self.fps)
+        self.ship.calculate_physics(self.fps, game_frame=420)
 
 
     ''' No Velocity and No Acceleration
@@ -1065,6 +1065,8 @@ class TestShipCMDCalculatePhysics(TestCase):
         self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
         self.ship.gravity_brake_active = True
         self.ship.docking_at_station = "test-station-uuid"
+        self.ship.cargo_ore_mass_kg = 20
+        self.ship.virtual_ore_kg = 0
 
         self._calculate_physics()
         assert self.ship.gravity_brake_active
@@ -1115,6 +1117,10 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert self.ship.docked_at_station == "test-station-uuid"
         assert_floats_equal(self.ship.velocity_x_meters_per_second, 0)
         assert_floats_equal(self.ship.velocity_y_meters_per_second, 0)
+        # FIXME: this should be in a separate test
+        assert self.ship.cargo_ore_mass_kg == 0
+        assert self.ship.virtual_ore_kg == 20
+        assert self.ship.last_ore_deposit_frame == 420
 
     '''
                                         |  \                              |  \    |  \
@@ -2340,7 +2346,7 @@ class TestShipCMDTradeOreForOreCoin(TestCase):
 
     def test_command_does_not_work_if_not_docked_at_station(self):
         self.ship.cargo_ore_mass_kg = 10
-        self.ship.cmd_trade_ore_for_ore_coin(game_frame=12)
+        self.ship._cmd_trade_ore_for_ore_coin(game_frame=12)
         assert self.ship.cargo_ore_mass_kg == 10
         assert self.ship.virtual_ore_kg == 0
         assert self.ship.last_ore_deposit_frame is None
@@ -2348,7 +2354,7 @@ class TestShipCMDTradeOreForOreCoin(TestCase):
     def test_command_does_work_if_docked_at_station(self):
         self.ship.cargo_ore_mass_kg = 10
         self.ship.docked_at_station = "fooobaaaar"
-        self.ship.cmd_trade_ore_for_ore_coin(game_frame=12)
+        self.ship._cmd_trade_ore_for_ore_coin(game_frame=12)
         assert self.ship.cargo_ore_mass_kg == 0
         assert self.ship.virtual_ore_kg == 10
         assert self.ship.last_ore_deposit_frame == 12

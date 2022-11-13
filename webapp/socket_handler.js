@@ -207,12 +207,6 @@ const commandHandlers = {
             ship_command: 'stop_fueling',
         });
     },
-    trade_ore_for_ore_coin: (app, queueName, session, requestBody) => {
-        app.get(queueName).push({
-            player_id: session.player_id,
-            ship_command: 'trade_ore_for_ore_coin',
-        });
-    },
     start_core_upgrade: (app, queueName, session, requestBody) => {
         const slug = validateStartCoreUpgrade(requestBody);
         app.get(queueName).push({
