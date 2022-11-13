@@ -29,6 +29,7 @@ export class AssetService {
   public actionTileImgScannerOnline: HTMLImageElement = new Image()
 
   public magnetMineAsset: HTMLImageElement = new Image()
+  public miningLocationAsset: HTMLImageElement = new Image()
   public hunterDroneAsset: HTMLImageElement = new Image()
   public stationAsset: HTMLImageElement = new Image()
 
@@ -44,6 +45,7 @@ export class AssetService {
     this.actionTileImgEngineOnline.src = "/static/img/activate-engine.jpg"
     this.actionTileImgScannerOnline.src = "/static/img/activate-scanner.jpg"
 
+    this.miningLocationAsset.src = "/static/img/mining-location.svg"
     this.magnetMineAsset.src = "/static/img/magnet-mine.svg"
     this.hunterDroneAsset.src = "/static/img/Drone.png"
     this.stationAsset.src = "/static/img/Station.png"

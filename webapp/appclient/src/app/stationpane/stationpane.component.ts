@@ -20,10 +20,6 @@ export class StationpaneComponent implements OnInit {
     ).name
   }
 
-  async btnClickTradeOreForOreCoin() {
-    this._api.emitGameCommand('trade_ore_for_ore_coin', {})
-  }
-
   async btnClickStartFueling() {
     this._api.emitGameCommand('start_fueling', {})
   }
