@@ -374,7 +374,6 @@ export class Camera {
       gravityBrakeActive: ship.gravity_brake_active,
       miningOreLocation: ship.mining_ore ? ship.parked_at_ore_mine : null,
       fuelingAtStation: ship.fueling_at_station,
-      visualEbeamCharging: ship.ebeam_charging,
       visualEbeamFiring: ship.ebeam_firing,
       visualEbeamChargePercent: ship.ebeam_charge / ship.ebeam_charge_capacity,
       lastTubeFireFrame: ship.last_tube_fire_frame,
@@ -395,6 +394,9 @@ export class Camera {
       EngineOuterRightCanvasCoord,
       EngineInnerRightCanvasCoord,
       isDot: true,
+      visualScannerMode: ship.scanner_online?ship.scanner_mode:null,
+      visualScannerSensitivity: ship.scanner_online&&ship.scanner_mode=="radar"?ship.scanner_radar_sensitivity: null,
+      visualScannerRangeMeters: ship.scanner_online?(ship.scanner_mode=="ir"?ship.scanner_ir_range:ship.scanner_ir_range):null,
     })
 
     // Draw other scanner elements
@@ -426,7 +428,7 @@ export class Camera {
         x: HBBottomRightCanvasCoord.x * 3/9 + HBBottomCenterCanvasCoord.x * 6/9,
         y: HBBottomRightCanvasCoord.y * 3/9 + HBBottomCenterCanvasCoord.y * 6/9,
       }
-      let drawableShip: DrawableShip = {
+      drawableItems.ships.push({
         isSelf: false,
         isDot: true,
         skinSlug: scannerData.skin_slug,
@@ -439,7 +441,6 @@ export class Camera {
         mapCoord: otherCoord,
         designator: scannerData.designator,
         inVisualRange: scannerData.in_visual_range,
-        visualEbeamCharging: scannerData.visual_ebeam_charging,
         visualEbeamChargePercent: scannerData.visual_ebeam_charge_percent,
         visualEbeamFiring: scannerData.visual_ebeam_firing,
         canvasBoundingBox: this.pointCoordToBoxCoord(
@@ -465,8 +466,10 @@ export class Camera {
         EngineInnerLeftCanvasCoord,
         EngineOuterRightCanvasCoord,
         EngineInnerRightCanvasCoord,
-      }
-      drawableItems.ships.push(drawableShip)
+        visualScannerMode: scannerData.visual_scanner_mode,
+        visualScannerSensitivity: scannerData.visual_scanner_sensitivity,
+        visualScannerRangeMeters: scannerData.visual_scanner_range_meters,
+      })
     }
 
     // Magnet mines

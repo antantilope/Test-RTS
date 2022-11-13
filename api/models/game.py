@@ -744,12 +744,21 @@ class Game(BaseModel):
 
             if is_visual or is_scannable:
                 exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
+                other_scanner_online = self._ships[other_id].scanner_online
+                other_scanner_mode = self._ships[other_id].scanner_mode
                 scanner_ship_data: ScannedShipElement = {
                     'id': other_id,
                     'skin_slug': self._ships[other_id].skin_slug,
                     'designator': self._ships[other_id].scanner_designator,
                     'anti_radar_coating_level': self._ships[other_id].anti_radar_coating_level,
                     'scanner_thermal_signature': self._ships[other_id].scanner_thermal_signature,
+                    'visual_scanner_mode': other_scanner_mode if other_scanner_online else None,
+                    'visual_scanner_sensitivity': (
+                        self._ships[other_id].scanner_radar_sensitivity
+                        if other_scanner_online and other_scanner_mode == ShipScannerMode.RADAR
+                        else None
+                    ),
+                    'visual_scanner_range_meters': self._ships[other_id].scanner_range if other_scanner_online else None,
                     'coord_x': other_coords[0],
                     'coord_y': other_coords[1],
                     'visual_heading': self._ships[other_id].heading,
@@ -763,12 +772,10 @@ class Game(BaseModel):
                     'aflame': self._ships[other_id].aflame_since_frame is not None,
                     'exploded': self._ships[other_id].exploded,
                     'in_visual_range': is_visual,
-                    'visual_ebeam_charging': self._ships[other_id].ebeam_charging,
                     'visual_ebeam_charge_percent': self._ships[other_id].ebeam_charge / self._ships[other_id].ebeam_charge_capacity,
                     'visual_engine_lit': self._ships[other_id].engine_lit,
                     'visual_engine_boosted_last_frame': self._ships[other_id].engine_boosted_last_frame,
                     'visual_ebeam_firing': self._ships[other_id].ebeam_firing,
-                    'visual_ebeam_color': self._ships[other_id].ebeam_color,
                     'visual_gravity_brake_position': self._ships[other_id].gravity_brake_position,
                     'visual_gravity_brake_deployed_position': self._ships[other_id].gravity_brake_deployed_position,
                     'visual_gravity_brake_active': self._ships[other_id].gravity_brake_active,

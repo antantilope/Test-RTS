@@ -131,6 +131,9 @@ class ScannedShipElement(TypedDict):
     designator: str
     anti_radar_coating_level: int
     scanner_thermal_signature: int
+    visual_scanner_mode: Union[None, str]
+    visual_scanner_range_meters: int
+    visual_scanner_sensitivity: int
     coord_x: int
     coord_y: int
     visual_heading: int #heading of the scanned ship
@@ -148,10 +151,8 @@ class ScannedShipElement(TypedDict):
     exploded: bool
     in_visual_range: bool
     visual_engine_lit: bool
-    visual_ebeam_charging: bool
     visual_ebeam_charge_percent: float
     visual_ebeam_firing: bool
-    visual_ebeam_color: str
     visual_engine_boosted_last_frame: int
     visual_gravity_brake_position: int
     visual_gravity_brake_deployed_position: int

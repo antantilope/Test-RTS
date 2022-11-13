@@ -63,6 +63,16 @@ function nthRoot(x, root) {
   return Math.pow(x, 1 / root)
 }
 
+const simpleHash = (str, maxInt) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash &= hash;
+  }
+  return Math.abs(hash) % maxInt
+};
+
 class BottomRightOverlaySizing {
   yInterval: number
   timerRightXOffset: number
@@ -112,6 +122,8 @@ export class DrawingService {
   private minOnCount = 10
   private onForCount = 0
 
+  private nameHashes: Map<string, number> = new Map()
+
   constructor(
     private _camera: CameraService,
     private _api: ApiService,
@@ -123,6 +135,14 @@ export class DrawingService {
     this.deathQuote = this._quote.getQuote()
   }
 
+  private getNameHash(name: string): number {
+    if (this.nameHashes.has(name)) {
+      return this.nameHashes.get(name)
+    }
+    const hash = simpleHash(name, 5000)
+    this.nameHashes.set(name, hash)
+    return hash
+  }
 
   public drawMapBoundary(
     ctx: CanvasRenderingContext2D,
@@ -1656,6 +1676,31 @@ export class DrawingService {
       ctx.fill()
     }
 
+    if(drawableShip.visualScannerMode !== null) {
+      const color = drawableShip.visualScannerMode=="ir"?a=>`rgb(255, 255, 0, ${a})`:a=>`rgb(0, 255, 0, ${a})`
+      const radiusPx = drawableShip.visualScannerRangeMeters * this._api.frameData.map_config.units_per_meter / currentZoom
+      const interval = 2500 / ((drawableShip.visualScannerSensitivity || 0) + 1)
+      const ratationPercentStart = ((performance.now() + this.getNameHash(drawableShip.designator)) % interval) / interval
+      const ratationPercentEnd = ratationPercentStart + 0.02
+      const gradient = ctx.createRadialGradient(
+        drawableShip.canvasCoordCenter.x, drawableShip.canvasCoordCenter.y, 0,
+        drawableShip.canvasCoordCenter.x, drawableShip.canvasCoordCenter.y, radiusPx,
+      )
+      gradient.addColorStop(0, color(0.12))
+      gradient.addColorStop(1, color(0.02));
+      ctx.beginPath()
+      ctx.fillStyle = gradient
+      ctx.moveTo(drawableShip.canvasCoordCenter.x, drawableShip.canvasCoordCenter.y)
+      ctx.arc(
+        drawableShip.canvasCoordCenter.x, drawableShip.canvasCoordCenter.y,
+        radiusPx,
+        TWO_PI*ratationPercentStart,
+        TWO_PI*ratationPercentEnd,
+      )
+      ctx.lineTo(drawableShip.canvasCoordCenter.x, drawableShip.canvasCoordCenter.y)
+      ctx.fill()
+    }
+
     if (this.isDebug) {
       // Draw hitbox polygon
       ctx.beginPath()
@@ -2035,11 +2080,11 @@ export class DrawingService {
         ctx.stroke()
 
         // Draw spotlight effect
-        const spotLightIntervalMS = 3000
+        const spotLightIntervalMS = 6000
         const spotLightPercent = (performance.now() % spotLightIntervalMS) / spotLightIntervalMS
         const spotLightStartAngle = TWO_PI * spotLightPercent
         const spotLightEndAngle = spotLightStartAngle + TWO_PI * 0.125
-        const spotLightRadiusPx = 140 * this._api.frameData.map_config.units_per_meter / cameraZoom
+        const spotLightRadiusPx = 70 * this._api.frameData.map_config.units_per_meter / cameraZoom
         const gradient = ctx.createRadialGradient(
           centerCanvasCoord.x, centerCanvasCoord.y, 0,
           centerCanvasCoord.x, centerCanvasCoord.y, spotLightRadiusPx,

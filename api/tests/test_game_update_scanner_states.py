@@ -351,10 +351,8 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'velocity_x_meters_per_second': 0.0,
                 'visual_engine_lit': True,
                 'visual_engine_boosted_last_frame':-10,
-                'visual_ebeam_charging': False,
                 'visual_ebeam_charge_percent': 0.0,
                 'visual_ebeam_firing': False,
-                'visual_ebeam_color': '#ff0000',
                 'visual_heading': 0,
                 'visual_map_bottom_center_coord': (10000, 9925),
                 'visual_map_bottom_left_coord': (9950, 9944),
@@ -374,6 +372,9 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'anti_radar_coating_level':0,
                 'scanner_thermal_signature': 0,
                 'visual_last_tube_fire_frame': None,
+                'visual_scanner_mode': None,
+                'visual_scanner_range_meters': None,
+                'visual_scanner_sensitivity': None,
             }
         )
         self.assertEqual(self.game._ships[self.player_2_ship_id].scanner_ship_data[self.player_1_ship_id],
@@ -388,10 +389,8 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'velocity_x_meters_per_second': 0,
                 'visual_engine_lit': False,
                 'visual_engine_boosted_last_frame':-10,
-                'visual_ebeam_charging': False,
                 'visual_ebeam_charge_percent': 0.0,
                 'visual_ebeam_firing': False,
-                'visual_ebeam_color': '#ff0000',
                 'visual_heading': 0,
                 'visual_last_tube_fire_frame': None,
                 'visual_map_bottom_center_coord': (5000, 4925),
@@ -412,6 +411,9 @@ class TestGameUpdateScannerStatesForShips(TestCase):
                 'anti_radar_coating_level':0,
                 'scanner_thermal_signature': 0,
                 'visual_last_tube_fire_frame': None,
+                'visual_scanner_mode': None,
+                'visual_scanner_range_meters': None,
+                'visual_scanner_sensitivity': None,
             }
         )
 
@@ -446,10 +448,8 @@ class TestGameUpdateScannerStatesForShips(TestCase):
             'velocity_x_meters_per_second': 0.0,
             'velocity_y_meters_per_second': 0.0,
             'visual_engine_boosted_last_frame': -10,
-            'visual_ebeam_charging': False,
             'visual_ebeam_charge_percent': 0.0,
             'visual_ebeam_firing': False,
-            'visual_ebeam_color': '#ff0000',
             'visual_gravity_brake_position': 0,
             'visual_gravity_brake_deployed_position': 100,
             'visual_gravity_brake_active': False,
@@ -469,6 +469,9 @@ class TestGameUpdateScannerStatesForShips(TestCase):
             'visual_map_bottom_left_coord': (4950, 4944),
             'visual_map_bottom_right_coord': (5050, 4944),
             'visual_map_nose_coord': (5000, 5075),
+            'visual_scanner_mode': None,
+            'visual_scanner_range_meters': None,
+            'visual_scanner_sensitivity': None,
         })
 
     def test_ship_1_and_ship_2_can_spot_eachother_with_radar_scanner_only(self):

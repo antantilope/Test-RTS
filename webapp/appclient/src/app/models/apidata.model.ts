@@ -127,12 +127,10 @@ export class ScannerDataShipElement {
     visual_map_bottom_right_coord: number[]
     visual_map_bottom_center_coord: number[]
 
-    anti_radar_coating_level: number
     designator: string
     in_visual_range: boolean
     visual_engine_lit: boolean
     visual_engine_boosted_last_frame: number
-    visual_ebeam_color: string
     visual_ebeam_firing: boolean
     aflame: boolean
     exploded: boolean
@@ -140,12 +138,15 @@ export class ScannerDataShipElement {
     relative_heading: number
     target_heading: number
     scanner_thermal_signature: number
+    anti_radar_coating_level: number
+    visual_scanner_mode: string | null
+    visual_scanner_sensitivity: number | null
+    visual_scanner_range_meters: number | null
     visual_gravity_brake_position: number
     visual_gravity_brake_deployed_position: number
     visual_gravity_brake_active: boolean
     visual_mining_ore_location: string | null
     visual_fueling_at_station: boolean
-    visual_ebeam_charging: boolean
     visual_ebeam_charge_percent: number
     visual_last_tube_fire_frame: null | number
 }
@@ -254,7 +255,6 @@ export class Ship {
     ebeam_firing: boolean
     ebeam_charging: boolean
     ebeam_charge_capacity: number
-    ebeam_color: string
     ebeam_charge: number
     ebeam_can_fire: boolean
     ebeam_last_hit_frame: number

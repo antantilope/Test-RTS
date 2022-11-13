@@ -11,7 +11,6 @@ export class DrawableShip {
     canvasCoordCenter: PointCoord
     designator: string
     inVisualRange: boolean
-    visualEbeamCharging: boolean
     visualEbeamChargePercent: number
     visualEbeamFiring: boolean
     canvasBoundingBox: BoxCoords
@@ -26,6 +25,9 @@ export class DrawableShip {
     EngineOuterRightCanvasCoord: PointCoord
     EngineInnerRightCanvasCoord: PointCoord
     heading: number
+    visualScannerMode: string | null
+    visualScannerSensitivity: number | null
+    visualScannerRangeMeters: number | null
     engineLit: boolean
     engineBoosted: boolean
     aflame: boolean
