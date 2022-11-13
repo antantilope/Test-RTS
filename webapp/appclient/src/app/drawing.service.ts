@@ -13,6 +13,7 @@ import {
   EBEAM_EFFECT_ELEMENT_TTL_MS,
   GravityBrakeShipEffectElement,
   GRAVITY_BREAK_SHIP_EFFECT_ELEMENT_TTL_MS,
+  CameraService,
 } from './camera.service';
 import { FormattingService } from './formatting.service';
 import { QuoteService, QuoteDetails } from './quote.service';
@@ -112,7 +113,7 @@ export class DrawingService {
   private onForCount = 0
 
   constructor(
-    // private _camera: CameraService,
+    private _camera: CameraService,
     private _api: ApiService,
     private _formatting: FormattingService,
     private _quote: QuoteService,
@@ -1419,6 +1420,7 @@ export class DrawingService {
     )
 
     if(drawableShip.miningOreLocation) {
+      let mupm = this._api.frameData.map_config.units_per_meter
       const om = this._api.frameData.ore_mines.find(o => o.uuid == drawableShip.miningOreLocation)
       if(om) {
         const p1 = camera.mapCoordToCanvasCoord(
@@ -1426,14 +1428,29 @@ export class DrawingService {
           camera.getPosition(),
         )
         const rockRadiusCanvasPx = om.collision_radius_meters * this._api.frameData.map_config.units_per_meter / currentZoom
-        p1.x += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
-        p1.y += randomInt(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+        p1.x += getRandomFloat(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
+        p1.y += getRandomFloat(rockRadiusCanvasPx * -1, rockRadiusCanvasPx)
         ctx.beginPath()
         ctx.strokeStyle = "rgb(255, 0, 0, 0.6)"
         ctx.lineWidth = 4
         ctx.moveTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
         ctx.lineTo(p1.x, p1.y)
         ctx.stroke()
+        ctx.beginPath()
+        ctx.fillStyle = `rgb(255, 0, 0, ${getRandomFloat(0.2, 0.5)})`
+        ctx.arc(
+          p1.x, p1.y, getRandomFloat(2, 6) * mupm / currentZoom, 0, TWO_PI
+        )
+        ctx.fill()
+        if(Math.random() >= 0.85) {
+          this._camera.addFlameSmokeElement(
+            {
+              x: om.position_map_units_x + getRandomFloat(-1*om.collision_radius_meters*mupm, om.collision_radius_meters*mupm),
+              y: om.position_map_units_y + getRandomFloat(-1*om.collision_radius_meters*mupm, om.collision_radius_meters*mupm),
+            },
+            getRandomFloat(2, 5)
+          )
+        }
       }
     }
 
