@@ -1060,33 +1060,26 @@ class Ship(BaseModel):
         ## apply gravity brake
         if self.gravity_brake_active:
             if self.velocity_x_meters_per_second != 0:
-                magX = abs(self.velocity_x_meters_per_second)
-                if magX > 150:
-                     # If more than 150M/S immediatly drop to 100M/S
-                    delta = magX - 100
-                else:
-                    # reduce X by half 6 times per second.
-                    delta = min(
-                        magX,
-                        max(5, magX / 2 / (fps / 6))
-                    )
+                try:
+                    delta = utils2d.calculate_gravity_brake_slowdown(
+                        self.velocity_x_meters_per_second
+                    ) / fps
+                except utils2d.ExcessiveVelocityError:
+                    delta = abs(self.velocity_x_meters_per_second) - utils2d.MAX_VELOCITY_FOR_GRAVITY_BRAKE
+
                 direction = 1 if self.velocity_x_meters_per_second < 0 else -1
                 self.velocity_x_meters_per_second += delta * direction
                 if abs(self.velocity_x_meters_per_second) < 5:
                     self.velocity_x_meters_per_second = 0
 
-
             if self.velocity_y_meters_per_second != 0:
-                magY = abs(self.velocity_y_meters_per_second)
-                if magY > 150:
-                    # If more than 150M/S immediatly drop to 100M/S
-                    delta = magY - 100
-                else:
-                    # Otherwise reduce Y by half 6 times per second.
-                    delta = min(
-                        magY,
-                        max(5, magY / 2 / (fps / 6))
-                    )
+                try:
+                    delta = utils2d.calculate_gravity_brake_slowdown(
+                        self.velocity_y_meters_per_second
+                    ) / fps
+                except utils2d.ExcessiveVelocityError:
+                    delta = abs(self.velocity_y_meters_per_second) - utils2d.MAX_VELOCITY_FOR_GRAVITY_BRAKE
+
                 direction = 1 if self.velocity_y_meters_per_second < 0 else -1
                 self.velocity_y_meters_per_second += delta * direction
                 if abs(self.velocity_y_meters_per_second) < 5:

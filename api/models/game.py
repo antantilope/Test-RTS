@@ -499,9 +499,8 @@ class Game(BaseModel):
                 self._fps = fps
                 self._last_frame_at = now_ts
 
-        if self._fps == 0:
-            self.logger.warn("FPS set to 0, artificially adjusting to 1")
-            self._fps = 1
+        if self._fps < MAX_SERVER_FPS:
+            self.logger.warn(f"FPS<30: {self._fps}")
 
         # Process user commands.
         for command in request['commands']:
