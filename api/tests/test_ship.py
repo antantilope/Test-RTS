@@ -1055,10 +1055,8 @@ class TestShipCMDCalculatePhysics(TestCase):
         self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
         self.ship.gravity_brake_active = True
         self._calculate_physics()
-        print(self.ship.velocity_x_meters_per_second)
-        print(self.ship.velocity_y_meters_per_second)
-        assert self.ship.velocity_x_meters_per_second == 100
-        assert self.ship.velocity_y_meters_per_second == 84
+        assert self.ship.velocity_x_meters_per_second == 110
+        assert self.ship.velocity_y_meters_per_second == 110
 
     def test_ship_comes_to_a_complete_stop(self):
         self.fps = 10
@@ -1074,43 +1072,29 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert self.ship.gravity_brake_active
         assert self.ship.docking_at_station == "test-station-uuid"
         assert self.ship.docked_at_station is None
-        assert self.ship.velocity_x_meters_per_second == 35
-        assert self.ship.velocity_y_meters_per_second == 52.5
+        assert self.ship.velocity_x_meters_per_second == 45
+        assert self.ship.velocity_y_meters_per_second == 67.5
 
         self._calculate_physics()
         assert self.ship.gravity_brake_active
         assert self.ship.docking_at_station == "test-station-uuid"
         assert self.ship.docked_at_station is None
-        assert self.ship.velocity_x_meters_per_second == 24.5
-        assert self.ship.velocity_y_meters_per_second == 36.75
+        assert self.ship.velocity_x_meters_per_second == 40.5
+        assert self.ship.velocity_y_meters_per_second == 60.75
 
         self._calculate_physics()
         assert self.ship.gravity_brake_active
         assert self.ship.docking_at_station == "test-station-uuid"
         assert self.ship.docked_at_station is None
-        assert self.ship.velocity_x_meters_per_second == 17.15
-        assert self.ship.velocity_y_meters_per_second == 25.725
+        assert self.ship.velocity_x_meters_per_second == 36.45
+        assert self.ship.velocity_y_meters_per_second == 54.675
 
-        self._calculate_physics()
-        assert self.ship.gravity_brake_active
-        assert self.ship.docking_at_station == "test-station-uuid"
-        assert self.ship.docked_at_station is None
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 12.00499)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 18.0075)
-
-        self._calculate_physics()
-        assert self.ship.gravity_brake_active
-        assert self.ship.docking_at_station == "test-station-uuid"
-        assert self.ship.docked_at_station is None
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 7.00499)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 12.6053)
-
-        self._calculate_physics()
-        assert self.ship.gravity_brake_active
-        assert self.ship.docking_at_station == "test-station-uuid"
-        assert self.ship.docked_at_station is None
-        assert_floats_equal(self.ship.velocity_x_meters_per_second, 0)
-        assert_floats_equal(self.ship.velocity_y_meters_per_second, 7.6053)
+        max_iterations, i = 10000, 0
+        while self.ship.docking_at_station == "test-station-uuid":
+            self._calculate_physics()
+            i += 1
+            if i > max_iterations:
+                raise AssertionError("max iterations")
 
         # Ship comes to a complete halt and grav brake is no longer active
         self._calculate_physics()
