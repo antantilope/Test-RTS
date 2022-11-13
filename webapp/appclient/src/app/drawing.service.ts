@@ -2039,6 +2039,7 @@ export class DrawingService {
   public drawMiningLocations(ctx: CanvasRenderingContext2D, camera: Camera,) {
     const cameraPosition = camera.getPosition()
     const minRockRadius = 10
+    const cameraZoom = camera.getZoom()
     for(let ix in this._api.frameData.ore_mines) {
       let om = this._api.frameData.ore_mines[ix]
       let centerCanvasCoord = camera.mapCoordToCanvasCoord(
@@ -2055,8 +2056,8 @@ export class DrawingService {
         percentage =  remainingOre / om.starting_ore_amount_kg
       }
 
-      const servicePerimeterRadiusCavasPx = om.service_radius_map_units / camera.getZoom()
-      const rockRadiusCavasPx =  om.collision_radius_meters * this._api.frameData.map_config.units_per_meter / camera.getZoom()
+      const servicePerimeterRadiusCavasPx = om.service_radius_map_units / cameraZoom
+      const rockRadiusCavasPx =  om.collision_radius_meters * this._api.frameData.map_config.units_per_meter / cameraZoom
       if(rockRadiusCavasPx < minRockRadius) {
         const iconFontSize = this.getIconFontSize(camera)
         ctx.beginPath()
@@ -2091,58 +2092,44 @@ export class DrawingService {
     servicePerimeterRadiusCavasPx: number,
     minedPercentage: number | null,
   ) {
-    // Rock body
-    ctx.beginPath()
-    ctx.fillStyle = "#4a1e00" // Dark brown
-    ctx.arc(
-      centerCanvasCoord.x, centerCanvasCoord.y,
-      rockRadiusCavasPx,
-      0, TWO_PI
+    const cameraZoom = camera.getZoom()
+    const imgX1 = centerCanvasCoord.x - rockRadiusCavasPx
+    const imgY1 = centerCanvasCoord.y - rockRadiusCavasPx
+    const imgLen = rockRadiusCavasPx  * 2
+    ctx.drawImage(
+      this._asset.miningLocationAsset,
+      imgX1, imgY1, imgLen, imgLen
     )
-    ctx.fill()
     // Mined out percentage indicator
-    if(minedPercentage !== null && Math.random() < 0.3) {
+    if(minedPercentage !== null) {
       ctx.beginPath()
-      ctx.strokeStyle = `rgb(255, 255, 0, 0.${randomInt(20, 50)})`
-      ctx.lineWidth = 8
+      ctx.strokeStyle = `rgb(255, 255, 0, 0.${randomInt(10, 30)})`
+      ctx.lineWidth = (rockRadiusCavasPx / 7)
       ctx.arc(
         centerCanvasCoord.x, centerCanvasCoord.y,
-        rockRadiusCavasPx - (rockRadiusCavasPx / 7),
+        rockRadiusCavasPx + (rockRadiusCavasPx / 6),
         0, TWO_PI * minedPercentage
       )
       ctx.stroke()
     }
-    // Mining Perimemter
-    ctx.beginPath()
-    ctx.strokeStyle = "rgb(168, 168, 0, 0.2)" // yellow
-    ctx.lineWidth = Math.ceil(
+    // Draw lights
+    const bulbRadius = Math.floor(
       Math.max(
         1,
-        1 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
+        2 * this._api.frameData.map_config.units_per_meter / cameraZoom,
       )
     )
-    ctx.arc(
-      centerCanvasCoord.x, centerCanvasCoord.y,
-      servicePerimeterRadiusCavasPx,
-      0, TWO_PI
+    const effectRadius = Math.floor(
+      Math.max(
+        1,
+        om.service_radius_meters * this._api.frameData.map_config.units_per_meter / cameraZoom,
+      )
     )
-    ctx.stroke()
-    // Draw remaining amount
-    // Draw lights
-    const lightOn = this._api.frameData.game_frame % 125 < 30
-    if(lightOn) {
-      const bulbRadius = Math.floor(
-        Math.max(
-          1,
-          1 * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
-        )
-      )
-      const effectRadius = Math.floor(
-        Math.max(
-          1,
-          om.service_radius_meters * this._api.frameData.map_config.units_per_meter / camera.getZoom(),
-        )
-      )
+    const gradientFillPercent = 0.8
+    const gradientMin = 0.07
+    const gradientMax = 0.15
+    if(Math.random() < 0.97) {
+      // Top Center Light
       ctx.beginPath()
       ctx.fillStyle = "rgb(255, 221, 148)"
       ctx.arc(
@@ -2150,13 +2137,24 @@ export class DrawingService {
         bulbRadius, 0, TWO_PI
       )
       ctx.fill()
+      const gradient = ctx.createRadialGradient(
+        centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx, 0,
+        centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx, effectRadius,
+      )
+      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
+      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
       ctx.beginPath()
-      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
+      ctx.fillStyle = gradient
+      ctx.moveTo(centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx)
       ctx.arc(
         centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx,
-        effectRadius, 0, TWO_PI
+        effectRadius, TWO_PI*0.15, TWO_PI*0.35
       )
+      ctx.lineTo(centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx)
       ctx.fill()
+    }
+    if(Math.random() < 0.97) {
+      // Right Hand Light
       ctx.beginPath()
       ctx.fillStyle = "rgb(255, 221, 148)"
       ctx.arc(
@@ -2164,13 +2162,24 @@ export class DrawingService {
         bulbRadius, 0, TWO_PI
       )
       ctx.fill()
-      ctx.beginPath()
-      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
-      ctx.arc(
-        centerCanvasCoord.x +servicePerimeterRadiusCavasPx , centerCanvasCoord.y,
-        effectRadius, 0, TWO_PI
+      const gradient = ctx.createRadialGradient(
+        centerCanvasCoord.x + servicePerimeterRadiusCavasPx, centerCanvasCoord.y, 0,
+        centerCanvasCoord.x + servicePerimeterRadiusCavasPx, centerCanvasCoord.y, effectRadius,
       )
+      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
+      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
+      ctx.beginPath()
+      ctx.fillStyle = gradient
+      ctx.moveTo(centerCanvasCoord.x +servicePerimeterRadiusCavasPx , centerCanvasCoord.y)
+      ctx.arc(
+        centerCanvasCoord.x + servicePerimeterRadiusCavasPx, centerCanvasCoord.y,
+        effectRadius, TWO_PI*0.4, TWO_PI*0.6
+      )
+      ctx.lineTo(centerCanvasCoord.x +servicePerimeterRadiusCavasPx , centerCanvasCoord.y)
       ctx.fill()
+    }
+    if(Math.random() < 0.97) {
+      // Bottom Light
       ctx.beginPath()
       ctx.fillStyle = "rgb(255, 221, 148)"
       ctx.arc(
@@ -2178,12 +2187,24 @@ export class DrawingService {
         bulbRadius, 0, TWO_PI
       )
       ctx.fill()
-      ctx.beginPath()
-      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
-      ctx.arc(
-        centerCanvasCoord.x , centerCanvasCoord.y + servicePerimeterRadiusCavasPx,
-        effectRadius, 0, TWO_PI
+      const gradient = ctx.createRadialGradient(
+        centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx, 0,
+        centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx, effectRadius,
       )
+      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
+      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
+      ctx.beginPath()
+      ctx.fillStyle = gradient
+      ctx.moveTo(centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx)
+      ctx.arc(
+        centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx,
+        effectRadius, TWO_PI*0.65, TWO_PI*0.85,
+      )
+      ctx.lineTo(centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx)
+      ctx.fill()
+    }
+    if(Math.random() < 0.97) {
+      // Left Hand Light
       ctx.fill()
       ctx.beginPath()
       ctx.fillStyle = "rgb(255, 221, 148)"
@@ -2192,12 +2213,20 @@ export class DrawingService {
         bulbRadius, 0, TWO_PI
       )
       ctx.fill()
+      const gradient = ctx.createRadialGradient(
+        centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y, 0,
+        centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y, effectRadius,
+      )
+      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
+      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
       ctx.beginPath()
-      ctx.fillStyle = "rgb(255, 221, 148, 0.1)"
+      ctx.fillStyle = gradient
+      ctx.moveTo(centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y)
       ctx.arc(
         centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y,
-        effectRadius, 0, TWO_PI
+        effectRadius, TWO_PI*0.9, TWO_PI*1.1
       )
+      ctx.lineTo(centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y)
       ctx.fill()
     }
   }
