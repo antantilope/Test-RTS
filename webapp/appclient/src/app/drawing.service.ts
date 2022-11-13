@@ -2137,8 +2137,11 @@ export class DrawingService {
     const imgX1 = centerCanvasCoord.x - rockRadiusCavasPx
     const imgY1 = centerCanvasCoord.y - rockRadiusCavasPx
     const imgLen = rockRadiusCavasPx  * 2
-    ctx.drawImage(
+    const rotatedPercent = (performance.now() % 27000) / 27000
+    this.drawRotatedImg(
+      ctx,
       this._asset.miningLocationAsset,
+      360 * rotatedPercent,
       imgX1, imgY1, imgLen, imgLen
     )
     // Mined out percentage indicator
@@ -2154,6 +2157,8 @@ export class DrawingService {
       ctx.stroke()
     }
     // Draw lights
+    console.log({minedPercentage})
+    const lightColor = Boolean(minedPercentage)? a=>`rgb(255, 221, 148, ${a})`:a=>`rgb(200, 0, 0, ${a})`
     const bulbRadius = Math.floor(
       Math.max(
         1,
@@ -2182,8 +2187,8 @@ export class DrawingService {
         centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx, 0,
         centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx, effectRadius,
       )
-      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
-      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
+      gradient.addColorStop(0, lightColor(getRandomFloat(gradientMin, gradientMax)))
+      gradient.addColorStop(gradientFillPercent, lightColor(0));
       ctx.beginPath()
       ctx.fillStyle = gradient
       ctx.moveTo(centerCanvasCoord.x, centerCanvasCoord.y - servicePerimeterRadiusCavasPx)
@@ -2207,8 +2212,8 @@ export class DrawingService {
         centerCanvasCoord.x + servicePerimeterRadiusCavasPx, centerCanvasCoord.y, 0,
         centerCanvasCoord.x + servicePerimeterRadiusCavasPx, centerCanvasCoord.y, effectRadius,
       )
-      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
-      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
+      gradient.addColorStop(0, lightColor(getRandomFloat(gradientMin, gradientMax)))
+      gradient.addColorStop(gradientFillPercent, lightColor(0));
       ctx.beginPath()
       ctx.fillStyle = gradient
       ctx.moveTo(centerCanvasCoord.x +servicePerimeterRadiusCavasPx , centerCanvasCoord.y)
@@ -2232,8 +2237,8 @@ export class DrawingService {
         centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx, 0,
         centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx, effectRadius,
       )
-      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
-      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
+      gradient.addColorStop(0, lightColor(getRandomFloat(gradientMin, gradientMax)))
+      gradient.addColorStop(gradientFillPercent, lightColor(0));
       ctx.beginPath()
       ctx.fillStyle = gradient
       ctx.moveTo(centerCanvasCoord.x, centerCanvasCoord.y + servicePerimeterRadiusCavasPx)
@@ -2258,8 +2263,8 @@ export class DrawingService {
         centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y, 0,
         centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y, effectRadius,
       )
-      gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(gradientMin, gradientMax)})`)
-      gradient.addColorStop(gradientFillPercent, "rgb(255, 221, 148, 0)");
+      gradient.addColorStop(0, lightColor(getRandomFloat(gradientMin, gradientMax)))
+      gradient.addColorStop(gradientFillPercent, lightColor(0));
       ctx.beginPath()
       ctx.fillStyle = gradient
       ctx.moveTo(centerCanvasCoord.x - servicePerimeterRadiusCavasPx, centerCanvasCoord.y)
