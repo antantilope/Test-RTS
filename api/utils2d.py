@@ -344,3 +344,17 @@ def calculate_heading_to_point(point_a: Tuple, point_b: Tuple) -> float:
         return signed_angle_to_unsigned_angle(angle)
     else:
         raise NotImplementedError
+
+class ExcessiveVelocityError(Exception):
+    pass
+
+MAX_VELOCITY_FOR_GRAVITY_BRAKE = 110
+
+def calculate_gravity_brake_slowdown(f_meters_per_second: float) -> float:
+    magnitude = abs(f_meters_per_second)
+    if magnitude >= MAX_VELOCITY_FOR_GRAVITY_BRAKE:
+        raise ExcessiveVelocityError()
+    return min(
+        magnitude,
+        0.85 * f_meters_per_second**2 + 2
+    )
