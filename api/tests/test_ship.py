@@ -1048,13 +1048,15 @@ class TestShipCMDCalculatePhysics(TestCase):
         assert self.ship.coord_x == self.start_x - 238
         assert self.ship.coord_y == self.start_y + 1502
 
-    def test_ship_v_over_150MS_immediatly_is_cut(self):
+    def test_ship_v_over_110MS_immediatly_is_cut(self):
         self.fps = 10
         self.ship.velocity_x_meters_per_second = 300
         self.ship.velocity_y_meters_per_second = 120
         self.ship.gravity_brake_position = self.ship.gravity_brake_deployed_position
         self.ship.gravity_brake_active = True
         self._calculate_physics()
+        print(self.ship.velocity_x_meters_per_second)
+        print(self.ship.velocity_y_meters_per_second)
         assert self.ship.velocity_x_meters_per_second == 100
         assert self.ship.velocity_y_meters_per_second == 84
 
