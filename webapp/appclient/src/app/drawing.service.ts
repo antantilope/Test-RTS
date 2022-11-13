@@ -1840,8 +1840,11 @@ export class DrawingService {
     ctx: CanvasRenderingContext2D,
     mine: DrawableMagnetMine,
   ) {
-    ctx.drawImage(
+    const percentRotated = (performance.now() % 1000) / 1000
+    this.drawRotatedImg(
+      ctx,
       this._asset.magnetMineAsset,
+      percentRotated * 360,
       mine.canvasX1, mine.canvasY1,
       mine.canvasW, mine.canvasH,
     )
