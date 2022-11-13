@@ -2080,11 +2080,11 @@ export class DrawingService {
         ctx.stroke()
 
         // Draw spotlight effect
-        const spotLightIntervalMS = 3000
+        const spotLightIntervalMS = 6000
         const spotLightPercent = (performance.now() % spotLightIntervalMS) / spotLightIntervalMS
         const spotLightStartAngle = TWO_PI * spotLightPercent
         const spotLightEndAngle = spotLightStartAngle + TWO_PI * 0.125
-        const spotLightRadiusPx = 140 * this._api.frameData.map_config.units_per_meter / cameraZoom
+        const spotLightRadiusPx = 70 * this._api.frameData.map_config.units_per_meter / cameraZoom
         const gradient = ctx.createRadialGradient(
           centerCanvasCoord.x, centerCanvasCoord.y, 0,
           centerCanvasCoord.x, centerCanvasCoord.y, spotLightRadiusPx,
