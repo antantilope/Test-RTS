@@ -1065,7 +1065,7 @@ class Ship(BaseModel):
                         self.velocity_x_meters_per_second
                     ) / fps
                 except utils2d.ExcessiveVelocityError:
-                    delta = self.velocity_x_meters_per_second - utils2d.MAX_VELOCITY_FOR_GRAVITY_BRAKE
+                    delta = abs(self.velocity_x_meters_per_second) - utils2d.MAX_VELOCITY_FOR_GRAVITY_BRAKE
 
                 direction = 1 if self.velocity_x_meters_per_second < 0 else -1
                 self.velocity_x_meters_per_second += delta * direction
@@ -1078,7 +1078,8 @@ class Ship(BaseModel):
                         self.velocity_y_meters_per_second
                     ) / fps
                 except utils2d.ExcessiveVelocityError:
-                    delta = self.velocity_y_meters_per_second - utils2d.MAX_VELOCITY_FOR_GRAVITY_BRAKE
+                    delta = abs(self.velocity_y_meters_per_second) - utils2d.MAX_VELOCITY_FOR_GRAVITY_BRAKE
+
                 direction = 1 if self.velocity_y_meters_per_second < 0 else -1
                 self.velocity_y_meters_per_second += delta * direction
                 if abs(self.velocity_y_meters_per_second) < 5:

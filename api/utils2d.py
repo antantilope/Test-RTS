@@ -352,9 +352,9 @@ MAX_VELOCITY_FOR_GRAVITY_BRAKE = 110
 
 def calculate_gravity_brake_slowdown(f_meters_per_second: float) -> float:
     magnitude = abs(f_meters_per_second)
-    if magnitude >= MAX_VELOCITY_FOR_GRAVITY_BRAKE:
+    if magnitude > MAX_VELOCITY_FOR_GRAVITY_BRAKE:
         raise ExcessiveVelocityError()
     return min(
         magnitude,
-        0.85 * f_meters_per_second**2 + 2
+        f_meters_per_second**2 + 2
     )
