@@ -1975,6 +1975,7 @@ export class DrawingService {
         );
       }
       else {
+        // Draw
         const sideYLengthCanvasPx = Math.floor(
           (
             STATION_LENGTH_METERS_Y
@@ -2012,12 +2013,35 @@ export class DrawingService {
           TWO_PI,
         )
         ctx.stroke()
+
+        // Draw spotlight effect
+        const spotLightIntervalMS = 3000
+        const spotLightPercent = (performance.now() % spotLightIntervalMS) / spotLightIntervalMS
+        const spotLightStartAngle = TWO_PI * spotLightPercent
+        const spotLightEndAngle = spotLightStartAngle + TWO_PI * 0.125
+        const spotLightRadiusPx = 140 * this._api.frameData.map_config.units_per_meter / cameraZoom
+        const gradient = ctx.createRadialGradient(
+          centerCanvasCoord.x, centerCanvasCoord.y, 0,
+          centerCanvasCoord.x, centerCanvasCoord.y, spotLightRadiusPx,
+        )
+        gradient.addColorStop(0, `rgb(255, 221, 148, ${getRandomFloat(0.2, 0.3)})`)
+        gradient.addColorStop(1, "rgb(255, 221, 148, 0)");
+        ctx.beginPath()
+        ctx.fillStyle = gradient
+        ctx.moveTo(centerCanvasCoord.x, centerCanvasCoord.y)
+        ctx.arc(
+          centerCanvasCoord.x, centerCanvasCoord.y,
+          spotLightRadiusPx,
+          spotLightStartAngle, spotLightEndAngle,
+        )
+        ctx.lineTo(centerCanvasCoord.x, centerCanvasCoord.y)
+        ctx.fill()
+        // Draw capture effect
         const grav_brake_last_caught: number | undefined = this._api.frameData.ship.scouted_station_gravity_brake_catches_last_frame[st.uuid]
         if(
           grav_brake_last_caught !== undefined
           && (grav_brake_last_caught + 18 > this._api.frameData.game_frame)
         ) {
-          // Draw capture effect
           const frame = this._api.frameData.game_frame - grav_brake_last_caught + 1
           if(frame < 12 || Math.random() > 0.8) {
             ctx.beginPath()
