@@ -458,9 +458,9 @@ export class DrawingService {
         ray.flashEffectPolygon[3].x, ray.flashEffectPolygon[3].y,
       )
       lineGradient.addColorStop(0, 'rgb(255, 255, 255, 0)')
-      lineGradient.addColorStop(0.45, 'rgb(255, 255, 255, 0.2)')
+      lineGradient.addColorStop(0.48, 'rgb(255, 255, 255, 0.2)')
       lineGradient.addColorStop(0.50, 'rgb(255, 255, 255, 0.6)')
-      lineGradient.addColorStop(0.55, 'rgb(255, 255, 255, 0.2)')
+      lineGradient.addColorStop(0.52, 'rgb(255, 255, 255, 0.2)')
       lineGradient.addColorStop(1, 'rgb(255, 255, 255, 0)')
       ctx.fillStyle = lineGradient
       ctx.moveTo(ray.flashEffectPolygon[0].x, ray.flashEffectPolygon[0].y)
@@ -1607,7 +1607,7 @@ export class DrawingService {
 
       const lineCt = randomInt(3, 6)
       for(let i=0; i<lineCt; i++) {
-        let lineLengthPx = getRandomFloat(30, 60) * this._api.frameData.map_config.units_per_meter / currentZoom
+        let lineLengthPx = getRandomFloat(40, 90) * this._api.frameData.map_config.units_per_meter / currentZoom
         let angle = randomInt(0, 359)
         let lineP2 = camera.getCanvasPointAtLocation(
           drawableShip.HBNoseCanvasCoord,
@@ -1616,7 +1616,7 @@ export class DrawingService {
         )
         ctx.beginPath()
         ctx.strokeStyle = 'rgb(255, 0, 0})'
-        ctx.lineWidth = getRandomFloat(1, 2.5) * this._api.frameData.map_config.units_per_meter / currentZoom
+        ctx.lineWidth = getRandomFloat(1.5, 3.5) * this._api.frameData.map_config.units_per_meter / currentZoom
         ctx.moveTo(drawableShip.HBNoseCanvasCoord.x, drawableShip.HBNoseCanvasCoord.y)
         ctx.lineTo(lineP2.x, lineP2.y)
         ctx.stroke()
