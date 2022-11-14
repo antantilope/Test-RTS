@@ -45,7 +45,6 @@ import {
   STATION_LENGTH_METERS_X,
   STATION_LENGTH_METERS_Y,
   TIMER_SLUG_SCANNER_LOCKING,
-  EBEAM_RAY_POLYGON_WIDTH_METERS,
   EBEAM_RAY_SHOOTER_ARC_RADIUS_METERS,
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
