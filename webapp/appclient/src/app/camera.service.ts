@@ -287,7 +287,6 @@ export class Camera {
       emps: [],
       hunterDrones: [],
       ebeamRays: [],
-      visionCircles:[],
     }
 
     const cameraMapBoxCoords: BoxCoords = this.getCameraMapBoxCoords()
@@ -308,12 +307,10 @@ export class Camera {
       (this._api.frameData.map_config.units_per_meter
       * this._api.frameData.ship.visual_range) / currentZoom
     )
-    drawableItems.visionCircles.push({
+    drawableItems.shipVisionCircle = {
       canvasCoord: shipCanvasCoord,
-      radius: basicVisualRangeCanvasPxRadius,
-      color: "#121212", // Dark gray
-      name: 'eyes',
-    })
+      radiusCanvasPX: basicVisualRangeCanvasPxRadius,
+    }
 
     // Add map wall\
     const corner2 = this.mapCoordToCanvasCoord({x:mapConfig.x_unit_length, y:mapConfig.y_unit_length}, cameraPosition)
