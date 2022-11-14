@@ -358,3 +358,6 @@ def calculate_gravity_brake_slowdown(f_meters_per_second: float) -> float:
         magnitude,
         f_meters_per_second**2 + 2
     )
+
+def calculate_autofire_degrees_threshold(distance: float) -> float:
+    return min(5, 30 / (0.01*distance**2) + 0.25)

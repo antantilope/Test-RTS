@@ -90,6 +90,8 @@ class ShipCommands:
     CHARGE_EBEAM = 'charge_ebeam'
     PAUSE_CHARGE_EBEAM = 'pause_charge_ebeam'
     FIRE_EBEAM = 'fire_ebeam'
+    ENABLE_EBEAM_AUTOFIRE = "enable_ebeam_autofire"
+    DISABLE_EBEAM_AUTOFIRE = "disable_ebeam_autofire"
 
     EXTEND_GRAVITY_BRAKE = "extend_gravity_brake"
     RETRACT_GRAVITY_BRAKE = "retract_gravity_brake"
@@ -347,6 +349,8 @@ class Ship(BaseModel):
         self.ebeam_charge_fire_minimum = None
         self.ebeam_color = None
         self.ebeam_last_hit_frame = None
+        self.ebeam_autofire_max_range = None
+        self.ebeam_autofire_enabled = False
 
         # Special weapons tubes
         self.special_weapons_tubes_count = None
@@ -726,6 +730,7 @@ class Ship(BaseModel):
         instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
+        instance.ebeam_autofire_max_range = constants.EBEAM_AUTOFIRE_INITIAL_MAX_RANGE_METERS
 
         instance.special_weapons_tubes_count = constants.SPECIAL_WEAPONS_TUBES_COUNT
         instance._hunter_drone_max_target_acquisition_distance_meters = (
