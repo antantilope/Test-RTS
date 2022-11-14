@@ -641,7 +641,11 @@ export class GamedisplayComponent implements OnInit {
     this.drawableObjects = drawableObjects
 
     // Vision circles
-    this._draw.drawVisionCircles(this.ctx, drawableObjects.visionCircles)
+    this._draw.drawVisionCircle(
+      this.ctx,
+      drawableObjects.shipVisionCircle.canvasCoord,
+      drawableObjects.shipVisionCircle.radiusCanvasPX,
+    )
 
     this._draw.drawExplosionShockwaves(this.ctx, this._camera.gameDisplayCamera)
 
@@ -658,12 +662,11 @@ export class GamedisplayComponent implements OnInit {
     }
 
     // expect smallest vision circle at end of array
-    const lastIx = drawableObjects.visionCircles.length - 1
-    if(lastIx > -1) {
+    if(drawableObjects.shipVisionCircle) {
       this._draw.drawVelocityAndHeadingLine(
         this.ctx,
         this._camera.gameDisplayCamera,
-        drawableObjects.visionCircles[lastIx],
+        drawableObjects.shipVisionCircle,
       )
     }
 

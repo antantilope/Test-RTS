@@ -28,7 +28,7 @@ import {
   DrawableMagnetMineTargetingLine,
   DrawableEMP,
   DrawableHunterDrone,
-  VisionCircle,
+  ShipVisionCircle,
   EBeamRayDetails,
 } from "./models/drawable-objects.model"
 import { TimerItem } from './models/timer-item.model';
@@ -164,36 +164,27 @@ export class DrawingService {
     ctx.stroke()
   }
 
-  public drawVisionCircles(
+  public drawVisionCircle(
     ctx: CanvasRenderingContext2D,
-    visionCircles: VisionCircle[],
+    shipCanvasCoord: PointCoord,
+    visionCircleRadiusPx: number,
   ) {
-    for(let i in visionCircles) {
-      let vs = visionCircles[i]
-      const isRadar = vs.name === "radar"
-      let endRad: number
-      let startRad: number
-      if(isRadar) {
-        const sensitivity = this._api.frameData.ship.scanner_radar_sensitivity
-        const rate = 30// {0:30, 1:20, 2:14, 3:8}[sensitivity]
-        const percent = (this._api.frameData.game_frame % rate) / rate
-        endRad = TWO_PI * percent
-        startRad = endRad - (Math.PI - (Math.PI / randomInt(1, 4)))
-      } else {
-        startRad = 0
-        endRad = TWO_PI
-      }
       ctx.beginPath()
-      ctx.fillStyle = vs.color
+      const gradient = ctx.createRadialGradient(
+        shipCanvasCoord.x, shipCanvasCoord.y, 0,
+        shipCanvasCoord.x, shipCanvasCoord.y, visionCircleRadiusPx,
+      )
+      gradient.addColorStop(0, 'rgb(44, 44, 44, 0)')
+      gradient.addColorStop(1, 'rgb(44, 44, 44, 0.25)');
+      ctx.fillStyle = gradient
       ctx.arc(
-        vs.canvasCoord.x,
-        vs.canvasCoord.y,
-        vs.radius,
-        startRad,
-        endRad,
+        shipCanvasCoord.x,
+        shipCanvasCoord.y,
+        visionCircleRadiusPx,
+        0,
+        TWO_PI,
       )
       ctx.fill()
-    }
   }
 
   public drawVisualVelocityElements(
@@ -368,7 +359,7 @@ export class DrawingService {
   public drawVelocityAndHeadingLine(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
-    visionCircle: VisionCircle,
+    visionCircle: ShipVisionCircle,
     headingOnly: boolean = false, // FIXME: garbage parameter.
   ) {
     const alpha = getRandomFloat(0.2, 0.6)
@@ -389,8 +380,8 @@ export class DrawingService {
         }
       ) * (Math.PI / 180)
       const velocityLinePointB = {
-        x: visionCircle.canvasCoord.x + (visionCircle.radius * Math.sin(vAngleRads)),
-        y: visionCircle.canvasCoord.y + (visionCircle.radius * Math.cos(vAngleRads)),
+        x: visionCircle.canvasCoord.x + (visionCircle.radiusCanvasPX * Math.sin(vAngleRads)),
+        y: visionCircle.canvasCoord.y + (visionCircle.radiusCanvasPX * Math.cos(vAngleRads)),
       }
       ctx.beginPath()
       ctx.lineWidth = 2
@@ -408,8 +399,8 @@ export class DrawingService {
     // Draw heading line
     const hAngleRads = (180 - ship.heading) * PI_OVER_180 // why -180? because it works.
     const headingLinePointB = {
-      x: visionCircle.canvasCoord.x + (visionCircle.radius * Math.sin(hAngleRads)),
-      y: visionCircle.canvasCoord.y + (visionCircle.radius * Math.cos(hAngleRads)),
+      x: visionCircle.canvasCoord.x + (visionCircle.radiusCanvasPX * Math.sin(hAngleRads)),
+      y: visionCircle.canvasCoord.y + (visionCircle.radiusCanvasPX * Math.cos(hAngleRads)),
     }
     ctx.beginPath()
     ctx.lineWidth = 2

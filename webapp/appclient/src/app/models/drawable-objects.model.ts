@@ -87,14 +87,10 @@ export class EBeamRayDetails {
     color: string
 }
 
-
-export class VisionCircle {
+export class ShipVisionCircle {
     canvasCoord: PointCoord
-    radius: number
-    color: string
-    name: string
+    radiusCanvasPX: number
 }
-
 
 export class DrawableCanvasItems {
     ships: DrawableShip[]
@@ -104,5 +100,5 @@ export class DrawableCanvasItems {
     hunterDrones: DrawableHunterDrone[]
     ebeamRays: EBeamRayDetails[]
     mapWall?: BoxCoords
-    visionCircles: VisionCircle[]
+    shipVisionCircle?:ShipVisionCircle
 }

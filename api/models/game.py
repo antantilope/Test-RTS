@@ -183,6 +183,7 @@ class Game(BaseModel):
         self._explosion_shockwave_max_radius_meters = None
         self._shockwave_max_delta_v_meters_per_second = constants.SHOCKWAVE_MAX_DELTA_V_METERS_PER_SECOND
         self._shockwave_max_delta_v_coef = constants.SHOCKWAVE_MAX_DELTA_V_COEF
+        self._tube_weapon_recoil_meters_per_second = constants.TUBE_WEAPON_RECOIL_METERS_PER_SECOND
         self._space_stations: List[MapSpaceStation] = []
         self._ore_mines: List[MapMiningLocationDetails] = []
         self._ore_mines_remaining_ore: Dict[str, float] = {}
@@ -979,6 +980,8 @@ class Game(BaseModel):
                         "victim_name": self._ships[hit_ship_id].scanner_designator,
                     })
 
+        apply_tubeweapon_recoil = False
+
         # SPECIAL WEAPONS (TUBE/TORPEDO WEAPONS)
         if self._ships[ship_id].magnet_mine_firing:
             # Spawn a new magnet mine.
@@ -993,6 +996,7 @@ class Game(BaseModel):
             mine.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
             mine.coord_x, mine.coord_y =  self._ships[ship_id].map_nose_coord
             self._magnet_mines[mine.id] = mine
+            apply_tubeweapon_recoil = not self._ships[ship_id].recoilless_tube_launches
 
         elif self._ships[ship_id].emp_firing:
             # Spawn a new EMP
@@ -1007,6 +1011,7 @@ class Game(BaseModel):
             emp.velocity_y_meters_per_second = extra_y + self._ships[ship_id].velocity_y_meters_per_second
             emp.coord_x, emp.coord_y =  self._ships[ship_id].map_nose_coord
             self._emps[emp.id] = emp
+            apply_tubeweapon_recoil = not self._ships[ship_id].recoilless_tube_launches
 
         elif self._ships[ship_id].hunter_drone_firing:
             # Spawn a new Hunter Drone
@@ -1031,6 +1036,16 @@ class Game(BaseModel):
                 self._ships[ship_id]._hunter_drone_tracking_acceleration_ms,
             )
             self._hunter_drones[hunter_drone.id] = hunter_drone
+            apply_tubeweapon_recoil = not self._ships[ship_id].recoilless_tube_launches
+
+        if apply_tubeweapon_recoil:
+            recoil_x, recoil_y = utils2d.calculate_x_y_components(
+                self._tube_weapon_recoil_meters_per_second,
+                utils2d.invert_heading(self._ships[ship_id].heading),
+            )
+            self._ships[ship_id].velocity_x_meters_per_second += recoil_x
+            self._ships[ship_id].velocity_y_meters_per_second += recoil_y
+
 
     def advance_magnet_mines(self, fps: int):
         keys_to_drop = []

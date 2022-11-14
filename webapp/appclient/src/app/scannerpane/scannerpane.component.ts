@@ -224,11 +224,11 @@ export class ScannerpaneComponent implements OnInit {
       this._camera.getEMPTrailElements(),
     )
 
-    if(drawableObjects.visionCircles.length) {
+    if(drawableObjects.shipVisionCircle) {
       this._draw.drawVelocityAndHeadingLine(
         this.ctx,
         this._camera.scannerPaneCamera,
-        drawableObjects.visionCircles[0],
+        drawableObjects.shipVisionCircle,
         true,
       )
     }
