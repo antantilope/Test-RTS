@@ -16,6 +16,7 @@ import {
   HUNTER_DRONE_LENGTH_METERS_X,
   HUNTER_DRONE_LENGTH_METERS_Y,
   HUNTER_DRONE_MIN_BOUNDING_BOX_LENGTH_METERS,
+  EBEAM_RAY_POLYGON_WIDTH_METERS,
 } from "./constants"
 
 function getRandomFloat(min: number, max: number): number {
@@ -577,10 +578,17 @@ export class Camera {
     // Add Energy Beam Rays
     for (let i in this._api.frameData.ebeam_rays) {
       let ray = this._api.frameData.ebeam_rays[i]
+      const startPoint = this.mapCoordToCanvasCoord({x:ray.start_point[0], y:ray.start_point[1]}, cameraPosition)
+      const endPoint = this.mapCoordToCanvasCoord({x:ray.end_point[0], y:ray.end_point[1]}, cameraPosition)
       drawableItems.ebeamRays.push({
-        startPoint: this.mapCoordToCanvasCoord({x:ray.start_point[0], y:ray.start_point[1]}, cameraPosition),
-        endPoint: this.mapCoordToCanvasCoord({x:ray.end_point[0], y:ray.end_point[1]}, cameraPosition),
-        color: ray.color
+        startPoint,
+        endPoint,
+        color: ray.color,
+        flashEffectPolygon: this.inflateLineToPolygonCoords(
+          startPoint,
+          endPoint,
+          EBEAM_RAY_POLYGON_WIDTH_METERS * this._api.frameData.map_config.units_per_meter / currentZoom,
+        ),
       })
     }
     return drawableItems
@@ -674,7 +682,24 @@ export class Camera {
       x: Math.floor(qx),
       y: Math.floor(qy),
     }
+  }
 
+  public inflateLineToPolygonCoords(a: PointCoord, b: PointCoord, width: number): PointCoord[] {
+    // https://stackoverflow.com/questions/17989148/javascript-find-point-on-perpendicular-line-always-the-same-distance-away
+    const angle = Math.atan2(b.y - a.y, b.x - a.x)
+    return [{
+      x: Math.sin(angle) * width + a.x,
+      y: -Math.cos(angle) * width + a.y,
+    }, {
+      x: Math.sin(angle) * width + b.x,
+      y: -Math.cos(angle) * width + b.y,
+    }, {
+      x: -Math.sin(angle) * width + b.x,
+      y: Math.cos(angle) * width + b.y,
+    }, {
+      x: -Math.sin(angle) * width + a.x,
+      y: Math.cos(angle) * width + a.y,
+    },]
   }
 
 }
