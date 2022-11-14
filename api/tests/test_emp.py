@@ -67,6 +67,8 @@ class TestEMP(TestCase):
         assert self.game._phase == GamePhase.LIVE
 
         self.game._game_frame = 3
+        self.game._ships[self.player_1_ship_id].recoilless_tube_launches = True
+        self.game._ships[self.player_2_ship_id].recoilless_tube_launches = True
         self.game._ships[self.player_1_ship_id].special_weapons_tubes_count = 1
         self.game._ships[self.player_2_ship_id].special_weapons_tubes_count = 1
         self.game._ships[self.player_1_ship_id].virtual_ore_kg = 1000

@@ -350,6 +350,7 @@ class Ship(BaseModel):
 
         # Special weapons tubes
         self.special_weapons_tubes_count = None
+        self.recoilless_tube_launches = False
         self.last_tube_fire_frame = None
         self._special_weapon_costs = None
         self.magnet_mines_loaded = 4
