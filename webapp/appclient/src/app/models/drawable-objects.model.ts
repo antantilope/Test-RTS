@@ -84,6 +84,7 @@ export class DrawableMagnetMineTargetingLine {
 export class EBeamRayDetails {
     startPoint: PointCoord
     endPoint: PointCoord
+    flashEffectPolygon: PointCoord[]
     color: string
 }
 
