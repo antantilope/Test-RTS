@@ -1,8 +1,4 @@
 
-
-
-# These tests are absolutely horrible Dx
-
 from uuid import uuid4
 
 from unittest import TestCase
