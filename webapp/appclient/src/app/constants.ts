@@ -26,7 +26,8 @@ export const HUNTER_DRONE_MIN_BOUNDING_BOX_LENGTH_METERS = Math.max(
 export const STATION_LENGTH_METERS_X = 52
 export const STATION_LENGTH_METERS_Y = 40
 
-export const EBEAM_RAY_POLYGON_WIDTH_METERS = 50
+export const EBEAM_RAY_POLYGON_WIDTH_METERS = 1000
+export const EBEAM_RAY_SHOOTER_ARC_RADIUS_METERS = 120
 
 // Timer Slugs
 export const TIMER_SLUG_SCANNER_STARTUP = "scanner_startup"

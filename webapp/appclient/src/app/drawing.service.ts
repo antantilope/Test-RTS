@@ -46,6 +46,7 @@ import {
   STATION_LENGTH_METERS_Y,
   TIMER_SLUG_SCANNER_LOCKING,
   EBEAM_RAY_POLYGON_WIDTH_METERS,
+  EBEAM_RAY_SHOOTER_ARC_RADIUS_METERS,
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
@@ -458,7 +459,9 @@ export class DrawingService {
         ray.flashEffectPolygon[3].x, ray.flashEffectPolygon[3].y,
       )
       lineGradient.addColorStop(0, 'rgb(255, 255, 255, 0)')
-      lineGradient.addColorStop(0.5, 'rgb(255, 255, 255, 0.5)')
+      lineGradient.addColorStop(0.45, 'rgb(255, 255, 255, 0.2)')
+      lineGradient.addColorStop(0.50, 'rgb(255, 255, 255, 0.6)')
+      lineGradient.addColorStop(0.55, 'rgb(255, 255, 255, 0.2)')
       lineGradient.addColorStop(1, 'rgb(255, 255, 255, 0)')
       ctx.fillStyle = lineGradient
       ctx.moveTo(ray.flashEffectPolygon[0].x, ray.flashEffectPolygon[0].y)
@@ -468,7 +471,7 @@ export class DrawingService {
       ctx.closePath();
       ctx.fill()
 
-      const shooterFlashRadius = EBEAM_RAY_POLYGON_WIDTH_METERS * 1.5 * this._api.frameData.map_config.units_per_meter / cameraZoom
+      const shooterFlashRadius = EBEAM_RAY_SHOOTER_ARC_RADIUS_METERS * this._api.frameData.map_config.units_per_meter / cameraZoom
       ctx.beginPath()
       const arcGradient = ctx.createRadialGradient(
         ray.startPoint.x, ray.startPoint.y, 0,
