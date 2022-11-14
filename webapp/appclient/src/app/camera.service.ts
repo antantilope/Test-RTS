@@ -734,10 +734,10 @@ export class CameraService {
   private updateVelocityTrailElementsInterval = 400
   private velocityTrailElements: VelocityTrailElement[] = []
 
-  private updateFlameSmokeElementInterval = 300
+  private updateFlameSmokeElementInterval = 200
   private flameSmokeElements: FlameSmokeElement[] = []
 
-  private updateEMPTrailElementsInterval = 200
+  private updateEMPTrailElementsInterval = 225
   private EMPTrailElements: EMPTrailElement[] = []
 
   private EBeamFiringEffectElements: EBeamFiringEffectElement[] = []
@@ -888,7 +888,7 @@ export class CameraService {
       })
     }
     // Add elements for own ship
-    if(this._api.frameData.ship.aflame) {
+    if(!this._api.frameData.ship.alive && !this._api.frameData.ship.exploded) {
       this.flameSmokeElements.push({
         createdAt: now,
         mapCoord: {
@@ -901,7 +901,7 @@ export class CameraService {
     // Add elements from other ships
     for(let i in this._api.frameData.ship.scanner_ship_data){
       let sde = this._api.frameData.ship.scanner_ship_data[i]
-      if(sde.aflame) {
+      if(!sde.alive && !sde.exploded) {
         this.flameSmokeElements.push({
           createdAt: now,
           mapCoord: {
