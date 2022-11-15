@@ -964,8 +964,7 @@ class Game(BaseModel):
 
         # ELECTRO MAGNETIC ENERGY BEAM WEAPON
         if self._ships[ship_id].ebeam_firing:
-            ebeam_fired = self._ships[ship_id].use_ebeam_charge(self._fps)
-            if ebeam_fired:
+            if self._ships[ship_id].use_ebeam_charge(self._fps):
                 line, hits = self._get_ebeam_line_and_hit(self._ships[ship_id])
                 self._ebeam_rays.append({
                     "start_point": line[0],
@@ -986,8 +985,7 @@ class Game(BaseModel):
                 self._ships[ship_id].ebeam_autofire_enabled = False
 
             elif self.search_for_firing_solution(ship_id):
-                ebeam_fired = self._ships[ship_id].use_ebeam_charge(self._fps)
-                if ebeam_fired:
+                if self._ships[ship_id].use_ebeam_charge(self._fps):
                     self._ships[ship_id].ebeam_firing = True
                     self._ships[ship_id].ebeam_autofire_enabled = False
                     line, hits = self._get_ebeam_line_and_hit(self._ships[ship_id])
@@ -1474,11 +1472,12 @@ class Game(BaseModel):
 
     def search_for_firing_solution(self, ship_id: str) -> bool:
         shooter_angle = self._ships[ship_id].heading + 360
+        ship_coords = self._ships[ship_id].coords
         for other_id, other_ship in self._ships.items():
             if other_id == ship_id or other_ship.died_on_frame:
                 continue
             distance_meters = self._distance_cache.get(
-                    self._ships[ship_id].coords,
+                    ship_coords,
                     other_ship.coords,
             ) / self._map_units_per_meter
             if distance_meters > self._ships[ship_id].ebeam_autofire_max_range:
@@ -1487,14 +1486,14 @@ class Game(BaseModel):
             any_below, any_above = False, False,
             for hb_coord in other_ship.hitbox_coords:
                 bearing = self._heading_cache.get(
-                    self._ships[ship_id].map_nose_coord,
+                    ship_coords,
                     hb_coord,
                 ) + 360
                 any_below = any_below or bearing < shooter_angle
                 any_above = any_above or bearing > shooter_angle
 
-            if any_below and any_above:
-                return True
+                if any_below and any_above:
+                    return True
 
         return False
 
