@@ -13,10 +13,10 @@ class TestCoordDistanceCache(TestCase):
         point_a = (1, 2)
         point_b = (1, 10)
         distance = 8
-        cache.set_val(point_a, point_b, distance)
+        cache.set_val(point_a, point_b)
         assert cache._data == {
-            (point_a, point_b): 8,
-            (point_b, point_a): 8,
+            (point_a, point_b): distance,
+            (point_b, point_a): distance,
         }
 
     def test_can_read_cache_distance_value(self):
@@ -25,10 +25,6 @@ class TestCoordDistanceCache(TestCase):
         point_b = (1, 10)
         distance = 8
 
-        assert cache.get_val(point_a, point_b) is None
-        assert cache.get_val(point_b, point_a) is None
-
-        cache.set_val(point_a, point_b, distance)
         assert cache.get_val(point_a, point_b) == distance
         assert cache.get_val(point_b, point_a) == distance
 
@@ -41,7 +37,7 @@ class TestCoordHeadingCache(TestCase):
         point_b = (5, -5)
         heading_a_to_b = 135
         heading_b_to_a = 315
-        cache.set_val(point_a, point_b, heading_a_to_b)
+        cache.set_val(point_a, point_b)
         assert cache._data == {
             (point_a, point_b): heading_a_to_b, # A to B is cached
             (point_b, point_a): heading_b_to_a, # B to A is calculated and cached.
@@ -53,7 +49,7 @@ class TestCoordHeadingCache(TestCase):
         point_b = (5, -5)
         heading_a_to_b = 135
         heading_b_to_a = 315
-        cache.set_val(point_a, point_b, heading_a_to_b)
+        cache.set_val(point_a, point_b)
 
         assert cache.get_val(point_a, point_b) == heading_a_to_b
         assert cache.get_val(point_b, point_a) == heading_b_to_a

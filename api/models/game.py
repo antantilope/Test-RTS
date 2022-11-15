@@ -36,6 +36,7 @@ from api.constants import (
 )
 from api.coord_cache import (
     CoordDistanceCache,
+    CoordHeadingCache,
 )
 from api.logger import get_logger
 
@@ -246,6 +247,8 @@ class Game(BaseModel):
         self._hunter_drone_max_proximity_to_explode_meters = constants.HUNTER_DRONE_MAX_PROXIMITY_TO_EXPLODE_METERS
         self._hunter_drone_explode_damage_radius_meters = constants.HUNTER_DRONE_EXPLODE_DAMAGE_RADIUS_METERS
 
+        self._heading_cache = CoordHeadingCache()
+        self._distance_cache = CoordDistanceCache()
 
     def get_state(self) -> GameState:
         base_state = {
@@ -517,12 +520,17 @@ class Game(BaseModel):
         check_for_gravity_brake_catches = self._game_frame % 4 == 0
         check_for_ore_mine_parking = self._game_frame % 60 == 0
 
+        for ship_id in self._ships:
+            self._ships[ship_id].calculate_physics(self._fps, self._game_frame)
+
+        self._heading_cache.clear()
+        self._distance_cache.clear()
+
         for ship_id, ship in self._ships.items():
             ship.advance_upgrades(self._fps)
             ship.advance_gravity_brake_position(self._fps)
             ship.adjust_resources(self._fps, self._game_frame)
             ship.advance_heading_traversal(self._fps)
-            ship.calculate_physics(self._fps, self._game_frame)
             ship.advance_thermal_signature(self._fps)
             self.reset_and_update_scanner_states(ship_id)
 
@@ -692,7 +700,6 @@ class Game(BaseModel):
             ]
 
     def reset_and_update_scanner_states(self, ship_id: str):
-        distance_cache = CoordDistanceCache()
 
         self._ships[ship_id].scanner_ship_data.clear()
         self._ships[ship_id].scanner_magnet_mine_data.clear()
@@ -711,11 +718,7 @@ class Game(BaseModel):
 
             other_coords = self._ships[other_id].coords
 
-
-            distance = distance_cache.get_val(ship_coords, other_coords)
-            if distance is None:
-                distance = utils2d.calculate_point_distance(ship_coords, other_coords)
-                distance_cache.set_val(ship_coords, other_coords, distance)
+            distance = self._distance_cache.get_val(ship_coords, other_coords)
             distance_meters = round(distance / self._map_units_per_meter)
 
             is_visual = visual_range >= distance_meters
@@ -743,7 +746,7 @@ class Game(BaseModel):
                 is_scannable = False
 
             if is_visual or is_scannable:
-                exact_heading = utils2d.calculate_heading_to_point(ship_coords, other_coords)
+                exact_heading = self._heading_cache.get_val(ship_coords, other_coords)
                 other_scanner_online = self._ships[other_id].scanner_online
                 other_scanner_mode = self._ships[other_id].scanner_mode
                 scanner_ship_data: ScannedShipElement = {
@@ -969,16 +972,41 @@ class Game(BaseModel):
                     "end_point": line[1],
                     "color": self._ships[ship_id].ebeam_color,
                 })
-
                 if any(hits):
                     self._ships[ship_id].ebeam_last_hit_frame = self._game_frame
-
                 for hit_ship_id in hits:
                     self._ships[hit_ship_id].die(self._game_frame)
                     self._killfeed.append({
                         "created_at_frame": self._game_frame,
                         "victim_name": self._ships[hit_ship_id].scanner_designator,
                     })
+
+        elif self._ships[ship_id].ebeam_autofire_enabled:
+            if self._ships[ship_id].ebeam_charge < self._ships[ship_id].ebeam_charge_fire_minimum:
+                self._ships[ship_id].ebeam_autofire_enabled = False
+
+            elif self.search_for_firing_solution(ship_id):
+                ebeam_fired = self._ships[ship_id].use_ebeam_charge(self._fps)
+                if ebeam_fired:
+                    self._ships[ship_id].ebeam_firing = True
+                    self._ships[ship_id].ebeam_autofire_enabled = False
+                    line, hits = self._get_ebeam_line_and_hit(self._ships[ship_id])
+                    self._ebeam_rays.append({
+                        "start_point": line[0],
+                        "end_point": line[1],
+                        "color": self._ships[ship_id].ebeam_color,
+                    })
+                    if any(hits):
+                        self._ships[ship_id].ebeam_last_hit_frame = self._game_frame
+                    for hit_ship_id in hits:
+                        self._ships[hit_ship_id].die(self._game_frame)
+                        self._killfeed.append({
+                            "created_at_frame": self._game_frame,
+                            "victim_name": self._ships[hit_ship_id].scanner_designator,
+                        })
+                else:
+                    self._ships[ship_id].ebeam_autofire_enabled = False
+
 
         apply_tubeweapon_recoil = False
 
@@ -1443,6 +1471,32 @@ class Game(BaseModel):
                 hits.append(other_id)
 
         return line, hits
+
+    def search_for_firing_solution(self, ship_id: str) -> bool:
+        shooter_angle = self._ships[ship_id].heading + 360
+        for other_id, other_ship in self._ships.items():
+            if other_id == ship_id or other_ship.died_on_frame:
+                continue
+            distance_meters = self._distance_cache.get(
+                    self._ships[ship_id].coords,
+                    other_ship.coords,
+            ) / self._map_units_per_meter
+            if distance_meters > self._ships[ship_id].ebeam_autofire_max_range:
+                continue
+
+            any_below, any_above = False, False,
+            for hb_coord in other_ship.hitbox_coords:
+                bearing = self._heading_cache.get(
+                    self._ships[ship_id].map_nose_coord,
+                    hb_coord,
+                ) + 360
+                any_below = any_below or bearing < shooter_angle
+                any_above = any_above or bearing > shooter_angle
+
+            if any_below and any_above:
+                return True
+
+        return False
 
 
     def check_for_winning_team(self):

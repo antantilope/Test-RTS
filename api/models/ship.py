@@ -460,6 +460,15 @@ class Ship(BaseModel):
         )
 
     @property
+    def hitbox_coords(self) -> Tuple[Tuple]:
+        return (
+            self.map_nose_coord,
+            self.map_bottom_left_coord,
+            self.map_bottom_center_coord,
+            self.map_bottom_right_coord,
+        )
+
+    @property
     def mass(self) -> int:
         return self._state.get(ShipStateKey.MASS, (
             self.battery_mass
