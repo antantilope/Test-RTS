@@ -149,6 +149,18 @@ const commandHandlers = {
             ship_command: 'fire_ebeam',
         });
     },
+    enable_ebeam_autofire: (app, queueName, session, requestBody) => {
+        app.get(queueName).push({
+            player_id: session.player_id,
+            ship_command: 'enable_ebeam_autofire',
+        });
+    },
+    disable_ebeam_autofire: (app, queueName, session, requestBody) => {
+        app.get(queueName).push({
+            player_id: session.player_id,
+            ship_command: 'disable_ebeam_autofire',
+        });
+    },
     run_autopilot: (app, queueName, session, requestBody) => {
         const data = validateRunAutoPilotProgram(requestBody);
         app.get(queueName).push({

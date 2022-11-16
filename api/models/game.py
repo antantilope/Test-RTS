@@ -982,7 +982,7 @@ class Game(BaseModel):
 
         elif self._ships[ship_id].ebeam_autofire_enabled:
             if self._ships[ship_id].ebeam_charge < self._ships[ship_id].ebeam_charge_fire_minimum:
-                self._ships[ship_id].ebeam_autofire_enabled = False
+                pass
 
             elif self.search_for_firing_solution(ship_id):
                 self._ships[ship_id].ebeam_firing = True

@@ -1492,6 +1492,10 @@ class Ship(BaseModel):
             self.cmd_pause_charge_ebeam()
         elif command == ShipCommands.FIRE_EBEAM:
             self.cmd_fire_ebeam()
+        elif command == ShipCommands.ENABLE_EBEAM_AUTOFIRE:
+            self.cmd_enable_ebeam_autofire()
+        elif command == ShipCommands.DISABLE_EBEAM_AUTOFIRE:
+            self.cmd_disable_ebeam_autofire()
 
         elif command == ShipCommands.RUN_AUTOPILOT_PROGRAM:
             self.cmd_run_autopilot_program(args[0])
@@ -1665,6 +1669,12 @@ class Ship(BaseModel):
             return
         if self.ebeam_charge >= self.ebeam_charge_fire_minimum:
             self.ebeam_firing = True
+
+    def cmd_enable_ebeam_autofire(self):
+        self.ebeam_autofire_enabled = True
+
+    def cmd_disable_ebeam_autofire(self):
+        self.ebeam_autofire_enabled = False
 
     def cmd_run_autopilot_program(self, program_name: str):
         if program_name == AutoPilotPrograms.POSITION_HOLD:
