@@ -985,8 +985,8 @@ class Game(BaseModel):
                 self._ships[ship_id].ebeam_autofire_enabled = False
 
             elif self.search_for_firing_solution(ship_id):
+                self._ships[ship_id].ebeam_firing = True
                 if self._ships[ship_id].use_ebeam_charge(self._fps):
-                    self._ships[ship_id].ebeam_firing = True
                     self._ships[ship_id].ebeam_autofire_enabled = False
                     line, hits = self._get_ebeam_line_and_hit(self._ships[ship_id])
                     self._ebeam_rays.append({
@@ -1003,6 +1003,7 @@ class Game(BaseModel):
                             "victim_name": self._ships[hit_ship_id].scanner_designator,
                         })
                 else:
+                    print("not enough charge", self._fps, self._ships[ship_id].ebeam_charge)
                     self._ships[ship_id].ebeam_autofire_enabled = False
 
 
@@ -1471,28 +1472,38 @@ class Game(BaseModel):
         return line, hits
 
     def search_for_firing_solution(self, ship_id: str) -> bool:
-        shooter_angle = self._ships[ship_id].heading + 360
+        shooter_angle = self._ships[ship_id].heading
         ship_coords = self._ships[ship_id].coords
         for other_id, other_ship in self._ships.items():
             if other_id == ship_id or other_ship.died_on_frame:
                 continue
-            distance_meters = self._distance_cache.get(
+            distance_meters = self._distance_cache.get_val(
                     ship_coords,
                     other_ship.coords,
             ) / self._map_units_per_meter
             if distance_meters > self._ships[ship_id].ebeam_autofire_max_range:
                 continue
 
-            any_below, any_above = False, False,
-            for hb_coord in other_ship.hitbox_coords:
-                bearing = self._heading_cache.get(
+            bearings = tuple(
+                self._heading_cache.get_val(
                     ship_coords,
                     hb_coord,
-                ) + 360
-                any_below = any_below or bearing < shooter_angle
-                any_above = any_above or bearing > shooter_angle
-
-                if any_below and any_above:
+                )
+                for hb_coord in other_ship.hitbox_coords
+            )
+            min_bearing = min(bearings)
+            max_bearing = max(bearings)
+            if (max_bearing - min_bearing) < 180:
+                if min_bearing < shooter_angle < max_bearing:
+                    return True
+            else:
+                # if one bearing = 1, and another bearing = 359, reorient bearings.
+                bearings = tuple(
+                    b + (360 if b < 180 else 0)
+                    for b in bearings
+                )
+                shooter_angle += 360 if shooter_angle < 180 else 0
+                if min(bearings) < shooter_angle < max(bearings):
                     return True
 
         return False
