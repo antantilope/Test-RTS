@@ -581,6 +581,8 @@ class Ship(BaseModel):
             'ebeam_charge_power_usage_per_second': self.ebeam_charge_power_usage_per_second,
             'ebeam_charge_thermal_signature_rate_per_second': self.ebeam_charge_thermal_signature_rate_per_second,
             'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
+            'ebeam_autofire_enabled': self.ebeam_autofire_enabled,
+            'ebeam_autofire_max_range': self.ebeam_autofire_max_range,
 
             'special_weapons_tubes_count': self.special_weapons_tubes_count,
             'last_tube_fire_frame': self.last_tube_fire_frame,

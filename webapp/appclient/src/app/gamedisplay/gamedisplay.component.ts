@@ -122,6 +122,7 @@ export class GamedisplayComponent implements OnInit {
     EMEBeamChargeBtn?: BoxCoords,
     EMEBeamPauseBtn?: BoxCoords,
     EMEBeamFireBtn?: BoxCoords,
+    EMEBeamToggleAutofireBtn?: BoxCoords,
 
     torpedoMenuBtn?: BoxCoords,
     torpedoMenuSelEMPBtn?: BoxCoords,
@@ -1541,6 +1542,7 @@ export class GamedisplayComponent implements OnInit {
     this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamMenuBtn")
     this.ctx.strokeRect(x1, y1, sizing.xLenMenu, sizing.yLen)
     if(this.activeBtnGroup === ButtonGroup.EMEBEAM) {
+      let disabled: boolean, active: boolean
       this.ctx.beginPath()
       this.ctx.fillStyle = btnColorWhite
       this.ctx.fillRect(x1, y1, sizing.xLenMenu, sizing.yLen)
@@ -1549,9 +1551,24 @@ export class GamedisplayComponent implements OnInit {
       this.ctx.font = `bold ${sizing.fontSize}px courier new`
       this.ctx.fillText("EME-BEAM", x1 + textLeftBuffer, y2)
       // EME Beam Column 2 buttons
+      // AUTO FIRE
+      active = ship.ebeam_autofire_enabled
+      x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
+      x2 = x1 + sizing.xLenEMEBeamMenu
+      y2 = canvasHeight - sizing.cornerOffset - col2YOffset
+      y1 = y2 - sizing.yLen
+      this.btnCanvasLocations.EMEBeamToggleAutofireBtn = {x1, x2, y1, y2}
+      this.ctx.beginPath()
+      this.ctx.strokeStyle = active ? btnColorGreen: btnColorWhite
+      this.ctx.lineWidth = this.getAndUpdateBtnBoarderWidth("EMEBeamToggleAutofireBtn")
+      this.ctx.strokeRect(x1, y1, sizing.xLenEMEBeamMenu, sizing.yLen)
+      this.ctx.beginPath()
+      this.ctx.fillStyle = active ? btnColorGreen: btnColorWhite
+      this.ctx.font = `bold ${sizing.fontSize}px courier new`
+      this.ctx.fillText("AUTO", x1 + textLeftBuffer, y2)
+      col2YOffset += (sizing.yGap + sizing.yLen)
       // FIRE
-      let disabled = !ship.ebeam_can_fire
-      let active: boolean
+      disabled = !ship.ebeam_can_fire
       x1 = sizing.cornerOffset + sizing.xLenMenu + sizing.xGap
       x2 = x1 + sizing.xLenEMEBeamMenu
       y2 = canvasHeight - sizing.cornerOffset - col2YOffset
@@ -1607,7 +1624,7 @@ export class GamedisplayComponent implements OnInit {
         this.btnCanvasLocations.EMEBeamMenuBtn.x2,
         this.btnCanvasLocations.EMEBeamMenuBtn.y1)
       this.ctx.lineTo(
-        this.btnCanvasLocations.EMEBeamMenuBtn.x2 + sizing.xGap,
+        this.btnCanvasLocations.EMEBeamMenuBtn.x2 + sizing.xGap / 2,
         this.btnCanvasLocations.EMEBeamMenuBtn.y1)
       this.ctx.lineTo(
         this.btnCanvasLocations.EMEBeamPauseBtn.x1,
@@ -1617,10 +1634,10 @@ export class GamedisplayComponent implements OnInit {
         this.btnCanvasLocations.EMEBeamPauseBtn.y1 - sizing.yGap / 2)
       this.ctx.lineTo(
         this.btnCanvasLocations.EMEBeamPauseBtn.x2 + sizing.xGap / 2,
-        this.btnCanvasLocations.EMEBeamFireBtn.y2 + sizing.yGap / 2)
+        this.btnCanvasLocations.EMEBeamToggleAutofireBtn.y2 + sizing.yGap / 2)
       this.ctx.lineTo(
         this.btnCanvasLocations.EMEBeamPauseBtn.x1 - sizing.xGap / 2,
-        this.btnCanvasLocations.EMEBeamFireBtn.y2 + sizing.yGap / 2)
+        this.btnCanvasLocations.EMEBeamToggleAutofireBtn.y2 + sizing.yGap / 2)
       this.ctx.lineTo(
         this.btnCanvasLocations.EMEBeamPauseBtn.x1 - sizing.xGap / 2,
         this.btnCanvasLocations.EMEBeamMenuBtn.y2)
@@ -1637,6 +1654,7 @@ export class GamedisplayComponent implements OnInit {
       delete this.btnCanvasLocations.EMEBeamChargeBtn
       delete this.btnCanvasLocations.EMEBeamPauseBtn
       delete this.btnCanvasLocations.EMEBeamFireBtn
+      delete this.btnCanvasLocations.EMEBeamToggleAutofireBtn
     }
     col1YOffset += (sizing.yGap + sizing.yLen)
 
@@ -2016,6 +2034,8 @@ export class GamedisplayComponent implements OnInit {
       this.btnClickPauseChargeEBeam()
     }else if(btnName == "EMEBeamFireBtn") {
       this.btnClickFireEBeam()
+    } else if(btnName == "EMEBeamToggleAutofireBtn"){
+      this.btnClickToggleEMEBeamAutofire()
     }// Torpedos //
     else if(btnName == "torpedoMenuSelEMPBtn") {
       this.selectedPneumaticWeapon = EMP_SLUG
@@ -2308,6 +2328,14 @@ export class GamedisplayComponent implements OnInit {
     if(this._api.frameData.ship.ebeam_can_fire) {
       this._api.emitGameCommand('fire_ebeam', {})
       this._sound.playPrimaryButtonClickSound()
+    }
+  }
+
+  private async btnClickToggleEMEBeamAutofire() {
+    if(!this._api.frameData.ship.ebeam_autofire_enabled) {
+      this._api.emitGameCommand('enable_ebeam_autofire', {})
+    } else {
+      this._api.emitGameCommand('disable_ebeam_autofire', {})
     }
   }
 
