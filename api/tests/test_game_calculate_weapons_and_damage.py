@@ -332,7 +332,7 @@ class TestEBeamAutofire(TestCase):
         assert isinstance(self.game._game_frame, int)
 
 
-    def test_ship_autofires_when_cardinal_solution_lines_up(self):
+    def test_ship_autofires_when_cardinal_solution_lines_up_bearing_reoriented(self):
         # ships are < 100 meters apart
         self.game._ships[self.player_1_ship_id].ebeam_charge = 20000
         self.game._ships[self.player_1_ship_id].coord_x = 150 * self.upm
@@ -348,9 +348,60 @@ class TestEBeamAutofire(TestCase):
         self.game._fps = 30
 
         while self.game._ships[self.player_1_ship_id].ebeam_autofire_enabled:
+            assert not self.game._ships[self.player_1_ship_id].ebeam_firing
             self.game._ships[self.player_1_ship_id].calculate_physics(30)
             self.game.calculate_weapons_and_damage(self.player_1_ship_id)
             if self.game._ships[self.player_1_ship_id].coord_x > 220 * self.upm:
+                raise AssertionError("too many iterations")
+
+        assert self.game._ships[self.player_1_ship_id].ebeam_firing
+        assert self.game._ships[self.player_2_ship_id].died_on_frame is not None
+
+    def test_ship_autofires_when_cardinal_solution_lines_up(self):
+        # ships are < 100 meters apart
+        self.game._ships[self.player_1_ship_id].ebeam_charge = 20000
+        self.game._ships[self.player_1_ship_id].coord_x = 100 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 25 * self.upm
+        self.game._ships[self.player_1_ship_id]._set_heading(constants.DEGREES_EAST)
+        self.game._ships[self.player_1_ship_id].ebeam_firing = False
+        self.game._ships[self.player_1_ship_id].ebeam_autofire_enabled = True
+        self.game._ships[self.player_1_ship_id].ebeam_autofire_max_range = 500
+        self.game._ships[self.player_2_ship_id].coord_x = 200 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 75 * self.upm
+
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 1
+        self.game._fps = 30
+
+        while self.game._ships[self.player_1_ship_id].ebeam_autofire_enabled:
+            assert not self.game._ships[self.player_1_ship_id].ebeam_firing
+            self.game._ships[self.player_1_ship_id].calculate_physics(30)
+            self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+            if self.game._ships[self.player_1_ship_id].coord_y > 100 * self.upm:
+                raise AssertionError("too many iterations")
+
+        assert self.game._ships[self.player_1_ship_id].ebeam_firing
+        assert self.game._ships[self.player_2_ship_id].died_on_frame is not None
+
+    def test_ship_autofires_when_non_cardinal_solution_lines_up(self):
+        # ships are < 100 meters apart
+        self.game._ships[self.player_1_ship_id].ebeam_charge = 20000
+        self.game._ships[self.player_1_ship_id].coord_x = 50 * self.upm
+        self.game._ships[self.player_1_ship_id].coord_y = 0 * self.upm
+        self.game._ships[self.player_1_ship_id]._set_heading(45)
+        self.game._ships[self.player_1_ship_id].ebeam_firing = False
+        self.game._ships[self.player_1_ship_id].ebeam_autofire_enabled = True
+        self.game._ships[self.player_1_ship_id].ebeam_autofire_max_range = 500
+        self.game._ships[self.player_2_ship_id].coord_x = 100 * self.upm
+        self.game._ships[self.player_2_ship_id].coord_y = 100 * self.upm
+
+        self.game._ships[self.player_1_ship_id].velocity_y_meters_per_second = 1
+        self.game._fps = 30
+
+        while self.game._ships[self.player_1_ship_id].ebeam_autofire_enabled:
+            assert not self.game._ships[self.player_1_ship_id].ebeam_firing
+            self.game._ships[self.player_1_ship_id].calculate_physics(30)
+            self.game.calculate_weapons_and_damage(self.player_1_ship_id)
+            if self.game._ships[self.player_1_ship_id].coord_y > 100 * self.upm:
                 raise AssertionError("too many iterations")
 
         assert self.game._ships[self.player_1_ship_id].ebeam_firing
