@@ -90,6 +90,8 @@ class ShipCommands:
     CHARGE_EBEAM = 'charge_ebeam'
     PAUSE_CHARGE_EBEAM = 'pause_charge_ebeam'
     FIRE_EBEAM = 'fire_ebeam'
+    ENABLE_EBEAM_AUTOFIRE = "enable_ebeam_autofire"
+    DISABLE_EBEAM_AUTOFIRE = "disable_ebeam_autofire"
 
     EXTEND_GRAVITY_BRAKE = "extend_gravity_brake"
     RETRACT_GRAVITY_BRAKE = "retract_gravity_brake"
@@ -347,6 +349,8 @@ class Ship(BaseModel):
         self.ebeam_charge_fire_minimum = None
         self.ebeam_color = None
         self.ebeam_last_hit_frame = None
+        self.ebeam_autofire_max_range = None
+        self.ebeam_autofire_enabled = False
 
         # Special weapons tubes
         self.special_weapons_tubes_count = None
@@ -453,6 +457,15 @@ class Ship(BaseModel):
             (self.map_bottom_left_coord, self.map_bottom_center_coord),
             (self.map_bottom_center_coord, self.map_bottom_right_coord),
             (self.map_bottom_right_coord, self.map_nose_coord),
+        )
+
+    @property
+    def hitbox_coords(self) -> Tuple[Tuple]:
+        return (
+            self.map_nose_coord,
+            self.map_bottom_left_coord,
+            self.map_bottom_center_coord,
+            self.map_bottom_right_coord,
         )
 
     @property
@@ -568,6 +581,8 @@ class Ship(BaseModel):
             'ebeam_charge_power_usage_per_second': self.ebeam_charge_power_usage_per_second,
             'ebeam_charge_thermal_signature_rate_per_second': self.ebeam_charge_thermal_signature_rate_per_second,
             'ebeam_charge_fire_minimum': self.ebeam_charge_fire_minimum,
+            'ebeam_autofire_enabled': self.ebeam_autofire_enabled,
+            'ebeam_autofire_max_range': self.ebeam_autofire_max_range,
 
             'special_weapons_tubes_count': self.special_weapons_tubes_count,
             'last_tube_fire_frame': self.last_tube_fire_frame,
@@ -726,6 +741,7 @@ class Ship(BaseModel):
         instance.ebeam_discharge_rate_per_second = constants.EBEAM_DISCHARGE_RATE_PER_SECOND
         instance.ebeam_charge_fire_minimum = constants.EBEAM_CHARGE_FIRE_MINIMUM
         instance.ebeam_color = constants.EBEAM_COLOR_STARTING
+        instance.ebeam_autofire_max_range = constants.EBEAM_AUTOFIRE_INITIAL_MAX_RANGE_METERS
 
         instance.special_weapons_tubes_count = constants.SPECIAL_WEAPONS_TUBES_COUNT
         instance._hunter_drone_max_target_acquisition_distance_meters = (
@@ -1478,6 +1494,10 @@ class Ship(BaseModel):
             self.cmd_pause_charge_ebeam()
         elif command == ShipCommands.FIRE_EBEAM:
             self.cmd_fire_ebeam()
+        elif command == ShipCommands.ENABLE_EBEAM_AUTOFIRE:
+            self.cmd_enable_ebeam_autofire()
+        elif command == ShipCommands.DISABLE_EBEAM_AUTOFIRE:
+            self.cmd_disable_ebeam_autofire()
 
         elif command == ShipCommands.RUN_AUTOPILOT_PROGRAM:
             self.cmd_run_autopilot_program(args[0])
@@ -1651,6 +1671,12 @@ class Ship(BaseModel):
             return
         if self.ebeam_charge >= self.ebeam_charge_fire_minimum:
             self.ebeam_firing = True
+
+    def cmd_enable_ebeam_autofire(self):
+        self.ebeam_autofire_enabled = True
+
+    def cmd_disable_ebeam_autofire(self):
+        self.ebeam_autofire_enabled = False
 
     def cmd_run_autopilot_program(self, program_name: str):
         if program_name == AutoPilotPrograms.POSITION_HOLD:

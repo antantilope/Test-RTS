@@ -262,6 +262,8 @@ export class Ship {
     ebeam_charge_power_usage_per_second: number
     ebeam_charge_thermal_signature_rate_per_second: number
     ebeam_charge_fire_minimum: number
+    ebeam_autofire_max_range: number
+    ebeam_autofire_enabled: boolean
 
     special_weapons_tubes_count: number
     special_weapons_loaded: number
