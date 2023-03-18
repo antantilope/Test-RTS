@@ -94,10 +94,12 @@ const runGameLoop = (room_id, port, app, io) => {
 
         const queueName = getQueueName(room_id)
         const commands = app.get(queueName) || [];
+        const admin_commands = app.get(queueName + '-admin') || [];
         app.set(queueName, []);
-        const payload = JSON.stringify({run_frame:{commands}});
+        app.set(queueName + '-admin', []);
+        const payload = JSON.stringify({run_frame:{commands, admin_commands}});
 
-        if(commands.length) {
+        if(commands.length || admin_commands.length) {
             logger.info("writing data to GameAPI: " + payload);
         } else {
             logger.silly("writing data to GameAPI: " + payload);

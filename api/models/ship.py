@@ -411,6 +411,26 @@ class Ship(BaseModel):
         # Arbitrary ship state data
         self._state = {}
 
+        self._delayed_console_commands = []
+        self._console_adjustable_props = frozenset([
+            'coord_x',
+            'coord_y',
+            'velocity_x_meters_per_second',
+            'velocity_y_meters_per_second',
+            'heading',
+            'desired_heading',
+            'battery_power',
+            'battery_capacity',
+            'fuel_level',
+            'fuel_capacity',
+            'engine_online',
+            'engine_lit',
+            'mining_ore',
+            '_seconds_to_aflame',
+            'explode_immediately',
+            '_seconds_to_explode',
+        ])
+
     @property
     def coords(self) -> Tuple[int]:
         return (self.coord_x, self.coord_y,)
@@ -1932,3 +1952,12 @@ class Ship(BaseModel):
         if self.hunter_drones_loaded > 0 and not self.hunter_drone_firing:
             self.hunter_drones_loaded -= 1
             self.hunter_drone_firing = True
+
+    def process_admin_command(self, **cmd):
+        if cmd['type'] == 'prop':
+            if cmd['prop'] not in self._console_adjustable_props:
+                return
+            setattr(self, cmd['prop'], cmd['val'])
+        if cmd['type'] == 'verb':
+            if cmd['cmd'] == 'die':
+                self.die()

@@ -115,6 +115,7 @@ class FrameCommand(TypedDict):
 
 class RunFrameDetails(TypedDict):
     commands: List[FrameCommand]
+    admin_commands: List[Dict]
 
 
 class EBeamRayDetails(TypedDict):
@@ -505,6 +506,12 @@ class Game(BaseModel):
 
         if self._fps < MAX_SERVER_FPS:
             self.logger.warn(f"FPS<30: {self._fps}")
+
+        # Process admin commands
+        for command in request['admin_commands']:
+            self._ships[command['ship_id']].process_admin_command(
+                command
+            )
 
         # Process user commands.
         for command in request['commands']:
