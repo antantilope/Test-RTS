@@ -25,6 +25,7 @@ const { getMapsController } = require("./controllers/get_maps");
 const { adminCreateRoomController } = require("./controllers/admin_create_room");
 const { adminRoomListController } = require("./controllers/admin_room_list");
 const { adminRoomDeleteController } = require("./controllers/admin_delete_room");
+const { adminRunCommandController } = require("./controllers/admin_run_command");
 const { pickShipController } = require("./controllers/pick_ship");
 const {
     startGameController,
@@ -213,7 +214,7 @@ expressApp.get("/admin", async (req, res) => {
 expressApp.get("/api/admin/rooms/list", setJSONContentType, adminRoomListController)
 expressApp.post("/api/admin/rooms/delete", setJSONContentType, adminRoomDeleteController)
 expressApp.post('/api/admin/rooms/create', setJSONContentType, adminCreateRoomController);
-
+expressApp.post('/api/admin/command', setJSONContentType, adminRunCommandController);
 
 /* Game Rooms
 */

@@ -50,11 +50,48 @@
                     url: "/api/admin/rooms/list",
                     success: (roomDetails) => {
                         roomDetails.forEach(room => {
+                            console.log(room)
+                            let rowContainer = document.createElement("div");
+                            let consoleCmdContainer = document.createElement("div");
                             let row = document.createElement("div");
+                            rowContainer.append(row);
+                            rowContainer.append(consoleCmdContainer);
+
+                            textareaInput = document.createElement('textarea');
+                            textareaInput.placeholder = "type console command here";
+                            $(textareaInput).css({width:'100%', display:'block', marginBottom:'3px'});
+                            sendCmdBtn = document.createElement('button');
+                            sendCmdBtn.innerText = "Run Console Command";
+                            consoleCmdContainer.append(textareaInput);
+                            consoleCmdContainer.append(sendCmdBtn);
+                            $(sendCmdBtn).click(()=>{
+                                const body = {
+                                    room_uuid: room.uuid,
+                                    commands: JSON.parse(textareaInput.value),
+                                }
+                                $.post({
+                                    url:"/api/admin/command",
+                                    contentType: "application/json",
+                                    data: JSON.stringify(body),
+                                    success: (data, status, xhr) => {
+                                        textareaInput.value = ''
+                                    },
+                                    error:function(jqXHR, textStatus, errorThrown) {
+                                        alert("Error, status = " + textStatus + ", " +
+                                            "error thrown: " + errorThrown
+                                        );
+                                    }
+                                });
+                            })
+
+                            $(rowContainer).css({
+                                "border": "1px solid black",
+                                "padding": "3px",
+                                "margin-bottom":"2px",
+                            });
                             $(row).css({
                                 "display":"flex",
                                 "justify-content":"space-between",
-                                "border": "1px solid black",
                                 "padding": "3px",
                                 "margin-bottom":"2px",
                             });
@@ -81,7 +118,7 @@
                             let delbtn = document.createElement("button");
                             $(delbtn).text("🗑️");
                             $(row).append(delbtn);
-                            $("#room-PIDs").append(row);
+                            $("#room-PIDs").append(rowContainer);
                             $(delbtn).click(()=>{
                                 $(delbtn).prop("disabled", true);
                                 $.post({
