@@ -32,7 +32,7 @@ export class ScannerpaneComponent implements OnInit {
 
   @ViewChild("paneElement") paneElement: ElementRef
   @ViewChild("graphicsCanvas") canvas: ElementRef
-  @ViewChild("titleBar") titleBar: ElementRef
+  // @ViewChild("titleBar") titleBar: ElementRef
   zIndexesUpdatedSubscription: Subscription
 
   private ctx: CanvasRenderingContext2D | null = null
@@ -103,14 +103,10 @@ export class ScannerpaneComponent implements OnInit {
     this._pane.addToTopOfZIndexes(this._pane.PANE_SCANNER)
   }
 
-  paneResized($event: any) {
-    this.resizeCanvas()
-  }
-
   private resizeCanvas() {
     setTimeout(() => {
       console.log("resizeCanvas()")
-      const height = this.paneElement.nativeElement.offsetHeight - this.titleBar.nativeElement.offsetHeight
+      const height = this.paneElement.nativeElement.offsetHeight //- this.titleBar.nativeElement.offsetHeight
       this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth
       this.canvas.nativeElement.height = height// this.canvas.nativeElement.offsetHeight
       this._camera.scannerPaneCamera.registerCanvasWidthHeight(
