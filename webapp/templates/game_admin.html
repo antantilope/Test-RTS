@@ -8,12 +8,45 @@
                 font-family: arial;
                 margin: 2rem;
             }
+            #console-commands {
+                display: none;
+            }
+            pre {
+                margin-bottom: 4px;
+            }
         </style>
     </head>
     <body>
         <h1>Game Admin</h1>
         <a href="/">back</a>
         <hr>
+        <div id="example-commands">
+            <div>
+                <button
+                    onclick="$('#console-commands').slideDown(); $(this).slideUp()"
+                    style="margin-bottom: 3px;"
+                >
+                    Show example console commands</button>
+            </div>
+            <div id="console-commands">
+                <B>Example Console Command</B>
+                <pre>
+[
+    {
+        "ship_id": "_UUID_",
+        "type": "prop",
+        "prop": "coord_x"
+        "val": 213233
+    },
+    {
+        "ship_id": "_UUID_",
+        "type": "verb",
+        "verb": "die"
+    },
+]
+                </pre>
+            </div>
+        </div>
         <div id="room-PIDs">
 
         </div>
@@ -64,6 +97,7 @@
                             sendCmdBtn.innerText = "Run Console Command";
                             consoleCmdContainer.append(textareaInput);
                             consoleCmdContainer.append(sendCmdBtn);
+                            let resetPlaceholderTimeout;
                             $(sendCmdBtn).click(()=>{
                                 const body = {
                                     room_uuid: room.uuid,
@@ -74,7 +108,18 @@
                                     contentType: "application/json",
                                     data: JSON.stringify(body),
                                     success: (data, status, xhr) => {
-                                        textareaInput.value = ''
+                                        if(xhr.status == 202) {
+                                            if(resetPlaceholderTimeout) {
+                                                clearTimeout(resetPlaceholderTimeout)
+                                            }
+                                            textareaInput.value = ''
+                                            textareaInput.placeholder = ' command sent'
+                                            resetPlaceholderTimeout = setTimeout(()=>{
+                                                textareaInput.placeholder = "type console command here";
+                                            }, 1300);
+                                            return;
+                                        }
+                                        alert("received unexpected status code: " + xhr.status);
                                     },
                                     error:function(jqXHR, textStatus, errorThrown) {
                                         alert("Error, status = " + textStatus + ", " +
@@ -125,10 +170,10 @@
                                     url:"/api/admin/rooms/delete",
                                     contentType: "application/json",
                                     data: JSON.stringify({room_uuid: room.uuid}),
-                                    success: (data, status, xhr) => {
-                                        $(row).slideUp();
+                                    success: () => {
+                                        $(rowContainer).slideUp(rowContainer.remove);
                                     },
-                                    error:function(jqXHR, textStatus, errorThrown) {
+                                    error:function(_jqXHR, textStatus, errorThrown) {
                                         alert("Error, status = " + textStatus + ", " +
                                             "error thrown: " + errorThrown
                                         );

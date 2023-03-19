@@ -1,5 +1,7 @@
 const { get_db_connection } = require("../lib/db/get_db_connection");
-const { getQueueName } = require("../lib/command_queue")
+const { getQueueName } = require("../lib/command_queue");
+const { get_user_details } = require("../lib/db/get_user_details");
+
 
 const { get_room } = require("../lib/db/get_rooms");
 
@@ -31,9 +33,10 @@ exports.adminRunCommandController = async (req, res) => {
         db.close();
     }
 
-    const queueName = getQueueName(room.roomDetails.uuid);
+    const queueName = getQueueName(room.uuid);
 
-    currentQueue = app.get(queueName + '-admin') || []
+    currentQueue = req.app.get(queueName + '-admin') || []
     currentQueue.push(...req.body.commands)
-    app.set(queueName, currentQueue)
+    req.app.set(queueName + '-admin', currentQueue)
+    return res.sendStatus(202);
 }

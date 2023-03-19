@@ -1959,5 +1959,5 @@ class Ship(BaseModel):
                 return
             setattr(self, cmd['prop'], cmd['val'])
         if cmd['type'] == 'verb':
-            if cmd['cmd'] == 'die':
+            if cmd['verb'] == 'die':
                 self.die()

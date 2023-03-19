@@ -534,7 +534,7 @@ export class QuoteService {
     {
       lines: [
         "What's dangerous is to not",
-        "solve."
+        "evaluate."
       ],
       author: this.mathLovingBotName,
     },
