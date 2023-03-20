@@ -276,7 +276,7 @@
                     })
                 });
 
-                const socket = io("ws://localhost:8000");
+                const socket = io("ws://" + location.host);
                 socket.on("connect", () => {
                     console.log("Socket Connected...");
                 });

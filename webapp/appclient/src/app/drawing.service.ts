@@ -2229,7 +2229,7 @@ export class DrawingService {
       ctx.stroke()
     }
     // Draw lights
-    console.log({minedPercentage})
+    // console.log({minedPercentage})
     const lightColor = Boolean(minedPercentage)? a=>`rgb(255, 221, 148, ${a})`:a=>`rgb(200, 0, 0, ${a})`
     const bulbRadius = Math.floor(
       Math.max(
