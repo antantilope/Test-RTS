@@ -430,6 +430,9 @@ class Ship(BaseModel):
             'explode_immediately',
             '_seconds_to_explode',
         ])
+        self._console_verbs = frozenset([
+            'die',
+        ])
 
     @property
     def coords(self) -> Tuple[int]:
@@ -1953,11 +1956,26 @@ class Ship(BaseModel):
             self.hunter_drones_loaded -= 1
             self.hunter_drone_firing = True
 
-    def process_admin_command(self, **cmd):
+    def process_admin_command(self, cmd: Dict, game_frame: int):
         if cmd['type'] == 'prop':
-            if cmd['prop'] not in self._console_adjustable_props:
-                return
+            if (
+                cmd['prop'] not in self._console_adjustable_props
+                or not hasattr(self, cmd['prop'])
+            ):
+                raise Exception(
+                    f"prop '{cmd['prop']}' is not adjustable via admin console command"
+                )
             setattr(self, cmd['prop'], cmd['val'])
-        if cmd['type'] == 'verb':
-            if cmd['verb'] == 'die':
-                self.die()
+
+        elif cmd['type'] == 'verb':
+            if cmd['verb'] not in self._console_verbs:
+                raise Exception(
+                    f"verb '{cmd['verb']}' is not available for use as a console verb"
+                )
+            elif cmd['verb'] == 'die':
+                self.die(game_frame)
+            else:
+                raise NotImplementedError
+
+        else:
+            raise NotImplementedError

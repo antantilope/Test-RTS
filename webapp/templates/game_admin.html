@@ -115,6 +115,7 @@
                                             textareaInput.value = ''
                                             textareaInput.placeholder = ' command sent'
                                             resetPlaceholderTimeout = setTimeout(()=>{
+                                                resetPlaceholderTimeout = null;
                                                 textareaInput.placeholder = "type console command here";
                                             }, 1300);
                                             return;

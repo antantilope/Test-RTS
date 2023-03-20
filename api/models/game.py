@@ -509,9 +509,15 @@ class Game(BaseModel):
 
         # Process admin commands
         for command in request['admin_commands']:
-            self._ships[command['ship_id']].process_admin_command(
-                command
-            )
+            try:
+                self._ships[command['ship_id']].process_admin_command(
+                    command, self._game_frame
+                )
+            except Exception as e:
+                self.logger.error("error running admin console command")
+                self.logger.error(json.dumps(command))
+                tb = traceback.format_exc()
+                self.logger.error(tb)
 
         # Process user commands.
         for command in request['commands']:
