@@ -239,6 +239,8 @@ $(document).ready(() => {
 
 ### Node Backend Web Appliocation
  - webapp/
+    - _index.js_ (entry point for express.js application)
+    - _socket_handler.js_ define server side socket behavior for talking to the Angular app
     - appclient/ __(angular front end)__
     - static/
       - static files that are served by the web application
@@ -247,8 +249,8 @@ $(document).ready(() => {
       - this is a django project which only used for database migrations
     - scripts/
       - management commands
-    - controllers/
-      - express.js HTTP route handlers
+    - _controllers/_ express.js HTTP route handlers
+      - _start_game.js_ handles server side socket behavior for talking to Python Game API
     - lib/
       - services for the express.js app
         - database client and methods
