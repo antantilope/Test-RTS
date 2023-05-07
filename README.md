@@ -227,27 +227,33 @@ $(document).ready(() => {
      - ship_designator.py
        - logic that assigns a random designator to each ship.
        - players do not see opponent's handle's. They only see this random designation.
-     - utils2d.py
-       - defines math intensive operations for managing objects on a 2-dimensional plane
-         - trigonometry
-         - geometry
-         - physics
-         - hitboxes
+    - utils2d.py
+      - defines math intensive operations for managing objects on a 2-dimensional plane
+        - trigonometry
+        - geometry
+        - physics
+        - hitboxes
    - tests/
      - Holds unit tests for python application
 
 
 ### Node Backend Web Appliocation
-
- - appclient/ (angular front end)
- - static/
-   - static files that are served by the web application
-   - angular build files
- - appmodels/
-   - this is a django project which only used for database migrations
- - scripts/
- - controllers/
- - lib/
- - templates/
-  -
- -
+ - webapp/
+    - appclient/ __(angular front end)__
+    - static/
+      - static files that are served by the web application
+      - angular build files
+    - appmodels/
+      - this is a django project which only used for database migrations
+    - scripts/
+      - management commands
+    - controllers/
+      - express.js HTTP route handlers
+    - lib/
+      - services for the express.js app
+        - database client and methods
+        - unix process managements
+        - logging (winston)
+        - event/socket/command namesspaces
+    - templates/
+      - HTML markup for non angular pages
