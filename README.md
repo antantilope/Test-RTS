@@ -34,8 +34,7 @@ $ cd voidstar3
 ### Setup a Python Virtual Environment and Install Packages
 ```bash
 # from the project root rungit s
-$ pip install virtualenv
-$ virtualenv env
+$ python3 -m venv env
 $ source env/bin/activate
 $ pip install -r requirements.txt
 ```
