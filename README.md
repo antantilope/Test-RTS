@@ -250,7 +250,7 @@ $(document).ready(() => {
     - scripts/
       - management commands
     - _controllers/_ express.js HTTP route handlers
-      - _start_game.js_ handles server side socket behavior for talking to Python Game API
+      - _start_game.js_ handles server side socket behavior for talking to Python Game API. Maintains server tickrate using setTimeout
     - lib/
       - services for the express.js app
         - database client and methods
