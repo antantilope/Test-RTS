@@ -374,6 +374,14 @@ export class GamedisplayComponent implements OnInit {
         } else {
           this._pane.openScannerPane()
         }
+        break
+      case key === 'q':
+        if(this._pane.shipPaneVisible) {
+          this._pane.closeShipMenuPane()
+        } else {
+          this._pane.openShipMenuPane()
+        }
+        break
     }
   }
 
