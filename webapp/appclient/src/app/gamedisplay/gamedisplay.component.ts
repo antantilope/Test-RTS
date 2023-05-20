@@ -353,6 +353,9 @@ export class GamedisplayComponent implements OnInit {
       case key === 'f':
         this.btnClickFirePneumaticTube()
         break
+      case key === 'e':
+        this.btnClickFireEBeam()
+        break
       case key === ' ':
         this.keyboardShortcutEngineStateUp()
         break
@@ -365,6 +368,12 @@ export class GamedisplayComponent implements OnInit {
       case key === '3':
         this.selectedPneumaticWeapon = HUNTER_DRONE_SLUG
         break
+      case key === 's':
+        if(this._pane.scannerPaneVisible){
+          this._pane.closeScannerPane()
+        } else {
+          this._pane.openScannerPane()
+        }
     }
   }
 
@@ -383,7 +392,17 @@ export class GamedisplayComponent implements OnInit {
       case key === 'alt' || key === 'control':
         this.keyboardShortcutEngineStateDown()
         break
+      case key === 'arrowup' || key === 'arrowright':
+        this.btnClickScannerCursorUp()
+        break
+      case key === 'arrowdown' || key === 'arrowleft':
+        this.btnClickScannerCursorDown()
+        break
+      case key === 'enter':
+        this.btnClickScannerCursorLock()
+        break
     }
+
   }
 
   private registerMouseEventListener(): void {
