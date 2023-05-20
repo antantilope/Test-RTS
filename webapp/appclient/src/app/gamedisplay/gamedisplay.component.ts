@@ -356,6 +356,15 @@ export class GamedisplayComponent implements OnInit {
       case key === ' ':
         this.keyboardShortcutEngineStateUp()
         break
+      case key === '1':
+        this.selectedPneumaticWeapon = EMP_SLUG
+        break
+      case key === '2':
+        this.selectedPneumaticWeapon = MAGNET_MINE_SLUG
+        break
+      case key === '3':
+        this.selectedPneumaticWeapon = HUNTER_DRONE_SLUG
+        break
     }
   }
 
