@@ -46,6 +46,9 @@ import {
   STATION_LENGTH_METERS_Y,
   TIMER_SLUG_SCANNER_LOCKING,
   EBEAM_RAY_SHOOTER_ARC_RADIUS_METERS,
+  MAGNET_MINE_SLUG,
+  EMP_SLUG,
+  HUNTER_DRONE_SLUG,
 } from './constants';
 import { Explosion, OreMine, EMPBlast, SpaceStation } from './models/apidata.model';
 
@@ -555,6 +558,7 @@ export class DrawingService {
   public drawBottomRightOverlay(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
+    selectedPneumaticWeapon: string
   ) {
     // This method is a bit of a mess
     const sizing = this.getBottomRightOverlay(camera.canvasWidth, camera.canvasHeight)
@@ -572,6 +576,30 @@ export class DrawingService {
       camera.canvasWidth - sizing.XCornerOffset,
       camera.canvasHeight - brcYOffset,
     )
+    brcYOffset += sizing.clockTimerGap
+
+    // Selected Pneumatic Weapon
+    let weaponCount: number;
+    if (selectedPneumaticWeapon === EMP_SLUG) {
+      weaponCount = this._api.frameData.ship.emps_loaded
+    } else if (selectedPneumaticWeapon === MAGNET_MINE_SLUG) {
+      weaponCount = this._api.frameData.ship.magnet_mines_loaded
+    } else if (selectedPneumaticWeapon === HUNTER_DRONE_SLUG) {
+      weaponCount = this._api.frameData.ship.hunter_drones_loaded
+    }
+    const weaponName = `(${weaponCount}) ${selectedPneumaticWeapon.replace(/\_/g, ' ')}`
+    ctx.beginPath()
+    ctx.strokeStyle = '#ffffff'
+    ctx.fillStyle = '#ffffff'
+    ctx.textAlign = 'right'
+    ctx.textBaseline = "bottom"
+    ctx.fillText(
+      weaponName,
+      camera.canvasWidth - sizing.XCornerOffset,
+      camera.canvasHeight - brcYOffset,
+    )
+    brcYOffset += sizing.clockTimerGap
+
 
     // Timers
     const timerBarLength = sizing.timerBarLen //Math.min(200, Math.round(camera.canvasWidth / 6.5))
@@ -581,7 +609,6 @@ export class DrawingService {
     if(this._api.frameData.ship.alive){
       ctx.font = `${sizing.timerLabelFontSize}px Courier New`
       ctx.strokeStyle = '#00ff00'
-      brcYOffset += sizing.clockTimerGap
       ctx.textBaseline = "middle"
       ctx.textAlign = "right"
       for(let i in this._api.frameData.ship.timers) {

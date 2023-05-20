@@ -353,9 +353,27 @@ export class GamedisplayComponent implements OnInit {
       case key === 'f':
         this.btnClickFirePneumaticTube()
         break
+      case key === 'e':
+        this.btnClickFireEBeam()
+        break
       case key === ' ':
         this.keyboardShortcutEngineStateUp()
         break
+      case key === '1':
+        this.selectedPneumaticWeapon = EMP_SLUG
+        break
+      case key === '2':
+        this.selectedPneumaticWeapon = MAGNET_MINE_SLUG
+        break
+      case key === '3':
+        this.selectedPneumaticWeapon = HUNTER_DRONE_SLUG
+        break
+      case key === 's':
+        if(this._pane.scannerPaneVisible){
+          this._pane.closeScannerPane()
+        } else {
+          this._pane.openScannerPane()
+        }
     }
   }
 
@@ -374,7 +392,17 @@ export class GamedisplayComponent implements OnInit {
       case key === 'alt' || key === 'control':
         this.keyboardShortcutEngineStateDown()
         break
+      case key === 'arrowup' || key === 'arrowright':
+        this.btnClickScannerCursorUp()
+        break
+      case key === 'arrowdown' || key === 'arrowleft':
+        this.btnClickScannerCursorDown()
+        break
+      case key === 'enter':
+        this.btnClickScannerCursorLock()
+        break
     }
+
   }
 
   private registerMouseEventListener(): void {
@@ -773,7 +801,8 @@ export class GamedisplayComponent implements OnInit {
     // Corner overlays
     if(!this.isCinematic && cameraMode !== CAMERA_MODE_MAP) {
       this._draw.drawTopLeftOverlay(this.ctx, cameraMode, this._camera.gameDisplayCamera);
-      this._draw.drawBottomRightOverlay(this.ctx, this._camera.gameDisplayCamera)
+      this._draw.drawBottomRightOverlay(
+        this.ctx, this._camera.gameDisplayCamera, this.selectedPneumaticWeapon)
     }
     // Front center and alerts
     if(!this.isCinematic) {
