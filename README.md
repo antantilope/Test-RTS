@@ -72,6 +72,22 @@ $ python -c 'from django.core.management.utils import get_random_secret_key; pri
 ./test_api
 ```
 
+### API V2 C++ :ibraries
+
+Download the following repos and add to include:
+ - https://github.com/Tencent/rapidjson
+ - https://github.com/gabime/spdlog
+
+```bash
+# you may need to tweak folder names these commands:
+
+unzip rapidjson.zip
+sudo cp -rv rapidjson/include/rapidjson /usr/local/include
+
+unzip spdlog.zip
+sudo cp -rv spdlog/include/spdlog /usr/local/include
+```
+
 
 ### Node
 
