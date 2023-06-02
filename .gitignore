@@ -10,3 +10,10 @@ applocals.*
 *.log
 
 *.rdb
+
+*.out
+.vscode/
+*.o
+
+build/
+build_artifacts/
