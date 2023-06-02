@@ -1,11 +1,12 @@
 
+#include <iostream>
 
 #include "game.hpp"
 
 
 using namespace std;
 
-Game::Game(bool isUnitTesting) {
+Game::Game(const bool& isUnitTesting) {
     isTest = isUnitTesting;
     phase = constants::PHASE_0_LOBBY;
 
@@ -16,6 +17,6 @@ Game::Game(bool isUnitTesting) {
     logger->flush();
 }
 
-int Game::getPhase() {
+const int& Game::getPhase() {
     return phase;
 }

@@ -19,6 +19,6 @@ BaseModel::BaseModel() {
     W_IGNORE_STOP
 }
 
-string BaseModel::getId() {
+const string& BaseModel::getId() {
     return id;
 }

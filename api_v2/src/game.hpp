@@ -26,8 +26,8 @@ class Game: public BaseModel
 
 
     public:
-        Game(bool testing);
-        int getPhase();
+        Game(const bool& testing);
+        const int& getPhase();
 };
 
 #endif

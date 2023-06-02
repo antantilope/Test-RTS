@@ -12,7 +12,7 @@ class BaseModel
         string id;
 
     public:
-        string getId();
+        const string& getId();
         BaseModel();
 };
 
