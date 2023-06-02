@@ -24,7 +24,7 @@ std::shared_ptr<spdlog::logger> logging::new_ad_hoc_logger(
     const std::string nowUnixTS = std::to_string(std::time(nullptr));
 
 
-    const std::string fileName = nowUnixTS + "_" + gameID.substr(0, 3) + "_game-info.log";
+    const std::string fileName = nowUnixTS + "_" + gameID.substr(0, 4) + "_game-info.log";
     const std::string loggerName = "game";
     std::shared_ptr<spdlog::logger> logger;
     if (isTest) {
