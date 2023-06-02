@@ -3,8 +3,14 @@
 #define GAME_H
 
 #include <string>
+
 #include "spdlog/logger.h"
+
 #include "base_models.hpp"
+#include "constants.hpp"
+#include "logging.hpp"
+#include "uuid.hpp"
+#include "warnings.hpp"
 
 
 using namespace std;
@@ -25,4 +31,3 @@ class Game: public BaseModel
 };
 
 #endif
-

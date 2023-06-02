@@ -1,14 +1,12 @@
 
 #include <ctime>
-#include <string>
 
 #include "logging.hpp"
 
 
-
 std::shared_ptr<spdlog::logger> logging::new_ad_hoc_logger(
-    const std::string gameID,
-    const bool isTest
+    const std::string& gameID,
+    const bool& isTest
 ) {
     /*
         Create a new logger instance
@@ -18,12 +16,10 @@ std::shared_ptr<spdlog::logger> logging::new_ad_hoc_logger(
         TIMESTAMP_IDPREFIX_game-info.log
     */
 
-
+    W_IGNORE_START NO_WAGGREGATE_RETURN
     // std::time is not guranteed to work by the language
-    // but we can expect it to work on Linux.
+    // but we can expect it to work on Linux platforms.
     const std::string nowUnixTS = std::to_string(std::time(nullptr));
-
-
     const std::string fileName = nowUnixTS + "_" + gameID.substr(0, 4) + "_game-info.log";
     const std::string loggerName = "game";
     std::shared_ptr<spdlog::logger> logger;
@@ -33,5 +29,6 @@ std::shared_ptr<spdlog::logger> logging::new_ad_hoc_logger(
         logger = spdlog::basic_logger_mt(loggerName, "logs/" + fileName);
         logger->set_level(spdlog::level::info);
     }
+    W_IGNORE_STOP
     return logger;
 }

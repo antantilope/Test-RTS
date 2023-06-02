@@ -9,8 +9,7 @@ static std::mt19937                    gen(rd());
 static std::uniform_int_distribution<> dis(0, 15);
 static std::uniform_int_distribution<> dis2(8, 11);
 
-std::string uuid::v4() {
-    std::stringstream strstream;
+void uuid::v4(std::stringstream& strstream) {
     int i;
     strstream << std::hex;
     for (i = 0; i < 8; i++) {
@@ -33,6 +32,4 @@ std::string uuid::v4() {
     for (i = 0; i < 12; i++) {
         strstream << dis(gen);
     };
-    return strstream.str();
 }
-

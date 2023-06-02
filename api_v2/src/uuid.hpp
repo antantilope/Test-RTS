@@ -3,10 +3,11 @@
 #define UUID_H
 
 #include<string>
+#include <sstream>
 
 namespace uuid
 {
-    std::string v4();
+    void v4(std::stringstream& str);
 }
 
 #endif

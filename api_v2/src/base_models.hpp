@@ -16,5 +16,4 @@ class BaseModel
         BaseModel();
 };
 
-
 #endif
