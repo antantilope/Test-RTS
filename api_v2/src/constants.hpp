@@ -11,7 +11,7 @@ namespace constants
     static const int PHASE_0_LOBBY = 0;
     static const int PHASE_1_STARTING = 1;
     static const int PHASE_2_LIVE = 2;
-    static const int PHASE_3_LIVE = 3;
+    static const int PHASE_3_COMPLETE = 3;
 }
 
 #endif
