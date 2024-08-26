@@ -1,5 +1,8 @@
-# voidstar3
+# Test RTS
 
+This was an RTS I developed for several months and eventually abandoned. Now it serves as a codebase I ctrl+c/ctrl+v snippets from.
+
+There are many problems with this app: the 2 main issues: UI/UX, netcode.
 
 ![](https://media3.giphy.com/media/3FjEPbKqEPhPpmC8uY/giphy.gif?cid=ecf05e47mhdcyehw2x36vt8rt3rsohj4gf8f0d1dim455am2&rid=giphy.gif&ct=g)
 
