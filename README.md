@@ -2,6 +2,10 @@
 
 This was an RTS I developed for several months and eventually abandoned. Now it serves as a codebase I ctrl+c/ctrl+v snippets from.
 
+Useful pieces:
+ - https://github.com/antantilope/Test-RTS/blob/main/api/utils2d.py
+ - https://github.com/antantilope/Test-RTS/blob/main/webapp/appclient/src/app/drawing.service.ts#L1338
+
 There are many problems with this app: the 2 main issues: UI/UX, netcode.
 
 ![](https://media3.giphy.com/media/3FjEPbKqEPhPpmC8uY/giphy.gif?cid=ecf05e47mhdcyehw2x36vt8rt3rsohj4gf8f0d1dim455am2&rid=giphy.gif&ct=g)
